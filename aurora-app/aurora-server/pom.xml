@@ -28,12 +28,6 @@
 
         <dependency>
             <groupId>com.aurora</groupId>
-            <artifactId>aurora-scheduler</artifactId>
-            <version>${package.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.aurora</groupId>
             <artifactId>aurora-auth</artifactId>
             <version>${package.version}</version>
         </dependency>
@@ -44,4 +38,16 @@
         </dependency>
 
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.aurora.AuroraServerApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -75,12 +75,12 @@
         <el-table-column label="日志信息" align="center" prop="jobMessage" :show-overflow-tooltip="true" />
         <el-table-column label="执行状态" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 0 ? 'success' : 'danger'">
+            <el-tag :type="row.status === '0' ? 'success' : 'danger'">
               {{ statusFormat(row) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="执行时间" align="center" prop="createTime" width="180" />
+        <el-table-column label="执行时间" align="center" prop="startTime" width="180" />
         <el-table-column label="操作" align="center" width="100">
           <template #default="{ row }">
             <el-button
@@ -144,8 +144,8 @@ const jobGroupOptions = [
 
 // 状态字典
 const statusOptions = [
-{ value: 0, label: '成功' },
-  { value: 1, label: '失败' }
+  { value: '0', label: '成功' },
+  { value: '1', label: '失败' }
 ]
 
 // 任务组名格式化
@@ -185,14 +185,14 @@ const resetQuery = () => {
 
 /** 多选框选中数据 */
 const handleSelectionChange = (selection: any[]) => {
-  selectedIds.value = selection.map(item => item.id)
+  selectedIds.value = selection.map(item => item.logId)
 }
 
 /** 删除按钮操作 */
 const handleDelete = async (row: any) => {
   try {
     await ElMessageBox.confirm('确定要删除"' + row.jobName + '"这个调度日志吗？')
-    await delleteJobLogApi(row.id)
+    await delleteJobLogApi(row.logId)
     getList()
     ElMessage.success('删除成功')
   } catch (error) {
