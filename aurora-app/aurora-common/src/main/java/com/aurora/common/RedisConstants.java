@@ -82,12 +82,5 @@ public class RedisConstants {
      * 令牌有效期（小时）
      */
     public static final Integer TOKEN_EXPIRE = 2;
-    /**
-     * 微信登录用户状态
-     */
-    public static final String WX_LOGIN_USER_CODE = "wx_login_user_statue:";
-
-
-    public static final String WX_LOGIN_USER = "wx_login_user:";
 
 }
