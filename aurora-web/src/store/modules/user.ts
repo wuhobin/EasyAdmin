@@ -23,18 +23,6 @@ export const useUserStore = defineStore("user", () => {
     permissions: []
   });
 
-  // 自定义 reset：setup-style store 没有 $reset()，且 pinia-plugin-persistedstate@3.2 不会 polyfill
-  // plugin 会通过 $subscribe 监听 state 变化，user 重置后它会自动把空状态写回 localStorage
-  function resetUser() {
-    user.value = {
-      roles: [],
-      intro: null,
-      avatar: null,
-      nickname: null,
-      permissions: []
-    };
-  }
-
   /**
    * 登录
    *
@@ -79,8 +67,7 @@ export const useUserStore = defineStore("user", () => {
       logoutApi()
         .then(() => {
           removeToken()
-          resetUser()  // plugin auto-syncs empty state to localStorage
-          location.reload()
+          location.reload(); // 清空路由
           resolve();
         })
         .catch((error) => {
@@ -94,7 +81,6 @@ export const useUserStore = defineStore("user", () => {
     console.log("resetToken");
     return new Promise<void>((resolve) => {
       removeToken()
-      resetUser()  // plugin auto-syncs empty state to localStorage
       resetRouter();
       resolve();
     });
@@ -106,13 +92,7 @@ export const useUserStore = defineStore("user", () => {
     getUserInfo,
     logout,
     resetToken,
-    resetUser,
   };
-}, {
-  persist: {
-    key: 'aurora_admin_user_info',
-    storage: localStorage,
-  }
 });
 
 // 非setup
