@@ -85,6 +85,18 @@
             <artifactId>redis-spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- OSS 对象存储（platform-boot-starter） -->
+        <dependency>
+            <groupId>io.github.wuhobin</groupId>
+            <artifactId>oss-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- 七牛云 SDK（OSS starter 依赖，用于 qiniu-kodo 平台） -->
+        <dependency>
+            <groupId>com.qiniu</groupId>
+            <artifactId>qiniu-java-sdk</artifactId>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

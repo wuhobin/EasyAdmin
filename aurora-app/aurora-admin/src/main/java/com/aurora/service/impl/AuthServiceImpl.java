@@ -1,6 +1,7 @@
 package com.aurora.service.impl;
 
 import cn.dev33.satoken.secure.BCrypt;
+import cn.dev33.satoken.stp.StpUtil;
 import com.aurora.common.Constants;
 import com.aurora.common.ResultCode;
 import com.aurora.dto.LoginDTO;
@@ -49,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
         LoginUserInfo loginUserInfo = new LoginUserInfo();
         BeanUtils.copyProperties(user, loginUserInfo);
         loginUserInfo.setToken(tokenValue);
+        StpUtil.getSession().set(Constants.CURRENT_USER, loginUserInfo);
         return loginUserInfo;
     }
 

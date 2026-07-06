@@ -21,12 +21,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.aurora</groupId>
-            <artifactId>aurora-storage</artifactId>
-            <version>${package.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
         </dependency>

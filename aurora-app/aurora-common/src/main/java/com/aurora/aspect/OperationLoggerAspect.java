@@ -7,6 +7,7 @@ import com.aurora.annotation.OperationLogger;
 import com.aurora.common.Constants;
 import com.aurora.dto.user.LoginUserInfo;
 import com.aurora.entity.SysOperateLog;
+import com.aurora.starter.common.utils.JsonUtil;
 import com.aurora.mapper.SysOperateLogMapper;
 import com.aurora.utils.AspectUtils;
 import com.aurora.utils.DateUtils;
@@ -95,7 +96,8 @@ public class OperationLoggerAspect {
         String paramsJson = getParamsJson(point);
 
         // 当前操作用户
-        LoginUserInfo user = JSONUtil.toBean(JSONUtil.toJsonStr(StpUtil.getSession().get(Constants.CURRENT_USER)), LoginUserInfo.class);
+        String userJson = JsonUtil.toJson(StpUtil.getSession().get(Constants.CURRENT_USER));
+        LoginUserInfo user = JsonUtil.parse(userJson, LoginUserInfo.class);
         String type = request.getMethod();
         String ip = IpUtils.getIp();
         String url = request.getRequestURI();
