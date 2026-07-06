@@ -3,6 +3,7 @@ package com.aurora.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.aurora.service.CacheService;
+import com.aurora.starter.redis.core.RedisCache;
 import com.aurora.vo.cache.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.RedisServerCommands;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class CacheServiceImpl implements CacheService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisCache redisCache;
 
     @Override
     public CacheInfoVo getCacheInfo() {
@@ -81,7 +83,7 @@ public class CacheServiceImpl implements CacheService {
     @Override
     public IPage<CacheKeyVo> getKeyList(CacheKeyQuery query) {
         IPage<CacheKeyVo> page = new Page<>();
-        Set<String> keys = redisTemplate.keys(query.getKey() == null ? "*" : "*" + query.getKey() + "*");
+        Collection<String> keys = redisCache.scan(query.getKey() == null ? "*" : "*" + query.getKey() + "*");
         if (keys == null || keys.isEmpty()) {
             page.setTotal(0);
             page.setRecords(Collections.emptyList());
@@ -107,10 +109,7 @@ public class CacheServiceImpl implements CacheService {
 
     @Override
     public void clearCache() {
-        Set<String> keys = redisTemplate.keys("*");
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
-        }
+        redisCache.deleteByPattern("*");
     }
 
     private Long getKeySize(String key) {

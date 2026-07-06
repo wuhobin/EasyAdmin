@@ -1,6 +1,5 @@
 package com.aurora.service.impl;
 
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -12,7 +11,7 @@ import com.aurora.entity.SysUser;
 import com.aurora.exception.BusinessException;
 import com.aurora.mapper.SysUserMapper;
 import com.aurora.service.SysUserService;
-import com.aurora.utils.RedisUtils;
+import com.aurora.starter.redis.core.RedisCache;
 import com.aurora.vo.user.OnlineUserVo;
 import com.aurora.vo.user.SysUserPageListVo;
 import com.aurora.vo.user.SysUserProfileVo;
@@ -35,7 +34,7 @@ import com.aurora.dto.user.UpdatePwdDTO;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private final SysRoleMapper roleMapper;
-    private final RedisUtils redisUtils;
+    private final RedisCache redisCache;
     private final SysUserMapper sysUserMapper;
 
     @Override
@@ -131,12 +130,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         Integer pageSize = PageUtils.getPageQuery().getPageSize();
 
         // 返回数据对象
-        Collection<String> keys = redisUtils.keys(RedisConstants.LOGIN_TOKEN.concat( "*"));
+        Collection<String> keys = redisCache.scan(RedisConstants.LOGIN_TOKEN.concat("*"));
 
         List<OnlineUserVo> totalList = new ArrayList<>();
         for (String key : keys) {
-            Object userObj = redisUtils.get(key);
-            OnlineUserVo onlineUser = JSONUtil.toBean(userObj.toString(), OnlineUserVo.class);
+            OnlineUserVo onlineUser = redisCache.<OnlineUserVo>getCacheObject(key);
+            if (onlineUser == null) {
+                continue;
+            }
             if (StringUtils.isNotBlank(username)) {
                 if (onlineUser.getUsername().contains(username)) {
                     totalList.add(onlineUser);

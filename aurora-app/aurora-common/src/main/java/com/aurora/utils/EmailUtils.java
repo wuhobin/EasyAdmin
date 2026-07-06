@@ -1,6 +1,7 @@
 package com.aurora.utils;
 
 import com.aurora.common.RedisConstants;
+import com.aurora.starter.redis.core.RedisCache;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class EmailUtils {
     @Value("${mail.smtp.host}")
     private String host;
 
-    private final RedisUtils redisUtils;
+    private final RedisCache redisCache;
 
     private final JavaMailSenderImpl javaMailSender = new JavaMailSenderImpl();
 
@@ -122,8 +123,7 @@ public class EmailUtils {
         this.send(email, content);
         log.info("邮箱验证码发送成功,邮箱:{},验证码:{}",email,code);
 
-        redisUtils.set(RedisConstants.CAPTCHA_CODE_KEY + email, code +"");
-        redisUtils.expire(RedisConstants.CAPTCHA_CODE_KEY + email, RedisConstants.CAPTCHA_EXPIRATION, TimeUnit.MINUTES);
+        redisCache.setCacheObject(RedisConstants.CAPTCHA_CODE_KEY + email, code, RedisConstants.CAPTCHA_EXPIRATION, TimeUnit.MINUTES);
     }
 
     private void send(String email, String template) throws MessagingException {

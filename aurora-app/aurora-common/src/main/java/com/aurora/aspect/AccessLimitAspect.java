@@ -4,7 +4,7 @@ import com.aurora.annotation.AccessLimit;
 import com.aurora.common.RedisConstants;
 import com.aurora.exception.BusinessException;
 import com.aurora.utils.IpUtils;
-import com.aurora.utils.RedisUtils;
+import com.aurora.starter.redis.core.RedisRateLimiter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,8 +12,6 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author: quequnlong
@@ -26,29 +24,19 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AccessLimitAspect {
 
-    private final RedisUtils redisUtils;
+    private final RedisRateLimiter redisRateLimiter;
 
     @Before("@annotation(accessLimit)")
-    public void doBefore(JoinPoint joinPoint, AccessLimit accessLimit) throws Throwable {
+    public void doBefore(JoinPoint joinPoint, AccessLimit accessLimit) {
         int time = accessLimit.time();
+        int count = accessLimit.count();
 
         HttpServletRequest request = IpUtils.getRequest();
         // 拼接redis key = IP + Api限流
         String key = RedisConstants.RATE_LIMIT_KEY + IpUtils.getIp() + request.getRequestURI();
-        // 获取redis的value
-        Integer maxTimes = null;
-        Object value = redisUtils.get(key);
-        if (value != null) {
-            maxTimes = Integer.parseInt(value.toString());
-        }
-        if (maxTimes == null) {
-            // 如果redis中没有该ip对应的时间则表示第一次调用，保存key到redis
-            redisUtils.set(key,"1",time, TimeUnit.SECONDS);
-        } else if (maxTimes < accessLimit.count()) {
-            // 如果redis中的时间比注解上的时间小则表示可以允许访问,这是修改redis的value时间
-            redisUtils.set(key, (maxTimes + 1) + "", time, TimeUnit.SECONDS);
-        } else {
-            // 请求过于频繁
+
+        // 尝试获取限流许可；失败表示请求过于频繁
+        if (!redisRateLimiter.tryRateLimit(key, count, time, () -> {})) {
             log.info("API请求限流拦截启动,{} 请求过于频繁", key);
             throw new BusinessException("请求过于频繁,稍后重试");
         }
