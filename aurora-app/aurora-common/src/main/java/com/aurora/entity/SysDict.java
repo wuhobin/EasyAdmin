@@ -1,20 +1,20 @@
 package com.aurora.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.aurora.utils.DateUtils;
+import com.aurora.starter.mybatisplus.model.BaseEntity;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 
 @Data
 @TableName("sys_dict")
 @Schema(description = "字典类型")
-public class SysDict implements Serializable {
-    
+public class SysDict extends BaseEntity implements Serializable {
+
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -32,11 +32,4 @@ public class SysDict implements Serializable {
 
     @Schema(description = "排序")
     private Integer sort;
-
-    @TableField(fill = FieldFill.INSERT)
-    @JsonFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS, timezone = "GMT+8")
-    private LocalDateTime createTime;
-
-    @TableField(fill = FieldFill.UPDATE)
-    private LocalDateTime updateTime;
-} 
+}

@@ -17,17 +17,6 @@ spring:
 mybatis-plus:
   mapper-locations: classpath:/mapper/*Mapper.xml
   typeAliasesPackage: com.aurora.entity
-  global-config:
-    db-config:
-      id-type: AUTO
-      field-strategy: not_empty
-      column-underline: true
-      db-type: mysql
-    refresh: true
-  configuration:
-    map-underscore-to-camel-case: true
-    cache-enabled: false
-    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 # platform-boot-starter 配置
 platform:

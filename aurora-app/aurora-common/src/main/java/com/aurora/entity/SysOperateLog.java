@@ -1,28 +1,24 @@
 package com.aurora.entity;
 
+import com.aurora.starter.mybatisplus.model.BaseEntity;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.aurora.utils.DateUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.io.Serializable;
-/**
- *
- */
+
 @Data
 @Builder
 @TableName("sys_operate_log")
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "对象 gen_table")
-public class SysOperateLog implements Serializable {
+@Schema(description = "操作日志")
+public class SysOperateLog extends BaseEntity implements Serializable {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "主键ID")
@@ -49,10 +45,6 @@ public class SysOperateLog implements Serializable {
     @Schema(description = "请求接口耗时")
     private Long spendTime;
 
-    @Schema(description = "创建时间")
-    @JsonFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS, timezone = "GMT+8")
-    private LocalDateTime createTime;
-
     @Schema(description = "请求参数")
     private String paramsJson;
 
@@ -61,5 +53,4 @@ public class SysOperateLog implements Serializable {
 
     @Schema(description = "方法名")
     private String methodName;
-
 }

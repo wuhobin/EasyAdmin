@@ -1,8 +1,11 @@
 package com.aurora.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.aurora.starter.mybatisplus.model.BaseEntity;
 import com.aurora.utils.DateUtils;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @TableName("sys_user")
 @Schema(description = "用户信息")
-public class SysUser implements Serializable {
+public class SysUser extends BaseEntity implements Serializable {
 
     @TableId(type = IdType.AUTO)
     private Integer id;
@@ -65,14 +68,4 @@ public class SysUser implements Serializable {
     @Schema(description = "上次登录时间")
     @JsonFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS, timezone = "GMT+8")
     private LocalDateTime lastLoginTime;
-
-    @Schema(description = "创建时间")
-    @TableField(fill = FieldFill.INSERT)
-    @JsonFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS, timezone = "GMT+8")
-    private LocalDateTime createTime;
-
-    @Schema(description = "更新时间")
-    @TableField(fill = FieldFill.UPDATE)
-    @JsonFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS, timezone = "GMT+8")
-    private LocalDateTime updateTime;
 }
