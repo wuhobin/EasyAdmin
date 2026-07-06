@@ -1,6 +1,7 @@
 package com.aurora.config.mybatisplus;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.aurora.starter.security.context.SecurityUtils;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.aurora.common.Constants;
 import com.aurora.dto.user.LoginUserInfo;
@@ -34,7 +35,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
 
     private LoginUserInfo getCurrentUser() {
         try {
-            Object obj = StpUtil.getSession().get(Constants.CURRENT_USER);
+            Object obj = SecurityUtils.getSessionAttribute(Constants.CURRENT_USER);
             if (obj instanceof LoginUserInfo) {
                 return (LoginUserInfo) obj;
             }

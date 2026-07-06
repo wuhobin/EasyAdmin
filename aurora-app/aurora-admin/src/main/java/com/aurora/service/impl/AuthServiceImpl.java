@@ -50,7 +50,8 @@ public class AuthServiceImpl implements AuthService {
         LoginUserInfo loginUserInfo = new LoginUserInfo();
         BeanUtils.copyProperties(user, loginUserInfo);
         loginUserInfo.setToken(tokenValue);
-        StpUtil.getSession().set(Constants.CURRENT_USER, loginUserInfo);
+
+        SecurityUtils.setSessionAttribute(Constants.CURRENT_USER, loginUserInfo);
         return loginUserInfo;
     }
 
