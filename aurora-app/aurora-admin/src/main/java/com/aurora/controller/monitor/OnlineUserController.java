@@ -5,6 +5,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.aurora.common.Result;
 import com.aurora.service.SysUserService;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.vo.user.OnlineUserVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,8 +30,8 @@ public class OnlineUserController {
 
     @GetMapping("/list")
     @Operation(summary = "获取在线用户列表")
-    public Result<IPage<OnlineUserVo>> getOnlineUserList(String username) {
-        return Result.success(sysUserService.getOnlineUserList(username));
+    public Result<IPage<OnlineUserVo>> getOnlineUserList(String username, PageParam pageParam) {
+        return Result.success(sysUserService.getOnlineUserList(username, pageParam));
     }
 
     @Operation(summary = "强制踢出")

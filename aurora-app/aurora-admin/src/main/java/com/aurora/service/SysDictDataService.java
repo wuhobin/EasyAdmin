@@ -1,6 +1,7 @@
 package com.aurora.service;
 
 import com.aurora.entity.SysDictData;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
@@ -11,7 +12,7 @@ public interface SysDictDataService extends IService<SysDictData> {
     /**
      * 查询字典数据分页列表
      */
-    IPage<SysDictData> listDictData(Long dictId);
+    IPage<SysDictData> listDictData(Long dictId, PageParam pageParam);
     
     /**
      * 新增字典数据

@@ -3,6 +3,7 @@ package com.aurora.controller.tool;
 import com.aurora.common.Result;
 import com.aurora.entity.GenTable;
 import com.aurora.service.GenTableService;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,8 +55,8 @@ public class GenController {
 
     @GetMapping("/db/list")
     @Operation(description = "查询数据库列表")
-    public Result<Map<String, Object>> dbList(GenTable genTable) {
-        Map<String, Object> list = genTableService.selectDbTableList(genTable);
+    public Result<Map<String, Object>> dbList(GenTable genTable, PageParam pageParam) {
+        Map<String, Object> list = genTableService.selectDbTableList(genTable, pageParam);
         return Result.success(list);
     }
 

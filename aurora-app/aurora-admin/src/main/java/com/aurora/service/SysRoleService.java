@@ -3,6 +3,7 @@ package com.aurora.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.aurora.entity.SysRole;
+import com.aurora.starter.mybatisplus.model.PageParam;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public interface SysRoleService extends IService<SysRole> {
     /**
      * 分页查询角色
      */
-    IPage<SysRole> listRoles(String name);
+    IPage<SysRole> listRoles(String name, PageParam pageParam);
     
     /**
      * 新增角色

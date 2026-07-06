@@ -3,7 +3,8 @@ package com.aurora.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.aurora.utils.PageUtils;
+import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.entity.SysDict;
 import com.aurora.mapper.SysDictMapper;
 import com.aurora.service.SysDictService;
@@ -16,13 +17,13 @@ import org.springframework.util.StringUtils;
 public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> implements SysDictService {
 
     @Override
-    public IPage<SysDict> getDictPageList(String name,Integer status) {
+    public IPage<SysDict> getDictPageList(String name, Integer status, PageParam pageParam) {
         LambdaQueryWrapper<SysDict> wrapper = new LambdaQueryWrapper<SysDict>()
                 .like(StringUtils.hasText(name),SysDict::getName, name)
                 .eq(status != null,SysDict::getStatus, status)
                 .orderByAsc(SysDict::getSort);
 
-        return baseMapper.selectPage(PageUtils.getPage(), wrapper);
+        return baseMapper.selectPage(PageUtils.buildPage(pageParam), wrapper);
     }
 
     @Override

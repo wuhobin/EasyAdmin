@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ${packageName}.entity.${className};
 import ${packageName}.service.${className}Service;
 import ${packageName}.common.Result;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.RequiredArgsConstructor;
 
@@ -22,8 +23,8 @@ public class ${className}Controller {
      * 查询${tableComment}列表
      */
     @GetMapping("/list")
-    public Result<IPage<${className}>> list(${className} ${classname}) {
-        return Result.success(${classname}Service.selectPage(${classname}));
+    public Result<IPage<${className}>> list(${className} ${classname}, PageParam pageParam) {
+        return Result.success(${classname}Service.selectPage(${classname}, pageParam));
     }
 
     /**

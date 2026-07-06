@@ -1,6 +1,7 @@
 package com.aurora.service;
 
 import com.aurora.entity.GenTable;
+import com.aurora.starter.mybatisplus.model.PageParam;
 
 import java.util.Map;
 
@@ -16,7 +17,7 @@ public interface GenTableService {
     
     String synchDb(String tableName);
 
-    Map<String, Object> selectDbTableList(GenTable genTable);
+    Map<String, Object> selectDbTableList(GenTable genTable, PageParam pageParam);
     
     void importGenTable(String[] tableNames);
 

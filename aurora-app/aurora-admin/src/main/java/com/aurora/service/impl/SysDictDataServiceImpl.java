@@ -1,7 +1,8 @@
 package com.aurora.service.impl;
 
 import com.aurora.service.SysDictDataService;
-import com.aurora.utils.PageUtils;
+import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.entity.SysDictData;
 import com.aurora.mapper.SysDictDataMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -18,12 +19,12 @@ import lombok.RequiredArgsConstructor;
 public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDictData> implements SysDictDataService {
 
     @Override
-    public IPage<SysDictData> listDictData(Long dictId) {
+    public IPage<SysDictData> listDictData(Long dictId, PageParam pageParam) {
         LambdaQueryWrapper<SysDictData> wrapper = new LambdaQueryWrapper<>();
         // 构建查询条件
         wrapper.eq(SysDictData::getDictId,dictId)
                 .orderByAsc(SysDictData::getSort);
-        return page(PageUtils.getPage(), wrapper);
+        return page(PageUtils.buildPage(pageParam), wrapper);
     }
 
     @Override

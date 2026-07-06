@@ -5,6 +5,7 @@ import com.aurora.annotation.OperationLogger;
 import com.aurora.common.Result;
 import com.aurora.entity.SysRole;
 import com.aurora.service.SysRoleService;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.utils.FastExcelUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,8 +27,8 @@ public class SysRoleController {
 
     @GetMapping("/")
     @Operation(summary = "获取角色列表")
-    public Result<IPage<SysRole>> listRoles(@RequestParam(required = false) String name) {
-        return Result.success(sysRoleService.listRoles(name));
+    public Result<IPage<SysRole>> listRoles(@RequestParam(required = false) String name, PageParam pageParam) {
+        return Result.success(sysRoleService.listRoles(name, pageParam));
     }
 
     @GetMapping("/{id}")

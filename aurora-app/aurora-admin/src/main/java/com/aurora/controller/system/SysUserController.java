@@ -8,6 +8,7 @@ import com.aurora.common.Result;
 import com.aurora.dto.user.UpdatePwdDTO;
 import com.aurora.entity.SysUser;
 import com.aurora.service.SysUserService;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.vo.user.SysUserPageListVo;
 import com.aurora.vo.user.SysUserProfileVo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,8 +29,9 @@ public class SysUserController {
     @GetMapping
     @Operation(summary = "获取用户列表")
     public Result<IPage<SysUserPageListVo>> listUsers(@RequestParam(required = false) String nickname,
-                                                      @RequestParam(required = false) Integer status) {
-        return Result.success(sysUserService.listUsers(nickname,status));
+                                                      @RequestParam(required = false) Integer status,
+                                                      PageParam pageParam) {
+        return Result.success(sysUserService.listUsers(nickname, status, pageParam));
     }
 
     @PostMapping

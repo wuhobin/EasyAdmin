@@ -6,7 +6,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.common.RedisConstants;
 import com.aurora.dto.user.UserSaveOrUpdateDto;
 import com.aurora.mapper.SysRoleMapper;
-import com.aurora.utils.PageUtils;
+import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.entity.SysUser;
 import com.aurora.exception.BusinessException;
 import com.aurora.mapper.SysUserMapper;
@@ -38,8 +39,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private final SysUserMapper sysUserMapper;
 
     @Override
-    public IPage<SysUserPageListVo> listUsers(String nickname, Integer status) {
-        return baseMapper.selectUserPage(PageUtils.getPage(), nickname,status);
+    public IPage<SysUserPageListVo> listUsers(String nickname, Integer status, PageParam pageParam) {
+        return baseMapper.selectUserPage(PageUtils.buildPage(pageParam), nickname, status);
     }
 
     @Override
@@ -125,9 +126,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    public IPage<OnlineUserVo> getOnlineUserList(String username) {
-        Integer pageNum = PageUtils.getPageQuery().getPageNum();
-        Integer pageSize = PageUtils.getPageQuery().getPageSize();
+    public IPage<OnlineUserVo> getOnlineUserList(String username, PageParam pageParam) {
+        Integer pageNum = pageParam.getPageNum() != null ? pageParam.getPageNum() : 1;
+        Integer pageSize = pageParam.getPageSize() != null ? pageParam.getPageSize() : 10;
 
         // 返回数据对象
         Collection<String> keys = redisCache.scan(RedisConstants.LOGIN_TOKEN.concat("*"));

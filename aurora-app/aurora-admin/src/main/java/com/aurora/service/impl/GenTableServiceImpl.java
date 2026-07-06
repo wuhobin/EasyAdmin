@@ -2,7 +2,7 @@ package com.aurora.service.impl;
 
 import com.aurora.config.VelocityInitializer;
 import com.aurora.service.GenTableService;
-import com.aurora.utils.PageUtils;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.entity.GenTable;
 import com.aurora.entity.GenTableColumn;
 import com.aurora.mapper.GenTableMapper;
@@ -184,12 +184,14 @@ public class GenTableServiceImpl implements GenTableService {
     }
 
     @Override
-    public Map<String, Object> selectDbTableList(GenTable genTable) {
+    public Map<String, Object> selectDbTableList(GenTable genTable, PageParam pageParam) {
         // 计算偏移量
-        int offset = (PageUtils.getPageQuery().getPageNum() - 1) * PageUtils.getPageQuery().getPageSize();
+        int pageNum = pageParam.getPageNum() != null ? pageParam.getPageNum() : 1;
+        int pageSize = pageParam.getPageSize() != null ? pageParam.getPageSize() : 10;
+        int offset = (pageNum - 1) * pageSize;
         // 设置分页参数
         genTable.setOffset(offset);
-        genTable.setPageSize(PageUtils.getPageQuery().getPageSize());
+        genTable.setPageSize(pageSize);
 
         // 查询数据
         List<GenTable> list = genTableMapper.selectDbTableList(genTable);
