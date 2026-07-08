@@ -32,7 +32,6 @@
         <useragent.version>1.21</useragent.version>
         <ip2region.version>2.7.0</ip2region.version>
         <oshi.version>6.4.0</oshi.version>
-        <velocity.version>2.3</velocity.version>
         <fastexcel.version>1.0.0</fastexcel.version>
         <jsoup.version>1.14.3</jsoup.version>
         <flexmark.version>0.62.2</flexmark.version>
