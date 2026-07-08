@@ -122,10 +122,10 @@
             <version>6.4.0</version>
         </dependency>
 
-        <!-- knife4j依赖 -->
+        <!-- Knife4j 文档（platform-boot-starter） -->
         <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <groupId>io.github.wuhobin</groupId>
+            <artifactId>knife4j-spring-boot-starter</artifactId>
         </dependency>
 
         <dependency>
