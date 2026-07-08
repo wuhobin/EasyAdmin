@@ -90,3 +90,18 @@ mail:
 logging:
   file:
     path: /app/logs
+
+#=============================platform-boot-starter 配置（Knife4j 文档元信息）=====
+platform:
+  knife4j:
+    title: Aurora Admin API
+    description: 后台管理系统 - 接口文档
+    version: 1.0.0
+    terms-of-service-url: https://www.shiyit.com/mojian
+    contact:
+      name: wuhobin
+      url: https://github.com/wuhobin
+      email: wuhobin@example.com
+    license:
+      name: Apache 2.0
+      url: https://www.apache.org/licenses/LICENSE-2.0
