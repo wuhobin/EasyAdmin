@@ -1,4 +1,11 @@
 spring:
+  # 排除 knife4j 自动装配：knife4j 4.5.0 与 Spring 6.2 (Spring Boot 3.5) + springdoc 2.8.6 ABI 不兼容
+  # （Knife4jOpenApiCustomizer 调用旧 List API，新版本换为 Set；以及 Spring 6.2 移除了 ControllerAdviceBean(Object) 构造器）。
+  # 排除后 springdoc 自身的 OpenAPI Bean 与 knife4j-openapi3-ui 静态资源仍生效，/doc.html 与 /swagger-ui.html 仍可访问。
+  # 当 platform-boot-starter 升级到兼容 Spring 6.2 的 knife4j 版本（4.6+）时可移除此行。
+  autoconfigure:
+    exclude:
+      - com.github.xiaoymin.knife4j.spring.configuration.Knife4jAutoConfiguration
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
