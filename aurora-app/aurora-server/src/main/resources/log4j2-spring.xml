@@ -34,6 +34,14 @@
     </Appenders>
 
     <Loggers>
+        <!-- ============== MyBatis-Plus SQL 日志 ==============
+             默认 INFO（关闭 SQL 输出，避免生产环境日志爆炸）。
+             排查 SQL 问题时，把 level 改为 DEBUG 即可，无需改代码。
+             TRACE 级别会输出参数绑定详情（含具体参数值），谨慎开启。 -->
+        <Logger name="com.aurora.mapper" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
         <Root level="INFO">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="InfoFile"/>
