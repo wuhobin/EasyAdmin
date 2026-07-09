@@ -24,10 +24,3 @@ platform:
         - sys_operate_log
       # 线程未指定后缀时是否回退到当前月份（yyyyMM）
       fallback-to-current-month: false
-    # 禁止全表扫描的表名（FullScanInterceptor 拦截）
-    disable-full-scan-table:
-      - sys_user
-      - sys_role
-      - sys_menu
-      - sys_dict
-      - sys_dict_data
