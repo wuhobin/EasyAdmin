@@ -6,11 +6,12 @@ spring:
     username: ${mysql.username}
     password: ${mysql.password}
     hikari:
-      minimum-idle: 5
-      idle-timeout: 180000
-      maximum-pool-size: 10
+      # 生产环境调大连接池
+      minimum-idle: 10
+      idle-timeout: 300000
+      maximum-pool-size: 50
       auto-commit: true
-      pool-name: MyHikariCP
+      pool-name: MyHikariCP-Prod
       max-lifetime: 1800000
       connection-timeout: 30000
       connection-test-query: SELECT 1
@@ -18,28 +19,32 @@ spring:
     redis:
       host: ${redis.address}
       port: 6379
-      database: 12
+      # 生产环境建议使用 database 0
+      database: 0
       #password: ${redis.password}
       client-type: lettuce
       lettuce:
         pool:
-          # 最大活跃链接数 默认8
-          max-active: 8
-          # 最大空闲连接数 默认8
-          max-idle: 8
-          # 最小空闲连接数 默认0
-          min-idle: 0
+          # 生产环境调大连接池
+          max-active: 32
+          max-idle: 16
+          min-idle: 8
 
-# knife4j Basic 认证（环境相关：dev/prod 账号密码不同）
 knife4j:
+  enable: ${knife4j.enable:false}
   basic:
-    enable: true
-    # Basic 认证用户名
-    username: root
-    # Basic 认证密码
-    password: 123456
+    # knife4j 开启后才生效；账号密码通过环境变量注入
+    enable: ${knife4j.basic.enable:false}
+    username: ${knife4j.basic.username:admin}
+    password: ${knife4j.basic.password:CHANGE_ME}
+springdoc:
+  api-docs:
+    enabled: ${springdoc.api-docs.enabled:false}
+  swagger-ui:
+    enabled: ${springdoc.swagger-ui.enabled:false}
 
 # ============================== 文件存储配置 ==============================
+# 生产环境建议使用不同的 OSS 账号/Bucket
 dromara:
   x-file-storage:
     # 默认使用的存储平台
@@ -50,13 +55,14 @@ dromara:
     qiniu-kodo:
       - platform: qiniu-kodo-1
         enable-storage: true
-        access-key: gmU3fgKgiJYF4MsZUaKIWu47roQbYFwrXCAmGDxG
-        secret-key: QOe_P_pQg7THeRetMMTNO_ZplkusHOlukej_KIIg
-        bucket-name: codehub-wu
-        domain: https://oss.wuhobin.top/
-        base-path: base/
+        # 生产环境 AK/SK 通过环境变量注入，避免硬编码
+        access-key: ${oss.qiniu.access-key}
+        secret-key: ${oss.qiniu.secret-key}
+        bucket-name: ${oss.qiniu.bucket-name:easyadmin-prod}
+        domain: ${oss.qiniu.domain:https://oss.example.com/}
+        base-path: prod/
 
 # ============================== 日志配置 ==============================
 logging:
   file:
-    path: /app/logs
+    path: ${LOG_PATH:/app/logs}

@@ -1,10 +1,16 @@
 server:
+  # 服务端口
   port: 8800
+
 spring:
-  application:
-    name: aurora-admin
   profiles:
+    # 激活环境
     active: dev
+  application:
+    name: Easy-Admin
+  main:
+    allow-circular-references: true
+    allow-bean-definition-overriding: true
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -12,26 +18,8 @@ spring:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
-
-#==============================mybatis-plus配置=========================
-mybatis-plus:
-  mapper-locations: classpath:/mapper/*Mapper.xml
-  typeAliasesPackage: com.aurora.entity
-
-# platform-boot-starter 配置
-platform:
-  # Quartz 定时任务
-  quartz:
-    auto-init-table: true
-  # Sa-Token 认证
-  security:
-    enabled: true
-    token-name: Authorization
-    timeout: 259200
-    token-style: uuid
-    is-log: true
-    exclude-paths:
-      - /auth/login
-      - /auth/logout
-      - /auth/info
-      - /auth/verify
+  config:
+    import:
+      - classpath:config/mybatis-plus.yml
+      - classpath:config/platform.yml
+      - classpath:config/swagger.yml

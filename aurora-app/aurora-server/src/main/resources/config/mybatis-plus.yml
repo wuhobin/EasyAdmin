@@ -1,0 +1,4 @@
+# MyBatis-Plus 配置（业务功能，与环境无关）
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  typeAliasesPackage: com.aurora.entity
