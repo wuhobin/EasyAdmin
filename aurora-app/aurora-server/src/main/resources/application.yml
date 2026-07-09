@@ -35,5 +35,3 @@ platform:
       - /auth/logout
       - /auth/info
       - /auth/verify
-      - /localFile/**
-      - /bizFlow/test
