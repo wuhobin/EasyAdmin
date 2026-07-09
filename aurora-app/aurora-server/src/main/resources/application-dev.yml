@@ -1,11 +1,4 @@
 spring:
-  # 排除 knife4j 自动装配：knife4j 4.5.0 与 Spring 6.2 (Spring Boot 3.5) + springdoc 2.8.6 ABI 不兼容
-  # （Knife4jOpenApiCustomizer 调用旧 List API，新版本换为 Set；以及 Spring 6.2 移除了 ControllerAdviceBean(Object) 构造器）。
-  # 排除后 springdoc 自身的 OpenAPI Bean 与 knife4j-openapi3-ui 静态资源仍生效，/doc.html 与 /swagger-ui.html 仍可访问。
-  # 当 platform-boot-starter 升级到兼容 Spring 6.2 的 knife4j 版本（4.6+）时可移除此行。
-  autoconfigure:
-    exclude:
-      - com.github.xiaoymin.knife4j.spring.configuration.Knife4jAutoConfiguration
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -49,6 +42,19 @@ springdoc:
     - group: 'admin'
       paths-to-match: '/**'
       packages-to-scan: com.aurora.controller
+  # 文档元信息（springdoc 原生 springdoc.info.* 配置，无 Knife4jExtProperties 依赖）
+  info:
+    title: Aurora Admin API
+    description: 后台管理系统 - 接口文档
+    version: 1.0.0
+    terms-of-service: https://www.shiyit.com/mojian
+    contact:
+      name: wuhobin
+      url: https://github.com/wuhobin
+      email: wuhobin@example.com
+    license:
+      name: Apache 2.0
+      url: https://www.apache.org/licenses/LICENSE-2.0
 # knife4j的增强配置，不需要增强可以不配
 knife4j:
   enable: true
@@ -97,18 +103,3 @@ mail:
 logging:
   file:
     path: /app/logs
-
-#=============================platform-boot-starter 配置（Knife4j 文档元信息）=====
-platform:
-  knife4j:
-    title: Aurora Admin API
-    description: 后台管理系统 - 接口文档
-    version: 1.0.0
-    terms-of-service-url: https://www.shiyit.com/mojian
-    contact:
-      name: wuhobin
-      url: https://github.com/wuhobin
-      email: wuhobin@example.com
-    license:
-      name: Apache 2.0
-      url: https://www.apache.org/licenses/LICENSE-2.0
