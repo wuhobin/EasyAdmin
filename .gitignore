@@ -24,6 +24,7 @@ hs_err_pid*
 
 .claude/
 CLAUDE.md
+AGENTS.md
 .qoder/
 docs/
 .superpowers/
