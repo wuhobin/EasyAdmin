@@ -1,10 +1,10 @@
 package com.aurora.service.impl;
 
-import com.aurora.exception.BusinessException;
 import com.aurora.service.FileService;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
 import com.aurora.starter.common.utils.DateUtils;
+import com.aurora.starter.webmvc.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dromara.x.file.storage.core.FileInfo;
@@ -28,13 +28,13 @@ public class FileServiceImpl implements FileService {
     @Override
     public OssUploadResult upload(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException("上传文件不能为空");
+            throw new BizException("上传文件不能为空");
         }
         String datePath = DateUtils.parseDateToStr(DateUtils.YYYYMMDD, DateUtils.getNowDate());
         String path = datePath + "/";
         OssUploadResult result = ossTemplate.upload(file, path);
         if (result == null || result.getUrl() == null) {
-            throw new BusinessException("上传文件失败");
+            throw new BizException("上传文件失败");
         }
         return result;
     }
@@ -42,11 +42,11 @@ public class FileServiceImpl implements FileService {
     @Override
     public OssUploadResult upload(MultipartFile file, String path) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException("上传文件不能为空");
+            throw new BizException("上传文件不能为空");
         }
         OssUploadResult result = ossTemplate.upload(file, path);
         if (result == null || result.getUrl() == null) {
-            throw new BusinessException("上传文件失败");
+            throw new BizException("上传文件失败");
         }
         return result;
     }

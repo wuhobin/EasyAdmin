@@ -6,13 +6,13 @@ import com.aurora.common.ResultCode;
 import com.aurora.dto.LoginDTO;
 import com.aurora.dto.user.LoginUserInfo;
 import com.aurora.entity.SysUser;
-import com.aurora.exception.BusinessException;
 import com.aurora.mapper.SysMenuMapper;
 import com.aurora.mapper.SysRoleMapper;
 import com.aurora.mapper.SysUserMapper;
 import com.aurora.service.AuthService;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.common.utils.bean.BeanUtils;
+import com.aurora.starter.webmvc.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
         Integer userId = (int) userIdLong;
         SysUser user = userMapper.selectById(userId);
         if (user == null) {
-            throw new BusinessException(ResultCode.ERROR_USER_NOT_EXIST);
+            throw new BizException(ResultCode.ERROR_USER_NOT_EXIST);
         }
 
         // 角色与权限
@@ -87,15 +87,15 @@ public class AuthServiceImpl implements AuthService {
 
     private static void validateLogin(LoginDTO loginDTO, SysUser user) {
         if (user == null) {
-            throw new BusinessException(ResultCode.ERROR_USER_NOT_EXIST);
+            throw new BizException(ResultCode.ERROR_USER_NOT_EXIST);
         }
         // 验证密码
         if (!BCrypt.checkpw(loginDTO.getPassword(), user.getPassword())) {
-            throw new BusinessException(ResultCode.ERROR_PASSWORD);
+            throw new BizException(ResultCode.ERROR_PASSWORD);
         }
         // 验证状态：1=启用，其它=禁用
         if (user.getStatus() == null || user.getStatus() != 1) {
-            throw new BusinessException(ResultCode.DISABLE_ACCOUNT);
+            throw new BizException(ResultCode.DISABLE_ACCOUNT);
         }
     }
 }

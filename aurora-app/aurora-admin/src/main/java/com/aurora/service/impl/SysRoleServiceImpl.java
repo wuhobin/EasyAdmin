@@ -9,6 +9,7 @@ import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.entity.SysRole;
 import com.aurora.mapper.SysRoleMapper;
+import com.aurora.starter.webmvc.exception.BizException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     public void addRole(SysRole role) {
         // 检查角色编码是否已存在
         if (checkCodeExists(role.getCode(), null)) {
-            throw new RuntimeException("角色编码已存在");
+            throw new BizException("角色编码已存在");
         }
         save(role);
     }
@@ -41,11 +42,11 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     public void updateRole(SysRole role) {
         // 检查角色是否存在
         if (getById(role.getId()) == null) {
-            throw new RuntimeException("角色不存在");
+            throw new BizException("角色不存在");
         }
         // 检查角色编码是否已存在
         if (checkCodeExists(role.getCode(), role.getId())) {
-            throw new RuntimeException("角色编码已存在");
+            throw new BizException("角色编码已存在");
         }
         updateById(role);
     }

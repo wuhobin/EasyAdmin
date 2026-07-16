@@ -9,6 +9,7 @@ import com.aurora.mapper.SysMenuMapper;
 import com.aurora.service.SysMenuService;
 import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.security.context.SecurityUtils;
+import com.aurora.starter.webmvc.exception.BizException;
 import com.aurora.vo.menu.RouterVO;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +58,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     public void deleteMenu(Integer id) {
         // 检查是否有子菜单
         if (count(new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getParentId, id)) > 0) {
-            throw new RuntimeException("存在子菜单，不能删除");
+            throw new BizException("存在子菜单，不能删除");
         }
         removeById(id);
     }

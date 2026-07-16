@@ -9,12 +9,12 @@ import com.aurora.mapper.SysRoleMapper;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.entity.SysUser;
-import com.aurora.exception.BusinessException;
 import com.aurora.mapper.SysUserMapper;
 import com.aurora.service.SysUserService;
 import com.aurora.starter.redis.core.RedisCache;
 import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.security.context.SecurityUtils;
+import com.aurora.starter.webmvc.exception.BizException;
 import com.aurora.vo.user.OnlineUserVo;
 import com.aurora.vo.user.SysUserPageListVo;
 import com.aurora.vo.user.SysUserProfileVo;
@@ -49,7 +49,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 检查用户名是否已存在
         SysUser user = UserSaveOrUpdateDto.getUser();
         if (baseMapper.selectByUsername(user.getUsername()) != null) {
-            throw new RuntimeException("用户名已存在");
+            throw new BizException("用户名已存在");
         }
         user.setPassword(BCrypt.hashpw(user.getPassword(),BCrypt.gensalt()));
         save(user);
@@ -63,7 +63,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public void update(UserSaveOrUpdateDto user) {
         // 检查用户是否存在
         if (getById(user.getUser().getId()) == null) {
-            throw new RuntimeException("用户不存在");
+            throw new BizException("用户不存在");
         }
         updateById(user.getUser());
 
@@ -85,11 +85,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
         SysUser user = this.getById(SecurityUtils.getLoginIdAsInt());
         if (user == null) {
-            throw new BusinessException("用户不存在");
+            throw new BizException("用户不存在");
         }
 
         if (!BCrypt.checkpw(updatePwdDTO.getOldPassword(), user.getPassword())) {
-            throw new BusinessException("旧密码错误");
+            throw new BizException("旧密码错误");
         }
 
         user.setPassword(BCrypt.hashpw(updatePwdDTO.getNewPassword(),BCrypt.gensalt()));
