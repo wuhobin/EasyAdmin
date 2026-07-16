@@ -304,9 +304,37 @@ INSERT INTO `sys_menu` VALUES (94, '17', '', '', '清空', 2, '', 'BUTTON', '202
 INSERT INTO `sys_menu` VALUES (95, '17', '', '', '列表', 1, '', 'BUTTON', '2024-12-28 22:23:36', NULL, '', '', 1, 'monitor:cache:info', 0);
 INSERT INTO `sys_menu` VALUES (104, '67', '', '', '列表', 1, '', 'BUTTON', '2025-01-03 15:53:46', NULL, '', '', 1, 'monitor:online:list', 0);
 INSERT INTO `sys_menu` VALUES (105, '67', '', '', '强退', 2, '', 'BUTTON', '2025-01-03 15:54:03', NULL, '', '', 1, 'monitor:online:forceLogout', 0);
-INSERT INTO `sys_menu` VALUES (106, '0', '/file', 'Layout', '文件管理', 10, '', 'CATALOG', '2025-01-04 12:08:03', NULL, '', '', 1, '', 0);
-INSERT INTO `sys_menu` VALUES (107, '106', '', '', '上传文件', 1, '', 'BUTTON', '2025-01-04 12:08:25', NULL, '', '', 1, 'sys:file:upload', 0);
-INSERT INTO `sys_menu` VALUES (108, '106', '', '', '删除文件', 2, '', 'BUTTON', '2025-01-04 12:08:36', NULL, '', '', 1, 'sys:file:delete', 0);
+INSERT INTO `sys_menu` VALUES (106, '0', '/file', 'Layout', '文件管理', 10, 'FolderOpened', 'CATALOG', '2025-01-04 12:08:03', NULL, '/file/list', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (107, '109', '', '', '上传文件', 2, '', 'BUTTON', '2025-01-04 12:08:25', NULL, '', '', 1, 'sys:file:upload', 0);
+INSERT INTO `sys_menu` VALUES (108, '109', '', '', '删除文件', 3, '', 'BUTTON', '2025-01-04 12:08:36', NULL, '', '', 1, 'sys:file:delete', 0);
+INSERT INTO `sys_menu` VALUES (109, '106', 'list', '/file/index', '文件列表', 1, 'Files', 'MENU', '2026-07-16 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (110, '109', '', '', '文件列表', 1, '', 'BUTTON', '2026-07-16 00:00:00', NULL, '', '', 1, 'sys:file:list', 0);
+
+-- ----------------------------
+-- Table structure for sys_oss_file
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_oss_file`;
+CREATE TABLE `sys_oss_file` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `file_id` varchar(64) NOT NULL COMMENT '文件唯一ID',
+  `file_url` varchar(1000) NOT NULL COMMENT 'OSS访问地址',
+  `file_name` varchar(255) NOT NULL COMMENT 'OSS保存文件名',
+  `original_filename` varchar(255) NULL DEFAULT NULL COMMENT '原始文件名',
+  `content_type` varchar(128) NULL DEFAULT NULL COMMENT 'MIME类型',
+  `file_size` bigint NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
+  `platform` varchar(64) NULL DEFAULT NULL COMMENT '存储平台',
+  `thumbnail_url` varchar(1000) NULL DEFAULT NULL COMMENT '缩略图地址',
+  `uploader_id` bigint NULL DEFAULT NULL COMMENT '上传人ID',
+  `uploader_name` varchar(100) NULL DEFAULT NULL COMMENT '上传人用户名',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_sys_oss_file_file_id` (`file_id`) USING BTREE,
+  INDEX `idx_sys_oss_file_url` (`file_url`(255)) USING BTREE,
+  INDEX `idx_sys_oss_file_original_name` (`original_filename`) USING BTREE,
+  INDEX `idx_sys_oss_file_content_type` (`content_type`) USING BTREE,
+  INDEX `idx_sys_oss_file_uploader` (`uploader_id`, `uploader_name`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'OSS文件流水表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for sys_operate_log

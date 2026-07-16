@@ -26,7 +26,10 @@ hs_err_pid*
 CLAUDE.md
 AGENTS.md
 .qoder/
-docs/
+docs/*
+!docs/sql/
+docs/sql/*
+!docs/sql/2026-07-16-oss-file-management.sql
 .superpowers/
 openspec/
 .playwright-mcp/
