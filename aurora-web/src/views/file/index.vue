@@ -2,10 +2,10 @@
   <div class="app-container">
     <div class="search-wrapper">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-        <el-form-item label="文件名" prop="originalFilename">
+        <el-form-item label="文件名称" prop="fileName">
           <el-input
-            v-model="queryParams.originalFilename"
-            placeholder="请输入原始文件名"
+            v-model="queryParams.fileName"
+            placeholder="请输入文件名称"
             clearable
             @keyup.enter="handleQuery"
           />
@@ -48,24 +48,20 @@
             <el-icon v-else class="file-icon"><Document /></el-icon>
           </template>
         </el-table-column>
-        <el-table-column prop="originalFilename" label="原始文件名" min-width="220" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ row.originalFilename || row.fileName }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="contentType" label="MIME" min-width="170" show-overflow-tooltip>
+        <el-table-column prop="fileName" label="文件名称" min-width="280" show-overflow-tooltip />
+        <el-table-column prop="contentType" label="MIME" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
             <el-tag type="info" effect="plain">{{ row.contentType || '-' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="大小" width="110" align="right">
+        <el-table-column label="大小" min-width="110" align="right">
           <template #default="{ row }">{{ formatFileSize(row.fileSize) }}</template>
         </el-table-column>
-        <el-table-column prop="uploaderName" label="上传人" width="130" align="center">
+        <el-table-column prop="uploaderName" label="上传人" min-width="120" align="center">
           <template #default="{ row }">{{ row.uploaderName || '-' }}</template>
         </el-table-column>
-        <el-table-column prop="createTime" label="上传时间" width="180" align="center" />
-        <el-table-column label="URL" width="108" align="center">
+        <el-table-column prop="createTime" label="上传时间" min-width="180" align="center" />
+        <el-table-column label="URL" min-width="100" align="center">
           <template #default="{ row }">
             <el-tooltip content="打开文件" placement="top">
               <el-button link :icon="Link" aria-label="打开文件" @click="openFile(row.fileUrl)" />
@@ -125,7 +121,7 @@ const fileList = ref<OssFileRecord[]>([])
 const queryParams = reactive<OssFileQuery>({
   pageNum: 1,
   pageSize: 10,
-  originalFilename: '',
+  fileName: '',
   contentType: '',
   uploaderName: ''
 })
@@ -172,7 +168,7 @@ const copyUrl = async (url: string) => {
 const handleDelete = async (row: unknown) => {
   const file = row as OssFileRecord
   await ElMessageBox.confirm(
-    `确定删除文件“${file.originalFilename || file.fileName}”吗？`,
+    `确定删除文件”${file.fileName}”吗？`,
     '删除确认',
     { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
   )

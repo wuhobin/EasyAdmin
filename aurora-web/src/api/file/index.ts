@@ -18,7 +18,7 @@ export interface OssFileRecord {
 export interface OssFileQuery {
   pageNum: number
   pageSize: number
-  originalFilename?: string
+  fileName?: string
   contentType?: string
   uploaderName?: string
 }
