@@ -4,6 +4,8 @@ import { useUserStore, useSettingsStore } from '@/store'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import { getToken } from '@/utils/auth'
+import { ElMessage } from 'element-plus'
+import { isReportedRequestError, isUnauthorizedError } from '@/utils/request'
 NProgress.configure({ showSpinner: false })
 
 const whiteList = ['/login'] // 路由白名单
@@ -68,11 +70,17 @@ export function setupPermission() {
           try {
             await initializePermission(hasToken)
             next({ ...to, replace: true });
-          } catch (error) {
+          } catch (error: unknown) {
             console.error('Permission error:', error);
-            // 移除 token 并跳转登录页
-            userStore.forceLogout();
-            next(`/login`);
+            if (isUnauthorizedError(error)) {
+              // 集中的 401 处理器负责清理会话、提示并跳转登录页。
+              next(false);
+            } else {
+              if (!isReportedRequestError(error)) {
+                ElMessage.error('页面初始化失败，请稍后再试');
+              }
+              next(false);
+            }
             NProgress.done();
           }
         } else {

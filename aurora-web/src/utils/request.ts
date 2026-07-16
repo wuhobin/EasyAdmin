@@ -9,6 +9,24 @@ export interface ApiResponse<T = any> {
   data: T
 }
 
+export class RequestError extends Error {
+  constructor(
+    message: string,
+    readonly isUnauthorized = false,
+    readonly isReported = false
+  ) {
+    super(message)
+  }
+}
+
+export function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof RequestError && error.isUnauthorized
+}
+
+export function isReportedRequestError(error: unknown): boolean {
+  return error instanceof RequestError && error.isReported
+}
+
 type BinaryRequestConfig = AxiosRequestConfig & {
   responseType: 'blob' | 'arraybuffer'
 }
@@ -45,7 +63,7 @@ service.interceptors.response.use(
       } else {
         ElMessage.error(res.message || '请求错误')
       }
-      return Promise.reject(new Error(res.message || '请求错误'))
+      return Promise.reject(new RequestError(res.message || '请求错误', res.code === 401, res.code !== 401))
     }
     
     return res
@@ -53,12 +71,13 @@ service.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       void notifyUnauthorized()
+      return Promise.reject(new RequestError(error.message || '请求错误', true))
     } else if (error.response?.status === 500) {
       ElMessage.error('后端接口连接异常')
     } else {
       ElMessage.error('请求错误')
     }
-    return Promise.reject(error)
+    return Promise.reject(new RequestError(error.message || '请求错误', false, true))
   }
 )
 

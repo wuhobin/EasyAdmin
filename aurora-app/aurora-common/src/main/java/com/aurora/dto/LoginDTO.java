@@ -12,4 +12,7 @@ public class LoginDTO {
 
     @Schema(description = "密码")
     private String password;
+
+    @Schema(description = "Whether to keep the login active for three days")
+    private boolean rememberMe;
 }

@@ -89,6 +89,17 @@ test('route initialization uses explicit user-store state', () => {
   assert.doesNotMatch(permissionSource, /if \(!userStore\.user\.nickname\)/)
 })
 
+test('route initialization only clears the session after an unauthorized error', () => {
+  assert.match(requestSource, /isUnauthorized/)
+  assert.match(permissionSource, /if \(isUnauthorizedError\(error\)\)/)
+  assert.doesNotMatch(permissionSource, /userStore\.forceLogout\(\)/)
+  assert.match(permissionSource, /if \(isUnauthorizedError\(error\)\) \{[^}]*next\(false\);/)
+  assert.match(permissionSource, /else \{[\s\S]*isReportedRequestError\(error\)[\s\S]*ElMessage\.error\([\s\S]*next\(false\);/)
+  assert.match(requestSource, /new RequestError\([^\n]+false, true\)/)
+  assert.match(authSessionPluginSource, /userStore\.forceLogout\(\)/)
+  assert.match(authSessionPluginSource, /router\.replace\(['"]\/login['"]\)/)
+})
+
 test('image uploads send the same Bearer authorization scheme as axios', () => {
   assert.match(uploadSource, /const token = getToken\(\)/)
   assert.match(uploadSource, /Authorization:\s*token\s*\?\s*`Bearer \$\{token\}`\s*:\s*['"]["']/)

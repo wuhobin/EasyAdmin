@@ -1,6 +1,7 @@
 package com.aurora.service.impl;
 
 import cn.dev33.satoken.secure.BCrypt;
+import cn.dev33.satoken.stp.parameter.SaLoginParameter;
 import com.aurora.common.Constants;
 import com.aurora.common.ResultCode;
 import com.aurora.dto.LoginDTO;
@@ -27,6 +28,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    private static final long SESSION_TIMEOUT_SECONDS = 60 * 60;
+
+    private static final long REMEMBER_ME_TIMEOUT_SECONDS = 3 * 24 * 60 * 60;
+
     private final SysUserMapper userMapper;
 
     private final SysRoleMapper roleMapper;
@@ -42,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
         validateLogin(loginDTO, user);
 
         // 执行登录（sa-token 封装）
-        SecurityUtils.login(user.getId());
+        SecurityUtils.login(user.getId(), new SaLoginParameter().setTimeout(tokenTimeout(loginDTO.isRememberMe())));
         String tokenValue = SecurityUtils.getTokenValue();
 
         // 返回用户信息
@@ -97,5 +102,9 @@ public class AuthServiceImpl implements AuthService {
         if (user.getStatus() == null || user.getStatus() != 1) {
             throw new BizException(ResultCode.DISABLE_ACCOUNT);
         }
+    }
+
+    static long tokenTimeout(boolean rememberMe) {
+        return rememberMe ? REMEMBER_ME_TIMEOUT_SECONDS : SESSION_TIMEOUT_SECONDS;
     }
 }

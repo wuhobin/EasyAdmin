@@ -13,6 +13,3 @@ platform:
     is-log: true
     exclude-paths:
       - /auth/login
-      - /auth/logout
-      - /auth/info
-      - /auth/verify
