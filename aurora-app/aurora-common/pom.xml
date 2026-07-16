@@ -105,12 +105,6 @@
             <version>${ip2region.version}</version>
         </dependency>
 
-        <!-- WebSocket（BOM 已统一排除默认 logging） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-websocket</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>cn.idev.excel</groupId>
             <artifactId>fastexcel</artifactId>

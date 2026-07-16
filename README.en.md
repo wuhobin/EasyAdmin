@@ -19,7 +19,7 @@ Aurora Admin is a backend management system based on Spring Boot and Sa-Token, p
 - **Backend**: Spring Boot, MyBatis Plus, Sa-Token, Redis, Quartz
 - **Frontend**: Vue3, Element Plus, TypeScript
 - **Database**: MySQL
-- **Others**: Swagger, Redis, WebSocket
+- **Others**: Swagger, Redis
 
 ## Installation Guide
 
