@@ -241,11 +241,12 @@ watch(dialogVisible, (newVal) => {
 })
 
 // 添加 getItemIndex 方法
-const getItemIndex = (group: any, idx: number) => {
+const getItemIndex = (group: any, idx: string | number) => {
   let index = 0
+  const itemIndex = Number(idx)
   for (const g of searchResults.value) {
     if (g === group) {
-      return index + idx
+      return index + itemIndex
     }
     index += g.children.length
   }
@@ -520,4 +521,4 @@ const getItemIndex = (group: any, idx: number) => {
 }
 
 
-</style> 
+</style>

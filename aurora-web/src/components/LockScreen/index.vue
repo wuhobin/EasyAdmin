@@ -11,7 +11,7 @@
         <div class="avatar-wrapper">
           <el-avatar 
             :size="90" 
-            :src="userStore.user?.avatar" 
+            :src="userStore.user?.avatar || undefined"
           />
           <div class="avatar-border"></div>
         </div>
@@ -64,7 +64,7 @@ const loading = ref(false)
 // 时间相关
 const currentTime = ref('')
 const currentDate = ref('')
-let timer: NodeJS.Timer
+let timer: ReturnType<typeof setInterval> | undefined
 
 const updateTime = () => {
   currentTime.value = dayjs().format('HH:mm:ss')
@@ -77,7 +77,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  clearInterval(timer)
+  if (timer) clearInterval(timer)
 })
 
 const errorMessage = ref('')
@@ -347,4 +347,4 @@ defineExpose({
 .el-message {
   z-index: 2100 !important;
 }
-</style> 
+</style>

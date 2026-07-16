@@ -72,109 +72,51 @@
       <!-- 右侧登录区 -->
       <div class="login-section">
         <div class="login-box">
-          <!-- 登录方式切换 -->
-          <div class="login-tabs">
-            <div 
-              class="tab-item" 
-              :class="{ active: loginType === 'account' }"
-              @click="loginType = 'account'"
-            >
-              <el-icon><User /></el-icon>
-              账号登录
-            </div>
-            <div 
-              class="tab-item"
-              :class="{ active: loginType === 'qrcode' }"
-              @click="loginType = 'qrcode'"
-            >
-              <el-icon><QrCode /></el-icon>
-              扫码登录
-            </div>
+          <div class="login-title">
+            <el-icon><User /></el-icon>
+            <span>账号登录</span>
           </div>
 
           <!-- 登录表单 -->
-          <transition name="fade-transform" mode="out-in">
-            <el-form
-              v-if="loginType === 'account'"
-              key="account-form"
-              ref="loginFormRef"
-              :model="loginForm"
-              :rules="rules"
-              @keyup.enter="handleLogin"
-            >
-              <el-form-item prop="username">
-                <el-input
-                  v-model="loginForm.username"
-                  placeholder="请输入用户名"
-                  prefix-icon="User"
-                  class="login-input"
-                />
-              </el-form-item>
-              <el-form-item prop="password">
-                <el-input
-                  v-model="loginForm.password"
-                  type="password"
-                  placeholder="请入密码"
-                  prefix-icon="Lock"
-                  show-password
-                  class="login-input"
-                />
-              </el-form-item>
-              <el-form-item>
-                <slider-captcha ref="sliderCaptchaRef" @success="handleSliderSuccess" />
-              </el-form-item>
-              <div class="login-options">
-                <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-                <a href="#" class="forget-password">忘记密码？</a>
-              </div>
-              <el-form-item>
-                <el-button
-                  :loading="loading"
-                  type="primary"
-                  class="login-button"
-                  @click="handleLogin"
-                >
-                  {{ loading ? '登录中...' : '登录' }}
-                </el-button>
-              </el-form-item>
-            </el-form>
-
-            <div v-else key="qrcode-form" class="qrcode-box">
-              <div class="qrcode-wrapper">
-                <div class="qrcode-scanner"></div>
-                <img :src="qrCodeUrl" alt="二维码" class="qrcode-img" />
-                <transition name="fade">
-                  <div class="qrcode-mask" v-if="qrCodeExpired">
-                    <el-icon class="expired-icon"><Warning /></el-icon>
-                    <p>二维码已过期</p>
-                    <el-button type="primary" @click="refreshQrCode" round>
-                      <el-icon><RefreshRight /></el-icon>
-                      刷新二维码
-                    </el-button>
-                  </div>
-                </transition>
-              </div>
-              <p class="qrcode-tip">
-                <el-icon><Iphone /></el-icon>
-                请使用手机扫码登录
-              </p>
+          <el-form
+            ref="loginFormRef"
+            :model="loginForm"
+            :rules="rules"
+            @keyup.enter="handleLogin"
+          >
+            <el-form-item prop="username">
+              <el-input
+                v-model="loginForm.username"
+                placeholder="请输入用户名"
+                prefix-icon="User"
+                class="login-input"
+              />
+            </el-form-item>
+            <el-form-item prop="password">
+              <el-input
+                v-model="loginForm.password"
+                type="password"
+                placeholder="请输入密码"
+                prefix-icon="Lock"
+                show-password
+                class="login-input"
+              />
+            </el-form-item>
+            <div class="login-options">
+              <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
+              <a href="#" class="forget-password">忘记密码？</a>
             </div>
-          </transition>
-          <!-- 社交登录 -->
-          <div class="social-login">
-            <div class="divider">其他登录方式</div>
-            <div class="social-icons">
-              <div class="social-icon wechat" @click="handleSocialLogin('qq')">
-                <svg-icon name="qq" :size="23"></svg-icon>
-              </div>
-              <div class="social-icon dingtalk" @click="handleSocialLogin('gitee')">
-                <svg-icon name="gitee" :size="23"></svg-icon>
-              </div>
-              <div class="social-icon feishu" @click="handleSocialLogin('wechat')">
-                <svg-icon name="wechat" :size="23"></svg-icon>
-              </div>
-            </div>
-          </div>
+            <el-form-item>
+              <el-button
+                :loading="loading"
+                type="primary"
+                class="login-button"
+                @click="handleLogin"
+              >
+                {{ loading ? '登录中...' : '登录' }}
+              </el-button>
+            </el-form-item>
+          </el-form>
         </div>
       </div>
     </div>
@@ -197,39 +139,16 @@ import type { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { useSettingsStore } from '@/store/modules/settings'
+import type { LoginParams } from '@/api/system/auth'
 import Logo from '@/layouts/components/Sidebar/Logo.vue'
 import settings from '@/config/settings'
-import SliderCaptcha from '@/components/SliderCaptcha/index.vue'
-
-const QrCode = markRaw({
-  name: 'QrCode',
-  render() {
-    return h('svg', {
-      viewBox: '0 0 1024 1024',
-      width: '1em',
-      height: '1em',
-      fill: 'currentColor'
-    }, [
-      h('path', {
-        d: 'M468 128H160c-17.7 0-32 14.3-32 32v308c0 4.4 3.6 8 8 8h332c4.4 0 8-3.6 8-8V136c0-4.4-3.6-8-8-8zm-56 284H192V192h220v220zm-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm444-140H556c-4.4 0-8 3.6-8 8v332c0 4.4 3.6 8 8 8h276c4.4 0 8-3.6 8-8V160c0-17.7-14.3-32-32-32zm-56 284H556V192h220v220zm-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zM192 556v308c0 17.7 14.3 32 32 32h308c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8H160c-4.4 0-8 3.6-8 8zm56 284V556h220v284H192zm-64-220h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm500 220c0 4.4 3.6 8 8 8h108v108c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8H556c-4.4 0-8 3.6-8 8v332zm64-216h108v108H748V624z'
-      })
-    ])
-  }
-})
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
 const loginFormRef = ref<FormInstance>()
 const loading = ref(false)
-const rememberMe = ref(false)
-const loginType = ref('account')
-const qrCodeUrl = ref('https://img.shiyit.com/wechatQr.jpg')
-const qrCodeExpired = ref(false)
-const sliderCaptchaRef = ref()
-const sliderVerified = ref(false)
-
-const loginForm = reactive({
-  username: 'test',
-  password: '123456',
+const loginForm = reactive<LoginParams>({
+  username: '',
+  password: '',
   rememberMe: false,
   source: 'ADMIN'
 })
@@ -254,52 +173,15 @@ const toggleTheme = () => {
 
 const handleLogin = async () => {
   if (!loginFormRef.value) return
-  if (!sliderVerified.value) {
-    ElMessage.warning('请完成滑块验证')
-    return
-  }
-  
   await loginFormRef.value.validate()
   loading.value = true
   userStore.login(loginForm).then(() => {
     router.push('/');
     ElMessage.success('登录成功')
-  }).catch(() => {
-    sliderCaptchaRef.value?.reset()
-    sliderVerified.value = false
-  }).finally(() => {
+  }).catch(() => {}).finally(() => {
     loading.value = false;
   });
 
-}
-
-const handleSocialLogin = (type: string) => {
-  ElMessage.success(type + '登录测试')
-}
-
-const refreshQrCode = async () => {
-  qrCodeExpired.value = false
-  // TODO: 调用后端接口获取新的二维码
-}
-
-let qrCodeTimer: number
-watch(loginType, (newVal) => {
-  if (newVal === 'qrcode') {
-    refreshQrCode()
-    qrCodeTimer = window.setInterval(() => {
-      // TODO: 检查二维码状态
-    }, 3000)
-  } else {
-    clearInterval(qrCodeTimer)
-  }
-})
-
-onUnmounted(() => {
-  clearInterval(qrCodeTimer)
-})
-
-const handleSliderSuccess = () => {
-  sliderVerified.value = true
 }
 
 // 添加 logo 颜色计算
@@ -696,68 +578,22 @@ const logoColor = computed(() => {
   }
 }
 
-/* 登录标签页美化 */
-.login-tabs {
-  display: flex;
-  margin-bottom: 35px;
-  background: rgba(255, 255, 255, 0.5);
-  padding: 5px;
-  border-radius: 16px;
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  overflow: hidden;
-
-  .dark & {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.1);
-    
-    .tab-item {
-      color: var(--el-text-color-primary);
-      
-      &.active {
-        background: rgba(0, 0, 0, 0.3);
-        box-shadow: 
-          0 4px 12px rgba(0, 0, 0, 0.2),
-          inset 0 2px 4px rgba(255, 255, 255, 0.05);
-      }
-    }
-  }
-}
-
-.tab-item {
-  flex: 1;
-  padding: 12px 24px;
-  text-align: center;
-  cursor: pointer;
-  border-radius: 12px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 1;
+/* 登录标题 */
+.login-title {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 15px;
+  margin-bottom: 35px;
+  color: var(--el-text-color-primary);
+  font-size: 20px;
+  font-weight: 600;
 }
 
-.tab-item .el-icon {
-  font-size: 18px;
-  transition: transform 0.3s ease;
-}
-
-.tab-item:hover .el-icon {
-  transform: scale(1.2);
-}
-
-.tab-item.active {
+.login-title .el-icon {
   color: var(--el-color-primary);
-  background: white;
-  font-weight: 500;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 2px 4px rgba(255, 255, 255, 0.5);
+  font-size: 22px;
 }
-
 /* 输入框样式优化 */
 :deep(.el-input__wrapper) {
   background: rgba(255, 255, 255, 0.9);
@@ -822,25 +658,6 @@ const logoColor = computed(() => {
   }
 }
 
-/* 验证码输入框特殊处理 */
-.captcha-container {
-  .captcha-input {
-    :deep(.el-input__wrapper) {
-      border-right: none;
-      border-top-right-radius: 0;
-      border-bottom-right-radius: 0;
-    }
-  }
-
-  .captcha-img {
-    height: 50px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-left: none;
-    border-radius: 0 12px 12px 0;
-    transition: all 0.3s;
-  }
-}
-
 /* 输入框图标样式优化 */
 :deep(.el-input__prefix-inner) {
   font-size: 18px;
@@ -855,25 +672,6 @@ const logoColor = computed(() => {
   &::placeholder {
     color: var(--el-text-color-placeholder);
   }
-}
-
-/* 验证码区域优化 */
-.captcha-container {
-  display: flex;
-  gap: 16px;
-}
-
-.captcha-img {
-  height: 50px;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.captcha-img:hover {
-  transform: scale(1.05) rotate(1deg);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* 登录按钮样式优化 */
@@ -969,18 +767,6 @@ const logoColor = computed(() => {
       inset 0 0 30px rgba(255, 255, 255, 0.05);
   }
 
-  .login-tabs {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .tab-item.active {
-    background: rgba(0, 0, 0, 0.3);
-    box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.2),
-      inset 0 2px 4px rgba(255, 255, 255, 0.05);
-  }
-
   :deep(.el-input__wrapper) {
     background: rgba(0, 0, 0, 0.2);
     box-shadow: 
@@ -1003,52 +789,6 @@ const logoColor = computed(() => {
 
 :deep(.el-input__wrapper.is-focus) {
   animation: inputFocus 0.3s ease-out;
-}
-
-/* 二维码样式优化 */
-.qrcode-box {
-  padding: 30px 0;
-}
-
-.qrcode-wrapper {
-  width: 220px;
-  height: 220px;
-  margin: 0 auto;
-  padding: 20px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.1),
-    inset 0 0 20px rgba(255, 255, 255, 0.5);
-  position: relative;
-  overflow: hidden;
-}
-
-.qrcode-scanner {
-  height: 3px;
-  background: linear-gradient(90deg, 
-    transparent,
-    var(--el-color-primary),
-    transparent
-  );
-  box-shadow: 0 0 8px var(--el-color-primary);
-}
-
-.qrcode-tip {
-  margin-top: 24px;
-  font-size: 15px;
-  color: var(--el-text-color-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.dark .qrcode-wrapper {
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.2),
-    inset 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
 /* 修改右上角操作按钮样式 */
@@ -1093,27 +833,6 @@ const logoColor = computed(() => {
   background: rgba(255, 255, 255, 0.95);
 }
 
-/* 验证码样式 */
-.captcha-container {
-  display: flex;
-  gap: 12px;
-}
-
-.captcha-input {
-  flex: 1;
-}
-
-.captcha-img {
-  height: 44px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: opacity 0.3s;
-}
-
-.captcha-img:hover {
-  opacity: 0.8;
-}
-
 /* 登录选项样式 */
 .login-options {
   display: flex;
@@ -1147,122 +866,6 @@ const logoColor = computed(() => {
 .login-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-}
-
-/* 二维码样式 */
-.qrcode-box {
-  text-align: center;
-  padding: 20px;
-}
-
-.qrcode-wrapper {
-  position: relative;
-  width: 200px;
-  height: 200px;
-  margin: 0 auto;
-  background: white;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.qrcode-scanner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: var(--el-color-primary);
-  animation: scan 2s linear infinite;
-}
-
-@keyframes scan {
-  0% { top: 0; }
-  50% { top: 100%; }
-  100% { top: 0; }
-}
-
-.qrcode-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.qrcode-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  border-radius: 12px;
-}
-
-.qrcode-tip {
-  margin-top: 16px;
-  color: var(--el-text-color-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-/* 社交登录样式 */
-.social-login {
-  margin-top: 30px;
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  margin: 20px 0;
-  color: var(--el-text-color-secondary);
-  font-size: 14px;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--el-border-color);
-  margin: 0 16px;
-}
-
-.social-icons {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.social-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  color: var(--el-text-color-primary);
-}
-
-.social-icon:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.social-icon img {
-  width: 24px;
-  height: 24px;
 }
 
 /* 页脚样式 */
@@ -1313,41 +916,6 @@ const logoColor = computed(() => {
     background: rgba(0, 0, 0, 0.3);
   }
 
-  .tab-item.active {
-    background: rgba(0, 0, 0, 0.2);
-  }
-
-  .qrcode-wrapper {
-    background: rgba(0, 0, 0, 0.2);
-  }
-
-  .qrcode-mask {
-    background: rgba(0, 0, 0, 0.9);
-  }
-
-  .social-icon {
-    background: rgba(0, 0, 0, 0.2);
-  }
-
-  .social-icon:hover {
-    background: rgba(0, 0, 0, 0.3);
-  }
-}
-
-/* 添加淡入淡出动画 */
-.fade-transform-enter-active,
-.fade-transform-leave-active {
-  transition: all 0.3s;
-}
-
-.fade-transform-enter-from {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-.fade-transform-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
 }
 
 /* 添加浮动动画 */
@@ -1364,91 +932,6 @@ const logoColor = computed(() => {
   animation: float 6s ease-in-out infinite;
 }
 
-/* 添加扫描动画 */
-@keyframes scan {
-  0% { top: 0; }
-  50% { top: calc(100% - 2px); }
-  100% { top: 0; }
-}
-
-.qrcode-scanner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: var(--el-color-primary);
-  animation: scan 2s linear infinite;
-}
-
-/* 验证码容器样式优化 */
-.captcha-container {
-  display: flex;
-  align-items: stretch; /* 确保子元素等高 */
-  height: 50px; /* 固定高度 */
-}
-
-.captcha-input {
-  flex: 1;
-  height: 50px; /* 固定高度 */
-}
-
-/* 验证码输入框样式 */
-.captcha-container {
-  .captcha-input {
-    :deep(.el-input__wrapper) {
-      height: 50px !important; /* 强制固定高度 */
-      border-right: none;
-      border-top-right-radius: 0;
-      border-bottom-right-radius: 0;
-      box-sizing: border-box;
-      padding-right: 0;
-    }
-  }
-}
-
-/* 验证码图片样式 */
-.captcha-img {
-  width: 120px; /* 固定宽度 */
-  height: 50px !important; /* 强制固定高度 */
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-left: none;
-  border-radius: 0 12px 12px 0;
-  object-fit: cover; /* 确保图片填充 */
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-  display: block;
-}
-
-/* 移除所有可能导致尺寸变化的过渡效果 */
-:deep(.el-input__wrapper),
-.captcha-img {
-  transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s !important;
-}
-
-/* 确保聚焦状态不会改变尺寸 */
-:deep(.el-input__wrapper.is-focus) {
-  height: 50px !important;
-  padding: 0 20px !important;
-  margin: 0 !important;
-  transform: none !important;
-}
-
-/* 移除所有可能的transform效果 */
-:deep(.el-input__wrapper:hover),
-:deep(.el-input__wrapper.is-focus),
-.captcha-img:hover {
-  transform: none !important;
-}
-
-/* 深色模式适配 */
-.dark {
-  .captcha-img {
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-}
-
 .brand-title {
   background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
   -webkit-background-clip: text;
@@ -1463,4 +946,4 @@ const logoColor = computed(() => {
   font-size: 16px;
   margin-bottom: 40px;
 }
-</style> 
+</style>

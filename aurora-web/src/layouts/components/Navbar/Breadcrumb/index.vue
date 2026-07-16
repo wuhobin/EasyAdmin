@@ -27,23 +27,25 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter, RouteLocationMatched } from 'vue-router'
+import { useRoute, useRouter, type RouteLocationMatched } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 
-const breadcrumbs = ref<RouteLocationMatched[]>([])
+type BreadcrumbItem = Pick<RouteLocationMatched, 'path' | 'meta'>
+
+const breadcrumbs = ref<BreadcrumbItem[]>([])
 
 const getBreadcrumb = () => {
-  let matched = route.matched.filter(item => item.meta && item.meta.title)
+  let matched: BreadcrumbItem[] = route.matched.filter(item => item.meta && item.meta.title)
   const first = matched[0]
   if (first && first.path !== '/dashboard') {
-    matched = [{ path: '/dashboard', meta: { title: '首页',icon: 'Orange' } } as RouteLocationMatched].concat(matched)
+    matched = [{ path: '/dashboard', meta: { title: '首页', icon: 'Orange' } }, ...matched]
   }
   breadcrumbs.value = matched
 }
 
-const handleLink = (item: RouteLocationMatched) => {
+const handleLink = (item: BreadcrumbItem) => {
   router.push(item.path)
 }
 
@@ -91,4 +93,4 @@ watch(
     margin-right: 3px;
   }
 }
-</style> 
+</style>

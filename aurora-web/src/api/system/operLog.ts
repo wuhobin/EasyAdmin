@@ -1,5 +1,4 @@
 import request from '@/utils/request'
-import type { OperationLog, LogQueryParams, PageResult } from '@/types/log'
 
 // 获取操作日志列表
 export function getOperationLogsApi(params: any) {

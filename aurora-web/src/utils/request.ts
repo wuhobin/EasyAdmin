@@ -1,9 +1,17 @@
-import axios from 'axios'
-import { ElMessage,ElMessageBox } from 'element-plus'
+import axios, { type AxiosRequestConfig } from 'axios'
+import { ElMessage } from 'element-plus'
 import { getToken } from '@/utils/auth'
-import { useUserStore } from '@/store/modules/user'
+import { notifyUnauthorized } from '@/utils/auth-session'
 
-let isRelogin = { show: false }; // 是否显示弹框
+export interface ApiResponse<T = any> {
+  code: number
+  message: string
+  data: T
+}
+
+type BinaryRequestConfig = AxiosRequestConfig & {
+  responseType: 'blob' | 'arraybuffer'
+}
 
 const service = axios.create({
   baseURL: import.meta.env.VITE_APP_BASE_API,
@@ -28,22 +36,14 @@ service.interceptors.response.use(
   (response) => {
     const res = response.data
     // 二进制数据则直接返回
-    if (response.request.responseType ===  'blob' || response.request.responseType ===  'arraybuffer') {
+    if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
       return response.data
     }
     if (res.code !== 200) {
-      ElMessage.error(res.message || '请求错误')
       if (res.code === 401) {
-  
-        ElMessageBox.confirm("当前页面已失效，请重新登录", "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
-        })
-        .then(() => {
-          const userStore = useUserStore()
-          userStore.logout()
-        })
+        void notifyUnauthorized()
+      } else {
+        ElMessage.error(res.message || '请求错误')
       }
       return Promise.reject(new Error(res.message || '请求错误'))
     }
@@ -52,15 +52,20 @@ service.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      const userStore = useUserStore()
-      userStore.logout()
-    }else if (error.response?.status === 500) {
+      void notifyUnauthorized()
+    } else if (error.response?.status === 500) {
       ElMessage.error('后端接口连接异常')
-    }else{
+    } else {
       ElMessage.error('请求错误')
     }
     return Promise.reject(error)
   }
 )
 
-export default service 
+export function request(config: BinaryRequestConfig): Promise<Blob | ArrayBuffer>
+export function request<T = any>(config: AxiosRequestConfig): Promise<ApiResponse<T>>
+export function request<T = any>(config: AxiosRequestConfig) {
+  return service.request<ApiResponse<T>, ApiResponse<T> | Blob | ArrayBuffer>(config)
+}
+
+export default request

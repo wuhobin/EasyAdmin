@@ -49,7 +49,7 @@
         <span>折叠菜单</span>
         <el-switch 
           :model-value="isCollapse"
-          @update:model-value="(val: boolean) => emit('update:isCollapse', val)"
+          @update:model-value="val => emit('update:isCollapse', Boolean(val))"
         />
       </div>
       <div class="setting-item">
@@ -321,4 +321,4 @@ const tagsStyles = [
   font-size: 13px;
   color: var(--el-text-color-regular);
 }
-</style> 
+</style>

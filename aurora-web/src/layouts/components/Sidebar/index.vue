@@ -55,8 +55,8 @@
         if (dashboardRoute) {
           // 将 dashboard 提升为一级路由
           return {
-            path: '/dashboard',
             ...dashboardRoute,
+            path: '/dashboard',
             children: undefined
           }
         }
@@ -67,7 +67,7 @@
   // 当前激活的菜单
   const activeMenu = computed(() => {
     const { meta, path } = route
-    if (meta?.activeMenu) {
+    if (typeof meta?.activeMenu === 'string') {
       return meta.activeMenu
     }
     return path

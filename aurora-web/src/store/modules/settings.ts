@@ -15,9 +15,7 @@ export interface SettingsState {
   title: string
 }
 
-export const useSettingsStore = defineStore({
-  id: 'settings',
-  
+export const useSettingsStore = defineStore('settings', {
   state: (): SettingsState => ({
     theme: 'light',
     themeColor: '#409EFF',
@@ -184,4 +182,4 @@ export const useSettingsStore = defineStore({
     },
 
   }
-}) 
+})

@@ -21,9 +21,9 @@ function findSvgFile(dir: string): string[] {
         .toString()
         .replace(clearReturn, "")
         .replace(svgTitle, ($1, $2) => {
-          let width = 0
-          let height = 0
-          let content = $2.replace(clearHeightWidth, (s1, s2, s3) => {
+          let width = ''
+          let height = ''
+          let content = $2.replace(clearHeightWidth, (s1: string, s2: string, s3: string) => {
             if (s2 === "width") {
               width = s3
             } else if (s2 === "height") {
@@ -68,4 +68,4 @@ export const svgBuilder = (path: string, perfix = "icon"): Plugin => {
       )
     }
   }
-} 
+}

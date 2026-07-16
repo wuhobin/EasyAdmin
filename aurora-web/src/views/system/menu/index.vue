@@ -82,7 +82,7 @@
               <el-tree-select
                 v-model="menuForm.parentId"
                 :data="menuOptions"
-                :props="{ label: 'title', value: 'id' }"
+                :props="{ label: 'title' }"
                 value-key="id"
                 placeholder="选择上级菜单"
                 check-strictly
@@ -441,4 +441,4 @@ const formatIconName = (icon: string) => {
     }
   }
 }
-</style> 
+</style>

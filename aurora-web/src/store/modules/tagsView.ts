@@ -53,7 +53,7 @@ export const useTagsViewStore = defineStore('tagsView', () => {
 
   const addVisitedView = (view: TagView) => {
     // 不添加 redirect 路由的标签
-    if (view.path.includes('/redirect')) return
+    if (!view.path || view.path.includes('/redirect')) return
     
     // 如果已经存在相同路径的标签，则不添加
     if (visitedViews.value.some(v => v.path === view.path)) return
@@ -146,4 +146,4 @@ export const useTagsViewStore = defineStore('tagsView', () => {
     delRightViews,
     initTags
   }
-}) 
+})

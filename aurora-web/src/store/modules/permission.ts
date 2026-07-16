@@ -16,12 +16,12 @@ const Layout = () => import("@/layouts/index.vue");
  * @param roles 用户角色集合
  * @returns 返回用户有权限的异步(动态)路由
  */
-const filterAsyncRoutes = (routes: RouteRecordRaw[], isRoot = true) => {
-  const asyncRoutes: any[] = [];
+const filterAsyncRoutes = (routes: any[], isRoot = true): RouteRecordRaw[] => {
+  const asyncRoutes: RouteRecordRaw[] = [];
 
   routes.forEach((route) => {
 
-    const tmpRoute = { ...route }; // ES6扩展运算符复制新对象
+    const tmpRoute: any = { ...route }; // ES6扩展运算符复制新对象
     
     if (!route.name) {
       tmpRoute.name = route.name;

@@ -152,7 +152,7 @@ const toggleNotification = () => {
   isOpen.value = !isOpen.value
 }
 
-const getIcon = (type: string) => {
+const getIcon = (type: Notification['type']) => {
   const icons = {
     info: InfoFilled,
     success: SuccessFilled,
@@ -417,4 +417,4 @@ const vClickOutside = {
     }
   }
 }
-</style> 
+</style>
