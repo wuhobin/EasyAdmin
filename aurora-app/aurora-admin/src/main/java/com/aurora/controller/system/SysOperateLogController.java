@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.aurora.entity.SysOperateLog;
 import com.aurora.service.SysOperateLogService;
 import com.aurora.starter.mybatisplus.model.PageParam;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ public class SysOperateLogController {
     @GetMapping
     @Operation(description = "获取操作日志列表")
     public Result<IPage<SysOperateLog>> list(SysOperateLog sysOperateLog, PageParam pageParam) {
-        return Result.success(sysOperateLogService.listSysOperateLog(sysOperateLog, pageParam));
+        return Result.data(sysOperateLogService.listSysOperateLog(sysOperateLog, pageParam));
     }
 
     @DeleteMapping("delete/{ids}")

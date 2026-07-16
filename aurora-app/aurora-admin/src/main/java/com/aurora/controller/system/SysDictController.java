@@ -3,7 +3,7 @@ package com.aurora.controller.system;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.aurora.annotation.OperationLogger;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.entity.SysDict;
 import com.aurora.service.SysDictService;
 import com.aurora.starter.mybatisplus.model.PageParam;
@@ -27,7 +27,7 @@ public class SysDictController {
     public Result<IPage<SysDict>> getDictList(@RequestParam(required = false) String name,
                                             @RequestParam(required = false) Integer status,
                                             PageParam pageParam) {
-        return Result.success(sysDictService.getDictPageList(name, status, pageParam));
+        return Result.data(sysDictService.getDictPageList(name, status, pageParam));
     }
 
     @PostMapping("/add")

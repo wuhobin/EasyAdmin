@@ -1,6 +1,6 @@
 package com.aurora.controller.auth;
 
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.dto.LoginDTO;
 import com.aurora.dto.user.LoginUserInfo;
 import com.aurora.service.AuthService;
@@ -22,7 +22,7 @@ public class AuthController {
     @Operation(summary = "用户登录")
     @PostMapping("/auth/login")
     public Result<LoginUserInfo> login(@RequestBody LoginDTO loginDTO) {
-        return Result.success(authService.login(loginDTO));
+        return Result.data(authService.login(loginDTO));
     }
 
     @Operation(summary = "用户登出")
@@ -35,6 +35,6 @@ public class AuthController {
     @Operation(summary = "获取当前登录用户信息")
     @GetMapping("/auth/info")
     public Result<LoginUserInfo> info() {
-        return Result.success(authService.getLoginUserInfo());
+        return Result.data(authService.getLoginUserInfo());
     }
 }

@@ -2,7 +2,7 @@ package com.aurora.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.annotation.OperationLogger;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.entity.SysRole;
 import com.aurora.service.SysRoleService;
 import com.aurora.starter.mybatisplus.model.PageParam;
@@ -28,12 +28,12 @@ public class SysRoleController {
     @GetMapping("/")
     @Operation(summary = "获取角色列表")
     public Result<IPage<SysRole>> listRoles(@RequestParam(required = false) String name, PageParam pageParam) {
-        return Result.success(sysRoleService.listRoles(name, pageParam));
+        return Result.data(sysRoleService.listRoles(name, pageParam));
     }
 
     @GetMapping("/{id}")
     public Result<SysRole> getRole(@PathVariable Integer id) {
-        return Result.success(sysRoleService.getById(id));
+        return Result.data(sysRoleService.getById(id));
     }
 
     @PostMapping("/")
@@ -67,7 +67,7 @@ public class SysRoleController {
     @GetMapping("/menus/{id}")
     @Operation(summary = "获取角色所拥有的权限")
     public Result<List<Integer>> getRoleMenus(@PathVariable Integer id) {
-        return Result.success(sysRoleService.getRoleMenus(id));
+        return Result.data(sysRoleService.getRoleMenus(id));
     }
 
     @PutMapping("/menus/{id}")
@@ -75,13 +75,13 @@ public class SysRoleController {
     @OperationLogger(value = "修改角色权限")
     @SaCheckPermission("sys:role:menus")
     public Result<Void> updateRoleMenus(@PathVariable Integer id,@RequestBody List<Integer> menuIds) {
-        return Result.success(sysRoleService.updateRoleMenus(id,menuIds));
+        return Result.data(sysRoleService.updateRoleMenus(id,menuIds));
     }
 
     @GetMapping("/all")
     @Operation(summary = "获取所有角色列表")
     public Result<List<SysRole>> all() {
-        return Result.success(sysRoleService.list());
+        return Result.data(sysRoleService.list());
     }
 
     @GetMapping("/export")

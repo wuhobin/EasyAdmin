@@ -2,7 +2,7 @@ package com.aurora.controller.monitor;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.annotation.OperationLogger;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.service.IJobLogService;
 import com.aurora.starter.quartz.domain.QuartzJobLog;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -40,7 +40,7 @@ public class JobLogController {
                 .eq(StringUtils.isNotBlank(status), QuartzJobLog::getStatus, status)
                 .orderByDesc(QuartzJobLog::getStartTime);
 
-        return Result.success(jobLogService.page(new Page<>(pageNum, pageSize), wrapper));
+        return Result.data(jobLogService.page(new Page<>(pageNum, pageSize), wrapper));
     }
 
     @DeleteMapping("/delete/{ids}")

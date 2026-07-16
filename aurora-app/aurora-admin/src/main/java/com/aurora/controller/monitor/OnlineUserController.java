@@ -3,7 +3,7 @@ package com.aurora.controller.monitor;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.service.SysUserService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.vo.user.OnlineUserVo;
@@ -31,7 +31,7 @@ public class OnlineUserController {
     @GetMapping("/list")
     @Operation(summary = "获取在线用户列表")
     public Result<IPage<OnlineUserVo>> getOnlineUserList(String username, PageParam pageParam) {
-        return Result.success(sysUserService.getOnlineUserList(username, pageParam));
+        return Result.data(sysUserService.getOnlineUserList(username, pageParam));
     }
 
     @Operation(summary = "强制踢出")

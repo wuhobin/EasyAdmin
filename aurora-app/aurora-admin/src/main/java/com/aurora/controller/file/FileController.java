@@ -1,7 +1,7 @@
 package com.aurora.controller.file;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.service.FileService;
 import com.aurora.starter.oss.model.OssUploadResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,13 +27,13 @@ public class FileController {
     @SaCheckPermission("sys:file:upload")
     public Result<String> upload(@RequestParam("file") MultipartFile file) {
         OssUploadResult result = fileService.upload(file);
-        return Result.success(result == null ? null : result.getUrl());
+        return Result.data(result == null ? null : result.getUrl());
     }
 
     @Operation(summary = "删除文件")
     @GetMapping("/delete")
     @SaCheckPermission("sys:file:delete")
     public Result<Boolean> delete(@RequestParam("url") String url) {
-        return Result.success(fileService.delete(url));
+        return Result.data(fileService.delete(url));
     }
 }

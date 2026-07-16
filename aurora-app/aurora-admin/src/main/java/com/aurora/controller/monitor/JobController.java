@@ -2,7 +2,7 @@ package com.aurora.controller.monitor;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.annotation.OperationLogger;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.starter.quartz.domain.QuartzJob;
 import com.aurora.starter.quartz.exception.TaskException;
 import com.aurora.starter.quartz.service.IQuartzJobService;
@@ -38,13 +38,13 @@ public class JobController {
                 .like(StringUtils.isNotBlank(jobName), QuartzJob::getJobName, jobName)
                 .eq(StringUtils.isNotBlank(jobGroup), QuartzJob::getJobGroup, jobGroup)
                 .eq(StringUtils.isNotBlank(status), QuartzJob::getStatus, status);
-        return Result.success(quartzJobService.page(new Page<>(pageNum, pageSize), wrapper));
+        return Result.data(quartzJobService.page(new Page<>(pageNum, pageSize), wrapper));
     }
 
     @Operation(summary = "获取定时任务详情")
     @GetMapping("/{jobId}")
     public Result<QuartzJob> getInfo(@PathVariable Long jobId) {
-        return Result.success(quartzJobService.getById(jobId));
+        return Result.data(quartzJobService.getById(jobId));
     }
 
     @PostMapping
@@ -53,7 +53,7 @@ public class JobController {
     @SaCheckPermission("sys:job:add")
     public Result<QuartzJob> add(@RequestBody QuartzJob job) throws SchedulerException, TaskException {
         quartzJobService.createJob(job);
-        return Result.success(job);
+        return Result.data(job);
     }
 
     @PutMapping

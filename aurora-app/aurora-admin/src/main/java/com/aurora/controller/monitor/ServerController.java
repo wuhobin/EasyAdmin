@@ -1,6 +1,6 @@
 package com.aurora.controller.monitor;
 
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.service.ServerService;
 import com.aurora.vo.server.ServerInfo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +21,6 @@ public class ServerController {
     @GetMapping
     @Operation(summary = "获取服务器信息")
     public Result<ServerInfo> getServerInfo() {
-        return Result.success(serverService.getServerInfo());
+        return Result.data(serverService.getServerInfo());
     }
 }

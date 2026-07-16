@@ -1,6 +1,8 @@
 package com.aurora.common;
 
-public enum ResultCode {
+import com.aurora.starter.webmvc.exception.BizCode;
+
+public enum ResultCode implements BizCode {
 
     SUCCESS( 200, "成功" ),
 
@@ -31,6 +33,16 @@ public enum ResultCode {
     ResultCode(int code, String desc) {
         this.code = code;
         this.desc = desc;
+    }
+
+    @Override
+    public int getCode() {
+        return code;
+    }
+
+    @Override
+    public String getMessage() {
+        return desc;
     }
 
 }

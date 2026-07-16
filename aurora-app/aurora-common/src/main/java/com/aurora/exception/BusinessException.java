@@ -1,53 +1,31 @@
 package com.aurora.exception;
 
 import com.aurora.common.ResultCode;
-import lombok.Data;
+import com.aurora.starter.webmvc.exception.BizException;
 
-@Data
-public class BusinessException extends RuntimeException {
-
-    /** 异常代码 */
-    protected Integer code;
-
-    /** 异常消息 */
-    protected String message;
+public class BusinessException extends BizException {
 
     public BusinessException(String msg,Throwable e) {
-        super(msg,e);
+        super(ResultCode.ERROR_DEFAULT.code, msg, e);
     }
 
     public BusinessException(ResultCode resultCode) {
-        super(resultCode.desc);
-        this.code = resultCode.code;
-        this.message = resultCode.desc;
+        super(resultCode);
     }
 
     public BusinessException(String msg) {
-        super(msg);
-        this.code = ResultCode.ERROR_DEFAULT.code;
-        this.message = msg;
+        super(ResultCode.ERROR_DEFAULT.code, msg);
     }
 
     public BusinessException(Integer code, String msg) {
-        super(msg);
-        this.code = code;
-        this.message = msg;
+        super(code, msg);
     }
 
     public BusinessException(Integer code, String msg, Throwable cause) {
-        super(msg, cause);
-        this.code = code;
-        this.message = msg;
+        super(code, msg, cause);
     }
 
     public BusinessException(Throwable cause) {
-        super(cause);
-        this.code = ResultCode.ERROR.code;
-        this.message = cause.getMessage();
-    }
-
-    @Override
-    public String toString() {
-        return "errorCode: " + code + ", message: " + message;
+        super(ResultCode.ERROR.code, cause.getMessage(), cause);
     }
 }
