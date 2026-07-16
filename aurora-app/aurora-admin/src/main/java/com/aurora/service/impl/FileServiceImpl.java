@@ -4,7 +4,7 @@ import com.aurora.exception.BusinessException;
 import com.aurora.service.FileService;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
-import com.aurora.utils.DateUtils;
+import com.aurora.starter.common.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dromara.x.file.storage.core.FileInfo;

@@ -1,6 +1,5 @@
 package com.aurora.service.impl;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.common.Constants;
@@ -8,8 +7,9 @@ import com.aurora.entity.SysMenu;
 import com.aurora.enums.MenuTypeEnum;
 import com.aurora.mapper.SysMenuMapper;
 import com.aurora.service.SysMenuService;
+import com.aurora.starter.common.utils.StringUtils;
+import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.vo.menu.RouterVO;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -66,11 +66,11 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     public List<RouterVO> getCurrentUserMenu() {
 
         List<SysMenu> menus;
-        if (StpUtil.hasRole(Constants.ADMIN)) {
+        if (SecurityUtils.hasRole(Constants.ADMIN)) {
             menus = baseMapper.selectList(new LambdaQueryWrapper<SysMenu>()
                     .ne(SysMenu::getType,MenuTypeEnum.BUTTON.getCode()));
         }else {
-            menus = baseMapper.getMenusByUserId(StpUtil.getLoginIdAsInt(),MenuTypeEnum.BUTTON.getCode());
+            menus = baseMapper.getMenusByUserId(SecurityUtils.getLoginIdAsInt(),MenuTypeEnum.BUTTON.getCode());
         }
 
         return this.buildRouterTree(menus);
@@ -141,4 +141,4 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     {
         return menu.getParentId() != 0 && MenuTypeEnum.MENU.equals(menu.getType());
     }
-} 
+}

@@ -1,7 +1,7 @@
 package com.aurora.entity;
 
 import com.aurora.starter.mybatisplus.model.BaseEntity;
-import com.aurora.utils.DateUtils;
+import com.aurora.starter.common.utils.DateUtils;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;

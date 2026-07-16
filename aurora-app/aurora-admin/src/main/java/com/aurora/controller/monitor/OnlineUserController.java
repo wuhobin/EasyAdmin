@@ -1,11 +1,11 @@
 package com.aurora.controller.monitor;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.service.SysUserService;
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.vo.user.OnlineUserVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,7 +38,7 @@ public class OnlineUserController {
     @GetMapping("/forceLogout/{token}")
     @SaCheckPermission("monitor:online:forceLogout")
     public Result<Void> forceLogout(@PathVariable String token) {
-        StpUtil.logoutByTokenValue(token);
+        SecurityUtils.logoutByTokenValue(token);
         return Result.success();
     }
 

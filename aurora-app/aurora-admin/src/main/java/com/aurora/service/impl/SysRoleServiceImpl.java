@@ -6,11 +6,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.service.SysRoleService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
+import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.entity.SysRole;
 import com.aurora.mapper.SysRoleMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +22,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     public IPage<SysRole> listRoles(String name, PageParam pageParam) {
 
         LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<SysRole>()
-                .like(StringUtils.hasText(name),SysRole::getName, name)
+                .like(StringUtils.isNotBlank(name),SysRole::getName, name)
                 .orderByDesc(SysRole::getCreateTime);
 
         return baseMapper.selectPage(PageUtils.buildPage(pageParam), wrapper);
@@ -86,4 +86,4 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         }
         return baseMapper.selectCount(wrapper) > 0;
     }
-} 
+}

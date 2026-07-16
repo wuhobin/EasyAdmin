@@ -13,14 +13,14 @@ import com.aurora.exception.BusinessException;
 import com.aurora.mapper.SysUserMapper;
 import com.aurora.service.SysUserService;
 import com.aurora.starter.redis.core.RedisCache;
+import com.aurora.starter.common.utils.StringUtils;
+import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.vo.user.OnlineUserVo;
 import com.aurora.vo.user.SysUserPageListVo;
 import com.aurora.vo.user.SysUserProfileVo;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import cn.dev33.satoken.secure.BCrypt;
-import cn.dev33.satoken.stp.StpUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -83,7 +83,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public void updatePwd(UpdatePwdDTO updatePwdDTO) {
 
-        SysUser user = this.getById(StpUtil.getLoginIdAsInt());
+        SysUser user = this.getById(SecurityUtils.getLoginIdAsInt());
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
@@ -99,7 +99,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public SysUserProfileVo profile() {
 
-        SysUser sysUser = baseMapper.selectById(StpUtil.getLoginIdAsInt());
+        SysUser sysUser = baseMapper.selectById(SecurityUtils.getLoginIdAsInt());
         sysUser.setPassword(null);
         //获取角色
         List<String> roles = roleMapper.selectRolesByUserId(sysUser.getId());
@@ -114,7 +114,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public Boolean verifyPassword(String password) {
-        SysUser user = baseMapper.selectById(StpUtil.getLoginIdAsInt());
+        SysUser user = baseMapper.selectById(SecurityUtils.getLoginIdAsInt());
         return BCrypt.checkpw(password, user.getPassword());
     }
 

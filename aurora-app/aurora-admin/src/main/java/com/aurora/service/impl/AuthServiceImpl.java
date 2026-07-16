@@ -1,7 +1,6 @@
 package com.aurora.service.impl;
 
 import cn.dev33.satoken.secure.BCrypt;
-import cn.dev33.satoken.stp.StpUtil;
 import com.aurora.common.Constants;
 import com.aurora.common.ResultCode;
 import com.aurora.dto.LoginDTO;
@@ -13,9 +12,9 @@ import com.aurora.mapper.SysRoleMapper;
 import com.aurora.mapper.SysUserMapper;
 import com.aurora.service.AuthService;
 import com.aurora.starter.security.context.SecurityUtils;
+import com.aurora.starter.common.utils.bean.BeanUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

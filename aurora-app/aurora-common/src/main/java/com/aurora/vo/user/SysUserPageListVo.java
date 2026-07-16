@@ -1,7 +1,7 @@
 package com.aurora.vo.user;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.aurora.utils.DateUtils;
+import com.aurora.starter.common.utils.DateUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

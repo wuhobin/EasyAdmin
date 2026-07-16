@@ -29,23 +29,13 @@
         <maven.compiler.target>21</maven.compiler.target>
         <package.version>1.0-SNAPSHOT</package.version>
         <!-- easyadmin 专属依赖版本（BOM 未管理的） -->
-        <useragent.version>1.21</useragent.version>
         <ip2region.version>2.7.0</ip2region.version>
-        <oshi.version>6.4.0</oshi.version>
         <fastexcel.version>1.0.0</fastexcel.version>
-        <jsoup.version>1.14.3</jsoup.version>
-        <flexmark.version>0.62.2</flexmark.version>
         <qiniu.version>7.12.1</qiniu.version>
-        <sa-token.version>1.45.0</sa-token.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>eu.bitwalker</groupId>
-                <artifactId>UserAgentUtils</artifactId>
-                <version>${useragent.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.qiniu</groupId>
                 <artifactId>qiniu-java-sdk</artifactId>

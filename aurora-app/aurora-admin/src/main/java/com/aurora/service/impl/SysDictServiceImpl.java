@@ -5,12 +5,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
+import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.entity.SysDict;
 import com.aurora.mapper.SysDictMapper;
 import com.aurora.service.SysDictService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +19,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
     @Override
     public IPage<SysDict> getDictPageList(String name, Integer status, PageParam pageParam) {
         LambdaQueryWrapper<SysDict> wrapper = new LambdaQueryWrapper<SysDict>()
-                .like(StringUtils.hasText(name),SysDict::getName, name)
+                .like(StringUtils.isNotBlank(name),SysDict::getName, name)
                 .eq(status != null,SysDict::getStatus, status)
                 .orderByAsc(SysDict::getSort);
 
