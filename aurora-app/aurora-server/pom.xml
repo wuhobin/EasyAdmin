@@ -17,7 +17,6 @@
         <dependency>
             <groupId>com.aurora</groupId>
             <artifactId>aurora-admin</artifactId>
-            <version>${package.version}</version>
         </dependency>
 
         <dependency>

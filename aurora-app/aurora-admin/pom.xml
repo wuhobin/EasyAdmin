@@ -18,7 +18,6 @@
         <dependency>
             <groupId>com.aurora</groupId>
             <artifactId>aurora-common</artifactId>
-            <version>${package.version}</version>
         </dependency>
 
         <dependency>
