@@ -14,9 +14,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.dromara.x.file.storage.core.FileInfo;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
 import java.util.List;
 
 @Service
@@ -61,7 +63,7 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
         if (file == null) {
             throw new BizException("文件记录不存在");
         }
-        if (!ossTemplate.delete(file.getFileUrl())) {
+        if (!deleteOssFile(file)) {
             throw new BizException("OSS 文件删除失败");
         }
         if (!removeById(id)) {
@@ -78,9 +80,9 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
                 .eq(SysOssFile::getFileUrl, url);
         List<SysOssFile> files = list(wrapper);
         if (files.isEmpty()) {
-            return ossTemplate.delete(url);
+            return deleteOssFile(SysOssFile.builder().fileUrl(url).build());
         }
-        if (!ossTemplate.delete(url)) {
+        if (!deleteOssFile(files.getFirst())) {
             return false;
         }
         if (!remove(wrapper)) {
@@ -91,6 +93,45 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
             throw new BizException("文件记录删除失败, ids=" + recordIds + ", fileIds=" + fileIds);
         }
         return true;
+    }
+
+    private boolean deleteOssFile(SysOssFile file) {
+        String platform = file.getPlatform();
+        if (platform == null || platform.isBlank()) {
+            platform = ossTemplate.getFileStorageService().getDefaultPlatform();
+        }
+        String objectKey = extractObjectKey(file.getFileUrl());
+        if (objectKey == null || objectKey.isBlank()) {
+            objectKey = file.getFileName();
+        }
+        if (objectKey == null || objectKey.isBlank()) {
+            throw new BizException("无法解析 OSS 文件对象名称");
+        }
+        FileInfo fileInfo = new FileInfo()
+                .setUrl(file.getFileUrl())
+                .setPlatform(platform)
+                .setFilename(objectKey);
+        return ossTemplate.delete(fileInfo);
+    }
+
+    private static String extractObjectKey(String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        try {
+            String path = URI.create(url).getRawPath();
+            if (path == null) {
+                return null;
+            }
+            int firstCharacter = 0;
+            while (firstCharacter < path.length() && path.charAt(firstCharacter) == '/') {
+                firstCharacter++;
+            }
+            return path.substring(firstCharacter);
+        } catch (IllegalArgumentException exception) {
+            log.warn("Invalid OSS file URL, url={}", url, exception);
+            return null;
+        }
     }
 
     private static SysOssFile toEntity(OssFileRecordRetryData data) {
