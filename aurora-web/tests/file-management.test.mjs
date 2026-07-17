@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
+import { transform } from 'esbuild'
 
 async function readSource(relativePath) {
   return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8')
@@ -8,6 +9,13 @@ async function readSource(relativePath) {
 
 const apiSource = await readSource('src/api/file/index.ts')
 const pageSource = await readSource('src/views/file/index.vue')
+
+async function importTypeScriptModule(relativePath) {
+  const source = await readSource(relativePath)
+  const result = await transform(source, { loader: 'ts', format: 'esm', target: 'es2022' })
+  const encoded = Buffer.from(result.code).toString('base64')
+  return import(`data:text/javascript;base64,${encoded}`)
+}
 
 test('file API exposes typed list, download, and id-based delete operations', () => {
   assert.match(apiSource, /export interface OssFileRecord/)
@@ -39,4 +47,24 @@ test('file page supports search, preview, authenticated download, URL commands, 
   assert.match(pageSource, /sys:file:delete/)
   assert.match(pageSource, /deleteFileApi/)
   assert.doesNotMatch(pageSource, /上传文件|uploadApi/)
+})
+
+test('binary response helper reads JSON business errors from blobs', async () => {
+  const { readBlobApiError } = await importTypeScriptModule('src/utils/binary-response.ts')
+  const blob = new Blob([
+    JSON.stringify({ code: 500, message: '下载文件失败', data: null })
+  ], { type: 'application/json;charset=UTF-8' })
+
+  assert.deepEqual(await readBlobApiError(blob), {
+    code: 500,
+    message: '下载文件失败',
+    data: null
+  })
+})
+
+test('binary response helper ignores ordinary file blobs', async () => {
+  const { readBlobApiError } = await importTypeScriptModule('src/utils/binary-response.ts')
+  const blob = new Blob(['file content'], { type: 'image/png' })
+
+  assert.equal(await readBlobApiError(blob), null)
 })

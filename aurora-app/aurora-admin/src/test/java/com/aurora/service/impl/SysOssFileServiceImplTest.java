@@ -1,10 +1,15 @@
 package com.aurora.service.impl;
 
 import com.aurora.dto.file.OssFileRecordRetryData;
+import com.aurora.dto.file.OssFileQuery;
 import com.aurora.entity.SysOssFile;
 import com.aurora.mapper.SysOssFileMapper;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.template.OssTemplate;
 import com.aurora.starter.webmvc.exception.BizException;
+import com.aurora.vo.file.SysOssFileVo;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.dromara.x.file.storage.core.Downloader;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.dromara.x.file.storage.core.FileStorageService;
@@ -55,6 +60,36 @@ class SysOssFileServiceImplTest {
         assertThat(service.saveIfAbsent(data)).isTrue();
 
         verify(mapper, never()).insert(org.mockito.ArgumentMatchers.any(SysOssFile.class));
+    }
+
+    @Test
+    void returnsViewModelsInsteadOfPersistenceEntities() {
+        SysOssFile file = file();
+        file.setOriginalFilename("avatar.png");
+        file.setContentType("image/png");
+        file.setFileSize(128L);
+        file.setUploaderId(1L);
+        file.setUploaderName("admin");
+        Page<SysOssFile> entityPage = new Page<>(1, 10);
+        entityPage.setRecords(List.of(file));
+        entityPage.setTotal(1L);
+        when(mapper.selectPage(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(entityPage);
+
+        OssFileQuery query = new OssFileQuery();
+        query.setFileName("file.png");
+        IPage<SysOssFileVo> result = service.listFiles(query, new PageParam(1, 10));
+
+        assertThat(result.getTotal()).isEqualTo(1L);
+        assertThat(result.getRecords()).singleElement().satisfies(record -> {
+            assertThat(record.getId()).isEqualTo(file.getId());
+            assertThat(record.getFileId()).isEqualTo(file.getFileId());
+            assertThat(record.getFileName()).isEqualTo(file.getFileName());
+            assertThat(record.getOriginalFilename()).isEqualTo("avatar.png");
+            assertThat(record.getContentType()).isEqualTo("image/png");
+            assertThat(record.getFileSize()).isEqualTo(128L);
+            assertThat(record.getUploaderName()).isEqualTo("admin");
+        });
     }
 
     @Test

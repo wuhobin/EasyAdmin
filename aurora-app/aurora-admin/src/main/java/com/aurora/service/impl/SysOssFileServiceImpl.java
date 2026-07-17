@@ -1,5 +1,6 @@
 package com.aurora.service.impl;
 
+import com.aurora.dto.file.OssFileQuery;
 import com.aurora.dto.file.OssFileRecordRetryData;
 import com.aurora.entity.SysOssFile;
 import com.aurora.mapper.SysOssFileMapper;
@@ -9,6 +10,7 @@ import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.starter.oss.template.OssTemplate;
 import com.aurora.starter.webmvc.exception.BizException;
+import com.aurora.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -45,17 +47,18 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
     }
 
     @Override
-    public IPage<SysOssFile> listFiles(SysOssFile query, PageParam pageParam) {
-        SysOssFile safeQuery = query == null ? new SysOssFile() : query;
+    public IPage<SysOssFileVo> listFiles(OssFileQuery query, PageParam pageParam) {
+        OssFileQuery safeQuery = query == null ? new OssFileQuery() : query;
         LambdaQueryWrapper<SysOssFile> wrapper = new LambdaQueryWrapper<SysOssFile>()
-                .like(StringUtils.isNotBlank(safeQuery.getOriginalFilename()),
-                        SysOssFile::getOriginalFilename, safeQuery.getOriginalFilename())
+                .like(StringUtils.isNotBlank(safeQuery.getFileName()),
+                        SysOssFile::getFileName, safeQuery.getFileName())
                 .eq(StringUtils.isNotBlank(safeQuery.getContentType()),
                         SysOssFile::getContentType, safeQuery.getContentType())
                 .like(StringUtils.isNotBlank(safeQuery.getUploaderName()),
                         SysOssFile::getUploaderName, safeQuery.getUploaderName())
                 .orderByDesc(SysOssFile::getCreateTime);
-        return page(PageUtils.buildPage(pageParam), wrapper);
+        IPage<SysOssFile> entityPage = page(PageUtils.buildPage(pageParam), wrapper);
+        return entityPage.convert(SysOssFileServiceImpl::toVo);
     }
 
     @Override
@@ -166,6 +169,23 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
                 .thumbnailUrl(data.getThumbnailUrl())
                 .uploaderId(data.getUploaderId())
                 .uploaderName(data.getUploaderName())
+                .build();
+    }
+
+    private static SysOssFileVo toVo(SysOssFile file) {
+        return SysOssFileVo.builder()
+                .id(file.getId())
+                .fileId(file.getFileId())
+                .fileUrl(file.getFileUrl())
+                .fileName(file.getFileName())
+                .originalFilename(file.getOriginalFilename())
+                .contentType(file.getContentType())
+                .fileSize(file.getFileSize())
+                .platform(file.getPlatform())
+                .thumbnailUrl(file.getThumbnailUrl())
+                .uploaderId(file.getUploaderId())
+                .uploaderName(file.getUploaderName())
+                .createTime(file.getCreateTime())
                 .build();
     }
 }

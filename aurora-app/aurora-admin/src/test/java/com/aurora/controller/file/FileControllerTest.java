@@ -1,11 +1,14 @@
 package com.aurora.controller.file;
 
+import com.aurora.dto.file.OssFileQuery;
 import com.aurora.entity.SysOssFile;
 import com.aurora.service.FileService;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -22,10 +25,10 @@ class FileControllerTest {
         FileService fileService = mock(FileService.class);
         SysOssFileService ossFileService = mock(SysOssFileService.class);
         FileController controller = new FileController(fileService, ossFileService);
-        SysOssFile query = new SysOssFile();
+        OssFileQuery query = new OssFileQuery();
         PageParam pageParam = new PageParam(1, 10);
         @SuppressWarnings("unchecked")
-        IPage<SysOssFile> page = mock(IPage.class);
+        IPage<SysOssFileVo> page = mock(IPage.class);
         when(ossFileService.listFiles(query, pageParam)).thenReturn(page);
 
         controller.list(query, pageParam);
@@ -57,8 +60,8 @@ class FileControllerTest {
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getContentType()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
         assertThat(response.getContentLengthLong()).isEqualTo(128L);
-        assertThat(response.getHeader(HttpHeaders.CONTENT_DISPOSITION))
-                .contains("filename*=UTF-8''");
+        assertThat(ContentDisposition.parse(response.getHeader(HttpHeaders.CONTENT_DISPOSITION)).getFilename())
+                .isEqualTo("中文图片.png");
         verify(ossFileService).download(file, response.getOutputStream());
     }
 

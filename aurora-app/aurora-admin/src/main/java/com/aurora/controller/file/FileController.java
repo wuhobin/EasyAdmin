@@ -1,12 +1,14 @@
 package com.aurora.controller.file;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.aurora.dto.file.OssFileQuery;
 import com.aurora.entity.SysOssFile;
 import com.aurora.service.FileService;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.webmvc.domain.response.Result;
+import com.aurora.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,7 +51,7 @@ public class FileController {
     @Operation(summary = "查询文件列表")
     @GetMapping("/list")
     @SaCheckPermission("sys:file:list")
-    public Result<IPage<SysOssFile>> list(SysOssFile query, PageParam pageParam) {
+    public Result<IPage<SysOssFileVo>> list(OssFileQuery query, PageParam pageParam) {
         return Result.data(ossFileService.listFiles(query, pageParam));
     }
 
@@ -58,7 +60,7 @@ public class FileController {
     @SaCheckPermission("sys:file:download")
     public void downloadById(@PathVariable Long id, HttpServletResponse response) throws IOException {
         SysOssFile file = ossFileService.getDownloadFile(id);
-        String filename = file.getFileName();
+        String filename = file.getOriginalFilename();
         if (filename == null || filename.isBlank()) {
             filename = file.getFileName();
         }
