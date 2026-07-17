@@ -4,12 +4,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.aurora.entity.SysDict;
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.domain.query.system.SysDictQuery;
 
 public interface SysDictService extends IService<SysDict> {
     /**
      * 分页查询字典
      */
-    IPage<SysDict> getDictPageList(String name, Integer status, PageParam pageParam);
+    IPage<SysDict> getDictPageList(SysDictQuery query, PageParam pageParam);
 
     /**
      * 新增字典

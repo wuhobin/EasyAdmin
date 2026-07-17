@@ -1,7 +1,7 @@
 package com.aurora.service;
 
 import com.aurora.domain.vo.cache.CacheInfoVo;
-import com.aurora.domain.vo.cache.CacheKeyQuery;
+import com.aurora.domain.query.monitor.CacheKeyQuery;
 import com.aurora.domain.vo.cache.CacheKeyVo;
 import com.aurora.domain.vo.cache.CacheMemoryVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -27,4 +27,4 @@ public interface CacheService {
      * 清空缓存
      */
     void clearCache();
-} 
+}

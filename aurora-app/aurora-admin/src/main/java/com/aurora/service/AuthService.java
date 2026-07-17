@@ -1,6 +1,5 @@
 package com.aurora.service;
 
-import com.aurora.domain.dto.LoginDTO;
 import com.aurora.domain.dto.user.LoginUserInfo;
 
 /**
@@ -14,7 +13,7 @@ public interface AuthService {
      * @param loginDTO 登录参数
      * @return 登录用户信息（含 token）
      */
-    LoginUserInfo login(LoginDTO loginDTO);
+    LoginUserInfo login(String username, String password, boolean rememberMe);
 
     /**
      * 退出登录

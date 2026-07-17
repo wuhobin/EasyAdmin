@@ -6,7 +6,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.service.SysRoleService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
-import com.aurora.starter.common.utils.StringUtils;
+import com.aurora.domain.query.system.SysRoleQuery;
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.aurora.entity.SysRole;
 import com.aurora.mapper.SysRoleMapper;
 import com.aurora.starter.webmvc.exception.BizException;
@@ -20,13 +21,11 @@ import java.util.List;
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
     @Override
-    public IPage<SysRole> listRoles(String name, PageParam pageParam) {
-
-        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<SysRole>()
-                .like(StringUtils.isNotBlank(name),SysRole::getName, name)
-                .orderByDesc(SysRole::getCreateTime);
-
-        return baseMapper.selectPage(PageUtils.buildPage(pageParam), wrapper);
+    public IPage<SysRole> listRoles(SysRoleQuery query, PageParam pageParam) {
+        if (pageParam != null && (pageParam.getOrderBy() == null || pageParam.getOrderBy().isBlank())) {
+            pageParam.setOrderBy("create_time desc");
+        }
+        return baseMapper.selectPage(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
     }
 
     @Override

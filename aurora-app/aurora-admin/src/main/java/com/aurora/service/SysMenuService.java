@@ -2,7 +2,6 @@ package com.aurora.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.aurora.entity.SysMenu;
-import com.aurora.domain.vo.menu.RouterVO;
 
 import java.util.List;
 
@@ -31,6 +30,6 @@ public interface SysMenuService extends IService<SysMenu> {
      * 获取当前登录用户所拥有的菜单
      * @return
      */
-    List<RouterVO> getCurrentUserMenu();
+    List<SysMenu> getCurrentUserMenus();
 
 }

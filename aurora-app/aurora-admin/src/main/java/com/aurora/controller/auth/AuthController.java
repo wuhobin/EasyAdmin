@@ -1,9 +1,9 @@
 package com.aurora.controller.auth;
 
+import com.aurora.biz.AuthBizService;
 import com.aurora.starter.webmvc.domain.response.Result;
-import com.aurora.domain.dto.LoginDTO;
-import com.aurora.domain.dto.user.LoginUserInfo;
-import com.aurora.service.AuthService;
+import com.aurora.domain.form.auth.LoginForm;
+import com.aurora.domain.vo.auth.LoginUserInfoVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -17,24 +17,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthBizService authBizService;
 
     @Operation(summary = "用户登录")
     @PostMapping("/auth/login")
-    public Result<LoginUserInfo> login(@RequestBody LoginDTO loginDTO) {
-        return Result.data(authService.login(loginDTO));
+    public Result<LoginUserInfoVo> login(@RequestBody LoginForm form) {
+        return Result.data(authBizService.login(form));
     }
 
     @Operation(summary = "用户登出")
     @PostMapping("/auth/logout")
     public Result<Void> logout() {
-        authService.logout();
+        authBizService.logout();
         return Result.success();
     }
 
     @Operation(summary = "获取当前登录用户信息")
     @GetMapping("/auth/info")
-    public Result<LoginUserInfo> info() {
-        return Result.data(authService.getLoginUserInfo());
+    public Result<LoginUserInfoVo> info() {
+        return Result.data(authBizService.getLoginUserInfo());
     }
 }

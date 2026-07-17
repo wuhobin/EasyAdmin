@@ -5,20 +5,18 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.List;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "路由对象")
-public class RouterVO {
-
+@Schema(description = "系统路由视图对象")
+public class SysRouterVo {
     @Schema(description = "菜单ID")
     private Integer id;
 
-    @Schema(description = "组件")
+    @Schema(description = "组件路径")
     private String component;
 
     @Schema(description = "路由地址")
@@ -27,24 +25,27 @@ public class RouterVO {
     @Schema(description = "路由名称")
     private String name;
 
-    @Schema(description = "跳转地址")
+    @Schema(description = "重定向地址")
     private String redirect;
 
     @Schema(description = "排序")
     private Integer sort;
 
-    @Schema(description = "菜单属性")
-    private MetaVO meta;
+    @Schema(description = "路由元信息")
+    private MetaVo meta;
 
-    private List<RouterVO> children;
+    @Schema(description = "子路由列表")
+    private List<SysRouterVo> children;
 
     @Data
-public static class MetaVO{
-
-        @Schema(description = "菜单标题")
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Schema(description = "路由元信息")
+    public static class MetaVo {
+        @Schema(description = "路由标题")
         private String title;
 
-        @Schema(description = "菜单图标")
+        @Schema(description = "路由图标")
         private String icon;
 
         @Schema(description = "是否隐藏")
@@ -52,12 +53,5 @@ public static class MetaVO{
 
         @Schema(description = "是否外链")
         private Boolean isExternal;
-
-        public MetaVO(String title, String icon, Integer hidden, Integer isExternal) {
-            this.title = title;
-            this.icon = icon;
-            this.hidden = hidden == 1;
-            this.isExternal = isExternal == 1;
-        }
     }
 }

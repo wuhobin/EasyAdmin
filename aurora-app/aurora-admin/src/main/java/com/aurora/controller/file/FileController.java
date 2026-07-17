@@ -1,12 +1,9 @@
 package com.aurora.controller.file;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.aurora.domain.query.OssFileQuery;
-import com.aurora.entity.SysOssFile;
-import com.aurora.service.FileService;
-import com.aurora.service.SysOssFileService;
+import com.aurora.biz.FileBizService;
+import com.aurora.domain.form.query.file.OssFileQueryForm;
 import com.aurora.starter.mybatisplus.model.PageParam;
-import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.domain.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -36,30 +33,27 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class FileController {
 
-    private final FileService fileService;
-
-    private final SysOssFileService ossFileService;
+    private final FileBizService fileBizService;
 
     @Operation(summary = "上传文件")
     @PostMapping("/upload")
     @SaCheckPermission("sys:file:upload")
     public Result<String> upload(@RequestParam("file") MultipartFile file) {
-        OssUploadResult result = fileService.upload(file);
-        return Result.data(result == null ? null : result.getUrl());
+        return Result.data(fileBizService.upload(file));
     }
 
     @Operation(summary = "查询文件列表")
     @GetMapping("/list")
     @SaCheckPermission("sys:file:list")
-    public Result<IPage<SysOssFileVo>> list(OssFileQuery query, PageParam pageParam) {
-        return Result.data(ossFileService.listFiles(query, pageParam));
+    public Result<IPage<SysOssFileVo>> list(OssFileQueryForm form, PageParam pageParam) {
+        return Result.data(fileBizService.list(form, pageParam));
     }
 
     @Operation(summary = "下载文件")
     @GetMapping("/{id}/download")
     @SaCheckPermission("sys:file:download")
     public void downloadById(@PathVariable Long id, HttpServletResponse response) throws IOException {
-        SysOssFile file = ossFileService.getDownloadFile(id);
+        SysOssFileVo file = fileBizService.getDownloadFile(id);
         String filename = file.getOriginalFilename();
         if (filename == null || filename.isBlank()) {
             filename = file.getFileName();
@@ -72,14 +66,14 @@ public class FileController {
         if (file.getFileSize() != null && file.getFileSize() > 0) {
             response.setContentLengthLong(file.getFileSize());
         }
-        ossFileService.download(file, response.getOutputStream());
+        fileBizService.download(file, response.getOutputStream());
     }
 
     @Operation(summary = "删除文件")
     @DeleteMapping("/{id}")
     @SaCheckPermission("sys:file:delete")
     public Result<Void> deleteById(@PathVariable Long id) {
-        ossFileService.deleteById(id);
+        fileBizService.deleteById(id);
         return Result.success();
     }
 
@@ -87,7 +81,7 @@ public class FileController {
     @GetMapping("/delete")
     @SaCheckPermission("sys:file:delete")
     public Result<Boolean> delete(@RequestParam("url") String url) {
-        return Result.data(ossFileService.deleteByUrl(url));
+        return Result.data(fileBizService.deleteByUrl(url));
     }
 
     private static MediaType resolveMediaType(String contentType) {

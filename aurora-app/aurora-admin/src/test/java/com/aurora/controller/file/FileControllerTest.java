@@ -1,11 +1,9 @@
 package com.aurora.controller.file;
 
-import com.aurora.domain.query.OssFileQuery;
-import com.aurora.entity.SysOssFile;
-import com.aurora.service.FileService;
-import com.aurora.service.SysOssFileService;
-import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.biz.FileBizService;
+import com.aurora.domain.form.query.file.OssFileQueryForm;
 import com.aurora.domain.vo.file.SysOssFileVo;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ContentDisposition;
@@ -21,38 +19,36 @@ import static org.mockito.Mockito.when;
 class FileControllerTest {
 
     @Test
-    void delegatesListAndDeleteOperationsToTheRecordService() {
-        FileService fileService = mock(FileService.class);
-        SysOssFileService ossFileService = mock(SysOssFileService.class);
-        FileController controller = new FileController(fileService, ossFileService);
-        OssFileQuery query = new OssFileQuery();
+    void delegatesListAndDeleteOperationsToTheBizService() {
+        FileBizService fileBizService = mock(FileBizService.class);
+        FileController controller = new FileController(fileBizService);
+        OssFileQueryForm form = new OssFileQueryForm();
         PageParam pageParam = new PageParam(1, 10);
         @SuppressWarnings("unchecked")
         IPage<SysOssFileVo> page = mock(IPage.class);
-        when(ossFileService.listFiles(query, pageParam)).thenReturn(page);
+        when(fileBizService.list(form, pageParam)).thenReturn(page);
 
-        controller.list(query, pageParam);
+        controller.list(form, pageParam);
         controller.deleteById(1L);
         controller.delete("https://oss.example.com/file.png");
 
-        verify(ossFileService).listFiles(query, pageParam);
-        verify(ossFileService).deleteById(1L);
-        verify(ossFileService).deleteByUrl("https://oss.example.com/file.png");
+        verify(fileBizService).list(form, pageParam);
+        verify(fileBizService).deleteById(1L);
+        verify(fileBizService).deleteByUrl("https://oss.example.com/file.png");
     }
 
     @Test
     void downloadsWithStoredMimeTypeAndOriginalFilename() throws Exception {
-        FileService fileService = mock(FileService.class);
-        SysOssFileService ossFileService = mock(SysOssFileService.class);
-        FileController controller = new FileController(fileService, ossFileService);
-        SysOssFile file = SysOssFile.builder()
+        FileBizService fileBizService = mock(FileBizService.class);
+        FileController controller = new FileController(fileBizService);
+        SysOssFileVo file = SysOssFileVo.builder()
                 .id(1L)
                 .originalFilename("中文图片.png")
                 .fileName("stored.png")
                 .contentType(MediaType.IMAGE_PNG_VALUE)
                 .fileSize(128L)
                 .build();
-        when(ossFileService.getDownloadFile(1L)).thenReturn(file);
+        when(fileBizService.getDownloadFile(1L)).thenReturn(file);
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         controller.downloadById(1L, response);
@@ -62,21 +58,20 @@ class FileControllerTest {
         assertThat(response.getContentLengthLong()).isEqualTo(128L);
         assertThat(ContentDisposition.parse(response.getHeader(HttpHeaders.CONTENT_DISPOSITION)).getFilename())
                 .isEqualTo("中文图片.png");
-        verify(ossFileService).download(file, response.getOutputStream());
+        verify(fileBizService).download(file, response.getOutputStream());
     }
 
     @Test
     void fallsBackToStoredFilenameAndBinaryContentType() throws Exception {
-        FileService fileService = mock(FileService.class);
-        SysOssFileService ossFileService = mock(SysOssFileService.class);
-        FileController controller = new FileController(fileService, ossFileService);
-        SysOssFile file = SysOssFile.builder()
+        FileBizService fileBizService = mock(FileBizService.class);
+        FileController controller = new FileController(fileBizService);
+        SysOssFileVo file = SysOssFileVo.builder()
                 .id(1L)
                 .fileName("stored.bin")
                 .contentType("not a mime type")
                 .fileSize(0L)
                 .build();
-        when(ossFileService.getDownloadFile(1L)).thenReturn(file);
+        when(fileBizService.getDownloadFile(1L)).thenReturn(file);
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         controller.downloadById(1L, response);

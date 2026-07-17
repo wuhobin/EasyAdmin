@@ -4,7 +4,6 @@ import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
 import com.aurora.common.Constants;
 import com.aurora.common.ResultCode;
-import com.aurora.domain.dto.LoginDTO;
 import com.aurora.domain.dto.user.LoginUserInfo;
 import com.aurora.entity.SysUser;
 import com.aurora.mapper.SysMenuMapper;
@@ -39,15 +38,15 @@ public class AuthServiceImpl implements AuthService {
     private final SysMenuMapper menuMapper;
 
     @Override
-    public LoginUserInfo login(LoginDTO loginDTO) {
+    public LoginUserInfo login(String username, String password, boolean rememberMe) {
         // 查询用户
-        SysUser user = userMapper.selectByUsername(loginDTO.getUsername());
+        SysUser user = userMapper.selectByUsername(username);
 
         // 校验是否能够登录
-        validateLogin(loginDTO, user);
+        validateLogin(password, user);
 
         // 执行登录（sa-token 封装）
-        SecurityUtils.login(user.getId(), new SaLoginParameter().setTimeout(tokenTimeout(loginDTO.isRememberMe())));
+        SecurityUtils.login(user.getId(), new SaLoginParameter().setTimeout(tokenTimeout(rememberMe)));
         String tokenValue = SecurityUtils.getTokenValue();
 
         // 返回用户信息
@@ -90,12 +89,12 @@ public class AuthServiceImpl implements AuthService {
         return loginUserInfo;
     }
 
-    private static void validateLogin(LoginDTO loginDTO, SysUser user) {
+    private static void validateLogin(String password, SysUser user) {
         if (user == null) {
             throw new BizException(ResultCode.ERROR_USER_NOT_EXIST);
         }
         // 验证密码
-        if (!BCrypt.checkpw(loginDTO.getPassword(), user.getPassword())) {
+        if (!BCrypt.checkpw(password, user.getPassword())) {
             throw new BizException(ResultCode.ERROR_PASSWORD);
         }
         // 验证状态：1=启用，其它=禁用

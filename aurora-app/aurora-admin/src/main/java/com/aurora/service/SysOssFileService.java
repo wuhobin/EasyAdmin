@@ -4,7 +4,6 @@ import com.aurora.domain.query.OssFileQuery;
 import com.aurora.domain.dto.file.OssFileRecordRetryData;
 import com.aurora.entity.SysOssFile;
 import com.aurora.starter.mybatisplus.model.PageParam;
-import com.aurora.domain.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -14,7 +13,7 @@ public interface SysOssFileService extends IService<SysOssFile> {
 
     boolean saveIfAbsent(OssFileRecordRetryData data);
 
-    IPage<SysOssFileVo> listFiles(OssFileQuery query, PageParam pageParam);
+    IPage<SysOssFile> listFiles(OssFileQuery query, PageParam pageParam);
 
     SysOssFile getDownloadFile(Long id);
 

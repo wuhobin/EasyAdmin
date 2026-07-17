@@ -13,6 +13,7 @@ import java.util.List;
 @Schema(description = "用户分页视图对象")
 public class SysUserPageListVo {
 
+    @Schema(description = "用户ID")
     private Integer id;
 
     @Schema(description = "用户名")

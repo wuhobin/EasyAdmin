@@ -2,13 +2,13 @@ package com.aurora.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.aurora.domain.dto.user.UserSaveOrUpdateDto;
 import com.aurora.entity.SysUser;
 import com.aurora.starter.mybatisplus.model.PageParam;
-import com.aurora.domain.dto.user.UpdatePwdDTO;
-import com.aurora.domain.vo.user.OnlineUserVo;
-import com.aurora.domain.vo.user.SysUserPageListVo;
-import com.aurora.domain.vo.user.SysUserProfileVo;
+import com.aurora.domain.query.system.SysUserQuery;
+import com.aurora.domain.query.monitor.OnlineUserQuery;
+import com.aurora.domain.model.user.OnlineUserData;
+import com.aurora.domain.model.user.SysUserPageData;
+import com.aurora.domain.model.user.SysUserProfileData;
 
 import java.util.List;
 
@@ -16,17 +16,17 @@ public interface SysUserService extends IService<SysUser> {
     /**
      * 分页查询用户
      */
-    IPage<SysUserPageListVo> listUsers(String nickname, Integer status, PageParam pageParam);
+    IPage<SysUserPageData> listUsers(SysUserQuery query, PageParam pageParam);
 
     /**
      * 新增用户
      */
-    void add(UserSaveOrUpdateDto user);
+    void add(SysUser user, List<Integer> roleIds);
 
     /**
      * 更新用户
      */
-    void update(UserSaveOrUpdateDto user);
+    void update(SysUser user, List<Integer> roleIds);
 
     /**
      * 删除用户
@@ -39,13 +39,13 @@ public interface SysUserService extends IService<SysUser> {
      *
      * @param updatePwdDTO 修改密码参数
      */
-    void updatePwd(UpdatePwdDTO updatePwdDTO);
+    void updatePwd(String oldPassword, String newPassword);
 
     /**
      * 获取个人信息
      * @return
      */
-    SysUserProfileVo profile();
+    SysUserProfileData profile();
 
     /**
      * 修改个人信息
@@ -71,7 +71,7 @@ public interface SysUserService extends IService<SysUser> {
      * 获取在线用户列表
      * @return
      */
-    IPage<OnlineUserVo> getOnlineUserList(String username, PageParam pageParam);
+    IPage<OnlineUserData> getOnlineUserList(OnlineUserQuery query, PageParam pageParam);
 
 
 }

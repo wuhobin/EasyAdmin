@@ -5,12 +5,11 @@ import com.aurora.domain.dto.file.OssFileRecordRetryData;
 import com.aurora.entity.SysOssFile;
 import com.aurora.mapper.SysOssFileMapper;
 import com.aurora.service.SysOssFileService;
-import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.starter.oss.template.OssTemplate;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.aurora.domain.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -47,18 +46,11 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
     }
 
     @Override
-    public IPage<SysOssFileVo> listFiles(OssFileQuery query, PageParam pageParam) {
-        OssFileQuery safeQuery = query == null ? new OssFileQuery() : query;
-        LambdaQueryWrapper<SysOssFile> wrapper = new LambdaQueryWrapper<SysOssFile>()
-                .like(StringUtils.isNotBlank(safeQuery.getFileName()),
-                        SysOssFile::getFileName, safeQuery.getFileName())
-                .eq(StringUtils.isNotBlank(safeQuery.getContentType()),
-                        SysOssFile::getContentType, safeQuery.getContentType())
-                .like(StringUtils.isNotBlank(safeQuery.getUploaderName()),
-                        SysOssFile::getUploaderName, safeQuery.getUploaderName())
-                .orderByDesc(SysOssFile::getCreateTime);
-        IPage<SysOssFile> entityPage = page(PageUtils.buildPage(pageParam), wrapper);
-        return entityPage.convert(SysOssFileServiceImpl::toVo);
+    public IPage<SysOssFile> listFiles(OssFileQuery query, PageParam pageParam) {
+        if (pageParam != null && (pageParam.getOrderBy() == null || pageParam.getOrderBy().isBlank())) {
+            pageParam.setOrderBy("create_time desc");
+        }
+        return page(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
     }
 
     @Override
@@ -172,20 +164,4 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
                 .build();
     }
 
-    private static SysOssFileVo toVo(SysOssFile file) {
-        return SysOssFileVo.builder()
-                .id(file.getId())
-                .fileId(file.getFileId())
-                .fileUrl(file.getFileUrl())
-                .fileName(file.getFileName())
-                .originalFilename(file.getOriginalFilename())
-                .contentType(file.getContentType())
-                .fileSize(file.getFileSize())
-                .platform(file.getPlatform())
-                .thumbnailUrl(file.getThumbnailUrl())
-                .uploaderId(file.getUploaderId())
-                .uploaderName(file.getUploaderName())
-                .createTime(file.getCreateTime())
-                .build();
-    }
 }

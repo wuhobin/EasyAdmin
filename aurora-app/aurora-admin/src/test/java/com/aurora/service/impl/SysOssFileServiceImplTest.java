@@ -7,7 +7,6 @@ import com.aurora.mapper.SysOssFileMapper;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.template.OssTemplate;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.aurora.domain.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.dromara.x.file.storage.core.Downloader;
@@ -63,7 +62,7 @@ class SysOssFileServiceImplTest {
     }
 
     @Test
-    void returnsViewModelsInsteadOfPersistenceEntities() {
+    void returnsEntitiesForTheBizConversionBoundary() {
         SysOssFile file = file();
         file.setOriginalFilename("avatar.png");
         file.setContentType("image/png");
@@ -78,7 +77,7 @@ class SysOssFileServiceImplTest {
 
         OssFileQuery query = new OssFileQuery();
         query.setFileName("file.png");
-        IPage<SysOssFileVo> result = service.listFiles(query, new PageParam(1, 10));
+        IPage<SysOssFile> result = service.listFiles(query, new PageParam(1, 10));
 
         assertThat(result.getTotal()).isEqualTo(1L);
         assertThat(result.getRecords()).singleElement().satisfies(record -> {

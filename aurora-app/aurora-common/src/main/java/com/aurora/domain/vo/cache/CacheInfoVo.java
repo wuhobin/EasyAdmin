@@ -39,5 +39,7 @@ public class CacheInfoVo {
 
     @Schema(description = "网络入口/出口")
     private String instantaneousInputKbps;
+
+    @Schema(description = "网络出口速率")
     private String instantaneousOutputKbps;
 }

@@ -1,6 +1,5 @@
 package com.aurora.domain.vo.user;
 
-import com.aurora.entity.SysUser;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +17,7 @@ import java.util.List;
 public class SysUserProfileVo {
 
     @Schema(description = "用户信息")
-    private SysUser sysUser;
+    private SysUserVo sysUser;
 
     @Schema(description = "角色")
     private List<String> roles;

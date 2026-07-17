@@ -2,61 +2,56 @@ package com.aurora.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.annotation.OperationLogger;
+import com.aurora.biz.SysMenuBizService;
+import com.aurora.domain.form.system.SysMenuForm;
+import com.aurora.domain.vo.menu.SysRouterVo;
+import com.aurora.domain.vo.system.SysMenuVo;
 import com.aurora.starter.webmvc.domain.response.Result;
-import com.aurora.entity.SysMenu;
-import com.aurora.service.SysMenuService;
-import com.aurora.domain.vo.menu.RouterVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/sys/menu")
 @RequiredArgsConstructor
-@Tag(name = "菜单管理", description = "系统菜单相关接口")
+@Tag(name = "Menu management")
 public class SysMenuController {
-
-    private final SysMenuService sysMenuService;
+    private final SysMenuBizService sysMenuBizService;
 
     @GetMapping("/tree")
     @Operation(summary = "获取菜单树列表")
-    public Result<List<SysMenu>> getMenuTree() {
-        return Result.data(sysMenuService.getMenuTree());
-    }
+    public Result<List<SysMenuVo>> getMenuTree() { return Result.data(sysMenuBizService.getMenuTree()); }
 
     @PostMapping
     @Operation(summary = "添加菜单")
-    @OperationLogger(value = "添加菜单")
+    @OperationLogger("添加菜单")
     @SaCheckPermission("sys:menu:add")
-    public Result<Void> addMenu(@RequestBody SysMenu menu) {
-        sysMenuService.addMenu(menu);
+    public Result<Void> addMenu(@RequestBody SysMenuForm form) {
+        sysMenuBizService.add(form);
         return Result.success();
     }
 
     @PutMapping
     @Operation(summary = "修改菜单")
-    @OperationLogger(value = "修改菜单")
+    @OperationLogger("修改菜单")
     @SaCheckPermission("sys:menu:update")
-    public Result<Void> updateMenu(@RequestBody SysMenu menu) {
-        sysMenuService.updateMenu(menu);
+    public Result<Void> updateMenu(@RequestBody SysMenuForm form) {
+        sysMenuBizService.update(form);
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除菜单")
-    @OperationLogger(value = "删除菜单")
+    @OperationLogger("删除菜单")
     @SaCheckPermission("sys:menu:delete")
     public Result<Void> deleteMenu(@PathVariable Integer id) {
-        sysMenuService.deleteMenu(id);
+        sysMenuBizService.delete(id);
         return Result.success();
     }
 
-    @GetMapping(value = "/routers")
+    @GetMapping("/routers")
     @Operation(summary = "获取用户菜单")
-    public Result<List<RouterVO>> getCurrentUserMenu() {
-        return Result.data(sysMenuService.getCurrentUserMenu());
-    }
+    public Result<List<SysRouterVo>> getCurrentUserMenu() { return Result.data(sysMenuBizService.getCurrentUserMenu()); }
 }
