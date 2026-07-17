@@ -16,8 +16,12 @@
         <result property="sex" column="sex" />
         <result property="createTime" column="create_time" />
 
+    </resultMap>
+
+    <resultMap type="com.aurora.domain.vo.user.SysUserPageListVo" id="SysUserRoleResultMap">
+        <id property="id" column="user_id"/>
         <collection property="roleIds" ofType="int">
-            <result column="roleId"/>
+            <result column="role_id"/>
         </collection>
     </resultMap>
 
@@ -49,10 +53,17 @@
             u.avatar,
             u.mobile,
             u.email,
-            u.sex,
-            sur.role_id as roleId
+            u.sex
         from sys_user u
-            left join sys_user_role sur on u.id = sur.user_id
         ${ew.customSqlSegment}
+    </select>
+
+    <select id="selectUserRoles" resultMap="SysUserRoleResultMap">
+        select user_id, role_id
+        from sys_user_role
+        where user_id in
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
     </select>
 </mapper>

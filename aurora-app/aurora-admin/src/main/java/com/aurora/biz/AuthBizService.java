@@ -82,7 +82,7 @@ public class AuthBizService {
         return loginUserInfo;
     }
 
-    private static long tokenTimeout(boolean rememberMe) {
+    static long tokenTimeout(boolean rememberMe) {
         return rememberMe ? REMEMBER_ME_TIMEOUT_SECONDS : SESSION_TIMEOUT_SECONDS;
     }
 }

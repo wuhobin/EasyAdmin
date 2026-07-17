@@ -9,6 +9,8 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
     /**
@@ -21,4 +23,6 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 
     IPage<SysUserPageListVo> selectUserPage(@Param("page") Page<Object> page,
                                             @Param("ew") Wrapper<SysUser> wrapper);
+
+    List<SysUserPageListVo> selectUserRoles(@Param("userIds") List<Integer> userIds);
 }

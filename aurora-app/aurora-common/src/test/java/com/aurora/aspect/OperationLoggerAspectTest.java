@@ -1,7 +1,13 @@
 package com.aurora.aspect;
 
+import com.aurora.annotation.OperationLogger;
+import com.aurora.mapper.SysOperateLogMapper;
+import com.aurora.starter.security.context.SecurityUtils;
+import com.aurora.starter.webmvc.utils.ServletUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -9,6 +15,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class OperationLoggerAspectTest {
 
@@ -39,5 +49,24 @@ class OperationLoggerAspectTest {
                 .anyMatch(field -> field.getName().equals("startTime"));
 
         assertThat(containsStartTimeField).isFalse();
+    }
+
+    @Test
+    void doesNotRequireTheAdminRoleBeforeProceeding() throws Throwable {
+        ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
+        OperationLogger annotation = mock(OperationLogger.class);
+        when(joinPoint.proceed()).thenReturn("ok");
+        when(annotation.save()).thenReturn(false);
+        OperationLoggerAspect aspect = new OperationLoggerAspect(mock(SysOperateLogMapper.class));
+
+        try (MockedStatic<ServletUtils> servletUtils = mockStatic(ServletUtils.class);
+             MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            servletUtils.when(ServletUtils::getRequest).thenReturn(new MockHttpServletRequest());
+
+            assertThat(aspect.doAround(joinPoint, annotation)).isEqualTo("ok");
+
+            securityUtils.verify(SecurityUtils::checkLogin);
+            verify(joinPoint).proceed();
+        }
     }
 }

@@ -12,13 +12,29 @@ import com.aurora.mapper.SysUserMapper;
 import com.aurora.service.SysUserService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     @Override
     public IPage<SysUserPageListVo> listUsers(SysUserQuery query, PageParam pageParam) {
-        return baseMapper.selectUserPage(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
+        IPage<SysUserPageListVo> page = baseMapper.selectUserPage(
+                PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
+        List<Integer> userIds = page.getRecords().stream().map(SysUserPageListVo::getId).toList();
+        if (userIds.isEmpty()) {
+            return page;
+        }
+        Map<Integer, SysUserPageListVo> rolesByUserId = baseMapper.selectUserRoles(userIds).stream()
+                .collect(Collectors.toMap(SysUserPageListVo::getId, Function.identity()));
+        page.getRecords().forEach(user -> {
+            SysUserPageListVo roles = rolesByUserId.get(user.getId());
+            user.setRoleIds(roles == null ? List.of() : roles.getRoleIds());
+        });
+        return page;
     }
 
     @Override

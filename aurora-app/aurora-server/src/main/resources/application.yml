@@ -8,9 +8,6 @@ spring:
     active: dev
   application:
     name: Easy-Admin
-  main:
-    allow-circular-references: true
-    allow-bean-definition-overriding: true
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

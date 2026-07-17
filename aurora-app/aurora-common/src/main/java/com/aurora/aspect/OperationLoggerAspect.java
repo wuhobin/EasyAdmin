@@ -1,6 +1,5 @@
 package com.aurora.aspect;
 
-import cn.dev33.satoken.exception.NotPermissionException;
 import com.aurora.annotation.OperationLogger;
 import com.aurora.common.Constants;
 import com.aurora.domain.vo.auth.LoginUserInfoVo;
@@ -32,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Records administrator operations after the business method succeeds.
+ * Records operations after the business method succeeds.
  */
 @Aspect
 @Component
@@ -52,9 +51,6 @@ public class OperationLoggerAspect {
     public Object doAround(ProceedingJoinPoint joinPoint, OperationLogger operationLogger) throws Throwable {
         HttpServletRequest request = ServletUtils.getRequest();
         SecurityUtils.checkLogin();
-        if (!SecurityUtils.hasRole(Constants.ADMIN)) {
-            throw new NotPermissionException("无权限");
-        }
 
         long startTime = System.currentTimeMillis();
         Object result = joinPoint.proceed();

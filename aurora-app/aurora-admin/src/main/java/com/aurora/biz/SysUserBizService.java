@@ -75,7 +75,9 @@ public class SysUserBizService {
     }
 
     public void updateProfile(UserProfileForm form) {
-        sysUserService.updateById(SysUserConvert.INSTANCE.toEntity(form));
+        SysUser user = SysUserConvert.INSTANCE.toEntity(form);
+        user.setId(SecurityUtils.getLoginIdAsInt());
+        sysUserService.updateById(user);
     }
 
     public boolean verifyPassword(String password) {

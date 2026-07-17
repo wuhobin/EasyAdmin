@@ -1,4 +1,4 @@
-package com.aurora.service.impl;
+package com.aurora.biz;
 
 import com.aurora.entity.SysOssFile;
 import com.aurora.service.SysOssFileService;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class FileServiceImplTest {
+class FileBizServiceTest {
 
     @Mock
     private OssTemplate ossTemplate;
@@ -38,14 +38,14 @@ class FileServiceImplTest {
         OssUploadResult uploadResult = uploadResult("native-id");
         when(ossTemplate.upload(any(MockMultipartFile.class), anyString())).thenReturn(uploadResult);
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileServiceImpl service = new FileServiceImpl(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
 
-        OssUploadResult result = service.upload(file);
+        String url = service.upload(file);
 
         ArgumentCaptor<SysOssFile> captor = ArgumentCaptor.forClass(SysOssFile.class);
         verify(ossFileService).saveIfAbsent(captor.capture());
         assertThat(captor.getValue().getFileId()).isEqualTo("native-id");
-        assertThat(result.getId()).isEqualTo("native-id");
+        assertThat(url).isEqualTo(uploadResult.getUrl());
         verify(retryTask, never()).submit(any());
     }
 
@@ -55,11 +55,13 @@ class FileServiceImplTest {
         OssUploadResult uploadResult = uploadResult(null);
         when(ossTemplate.upload(any(MockMultipartFile.class), anyString())).thenReturn(uploadResult);
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileServiceImpl service = new FileServiceImpl(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
 
-        OssUploadResult result = service.upload(file);
+        service.upload(file);
 
-        assertThat(result.getId()).isNotBlank();
+        ArgumentCaptor<SysOssFile> captor = ArgumentCaptor.forClass(SysOssFile.class);
+        verify(ossFileService).saveIfAbsent(captor.capture());
+        assertThat(captor.getValue().getFileId()).isNotBlank();
     }
 
     @Test
@@ -67,11 +69,11 @@ class FileServiceImplTest {
         MockMultipartFile file = file();
         when(ossTemplate.upload(any(MockMultipartFile.class), anyString())).thenReturn(uploadResult("file-123"));
         when(ossFileService.saveIfAbsent(any())).thenThrow(new IllegalStateException("database unavailable"));
-        FileServiceImpl service = new FileServiceImpl(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
 
-        OssUploadResult result = service.upload(file);
+        String url = service.upload(file);
 
-        assertThat(result.getUrl()).isEqualTo("https://oss.example.com/file.png");
+        assertThat(url).isEqualTo("https://oss.example.com/file.png");
         verify(retryTask).submit(any(SysOssFile.class));
     }
 
@@ -82,7 +84,7 @@ class FileServiceImplTest {
         when(ossFileService.saveIfAbsent(any())).thenReturn(false);
         org.mockito.Mockito.doThrow(new IllegalStateException("redis unavailable"))
                 .when(retryTask).submit(any(SysOssFile.class));
-        FileServiceImpl service = new FileServiceImpl(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
                 .isInstanceOf(IllegalStateException.class)
