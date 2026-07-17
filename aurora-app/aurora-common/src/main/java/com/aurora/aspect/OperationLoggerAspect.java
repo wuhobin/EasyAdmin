@@ -3,7 +3,7 @@ package com.aurora.aspect;
 import cn.dev33.satoken.exception.NotPermissionException;
 import com.aurora.annotation.OperationLogger;
 import com.aurora.common.Constants;
-import com.aurora.domain.dto.user.LoginUserInfo;
+import com.aurora.domain.vo.auth.LoginUserInfoVo;
 import com.aurora.entity.SysOperateLog;
 import com.aurora.mapper.SysOperateLogMapper;
 import com.aurora.starter.common.utils.JsonUtil;
@@ -75,7 +75,7 @@ public class OperationLoggerAspect {
         String paramsJson = serializeParameters(signature.getParameterNames(), point.getArgs());
 
         String userJson = JsonUtil.toJson(SecurityUtils.getSessionAttribute(Constants.CURRENT_USER));
-        LoginUserInfo user = JsonUtil.parse(userJson, LoginUserInfo.class);
+        LoginUserInfoVo user = JsonUtil.parse(userJson, LoginUserInfoVo.class);
         String ip = ServletUtils.getClientIp(request);
 
         SysOperateLog operateLog = SysOperateLog.builder()

@@ -1,6 +1,6 @@
 package com.aurora.service.impl;
 
-import com.aurora.domain.dto.file.OssFileRecordRetryData;
+import com.aurora.entity.SysOssFile;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
@@ -42,7 +42,7 @@ class FileServiceImplTest {
 
         OssUploadResult result = service.upload(file);
 
-        ArgumentCaptor<OssFileRecordRetryData> captor = ArgumentCaptor.forClass(OssFileRecordRetryData.class);
+        ArgumentCaptor<SysOssFile> captor = ArgumentCaptor.forClass(SysOssFile.class);
         verify(ossFileService).saveIfAbsent(captor.capture());
         assertThat(captor.getValue().getFileId()).isEqualTo("native-id");
         assertThat(result.getId()).isEqualTo("native-id");
@@ -72,7 +72,7 @@ class FileServiceImplTest {
         OssUploadResult result = service.upload(file);
 
         assertThat(result.getUrl()).isEqualTo("https://oss.example.com/file.png");
-        verify(retryTask).submit(any(OssFileRecordRetryData.class));
+        verify(retryTask).submit(any(SysOssFile.class));
     }
 
     @Test
@@ -81,14 +81,14 @@ class FileServiceImplTest {
         when(ossTemplate.upload(any(MockMultipartFile.class), anyString())).thenReturn(uploadResult("file-123"));
         when(ossFileService.saveIfAbsent(any())).thenReturn(false);
         org.mockito.Mockito.doThrow(new IllegalStateException("redis unavailable"))
-                .when(retryTask).submit(any(OssFileRecordRetryData.class));
+                .when(retryTask).submit(any(SysOssFile.class));
         FileServiceImpl service = new FileServiceImpl(ossTemplate, ossFileService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("redis unavailable");
 
-        verify(retryTask).submit(any(OssFileRecordRetryData.class));
+        verify(retryTask).submit(any(SysOssFile.class));
     }
 
     private static MockMultipartFile file() {

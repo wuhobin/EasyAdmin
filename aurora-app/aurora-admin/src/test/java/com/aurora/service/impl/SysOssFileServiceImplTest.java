@@ -1,6 +1,5 @@
 package com.aurora.service.impl;
 
-import com.aurora.domain.dto.file.OssFileRecordRetryData;
 import com.aurora.domain.query.OssFileQuery;
 import com.aurora.entity.SysOssFile;
 import com.aurora.mapper.SysOssFileMapper;
@@ -53,7 +52,7 @@ class SysOssFileServiceImplTest {
 
     @Test
     void treatsAnExistingFileIdAsAnIdempotentSuccess() {
-        OssFileRecordRetryData data = retryData();
+        SysOssFile data = retryData();
         when(mapper.exists(org.mockito.ArgumentMatchers.any())).thenReturn(true);
 
         assertThat(service.saveIfAbsent(data)).isTrue();
@@ -242,8 +241,8 @@ class SysOssFileServiceImplTest {
         verify(downloader).outputStream(outputStream);
     }
 
-    private static OssFileRecordRetryData retryData() {
-        return OssFileRecordRetryData.builder()
+    private static SysOssFile retryData() {
+        return SysOssFile.builder()
                 .fileId("file-123")
                 .fileUrl("https://oss.example.com/file.png")
                 .fileName("file.png")

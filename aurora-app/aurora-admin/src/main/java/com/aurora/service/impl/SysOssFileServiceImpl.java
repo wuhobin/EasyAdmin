@@ -1,7 +1,6 @@
 package com.aurora.service.impl;
 
 import com.aurora.domain.query.OssFileQuery;
-import com.aurora.domain.dto.file.OssFileRecordRetryData;
 import com.aurora.entity.SysOssFile;
 import com.aurora.mapper.SysOssFileMapper;
 import com.aurora.service.SysOssFileService;
@@ -21,14 +20,14 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
         implements SysOssFileService {
 
     @Override
-    public boolean saveIfAbsent(OssFileRecordRetryData data) {
+    public boolean saveIfAbsent(SysOssFile file) {
         LambdaQueryWrapper<SysOssFile> fileIdQuery = new LambdaQueryWrapper<SysOssFile>()
-                .eq(SysOssFile::getFileId, data.getFileId());
+                .eq(SysOssFile::getFileId, file.getFileId());
         if (baseMapper.exists(fileIdQuery)) {
             return true;
         }
         try {
-            return save(toEntity(data));
+            return save(file);
         } catch (DuplicateKeyException exception) {
             return true;
         }
@@ -44,21 +43,6 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
         LambdaQueryWrapper<SysOssFile> wrapper = new LambdaQueryWrapper<SysOssFile>()
                 .eq(SysOssFile::getFileUrl, url);
         return list(wrapper);
-    }
-
-    private static SysOssFile toEntity(OssFileRecordRetryData data) {
-        return SysOssFile.builder()
-                .fileId(data.getFileId())
-                .fileUrl(data.getFileUrl())
-                .fileName(data.getFileName())
-                .originalFilename(data.getOriginalFilename())
-                .contentType(data.getContentType())
-                .fileSize(data.getFileSize())
-                .platform(data.getPlatform())
-                .thumbnailUrl(data.getThumbnailUrl())
-                .uploaderId(data.getUploaderId())
-                .uploaderName(data.getUploaderName())
-                .build();
     }
 
 }

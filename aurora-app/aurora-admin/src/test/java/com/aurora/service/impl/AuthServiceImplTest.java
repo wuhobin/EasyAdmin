@@ -1,6 +1,6 @@
 package com.aurora.service.impl;
 
-import com.aurora.domain.dto.LoginDTO;
+import com.aurora.domain.form.auth.LoginForm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
@@ -23,22 +23,22 @@ class AuthServiceImplTest {
 
     @Test
     void defaultsRememberMeToFalseWhenTheFieldIsMissing() throws Exception {
-        LoginDTO loginDTO = new ObjectMapper().readValue(
+        LoginForm loginForm = new ObjectMapper().readValue(
                 "{\"username\":\"admin\",\"password\":\"secret\"}",
-                LoginDTO.class
+                LoginForm.class
         );
 
-        assertThat(loginDTO.isRememberMe()).isFalse();
+        assertThat(loginForm.isRememberMe()).isFalse();
     }
 
     @Test
     void bindsRememberMeWhenTheFieldIsProvided() throws Exception {
-        LoginDTO loginDTO = new ObjectMapper().readValue(
+        LoginForm loginForm = new ObjectMapper().readValue(
                 "{\"username\":\"admin\",\"password\":\"secret\",\"rememberMe\":true}",
-                LoginDTO.class
+                LoginForm.class
         );
 
-        assertThat(loginDTO.isRememberMe()).isTrue();
+        assertThat(loginForm.isRememberMe()).isTrue();
     }
 
     @Test

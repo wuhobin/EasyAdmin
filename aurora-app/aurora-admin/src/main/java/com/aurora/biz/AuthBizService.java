@@ -4,8 +4,6 @@ import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
 import com.aurora.common.Constants;
 import com.aurora.common.ResultCode;
-import com.aurora.domain.convert.AuthConvert;
-import com.aurora.domain.dto.user.LoginUserInfo;
 import com.aurora.domain.form.auth.LoginForm;
 import com.aurora.domain.vo.auth.LoginUserInfoVo;
 import com.aurora.entity.SysUser;
@@ -37,10 +35,10 @@ public class AuthBizService {
         validateLogin(form.getPassword(), user);
         SecurityUtils.login(user.getId(), new SaLoginParameter().setTimeout(tokenTimeout(form.isRememberMe())));
 
-        LoginUserInfo loginUserInfo = toLoginUserInfo(user);
+        LoginUserInfoVo loginUserInfo = toLoginUserInfo(user);
         loginUserInfo.setToken(SecurityUtils.getTokenValue());
         SecurityUtils.setSessionAttribute(Constants.CURRENT_USER, loginUserInfo);
-        return AuthConvert.INSTANCE.toVo(loginUserInfo);
+        return loginUserInfo;
     }
 
     public void logout() {
@@ -60,10 +58,10 @@ public class AuthBizService {
                 ? sysMenuService.listPermissions(buttonType)
                 : sysMenuService.listPermissionsByUserId(userId, buttonType);
 
-        LoginUserInfo loginUserInfo = toLoginUserInfo(user);
+        LoginUserInfoVo loginUserInfo = toLoginUserInfo(user);
         loginUserInfo.setRoles(roles);
         loginUserInfo.setPermissions(permissions);
-        return AuthConvert.INSTANCE.toVo(loginUserInfo);
+        return loginUserInfo;
     }
 
     private static void validateLogin(String password, SysUser user) {
@@ -78,8 +76,8 @@ public class AuthBizService {
         }
     }
 
-    private static LoginUserInfo toLoginUserInfo(SysUser user) {
-        LoginUserInfo loginUserInfo = new LoginUserInfo();
+    private static LoginUserInfoVo toLoginUserInfo(SysUser user) {
+        LoginUserInfoVo loginUserInfo = new LoginUserInfoVo();
         BeanUtils.copyProperties(user, loginUserInfo);
         return loginUserInfo;
     }

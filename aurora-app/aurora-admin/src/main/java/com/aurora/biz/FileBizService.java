@@ -2,10 +2,9 @@ package com.aurora.biz;
 
 import com.aurora.common.Constants;
 import com.aurora.domain.convert.OssFileConvert;
-import com.aurora.domain.dto.file.OssFileRecordRetryData;
-import com.aurora.domain.dto.user.LoginUserInfo;
 import com.aurora.domain.form.query.file.OssFileQueryForm;
 import com.aurora.domain.vo.file.SysOssFileVo;
+import com.aurora.domain.vo.auth.LoginUserInfoVo;
 import com.aurora.entity.SysOssFile;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.common.utils.DateUtils;
@@ -117,7 +116,7 @@ public class FileBizService {
     }
 
     private void recordUpload(MultipartFile file, OssUploadResult result) {
-        OssFileRecordRetryData data = buildRecordData(file, result, currentUser());
+        SysOssFile data = buildRecordData(file, result, currentUser());
         boolean saved;
         try {
             saved = ossFileService.saveIfAbsent(data);
@@ -181,8 +180,8 @@ public class FileBizService {
         }
     }
 
-    private static OssFileRecordRetryData buildRecordData(MultipartFile file, OssUploadResult result,
-                                                            LoginUserInfo user) {
+    private static SysOssFile buildRecordData(MultipartFile file, OssUploadResult result,
+                                               LoginUserInfoVo user) {
         String originalFilename = result.getOriginalFilename();
         if (originalFilename == null || originalFilename.isBlank()) {
             originalFilename = file.getOriginalFilename();
@@ -191,7 +190,7 @@ public class FileBizService {
         if (contentType == null || contentType.isBlank()) {
             contentType = file.getContentType();
         }
-        return OssFileRecordRetryData.builder()
+        return SysOssFile.builder()
                 .fileId(result.getId())
                 .fileUrl(result.getUrl())
                 .fileName(result.getFilename())
@@ -205,10 +204,10 @@ public class FileBizService {
                 .build();
     }
 
-    private static LoginUserInfo currentUser() {
+    private static LoginUserInfoVo currentUser() {
         try {
             Object sessionUser = SecurityUtils.getSessionAttribute(Constants.CURRENT_USER);
-            return JsonUtil.parse(JsonUtil.toJson(sessionUser), LoginUserInfo.class);
+            return JsonUtil.parse(JsonUtil.toJson(sessionUser), LoginUserInfoVo.class);
         } catch (Exception exception) {
             log.debug("Current upload user is unavailable", exception);
             return null;
