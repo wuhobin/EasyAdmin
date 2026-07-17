@@ -5,8 +5,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.aurora.entity.SysUser;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.domain.query.system.SysUserQuery;
-import com.aurora.domain.query.monitor.OnlineUserQuery;
-import com.aurora.domain.model.user.OnlineUserData;
 import com.aurora.domain.model.user.SysUserPageData;
 import com.aurora.domain.model.user.SysUserProfileData;
 
@@ -66,12 +64,5 @@ public interface SysUserService extends IService<SysUser> {
      * @return
      */
     Boolean resetPassword(SysUser user);
-
-    /**
-     * 获取在线用户列表
-     * @return
-     */
-    IPage<OnlineUserData> getOnlineUserList(OnlineUserQuery query, PageParam pageParam);
-
 
 }
