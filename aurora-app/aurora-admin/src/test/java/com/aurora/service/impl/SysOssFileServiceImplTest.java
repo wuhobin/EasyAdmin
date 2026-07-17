@@ -5,6 +5,7 @@ import com.aurora.entity.SysOssFile;
 import com.aurora.mapper.SysOssFileMapper;
 import com.aurora.starter.oss.template.OssTemplate;
 import com.aurora.starter.webmvc.exception.BizException;
+import org.dromara.x.file.storage.core.Downloader;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.dromara.x.file.storage.core.FileStorageService;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +35,9 @@ class SysOssFileServiceImplTest {
 
     @Mock
     private FileStorageService fileStorageService;
+
+    @Mock
+    private Downloader downloader;
 
     private SysOssFileServiceImpl service;
 
@@ -168,6 +173,39 @@ class SysOssFileServiceImplTest {
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining("ids=[1, 2]")
                 .hasMessageContaining("fileIds=[file-123, file-456]");
+    }
+
+    @Test
+    void returnsTheRequestedDownloadRecord() {
+        SysOssFile file = file();
+        when(mapper.selectById(file.getId())).thenReturn(file);
+
+        assertThat(service.getDownloadFile(file.getId())).isSameAs(file);
+    }
+
+    @Test
+    void rejectsDownloadWhenTheRecordDoesNotExist() {
+        when(mapper.selectById(99L)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.getDownloadFile(99L))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void streamsTheStoredPlatformAndObjectKeyFromOss() {
+        SysOssFile file = file();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        when(ossTemplate.getFileStorageService()).thenReturn(fileStorageService);
+        when(fileStorageService.download(org.mockito.ArgumentMatchers.any(FileInfo.class)))
+                .thenReturn(downloader);
+
+        service.download(file, outputStream);
+
+        verify(fileStorageService).download(org.mockito.ArgumentMatchers.argThat((FileInfo fileInfo) ->
+                file.getFileUrl().equals(fileInfo.getUrl())
+                        && file.getPlatform().equals(fileInfo.getPlatform())
+                        && "base/20260717/file.png".equals(fileInfo.getFilename())));
+        verify(downloader).outputStream(outputStream);
     }
 
     private static OssFileRecordRetryData retryData() {

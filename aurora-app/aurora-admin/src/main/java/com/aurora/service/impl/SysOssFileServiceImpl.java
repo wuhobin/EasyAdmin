@@ -18,6 +18,7 @@ import org.dromara.x.file.storage.core.FileInfo;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
 
@@ -55,6 +56,22 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
                         SysOssFile::getUploaderName, safeQuery.getUploaderName())
                 .orderByDesc(SysOssFile::getCreateTime);
         return page(PageUtils.buildPage(pageParam), wrapper);
+    }
+
+    @Override
+    public SysOssFile getDownloadFile(Long id) {
+        SysOssFile file = getById(id);
+        if (file == null) {
+            throw new BizException("文件记录不存在");
+        }
+        return file;
+    }
+
+    @Override
+    public void download(SysOssFile file, OutputStream outputStream) {
+        ossTemplate.getFileStorageService()
+                .download(toFileInfo(file))
+                .outputStream(outputStream);
     }
 
     @Override
@@ -96,6 +113,10 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
     }
 
     private boolean deleteOssFile(SysOssFile file) {
+        return ossTemplate.delete(toFileInfo(file));
+    }
+
+    private FileInfo toFileInfo(SysOssFile file) {
         String platform = file.getPlatform();
         if (platform == null || platform.isBlank()) {
             platform = ossTemplate.getFileStorageService().getDefaultPlatform();
@@ -107,11 +128,10 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
         if (objectKey == null || objectKey.isBlank()) {
             throw new BizException("无法解析 OSS 文件对象名称");
         }
-        FileInfo fileInfo = new FileInfo()
+        return new FileInfo()
                 .setUrl(file.getFileUrl())
                 .setPlatform(platform)
                 .setFilename(objectKey);
-        return ossTemplate.delete(fileInfo);
     }
 
     private static String extractObjectKey(String url) {

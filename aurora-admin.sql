@@ -316,6 +316,7 @@ INSERT INTO `sys_menu` VALUES (107, '109', '', '', '上传文件', 2, '', 'BUTTO
 INSERT INTO `sys_menu` VALUES (108, '109', '', '', '删除文件', 3, '', 'BUTTON', '2025-01-04 12:08:36', NULL, '', '', 1, 'sys:file:delete', 0);
 INSERT INTO `sys_menu` VALUES (109, '106', 'list', '/file/index', '文件列表', 1, 'Files', 'MENU', '2026-07-16 00:00:00', NULL, '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (110, '109', '', '', '文件列表', 1, '', 'BUTTON', '2026-07-16 00:00:00', NULL, '', '', 1, 'sys:file:list', 0);
+INSERT INTO `sys_menu` VALUES (111, '109', '', '', '下载文件', 4, '', 'BUTTON', '2026-07-17 00:00:00', NULL, '', '', 1, 'sys:file:download', 0);
 
 -- ----------------------------
 -- Table structure for sys_oss_file

@@ -48,6 +48,15 @@ export function getFileListApi(params: OssFileQuery) {
   })
 }
 
+export function downloadFileApi(id: number) {
+  return request({
+    url: `/file/${id}/download`,
+    method: 'get',
+    responseType: 'blob',
+    timeout: 0
+  })
+}
+
 export function deleteFileApi(id: number) {
   return request<void>({
     url: `/file/${id}`,

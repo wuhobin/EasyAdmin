@@ -51,19 +51,6 @@
 
     <el-card shadow="never">
       <el-table v-loading="loading" :data="fileList" row-key="id">
-        <el-table-column label="预览" width="88" align="center">
-          <template #default="{ row }">
-            <el-image
-              v-if="row.contentType?.startsWith('image/')"
-              class="file-preview"
-              :src="row.thumbnailUrl || row.fileUrl"
-              :preview-src-list="[row.fileUrl]"
-              preview-teleported
-              fit="cover"
-            />
-            <el-icon v-else class="file-icon"><Document /></el-icon>
-          </template>
-        </el-table-column>
         <el-table-column prop="fileName" label="文件名称" min-width="280" show-overflow-tooltip />
         <el-table-column prop="contentType" label="文件类型" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
@@ -77,6 +64,19 @@
           <template #default="{ row }">{{ row.uploaderName || '-' }}</template>
         </el-table-column>
         <el-table-column prop="createTime" label="上传时间" min-width="180" align="center" />
+        <el-table-column label="预览" width="88" align="center">
+          <template #default="{ row }">
+            <el-image
+              v-if="row.contentType?.startsWith('image/')"
+              class="file-preview"
+              :src="row.thumbnailUrl || row.fileUrl"
+              :preview-src-list="[row.fileUrl]"
+              preview-teleported
+              fit="cover"
+            />
+            <el-icon v-else class="file-icon"><Document /></el-icon>
+          </template>
+        </el-table-column>
         <el-table-column label="URL" min-width="100" align="center">
           <template #default="{ row }">
             <el-tooltip content="打开文件" placement="top">
@@ -90,7 +90,14 @@
         <el-table-column label="操作" width="118" align="center" fixed="right">
           <template #default="{ row }">
             <el-tooltip content="下载文件" placement="top">
-              <el-button link :icon="Download" aria-label="下载文件" @click="handleDownload(row)" />
+              <el-button
+                v-permission="['sys:file:download']"
+                link
+                :icon="Download"
+                :loading="downloadingId === row.id"
+                aria-label="下载文件"
+                @click="handleDownload(row)"
+              />
             </el-tooltip>
             <el-tooltip content="删除文件" placement="top">
               <el-button
@@ -127,6 +134,7 @@ import { CopyDocument, Delete, Document, Download, Link, Refresh, Search } from 
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import {
   deleteFileApi,
+  downloadFileApi,
   getFileListApi,
   type OssFileQuery,
   type OssFileRecord
@@ -137,6 +145,7 @@ import { getDictListApi, getDictDataListApi } from '@/api/system/dict'
 const queryFormRef = ref<FormInstance>()
 const loading = ref(false)
 const total = ref(0)
+const downloadingId = ref<number>()
 const fileList = ref<OssFileRecord[]>([])
 const userOptions = ref<{ id: number; nickname: string }[]>([])
 const contentTypeOptions = ref<{ label: string; value: string }[]>([])
@@ -221,16 +230,26 @@ const copyUrl = async (url: string) => {
   ElMessage.success('URL 已复制')
 }
 
-const handleDownload = (row: unknown) => {
+const handleDownload = async (row: unknown) => {
   const file = row as OssFileRecord
-  const link = document.createElement('a')
-  link.href = file.fileUrl
-  link.download = file.fileName
-  link.target = '_blank'
-  link.rel = 'noopener noreferrer'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  downloadingId.value = file.id
+  try {
+    const data = await downloadFileApi(file.id)
+    const blob = data instanceof Blob ? data : new Blob([data], { type: file.contentType })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    try {
+      link.href = url
+      link.download = file.originalFilename || file.fileName
+      document.body.appendChild(link)
+      link.click()
+    } finally {
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    }
+  } finally {
+    downloadingId.value = undefined
+  }
 }
 
 const handleDelete = async (row: unknown) => {

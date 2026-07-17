@@ -25,6 +25,7 @@ class OssFileSchemaTest {
             assertThat(sql).contains("`uploader_name` varchar(100)");
             assertThat(sql).contains("/file/index");
             assertThat(sql).contains("sys:file:list");
+            assertThat(sql).contains("sys:file:download");
         }
         assertThat(upgradeSql).contains("CREATE TABLE IF NOT EXISTS");
         assertThat(upgradeSql).doesNotContain("SELECT 109", "SELECT 110");
