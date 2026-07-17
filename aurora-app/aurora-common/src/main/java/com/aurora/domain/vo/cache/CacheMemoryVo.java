@@ -1,4 +1,4 @@
-package com.aurora.vo.cache;
+package com.aurora.domain.vo.cache;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

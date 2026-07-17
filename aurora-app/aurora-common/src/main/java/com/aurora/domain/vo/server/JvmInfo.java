@@ -1,4 +1,4 @@
-package com.aurora.vo.server;
+package com.aurora.domain.vo.server;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

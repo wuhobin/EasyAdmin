@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.common.RedisConstants;
-import com.aurora.dto.user.UserSaveOrUpdateDto;
+import com.aurora.domain.dto.user.UserSaveOrUpdateDto;
 import com.aurora.mapper.SysRoleMapper;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
@@ -15,9 +15,9 @@ import com.aurora.starter.redis.core.RedisCache;
 import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.aurora.vo.user.OnlineUserVo;
-import com.aurora.vo.user.SysUserPageListVo;
-import com.aurora.vo.user.SysUserProfileVo;
+import com.aurora.domain.vo.user.OnlineUserVo;
+import com.aurora.domain.vo.user.SysUserPageListVo;
+import com.aurora.domain.vo.user.SysUserProfileVo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import cn.dev33.satoken.secure.BCrypt;
@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.aurora.dto.user.UpdatePwdDTO;
+import com.aurora.domain.dto.user.UpdatePwdDTO;
 
 @Service
 @RequiredArgsConstructor

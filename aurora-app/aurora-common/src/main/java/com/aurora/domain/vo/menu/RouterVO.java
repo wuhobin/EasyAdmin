@@ -1,4 +1,4 @@
-package com.aurora.vo.menu;
+package com.aurora.domain.vo.menu;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

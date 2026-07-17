@@ -1,10 +1,10 @@
 package com.aurora.service;
 
-import com.aurora.dto.file.OssFileQuery;
-import com.aurora.dto.file.OssFileRecordRetryData;
+import com.aurora.domain.query.OssFileQuery;
+import com.aurora.domain.dto.file.OssFileRecordRetryData;
 import com.aurora.entity.SysOssFile;
 import com.aurora.starter.mybatisplus.model.PageParam;
-import com.aurora.vo.file.SysOssFileVo;
+import com.aurora.domain.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 

@@ -1,6 +1,6 @@
 package com.aurora.service.impl;
 
-import com.aurora.dto.LoginDTO;
+import com.aurora.domain.dto.LoginDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 

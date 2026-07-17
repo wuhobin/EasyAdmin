@@ -1,6 +1,6 @@
 package com.aurora.service.impl;
 
-import com.aurora.dto.file.OssFileRecordRetryData;
+import com.aurora.domain.dto.file.OssFileRecordRetryData;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;

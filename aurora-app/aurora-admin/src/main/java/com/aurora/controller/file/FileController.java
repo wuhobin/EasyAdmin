@@ -1,14 +1,14 @@
 package com.aurora.controller.file;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.aurora.dto.file.OssFileQuery;
+import com.aurora.domain.query.OssFileQuery;
 import com.aurora.entity.SysOssFile;
 import com.aurora.service.FileService;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.webmvc.domain.response.Result;
-import com.aurora.vo.file.SysOssFileVo;
+import com.aurora.domain.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

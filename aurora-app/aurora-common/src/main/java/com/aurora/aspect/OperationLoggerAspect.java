@@ -3,7 +3,7 @@ package com.aurora.aspect;
 import cn.dev33.satoken.exception.NotPermissionException;
 import com.aurora.annotation.OperationLogger;
 import com.aurora.common.Constants;
-import com.aurora.dto.user.LoginUserInfo;
+import com.aurora.domain.dto.user.LoginUserInfo;
 import com.aurora.entity.SysOperateLog;
 import com.aurora.mapper.SysOperateLogMapper;
 import com.aurora.starter.common.utils.JsonUtil;

@@ -1,7 +1,7 @@
 package com.aurora.service.impl;
 
-import com.aurora.dto.file.OssFileQuery;
-import com.aurora.dto.file.OssFileRecordRetryData;
+import com.aurora.domain.query.OssFileQuery;
+import com.aurora.domain.dto.file.OssFileRecordRetryData;
 import com.aurora.entity.SysOssFile;
 import com.aurora.mapper.SysOssFileMapper;
 import com.aurora.service.SysOssFileService;
@@ -10,7 +10,7 @@ import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.starter.oss.template.OssTemplate;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.aurora.vo.file.SysOssFileVo;
+import com.aurora.domain.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

@@ -1,8 +1,8 @@
 package com.aurora.service.impl;
 
 import com.aurora.common.Constants;
-import com.aurora.dto.file.OssFileRecordRetryData;
-import com.aurora.dto.user.LoginUserInfo;
+import com.aurora.domain.dto.file.OssFileRecordRetryData;
+import com.aurora.domain.dto.user.LoginUserInfo;
 import com.aurora.service.FileService;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.common.utils.DateUtils;

@@ -5,7 +5,7 @@ import com.aurora.annotation.OperationLogger;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.entity.SysMenu;
 import com.aurora.service.SysMenuService;
-import com.aurora.vo.menu.RouterVO;
+import com.aurora.domain.vo.menu.RouterVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

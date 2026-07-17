@@ -1,4 +1,4 @@
-package com.aurora.vo.user;
+package com.aurora.domain.vo.user;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.aurora.starter.common.utils.DateUtils;

@@ -1,7 +1,7 @@
 package com.aurora.service.impl;
 
+import com.aurora.domain.vo.server.*;
 import com.aurora.service.ServerService;
-import com.aurora.vo.server.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

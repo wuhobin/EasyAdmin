@@ -1,6 +1,6 @@
 package com.aurora.service;
 
-import com.aurora.vo.server.ServerInfo;
+import com.aurora.domain.vo.server.ServerInfo;
 
 public interface ServerService {
     /**

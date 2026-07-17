@@ -1,4 +1,4 @@
-package com.aurora.vo.user;
+package com.aurora.domain.vo.user;
 
 import com.aurora.entity.SysUser;
 import io.swagger.v3.oas.annotations.media.Schema;

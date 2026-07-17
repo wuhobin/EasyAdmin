@@ -1,4 +1,4 @@
-package com.aurora.dto.file;
+package com.aurora.domain.query;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

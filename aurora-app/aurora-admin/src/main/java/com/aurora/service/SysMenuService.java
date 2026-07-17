@@ -2,7 +2,7 @@ package com.aurora.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.aurora.entity.SysMenu;
-import com.aurora.vo.menu.RouterVO;
+import com.aurora.domain.vo.menu.RouterVO;
 
 import java.util.List;
 

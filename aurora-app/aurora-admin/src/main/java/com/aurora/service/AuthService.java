@@ -1,7 +1,7 @@
 package com.aurora.service;
 
-import com.aurora.dto.LoginDTO;
-import com.aurora.dto.user.LoginUserInfo;
+import com.aurora.domain.dto.LoginDTO;
+import com.aurora.domain.dto.user.LoginUserInfo;
 
 /**
  * 认证服务

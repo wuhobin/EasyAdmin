@@ -2,13 +2,13 @@ package com.aurora.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.aurora.dto.user.UserSaveOrUpdateDto;
+import com.aurora.domain.dto.user.UserSaveOrUpdateDto;
 import com.aurora.entity.SysUser;
 import com.aurora.starter.mybatisplus.model.PageParam;
-import com.aurora.dto.user.UpdatePwdDTO;
-import com.aurora.vo.user.OnlineUserVo;
-import com.aurora.vo.user.SysUserPageListVo;
-import com.aurora.vo.user.SysUserProfileVo;
+import com.aurora.domain.dto.user.UpdatePwdDTO;
+import com.aurora.domain.vo.user.OnlineUserVo;
+import com.aurora.domain.vo.user.SysUserPageListVo;
+import com.aurora.domain.vo.user.SysUserProfileVo;
 
 import java.util.List;
 

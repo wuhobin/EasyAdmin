@@ -2,7 +2,7 @@ package com.aurora.controller.monitor;
 
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.service.ServerService;
-import com.aurora.vo.server.ServerInfo;
+import com.aurora.domain.vo.server.ServerInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

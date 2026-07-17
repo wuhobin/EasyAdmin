@@ -1,8 +1,8 @@
 package com.aurora.controller.auth;
 
 import com.aurora.starter.webmvc.domain.response.Result;
-import com.aurora.dto.LoginDTO;
-import com.aurora.dto.user.LoginUserInfo;
+import com.aurora.domain.dto.LoginDTO;
+import com.aurora.domain.dto.user.LoginUserInfo;
 import com.aurora.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

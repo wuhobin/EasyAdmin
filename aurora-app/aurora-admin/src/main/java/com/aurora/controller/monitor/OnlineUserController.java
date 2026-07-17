@@ -6,7 +6,7 @@ import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.service.SysUserService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.security.context.SecurityUtils;
-import com.aurora.vo.user.OnlineUserVo;
+import com.aurora.domain.vo.user.OnlineUserVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

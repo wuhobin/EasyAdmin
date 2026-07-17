@@ -1,11 +1,11 @@
 package com.aurora.controller.file;
 
-import com.aurora.dto.file.OssFileQuery;
+import com.aurora.domain.query.OssFileQuery;
 import com.aurora.entity.SysOssFile;
 import com.aurora.service.FileService;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.mybatisplus.model.PageParam;
-import com.aurora.vo.file.SysOssFileVo;
+import com.aurora.domain.vo.file.SysOssFileVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ContentDisposition;

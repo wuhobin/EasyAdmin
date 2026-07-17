@@ -1,4 +1,4 @@
-package com.aurora.dto.file;
+package com.aurora.domain.dto.file;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

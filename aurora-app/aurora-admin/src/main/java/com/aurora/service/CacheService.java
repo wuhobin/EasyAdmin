@@ -1,7 +1,10 @@
 package com.aurora.service;
 
+import com.aurora.domain.vo.cache.CacheInfoVo;
+import com.aurora.domain.vo.cache.CacheKeyQuery;
+import com.aurora.domain.vo.cache.CacheKeyVo;
+import com.aurora.domain.vo.cache.CacheMemoryVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.aurora.vo.cache.*;
 
 public interface CacheService {
     

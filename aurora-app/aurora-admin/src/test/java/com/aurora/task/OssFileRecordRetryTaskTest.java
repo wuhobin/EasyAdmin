@@ -1,6 +1,6 @@
 package com.aurora.task;
 
-import com.aurora.dto.file.OssFileRecordRetryData;
+import com.aurora.domain.dto.file.OssFileRecordRetryData;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.redis.model.DelayRetry;
 import org.junit.jupiter.api.Test;

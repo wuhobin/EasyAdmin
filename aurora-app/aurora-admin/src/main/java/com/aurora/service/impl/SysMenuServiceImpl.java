@@ -10,7 +10,7 @@ import com.aurora.service.SysMenuService;
 import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.aurora.vo.menu.RouterVO;
+import com.aurora.domain.vo.menu.RouterVO;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
