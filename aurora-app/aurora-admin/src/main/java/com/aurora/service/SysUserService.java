@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.aurora.dto.user.UserSaveOrUpdateDto;
 import com.aurora.entity.SysUser;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.dto.user.UpdatePwdDTO;
 import com.aurora.vo.user.OnlineUserVo;
 import com.aurora.vo.user.SysUserPageListVo;
@@ -15,7 +16,7 @@ public interface SysUserService extends IService<SysUser> {
     /**
      * 分页查询用户
      */
-    IPage<SysUserPageListVo> listUsers(String nickname, Integer status);
+    IPage<SysUserPageListVo> listUsers(String nickname, Integer status, PageParam pageParam);
 
     /**
      * 新增用户
@@ -70,7 +71,7 @@ public interface SysUserService extends IService<SysUser> {
      * 获取在线用户列表
      * @return
      */
-    IPage<OnlineUserVo> getOnlineUserList(String username);
+    IPage<OnlineUserVo> getOnlineUserList(String username, PageParam pageParam);
 
 
 }

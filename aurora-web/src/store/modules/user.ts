@@ -1,27 +1,50 @@
-import { ref } from "vue";
-import { defineStore } from 'pinia';
-import { loginApi,getUserInfoApi,logoutApi } from "@/api/system/auth";
-import { resetRouter } from "@/router";
-import { store } from "@/store";
-import { setToken,removeToken } from "@/utils/auth";
+import { ref } from 'vue'
+import { defineStore } from 'pinia'
+import {
+  getUserInfoApi,
+  loginApi,
+  logoutApi,
+  type CurrentUserResult,
+  type LoginParams,
+} from '@/api/system/auth'
+import { resetRouter } from '@/router'
+import { store } from '@/store'
+import { removeToken, setToken } from '@/utils/auth'
 
-interface UserState {
-  roles: string[];
-  perms: string[];
-  intro: any;
-  avatar: any;
-  nickname: any;
-  permissions: string[];
+export interface CurrentUser {
+  id: number | null
+  username: string
+  nickname: string | null
+  avatar: string | null
+  roles: string[]
+  permissions: string[]
+}
+
+function createEmptyUser(): CurrentUser {
+  return {
+    id: null,
+    username: '',
+    nickname: null,
+    avatar: null,
+    roles: [],
+    permissions: []
+  }
+}
+
+function toCurrentUser(data: CurrentUserResult): CurrentUser {
+  return {
+    id: data.id,
+    username: data.username,
+    nickname: data.nickname,
+    avatar: data.avatar,
+    roles: data.roles ?? [],
+    permissions: data.permissions ?? []
+  }
 }
 
 export const useUserStore = defineStore("user", () => {
-  const user = ref({
-    roles: [],
-    intro: null,
-    avatar: null,
-    nickname: null,
-    permissions: []
-  });
+  const user = ref<CurrentUser>(createEmptyUser())
+  const initialized = ref(false)
 
   /**
    * 登录
@@ -29,73 +52,58 @@ export const useUserStore = defineStore("user", () => {
    * @param {LoginData}
    * @returns
    */
-  function login(loginData: any) {
-    return new Promise<void>((resolve, reject) => {
-      loginApi(loginData)
-        .then((response) => {
-          const { data } = response;
-          setToken(data.token)
-          resolve();
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
+  async function login(loginData: LoginParams) {
+    const { data } = await loginApi(loginData)
+    setToken(data.token, loginData.rememberMe)
   }
 
   // 获取信息(用户昵称、头像、角色集合、权限集合)
-  function getUserInfo() {
-    return new Promise<any>((resolve, reject) => {
-      getUserInfoApi()
-        .then(({ data }) => {
-          if (!data) {
-            reject("Verification failed, please Login again.");
-            return;
-          }
-          Object.assign(user.value, { ...data });
-          resolve(data);
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
+  async function getUserInfo() {
+    const { data } = await getUserInfoApi()
+    if (!data) {
+      throw new Error('Verification failed, please login again.')
+    }
+    user.value = toCurrentUser(data)
+    return data
   }
 
-  // user logout
-  function logout() {
-    return new Promise<void>((resolve, reject) => {
-      logoutApi()
-        .then(() => {
-          removeToken()
-          location.reload(); // 清空路由
-          resolve();
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
+  function markInitialized() {
+    initialized.value = true
   }
 
-  // remove token
-  function resetToken() {
-    console.log("resetToken");
-    return new Promise<void>((resolve) => {
-      removeToken()
-      resetRouter();
-      resolve();
-    });
+  function clearSession() {
+    removeToken()
+    user.value = createEmptyUser()
+    initialized.value = false
+    resetRouter()
+  }
+
+  async function logout() {
+    try {
+      await logoutApi()
+    } finally {
+      clearSession()
+      location.reload()
+    }
+  }
+
+  function forceLogout() {
+    clearSession()
   }
 
   return {
     user,
+    initialized,
     login,
     getUserInfo,
+    markInitialized,
     logout,
-    resetToken,
-  };
-});
+    clearSession,
+    forceLogout
+  }
+})
 
 // 非setup
 export function useUserStoreHook() {
-  return useUserStore(store);
+  return useUserStore(store)
 }

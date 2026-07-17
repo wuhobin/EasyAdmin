@@ -36,7 +36,7 @@ export function createMenuApi(data: any) {
  */
 export function updateMenuApi(data: any) {
   return request({
-    url: `/sys/menu/`,
+    url: '/sys/menu',
     method: 'put',
     data
   })

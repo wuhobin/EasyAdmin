@@ -4,10 +4,11 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.aurora.annotation.OperationLogger;
 import com.aurora.dto.user.UserSaveOrUpdateDto;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.dto.user.UpdatePwdDTO;
 import com.aurora.entity.SysUser;
 import com.aurora.service.SysUserService;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.vo.user.SysUserPageListVo;
 import com.aurora.vo.user.SysUserProfileVo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,8 +29,9 @@ public class SysUserController {
     @GetMapping
     @Operation(summary = "获取用户列表")
     public Result<IPage<SysUserPageListVo>> listUsers(@RequestParam(required = false) String nickname,
-                                                      @RequestParam(required = false) Integer status) {
-        return Result.success(sysUserService.listUsers(nickname,status));
+                                                      @RequestParam(required = false) Integer status,
+                                                      PageParam pageParam) {
+        return Result.data(sysUserService.listUsers(nickname, status, pageParam));
     }
 
     @PostMapping
@@ -71,7 +73,7 @@ public class SysUserController {
     @GetMapping("/profile")
     @Operation(summary = "获取个人信息")
     public Result<SysUserProfileVo> profile() {
-        return Result.success(sysUserService.profile());
+        return Result.data(sysUserService.profile());
     }
 
     @PutMapping("/updProfile")
@@ -86,7 +88,7 @@ public class SysUserController {
     @GetMapping("/verifyPassword/{password}")
     @Operation(summary = "锁屏界面验证密码")
     public Result<Boolean> verifyPassword(@PathVariable String password) {
-        return Result.success(sysUserService.verifyPassword(password));
+        return Result.data(sysUserService.verifyPassword(password));
     }
 
     @PutMapping("/reset")
@@ -94,6 +96,6 @@ public class SysUserController {
     @Operation(summary = "重置密码")
     @SaCheckPermission("sys:user:reset")
     public Result<Boolean> resetPassword(@RequestBody SysUser user) {
-        return Result.success(sysUserService.resetPassword(user));
+        return Result.data(sysUserService.resetPassword(user));
     }
 }

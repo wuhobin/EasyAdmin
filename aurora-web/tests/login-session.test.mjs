@@ -1,0 +1,143 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import test from 'node:test'
+
+async function readSource(relativePath) {
+  return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8')
+}
+
+async function readOptionalSource(relativePath) {
+  try {
+    return await readSource(relativePath)
+  } catch (error) {
+    if (error?.code === 'ENOENT') return ''
+    throw error
+  }
+}
+
+const authSource = await readSource('src/utils/auth.ts')
+const authApiSource = await readSource('src/api/system/auth.ts')
+const userStoreSource = await readSource('src/store/modules/user.ts')
+const requestSource = await readSource('src/utils/request.ts')
+const permissionSource = await readSource('src/plugins/permission.ts')
+const authSessionSource = await readOptionalSource('src/utils/auth-session.ts')
+const authSessionPluginSource = await readOptionalSource('src/plugins/authSession.ts')
+const mainSource = await readSource('src/main.ts')
+const uploadSource = await readSource('src/components/Upload/Image.vue')
+const packageJson = JSON.parse(await readSource('package.json'))
+const packageLock = JSON.parse(await readSource('package-lock.json'))
+const gitignoreSource = await readSource('.gitignore')
+
+test('token cookie supports session and three-day remember-me lifetimes', () => {
+  assert.match(authSource, /REMEMBER_ME_DAYS\s*=\s*3/)
+  assert.match(authSource, /setToken\(token:\s*string,\s*rememberMe\s*=\s*false\)/)
+  assert.match(authSource, /sameSite:\s*['"]lax['"]/)
+  assert.match(authSource, /secure:/)
+  assert.match(authSource, /rememberMe\s*\?\s*REMEMBER_ME_DAYS\s*:\s*undefined/)
+  assert.match(authSource, /Cookies\.remove\(TokenKey,\s*\{\s*path:\s*['"]\/['"]\s*\}\)/)
+})
+
+test('login API types match the active username-password form', () => {
+  assert.match(authApiSource, /export interface LoginParams/)
+  assert.match(authApiSource, /export interface CurrentUserResult/)
+  assert.match(authApiSource, /export interface LoginResult extends CurrentUserResult/)
+  assert.match(authApiSource, /rememberMe:\s*boolean/)
+  assert.match(authApiSource, /Promise<ApiResponse<LoginResult>>/)
+  assert.match(authApiSource, /Promise<ApiResponse<CurrentUserResult>>/)
+  assert.match(authApiSource, /request<LoginResult>/)
+  assert.match(authApiSource, /request<CurrentUserResult>/)
+  assert.doesNotMatch(authApiSource, /as unknown as Promise/)
+  assert.doesNotMatch(authApiSource, /captchaCode|captchaKey/)
+})
+
+test('user store tracks initialization and centralizes local session cleanup', () => {
+  assert.match(userStoreSource, /const initialized = ref\(false\)/)
+  assert.match(userStoreSource, /setToken\(data\.token,\s*loginData\.rememberMe\)/)
+  assert.match(userStoreSource, /initialized\.value = true/)
+  assert.match(userStoreSource, /function clearSession\(\)/)
+  assert.match(userStoreSource, /function forceLogout\(\)/)
+  assert.match(userStoreSource, /resetRouter\(\)/)
+  assert.match(userStoreSource, /initialized\.value = false/)
+  assert.match(userStoreSource, /clearSession\(\)[\s\S]*location\.reload\(\)/)
+})
+
+test('request wrapper exposes business-response generics and preserves binary responses', () => {
+  assert.match(requestSource, /export interface ApiResponse<T/)
+  assert.match(requestSource, /function request<T\s*=\s*any>/)
+  assert.match(requestSource, /Promise<ApiResponse<T>>/)
+  assert.match(requestSource, /responseType:\s*['"]blob['"]\s*\|\s*['"]arraybuffer['"]/)
+})
+
+test('request interceptor delegates unauthorized handling without importing application state', () => {
+  assert.match(requestSource, /notifyUnauthorized/)
+  assert.doesNotMatch(requestSource, /useUserStore|ElMessageBox|window\.location/)
+  assert.match(authSessionSource, /registerUnauthorizedHandler/)
+  assert.match(authSessionSource, /let unauthorizedPromise:\s*Promise<void>\s*\|\s*null/)
+  assert.match(authSessionPluginSource, /userStore\.forceLogout\(\)/)
+  assert.match(authSessionPluginSource, /ElMessageBox\.alert/)
+  assert.match(authSessionPluginSource, /router\.replace\(['"]\/login['"]\)/)
+  assert.match(mainSource, /setupAuthSession\(\)/)
+})
+
+test('route initialization uses explicit user-store state', () => {
+  assert.match(permissionSource, /if \(!userStore\.initialized\)/)
+  assert.match(permissionSource, /let initializationPromise:\s*Promise<void>\s*\|\s*null/)
+  assert.match(permissionSource, /let initializationToken:\s*string\s*\|\s*undefined/)
+  assert.match(permissionSource, /initializationToken !== token/)
+  assert.match(permissionSource, /userStore\.markInitialized\(\)/)
+  assert.match(userStoreSource, /function markInitialized\(\)/)
+  assert.doesNotMatch(permissionSource, /if \(!userStore\.user\.nickname\)/)
+})
+
+test('route initialization only clears the session after an unauthorized error', () => {
+  assert.match(requestSource, /isUnauthorized/)
+  assert.match(permissionSource, /if \(isUnauthorizedError\(error\)\)/)
+  assert.doesNotMatch(permissionSource, /userStore\.forceLogout\(\)/)
+  assert.match(permissionSource, /if \(isUnauthorizedError\(error\)\) \{[^}]*next\(false\);/)
+  assert.match(permissionSource, /else \{[\s\S]*isReportedRequestError\(error\)[\s\S]*ElMessage\.error\([\s\S]*next\(false\);/)
+  assert.match(requestSource, /new RequestError\([^\n]+false, true\)/)
+  assert.match(authSessionPluginSource, /userStore\.forceLogout\(\)/)
+  assert.match(authSessionPluginSource, /router\.replace\(['"]\/login['"]\)/)
+})
+
+test('image uploads send the same Bearer authorization scheme as axios', () => {
+  assert.match(uploadSource, /const token = getToken\(\)/)
+  assert.match(uploadSource, /Authorization:\s*token\s*\?\s*`Bearer \$\{token\}`\s*:\s*['"]["']/)
+})
+
+test('unused Pinia persistence dependency is removed', () => {
+  assert.equal(packageJson.dependencies?.['pinia-plugin-persistedstate'], undefined)
+})
+
+test('frontend dependencies use the coordinated Node 18 compatible versions', () => {
+  assert.equal(packageJson.engines?.node, '>=18')
+  assert.equal(packageJson.dependencies.vue, '^3.5.40')
+  assert.equal(packageJson.dependencies['vue-router'], '^4.6.4')
+  assert.equal(packageJson.dependencies.pinia, '^3.0.4')
+  assert.equal(packageJson.dependencies['element-plus'], '^2.14.3')
+  assert.equal(packageJson.dependencies.axios, '^1.18.1')
+  assert.equal(packageJson.devDependencies.vite, '^6.4.3')
+  assert.equal(packageJson.devDependencies['@vitejs/plugin-vue'], '^5.2.4')
+  assert.equal(packageJson.devDependencies.typescript, '^5.9.3')
+  assert.equal(packageJson.devDependencies['vue-tsc'], '^3.3.7')
+  assert.equal(packageJson.devDependencies['unplugin-auto-import'], '^20.3.0')
+  assert.equal(packageJson.devDependencies['@types/vue-router'], undefined)
+  assert.equal(packageJson.devDependencies['@vue/runtime-core'], undefined)
+  assert.equal(packageJson.dependencies['svg-sprite-loader'], undefined)
+  assert.equal(packageJson.devDependencies['vite-svg-loader'], undefined)
+})
+
+test('package scripts expose repeatable test, typecheck, and full verification commands', () => {
+  assert.equal(
+    packageJson.scripts.test,
+    'node --test tests/login-page.test.mjs tests/login-session.test.mjs tests/file-management.test.mjs'
+  )
+  assert.equal(packageJson.scripts.typecheck, 'vue-tsc --noEmit')
+  assert.equal(packageJson.scripts.check, 'npm run typecheck && npm run test && npm run build')
+})
+
+test('npm lockfile is generated and tracked for reproducible installs', () => {
+  assert.equal(packageLock.name, packageJson.name)
+  assert.ok(packageLock.lockfileVersion >= 3)
+  assert.doesNotMatch(gitignoreSource, /^package-lock\.json$/m)
+})

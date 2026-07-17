@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.service.SysRoleService;
-import com.aurora.utils.PageUtils;
+import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.mybatisplus.mybatis.PageUtils;
+import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.entity.SysRole;
 import com.aurora.mapper.SysRoleMapper;
+import com.aurora.starter.webmvc.exception.BizException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,20 +20,20 @@ import java.util.List;
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
     @Override
-    public IPage<SysRole> listRoles(String name) {
+    public IPage<SysRole> listRoles(String name, PageParam pageParam) {
 
         LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<SysRole>()
-                .like(StringUtils.hasText(name),SysRole::getName, name)
+                .like(StringUtils.isNotBlank(name),SysRole::getName, name)
                 .orderByDesc(SysRole::getCreateTime);
-        
-        return baseMapper.selectPage(PageUtils.getPage(), wrapper);
+
+        return baseMapper.selectPage(PageUtils.buildPage(pageParam), wrapper);
     }
 
     @Override
     public void addRole(SysRole role) {
         // 检查角色编码是否已存在
         if (checkCodeExists(role.getCode(), null)) {
-            throw new RuntimeException("角色编码已存在");
+            throw new BizException("角色编码已存在");
         }
         save(role);
     }
@@ -40,11 +42,11 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     public void updateRole(SysRole role) {
         // 检查角色是否存在
         if (getById(role.getId()) == null) {
-            throw new RuntimeException("角色不存在");
+            throw new BizException("角色不存在");
         }
         // 检查角色编码是否已存在
         if (checkCodeExists(role.getCode(), role.getId())) {
-            throw new RuntimeException("角色编码已存在");
+            throw new BizException("角色编码已存在");
         }
         updateById(role);
     }
@@ -85,4 +87,4 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         }
         return baseMapper.selectCount(wrapper) > 0;
     }
-} 
+}

@@ -1,16 +1,28 @@
-import request from '@/utils/request'
+import request, { type ApiResponse } from '@/utils/request'
 
-interface LoginParams {
+export interface LoginParams {
   username: string
   password: string
-  captchaCode: string
-  captchaKey: string
   rememberMe: boolean
+  source?: string
+}
+
+export interface CurrentUserResult {
+  id: number
+  username: string
+  nickname: string | null
+  avatar: string | null
+  roles: string[] | null
+  permissions: string[] | null
+}
+
+export interface LoginResult extends CurrentUserResult {
+  token: string
 }
 
 // 登录接口
-export function loginApi(data: LoginParams) {
-  return request({
+export function loginApi(data: LoginParams): Promise<ApiResponse<LoginResult>> {
+  return request<LoginResult>({
     url: '/auth/login',
     method: 'post',
     data
@@ -25,8 +37,8 @@ export function logoutApi() {
   }
 
 // 获取用户信息
-export function getUserInfoApi() {
-  return request({
+export function getUserInfoApi(): Promise<ApiResponse<CurrentUserResult>> {
+  return request<CurrentUserResult>({
     url: "/auth/info",
     method: "get"
   })

@@ -4,9 +4,49 @@ import { useUserStore, useSettingsStore } from '@/store'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import { getToken } from '@/utils/auth'
+import { ElMessage } from 'element-plus'
+import { isReportedRequestError, isUnauthorizedError } from '@/utils/request'
 NProgress.configure({ showSpinner: false })
 
 const whiteList = ['/login'] // 路由白名单
+let initializationPromise: Promise<void> | null = null
+let initializationToken: string | undefined
+
+function registerAccessRoutes(accessRoutes: any[]) {
+  accessRoutes.forEach((route: any) => {
+    if (!route || typeof route !== 'object') {
+      console.error('Invalid route object:', route)
+      return
+    }
+    if (!route.meta?.isExternal) {
+      router.addRoute(route)
+    }
+  })
+}
+
+function initializePermission(token: string) {
+  if (!initializationPromise || initializationToken !== token) {
+    initializationToken = token
+    initializationPromise = (async () => {
+      const userStore = useUserStore()
+      const permissionStore = usePermissionStore()
+
+      await userStore.getUserInfo()
+      const accessRoutes = await permissionStore.generateRoutes()
+      if (Array.isArray(accessRoutes)) {
+        registerAccessRoutes(accessRoutes)
+      }
+      userStore.markInitialized()
+    })().finally(() => {
+      if (initializationToken === token) {
+        initializationPromise = null
+        initializationToken = undefined
+      }
+    })
+  }
+
+  return initializationPromise
+}
 
 export function setupPermission() {
   router.beforeEach(async (to, from, next) => {
@@ -24,38 +64,23 @@ export function setupPermission() {
         NProgress.done();
       } else {
         const userStore = useUserStore();
-        const permissionStore = usePermissionStore();
         
         // 判断是否已经获取过用户信息
-        if (!userStore.user.nickname) {
+        if (!userStore.initialized) {
           try {
-            // 获取用户信息
-            await userStore.getUserInfo();
-            // 生成可访问路由
-            const accessRoutes = await permissionStore.generateRoutes();
-            // 添加路由前检查和打印日志
-            if (Array.isArray(accessRoutes) && accessRoutes.length > 0) {
-              accessRoutes.forEach((route: any) => {
-                if (route && typeof route === 'object') {
-                  if(route.meta?.isExternal) {
-                    return;
-                  }
-                  router.addRoute(route);
-                } else {
-                  console.error('Invalid route object:', route);
-                }
-              });
-              // 使用 replace 进行重定向，确保路由添加完成
-              next({ ...to, replace: true });
-            } else {
-              console.error('No valid routes generated');
-              next();
-            }
-          } catch (error) {
+            await initializePermission(hasToken)
+            next({ ...to, replace: true });
+          } catch (error: unknown) {
             console.error('Permission error:', error);
-            // 移除 token 并跳转登录页
-            await userStore.resetToken();
-            next(`/login`);
+            if (isUnauthorizedError(error)) {
+              // 集中的 401 处理器负责清理会话、提示并跳转登录页。
+              next(false);
+            } else {
+              if (!isReportedRequestError(error)) {
+                ElMessage.error('页面初始化失败，请稍后再试');
+              }
+              next(false);
+            }
             NProgress.done();
           }
         } else {

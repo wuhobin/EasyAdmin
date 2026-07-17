@@ -1,10 +1,16 @@
 server:
+  # 服务端口
   port: 8800
+
 spring:
-  application:
-    name: aurora-admin
   profiles:
+    # 激活环境
     active: dev
+  application:
+    name: Easy-Admin
+  main:
+    allow-circular-references: true
+    allow-bean-definition-overriding: true
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -12,38 +18,8 @@ spring:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
-
-############## Sa-Token 配置 (文档: https://sa-token.cc) ##############
-sa-token:
-  # token 名称（同时也是 cookie 名称）
-  token-name: Authorization
-  # token 有效期（单位：秒） 默认30天，-1 代表永久有效
-  timeout: 259200
-  # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
-  active-timeout: -1
-  # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
-  is-concurrent: true
-  # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
-  is-share: false
-  # token 风格（默认可取值：uuid、simple-uuid、random-32、random-64、random-128、tik）
-  token-style: uuid
-  # 是否输出操作日志
-  is-log: true
-  # 关闭Cookie模式
-  isReadCookie: false
-
-#==============================mybatis-plus配置=========================
-mybatis-plus:
-  mapper-locations: classpath:/mapper/*Mapper.xml
-  typeAliasesPackage: com.aurora.entity
-  global-config:
-    db-config:
-      id-type: AUTO
-      field-strategy: not_empty
-      column-underline: true
-      db-type: mysql
-    refresh: true
-  configuration:
-    map-underscore-to-camel-case: true
-    cache-enabled: false
-    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  config:
+    import:
+      - classpath:config/mybatis-plus.yml
+      - classpath:config/platform.yml
+      - classpath:config/swagger.yml

@@ -3,9 +3,10 @@ package com.aurora.controller.system;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.aurora.annotation.OperationLogger;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.entity.SysDictData;
 import com.aurora.service.SysDictDataService;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +25,8 @@ public class SysDictDataController {
 
     @GetMapping("list")
     @Operation(summary = "获取字典数据列表")
-    public Result<IPage<SysDictData>> listDictData(Long dictId) {
-        return Result.success(sysDictDataService.listDictData(dictId));
+    public Result<IPage<SysDictData>> listDictData(Long dictId, PageParam pageParam) {
+        return Result.data(sysDictDataService.listDictData(dictId, pageParam));
     }
 
     @PostMapping("add")
@@ -54,4 +55,4 @@ public class SysDictDataController {
         sysDictDataService.removeBatchByIds(ids);
         return Result.success();
     }
-} 
+}

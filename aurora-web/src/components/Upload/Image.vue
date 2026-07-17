@@ -58,8 +58,9 @@ const emit = defineEmits(['update:modelValue'])
 const uploadUrl = import.meta.env.VITE_APP_BASE_API + '/file/upload'
 
 // 请求头
+const token = getToken()
 const headers = {
-  Authorization: getToken()
+  Authorization: token ? `Bearer ${token}` : ''
 }
 
 const fileList = ref<UploadUserFile[]>([])
@@ -161,4 +162,4 @@ watch(() => props.modelValue, () => {
 :deep(.el-upload-list--picture-card) {
   --el-upload-list-picture-card-size: 100px;
 }
-</style> 
+</style>

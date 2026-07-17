@@ -3,12 +3,13 @@ package com.aurora.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.aurora.entity.SysDict;
+import com.aurora.starter.mybatisplus.model.PageParam;
 
 public interface SysDictService extends IService<SysDict> {
     /**
      * 分页查询字典
      */
-    IPage<SysDict> getDictPageList(String name,Integer status);
+    IPage<SysDict> getDictPageList(String name, Integer status, PageParam pageParam);
 
     /**
      * 新增字典

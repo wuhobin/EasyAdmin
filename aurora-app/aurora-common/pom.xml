@@ -12,35 +12,30 @@
     <artifactId>aurora-common</artifactId>
     <description>通用模块</description>
 
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
-        <!-- Spring Boot（排除 Logback） -->
+        <!-- Spring Boot（BOM 已统一排除 spring-boot-starter-logging，下游无需再写 exclusion） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
-        <!-- Bean Validation（排除 Logback） -->
+        <!-- Bean Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- AOP（排除 Logback） -->
+        <!-- AOP -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <!-- 平台 webmvc 通用件：传递引入 Log4j2 与默认 log4j2-spring.xml，
+             同时复用 Result / BizException / GlobalExceptionHandler / TraceIdFilter 等基础设施 -->
+        <dependency>
+            <groupId>io.github.wuhobin</groupId>
+            <artifactId>platform-webmvc</artifactId>
         </dependency>
 
         <!-- MySQL -->
@@ -49,93 +44,54 @@
             <artifactId>mysql-connector-j</artifactId>
         </dependency>
 
-        <!-- MyBatis Plus -->
+        <!-- MyBatis Plus（platform-boot-starter；BOM 已统一排除默认 logging） -->
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <groupId>io.github.wuhobin</groupId>
+            <artifactId>mybatis-plus-spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- Quartz 定时任务（platform-boot-starter；BOM 已统一排除默认 logging） -->
         <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-spring-boot3-starter</artifactId>
+            <groupId>io.github.wuhobin</groupId>
+            <artifactId>quartz-spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- Sa-Token 认证（platform-boot-starter；BOM 已统一排除默认 logging） -->
         <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-redis-template</artifactId>
+            <groupId>io.github.wuhobin</groupId>
+            <artifactId>sa-token-spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- Redis 缓存（platform-boot-starter） -->
         <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-fastjson2</artifactId>
+            <groupId>io.github.wuhobin</groupId>
+            <artifactId>redis-spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- Lombok -->
+        <!-- OSS 对象存储（platform-boot-starter） -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <groupId>io.github.wuhobin</groupId>
+            <artifactId>oss-spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- UserAgent -->
+        <!-- 七牛云 SDK（OSS starter 依赖，用于 qiniu-kodo 平台） -->
         <dependency>
-            <groupId>eu.bitwalker</groupId>
-            <artifactId>UserAgentUtils</artifactId>
-        </dependency>
-
-        <!-- Redis连接 -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-pool2</artifactId>
-        </dependency>
-
-        <!-- OSHI -->
-        <dependency>
-            <groupId>com.github.oshi</groupId>
-            <artifactId>oshi-core</artifactId>
-            <version>6.4.0</version>
-        </dependency>
-
-        <!-- Velocity模板引擎 -->
-        <dependency>
-            <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity-engine-core</artifactId>
-            <version>2.3</version>
-        </dependency>
-
-        <!-- knife4j依赖 -->
-        <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
+            <groupId>com.qiniu</groupId>
+            <artifactId>qiniu-java-sdk</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.lionsoul</groupId>
             <artifactId>ip2region</artifactId>
-            <version>2.7.0</version>
-        </dependency>
-
-        <!-- WebSocket（排除 Logback） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-websocket</artifactId>
-        </dependency>
-
-        <!--email-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
+            <version>${ip2region.version}</version>
         </dependency>
 
         <dependency>
             <groupId>cn.idev.excel</groupId>
             <artifactId>fastexcel</artifactId>
-            <version>1.0.0</version>
+            <version>${fastexcel.version}</version>
             <exclusions>
+                <!-- logback 排除针对 BOM 未管控的传递依赖，作为最终兜底 -->
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>logback-classic</artifactId>
@@ -159,30 +115,12 @@
             </exclusions>
         </dependency>
 
-        <!-- Redisson 分布式锁 -->
-        <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson-spring-boot-starter</artifactId>
-        </dependency>
-
-        <!-- Log4j2 替代 Logback -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-log4j2</artifactId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <classifier>exec</classifier>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

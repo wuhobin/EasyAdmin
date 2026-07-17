@@ -1,10 +1,15 @@
 import Cookies from 'js-cookie'
 
 const TokenKey = 'Aurora-Admin-Token'
+const REMEMBER_ME_DAYS = 3
 
-// 设置token到cookie，过期时间1小时
-export function setToken(token: string) {
-  return Cookies.set(TokenKey, token, { expires: 1/24 }) // 1/24 天 = 1小时
+export function setToken(token: string, rememberMe = false) {
+  return Cookies.set(TokenKey, token, {
+    expires: rememberMe ? REMEMBER_ME_DAYS : undefined,
+    path: '/',
+    sameSite: 'lax',
+    secure: window.location.protocol === 'https:'
+  })
 }
 
 export function getToken() {
@@ -12,5 +17,5 @@ export function getToken() {
 }
 
 export function removeToken() {
-  return Cookies.remove(TokenKey)
-} 
+  return Cookies.remove(TokenKey, { path: '/' })
+}

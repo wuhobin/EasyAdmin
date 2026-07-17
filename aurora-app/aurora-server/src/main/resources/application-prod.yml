@@ -1,0 +1,68 @@
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${mysql.address}:3306/easyadmin?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=GMT%2B8
+    username: ${mysql.username}
+    password: ${mysql.password}
+    hikari:
+      # 生产环境调大连接池
+      minimum-idle: 10
+      idle-timeout: 300000
+      maximum-pool-size: 50
+      auto-commit: true
+      pool-name: MyHikariCP-Prod
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+  data:
+    redis:
+      host: ${redis.address}
+      port: 6379
+      # 生产环境建议使用 database 0
+      database: 0
+      #password: ${redis.password}
+      client-type: lettuce
+      lettuce:
+        pool:
+          # 生产环境调大连接池
+          max-active: 32
+          max-idle: 16
+          min-idle: 8
+
+knife4j:
+  enable: ${knife4j.enable:false}
+  basic:
+    # knife4j 开启后才生效；账号密码通过环境变量注入
+    enable: ${knife4j.basic.enable:false}
+    username: ${knife4j.basic.username:admin}
+    password: ${knife4j.basic.password:CHANGE_ME}
+springdoc:
+  api-docs:
+    enabled: ${springdoc.api-docs.enabled:false}
+  swagger-ui:
+    enabled: ${springdoc.swagger-ui.enabled:false}
+
+# ============================== 文件存储配置 ==============================
+# 生产环境建议使用不同的 OSS 账号/Bucket
+dromara:
+  x-file-storage:
+    # 默认使用的存储平台
+    default-platform: qiniu-kodo-1
+    # 缩略图后缀，例如【.min.jpg】【.png】
+    thumbnail-suffix: ".min.jpg"
+    # 七牛云 Kodo
+    qiniu-kodo:
+      - platform: qiniu-kodo-1
+        enable-storage: true
+        # 生产环境 AK/SK 通过环境变量注入，避免硬编码
+        access-key: ${oss.qiniu.access-key}
+        secret-key: ${oss.qiniu.secret-key}
+        bucket-name: ${oss.qiniu.bucket-name:easyadmin-prod}
+        domain: ${oss.qiniu.domain:https://oss.example.com/}
+        base-path: prod/
+
+# ============================== 日志配置 ==============================
+logging:
+  file:
+    path: ${LOG_PATH:/app/logs}

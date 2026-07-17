@@ -2,7 +2,7 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${mysql.address}:3306/aurora-admin?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=GMT%2B8
+    url: jdbc:mysql://${mysql.address}:3306/easyadmin?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=GMT%2B8
     username: ${mysql.username}
     password: ${mysql.password}
     hikari:
@@ -30,61 +30,31 @@ spring:
           # 最小空闲连接数 默认0
           min-idle: 0
 
-#==============================knife4j配置=======================================
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
-  api-docs:
-    path: /v3/api-docs
-  group-configs:
-    - group: 'admin'
-      paths-to-match: '/**'
-      packages-to-scan: com.aurora.controller
-# knife4j的增强配置，不需要增强可以不配
+# knife4j Basic 认证（环境相关：dev/prod 账号密码不同）
 knife4j:
-  enable: true
   basic:
     enable: true
-    # Basic认证用户名
+    # Basic 认证用户名
     username: root
-    # Basic认证密码
+    # Basic 认证密码
     password: 123456
-  setting:
-    language: zh_cn
 
-
-#==============================文件地址配置=======================================
+# ============================== 文件存储配置 ==============================
 dromara:
-  x-file-storage: #文件存储配置
-    default-platform: qiniu-kodo-1 #默认使用的存储平台
-    thumbnail-suffix: ".min.jpg" #缩略图后缀，例如【.min.jpg】【.png】
+  x-file-storage:
+    # 默认使用的存储平台
+    default-platform: qiniu-kodo-1
+    # 缩略图后缀，例如【.min.jpg】【.png】
+    thumbnail-suffix: ".min.jpg"
+    # 七牛云 Kodo
     qiniu-kodo:
-      - platform: qiniu-kodo-1 # 存储平台标识
-        enable-storage: true  # 启用存储
+      - platform: qiniu-kodo-1
+        enable-storage: true
         access-key: gmU3fgKgiJYF4MsZUaKIWu47roQbYFwrXCAmGDxG
         secret-key: QOe_P_pQg7THeRetMMTNO_ZplkusHOlukej_KIIg
         bucket-name: codehub-wu
-        domain: https://oss.wuhobin.top/  # 访问域名，注意“/”结尾，例如：http://abc.hn-bkt.clouddn.com/
-        base-path: base/ # 基础路径
-
-#==============================微信公众号配置==============================
-wx:
-  mp:
-    configs:
-      - appId: wx24cae73709fe6ff7
-        secret: acad60afb2103bb2f61b00eb6da187f8
-        token: app-token
-        aesKey: aurora
-
-#==============================邮箱配置=======================================
-mail:
-  smtp:
-    host: smtp.163.com
-    port: 25
-    email: ${mail.username}
-    password: ${mail.password}
+        domain: https://oss.wuhobin.top/
+        base-path: base/
 
 # ============================== 日志配置 ==============================
 logging:

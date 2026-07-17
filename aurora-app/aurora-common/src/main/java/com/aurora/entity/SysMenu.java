@@ -1,21 +1,22 @@
 package com.aurora.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.aurora.enums.MenuTypeEnum;
-import com.aurora.utils.DateUtils;
+import com.aurora.starter.mybatisplus.model.BaseEntity;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @TableName("sys_menu")
 @Schema(description = "菜单信息")
-public class SysMenu implements Serializable {
-    
+public class SysMenu extends BaseEntity implements Serializable {
+
     @TableId(type = IdType.AUTO)
     private Integer id;
 
@@ -55,14 +56,6 @@ public class SysMenu implements Serializable {
     @Schema(description = "权限标识")
     private String perm;
 
-    @TableField(fill = FieldFill.INSERT)
-    @JsonFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS, timezone = "GMT+8")
-    private LocalDateTime createTime;
-
-    @TableField(fill = FieldFill.UPDATE)
-    @JsonFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS, timezone = "GMT+8")
-    private LocalDateTime updateTime;
-
     @TableField(exist = false)
     private List<SysMenu> children;
-} 
+}

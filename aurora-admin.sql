@@ -18,122 +18,6 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for gen_table
--- ----------------------------
-DROP TABLE IF EXISTS `gen_table`;
-CREATE TABLE `gen_table`  (
-  `table_id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
-  `table_name` varchar(200) CHARACTER SET utf8mb4  NULL DEFAULT '' COMMENT '表名称',
-  `table_comment` varchar(500) CHARACTER SET utf8mb4  NULL DEFAULT '' COMMENT '表描述',
-  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
-  `update_time` datetime NULL DEFAULT NULL COMMENT '修改时间',
-  PRIMARY KEY (`table_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4  COMMENT = '代码生成业务表' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Records of gen_table
--- ----------------------------
-INSERT INTO `gen_table` VALUES (16, 'sys_tag', '标签表', '2024-12-22 10:38:49', NULL);
-INSERT INTO `gen_table` VALUES (17, 'sys_web_config', '网站配置表', '2024-12-22 11:55:59', NULL);
-INSERT INTO `gen_table` VALUES (18, 'sys_article', '文章标签关联表', '2024-12-22 12:20:29', '2024-12-25 14:32:51');
-INSERT INTO `gen_table` VALUES (19, 'sys_category', '分类表', '2024-12-22 13:22:38', NULL);
-INSERT INTO `gen_table` VALUES (20, 'sys_friend', '友情链接', '2024-12-22 13:57:02', NULL);
-
--- ----------------------------
--- Table structure for gen_table_column
--- ----------------------------
-DROP TABLE IF EXISTS `gen_table_column`;
-CREATE TABLE `gen_table_column`  (
-  `column_id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
-  `table_id` bigint NOT NULL COMMENT '归属表编号',
-  `column_name` varchar(200) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '列名称',
-  `column_comment` varchar(500) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '列描述',
-  `column_type` varchar(100) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '列类型',
-  `java_type` varchar(500) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT 'JAVA类型',
-  `java_field` varchar(200) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT 'JAVA字段名',
-  `is_pk` char(1) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '是否主键（1是）',
-  `is_required` char(1) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '是否必填（1是）',
-  `is_insert` char(1) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '是否为插入字段（1是）',
-  `is_edit` char(1) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '是否编辑字段（1是）',
-  `is_list` char(1) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '是否列表字段（1是）',
-  `is_query` char(1) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '是否查询字段（1是）',
-  `query_type` varchar(200) CHARACTER SET utf8mb4  NULL DEFAULT 'EQ' COMMENT '查询方式（等于、不等于、大于、小于、范围）',
-  `html_type` varchar(200) CHARACTER SET utf8mb4  NULL DEFAULT NULL COMMENT '显示类型（文本框、文本域、下拉框、复选框、单选框、日期控件）',
-  `sort` int NULL DEFAULT NULL COMMENT '排序',
-  PRIMARY KEY (`column_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 263 CHARACTER SET = utf8mb4  COMMENT = '代码生成业务表字段' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Records of gen_table_column
--- ----------------------------
-INSERT INTO `gen_table_column` VALUES (178, 16, 'id', '主键', 'int', 'Integer', 'id', '1', '1', '1', '1', '1', '1', 'EQ', 'input', 1);
-INSERT INTO `gen_table_column` VALUES (179, 16, 'name', '名称', 'varchar', 'String', 'name', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 2);
-INSERT INTO `gen_table_column` VALUES (180, 16, 'sort', '排序', 'int', 'Integer', 'sort', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 3);
-INSERT INTO `gen_table_column` VALUES (181, 16, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 4);
-INSERT INTO `gen_table_column` VALUES (182, 16, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 5);
-INSERT INTO `gen_table_column` VALUES (183, 17, 'id', '主键', 'bigint', 'Long', 'id', '1', '1', '1', '1', '1', '1', 'EQ', 'input', 1);
-INSERT INTO `gen_table_column` VALUES (184, 17, 'logo', 'logo(文件UID)', 'varchar', 'String', 'logo', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 2);
-INSERT INTO `gen_table_column` VALUES (185, 17, 'name', '网站名称', 'varchar', 'String', 'name', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 3);
-INSERT INTO `gen_table_column` VALUES (186, 17, 'summary', '介绍', 'varchar', 'String', 'summary', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 4);
-INSERT INTO `gen_table_column` VALUES (187, 17, 'record_num', '备案号', 'varchar', 'String', 'recordNum', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 5);
-INSERT INTO `gen_table_column` VALUES (188, 17, 'web_url', '网站地址', 'varchar', 'String', 'webUrl', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 6);
-INSERT INTO `gen_table_column` VALUES (189, 17, 'author', '作者', 'varchar', 'String', 'author', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 7);
-INSERT INTO `gen_table_column` VALUES (190, 17, 'author_info', '个性签名', 'varchar', 'String', 'authorInfo', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 8);
-INSERT INTO `gen_table_column` VALUES (191, 17, 'author_avatar', '作者头像', 'varchar', 'String', 'authorAvatar', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 9);
-INSERT INTO `gen_table_column` VALUES (192, 17, 'ali_pay', '支付宝收款码', 'varchar', 'String', 'aliPay', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 10);
-INSERT INTO `gen_table_column` VALUES (193, 17, 'weixin_pay', '微信收款码', 'varchar', 'String', 'weixinPay', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 11);
-INSERT INTO `gen_table_column` VALUES (194, 17, 'github', 'github地址', 'varchar', 'String', 'github', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 12);
-INSERT INTO `gen_table_column` VALUES (195, 17, 'gitee', 'gitee地址', 'varchar', 'String', 'gitee', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 13);
-INSERT INTO `gen_table_column` VALUES (196, 17, 'qq_number', 'QQ号', 'varchar', 'String', 'qqNumber', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 14);
-INSERT INTO `gen_table_column` VALUES (197, 17, 'qq_group', 'QQ群', 'varchar', 'String', 'qqGroup', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 15);
-INSERT INTO `gen_table_column` VALUES (198, 17, 'email', '邮箱', 'varchar', 'String', 'email', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 16);
-INSERT INTO `gen_table_column` VALUES (199, 17, 'wechat', '微信', 'varchar', 'String', 'wechat', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 17);
-INSERT INTO `gen_table_column` VALUES (200, 17, 'show_list', '显示的列表（用于控制邮箱、QQ、QQ群、Github、Gitee、微信是否显示在前端）', 'varchar', 'String', 'showList', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 18);
-INSERT INTO `gen_table_column` VALUES (201, 17, 'login_type_list', '登录方式列表（用于控制前端登录方式，如账号密码,码云,Github,QQ,微信）', 'varchar', 'String', 'loginTypeList', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 19);
-INSERT INTO `gen_table_column` VALUES (202, 17, 'open_comment', '是否开启评论(0:否 1:是)', 'tinyint', 'Integer', 'openComment', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 20);
-INSERT INTO `gen_table_column` VALUES (203, 17, 'open_admiration', '是否开启赞赏(0:否， 1:是)', 'tinyint', 'Integer', 'openAdmiration', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 21);
-INSERT INTO `gen_table_column` VALUES (204, 17, 'tourist_avatar', '游客头像', 'varchar', 'String', 'touristAvatar', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 22);
-INSERT INTO `gen_table_column` VALUES (205, 17, 'bulletin', '公告', 'varchar', 'String', 'bulletin', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 23);
-INSERT INTO `gen_table_column` VALUES (206, 17, 'about_me', '关于我', 'mediumtext', 'String', 'aboutMe', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 24);
-INSERT INTO `gen_table_column` VALUES (207, 17, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 25);
-INSERT INTO `gen_table_column` VALUES (208, 17, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 26);
-INSERT INTO `gen_table_column` VALUES (209, 18, 'id', '主键id', 'bigint', 'Long', 'id', NULL, '1', '1', '1', '1', '1', 'EQ', 'input', 1);
-INSERT INTO `gen_table_column` VALUES (210, 18, 'user_id', '用户id', 'int', 'Integer', 'userId', NULL, '1', '1', '1', '1', '1', 'EQ', 'input', 2);
-INSERT INTO `gen_table_column` VALUES (211, 18, 'category_id', '分类id', 'bigint', 'Long', 'categoryId', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 3);
-INSERT INTO `gen_table_column` VALUES (212, 18, 'title', '文章标题', 'varchar', 'String', 'title', NULL, '1', '1', '1', '1', '1', 'EQ', 'input', 4);
-INSERT INTO `gen_table_column` VALUES (213, 18, 'cover', '文章封面地址', 'varchar', 'String', 'cover', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 5);
-INSERT INTO `gen_table_column` VALUES (214, 18, 'summary', '文章简介', 'varchar', 'String', 'summary', NULL, '1', '1', '1', '1', '1', 'EQ', 'input', 6);
-INSERT INTO `gen_table_column` VALUES (215, 18, 'content', '文章内容', 'mediumtext', 'String', 'content', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 7);
-INSERT INTO `gen_table_column` VALUES (216, 18, 'content_md', '文章内容md格式', 'mediumtext', 'String', 'contentMd', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 8);
-INSERT INTO `gen_table_column` VALUES (217, 18, 'read_type', '阅读方式 0无需验证 1：评论阅读 2：点赞阅读 3：扫码阅读', 'int', 'Integer', 'readType', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 9);
-INSERT INTO `gen_table_column` VALUES (218, 18, 'is_stick', '是否置顶 0否 1是', 'int', 'Integer', 'isStick', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 10);
-INSERT INTO `gen_table_column` VALUES (219, 18, 'is_publish', '是否发布 0：下架 1：发布', 'int', 'Integer', 'isPublish', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 11);
-INSERT INTO `gen_table_column` VALUES (220, 18, 'is_original', '是否原创  0：转载 1:原创', 'int', 'Integer', 'isOriginal', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 12);
-INSERT INTO `gen_table_column` VALUES (221, 18, 'is_carousel', '是否首页轮播', 'int', 'Integer', 'isCarousel', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 13);
-INSERT INTO `gen_table_column` VALUES (222, 18, 'is_recommend', '是否推荐', 'int', 'Integer', 'isRecommend', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 14);
-INSERT INTO `gen_table_column` VALUES (223, 18, 'original_url', '转载地址', 'varchar', 'String', 'originalUrl', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 15);
-INSERT INTO `gen_table_column` VALUES (224, 18, 'quantity', '文章阅读量', 'bigint', 'Long', 'quantity', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 16);
-INSERT INTO `gen_table_column` VALUES (225, 18, 'keywords', '关键词', 'varchar', 'String', 'keywords', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 17);
-INSERT INTO `gen_table_column` VALUES (226, 18, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 18);
-INSERT INTO `gen_table_column` VALUES (227, 18, 'update_time', '修改时间', 'datetime', 'Date', 'updateTime', NULL, '0', '1', '1', '1', '1', 'EQ', 'input', 19);
-INSERT INTO `gen_table_column` VALUES (228, 19, 'id', '主键', 'int', 'Integer', 'id', '1', '1', '1', '1', '1', '1', 'EQ', 'input', 1);
-INSERT INTO `gen_table_column` VALUES (229, 19, 'name', '名称', 'varchar', 'String', 'name', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 2);
-INSERT INTO `gen_table_column` VALUES (230, 19, 'sort', '排序', 'int', 'Integer', 'sort', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 3);
-INSERT INTO `gen_table_column` VALUES (231, 19, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 4);
-INSERT INTO `gen_table_column` VALUES (232, 19, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 5);
-INSERT INTO `gen_table_column` VALUES (233, 20, 'id', '主键ID', 'int', 'Integer', 'id', '1', '1', '1', '1', '1', '1', 'EQ', 'input', 1);
-INSERT INTO `gen_table_column` VALUES (234, 20, 'name', '网站名称', 'varchar', 'String', 'name', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 2);
-INSERT INTO `gen_table_column` VALUES (235, 20, 'url', '网站地址', 'varchar', 'String', 'url', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 3);
-INSERT INTO `gen_table_column` VALUES (236, 20, 'avatar', '网站头像地址', 'varchar', 'String', 'avatar', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 4);
-INSERT INTO `gen_table_column` VALUES (237, 20, 'info', '网站描述', 'varchar', 'String', 'info', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 5);
-INSERT INTO `gen_table_column` VALUES (238, 20, 'email', '邮箱', 'varchar', 'String', 'email', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 6);
-INSERT INTO `gen_table_column` VALUES (239, 20, 'sort', '排序', 'int', 'Integer', 'sort', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 7);
-INSERT INTO `gen_table_column` VALUES (240, 20, 'reason', '下架原因', 'varchar', 'String', 'reason', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 8);
-INSERT INTO `gen_table_column` VALUES (241, 20, 'status', 'ENUM-状态:\"0,下架;1,申请;2:上架\"', 'int', 'Integer', 'status', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 9);
-INSERT INTO `gen_table_column` VALUES (242, 20, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 10);
-INSERT INTO `gen_table_column` VALUES (243, 20, 'update_time', '修改时间', 'datetime', 'Date', 'updateTime', '0', '0', '1', '1', '1', '1', 'EQ', 'input', 11);
-
--- ----------------------------
 -- Table structure for qrtz_job_details
 -- ----------------------------
 DROP TABLE IF EXISTS `qrtz_job_details`;
@@ -204,6 +88,7 @@ CREATE TABLE `sys_dict`  (
 -- ----------------------------
 -- Records of sys_dict
 -- ----------------------------
+INSERT INTO `sys_dict` VALUES (1, '文件类型', 'file_content_type', 1, '文件MIME类型分类', NOW(), NOW(), 1);
 
 -- ----------------------------
 -- Table structure for sys_dict_data
@@ -226,6 +111,12 @@ CREATE TABLE `sys_dict_data`  (
 -- Records of sys_dict_data
 -- ----------------------------
 INSERT INTO `sys_dict_data` VALUES (31, 11, 'aa', 'aa', NULL, NULL, 1, 'a', 1);
+INSERT INTO `sys_dict_data` VALUES (38, 1, '图片', 'image', 'success', NULL, 1, 'image/*', 1);
+INSERT INTO `sys_dict_data` VALUES (39, 1, '视频', 'video', 'danger', NULL, 2, 'video/*', 1);
+INSERT INTO `sys_dict_data` VALUES (40, 1, '音频', 'audio', 'warning', NULL, 3, 'audio/*', 1);
+INSERT INTO `sys_dict_data` VALUES (41, 1, '文档', 'application', 'primary', NULL, 4, 'application/*', 1);
+INSERT INTO `sys_dict_data` VALUES (42, 1, '文本', 'text', 'info', NULL, 5, 'text/*', 1);
+INSERT INTO `sys_dict_data` VALUES (43, 1, '其他', 'other', 'info', NULL, 6, '其他类型', 1);
 
 -- ----------------------------
 -- Table structure for sys_job
@@ -391,8 +282,6 @@ INSERT INTO `sys_menu` VALUES (19, '4', 'job-log', '/monitor/job/log', '调度�
 INSERT INTO `sys_menu` VALUES (27, '14', '', '', '新增', 2, '', 'BUTTON', '2024-11-18 09:18:14', '2024-11-21 22:15:30', NULL, '', 1, 'sys:user:add', 0);
 INSERT INTO `sys_menu` VALUES (28, '14', '', '', '编辑', 2, '', 'BUTTON', '2024-11-18 09:18:38', '2024-11-21 14:38:56', NULL, '', 1, 'sys:user:update', 0);
 INSERT INTO `sys_menu` VALUES (29, '14', '', '', '删除', 3, '', 'BUTTON', '2024-11-18 09:18:53', '2024-11-21 22:15:43', NULL, '', 1, 'sys:user:delete', 0);
-INSERT INTO `sys_menu` VALUES (30, '0', '/tool', 'Layout', '系统工具', 6, 'Suitcase', 'CATALOG', '2024-11-18 09:21:10', '2024-11-18 12:23:55', '/tool/gen', '', 0, '', 0);
-INSERT INTO `sys_menu` VALUES (31, '30', 'gen', '/tool/gen/index', '代码生成', 1, 'Compass', 'MENU', '2024-11-18 09:21:52', NULL, NULL, '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (32, '1', 'log', '', '日志管理', 5, 'DocumentCopy', 'MENU', '2024-11-18 10:52:47', '2024-11-18 10:58:00', '/system/log/operation', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (33, '32', 'operation', '/system/log/operation/index', '操作日志', 1, 'CircleCheckFilled', 'MENU', '2024-11-18 10:53:10', '2024-11-18 11:05:22', NULL, '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (34, '0', 'https://www.shiyit.com/', 'Layout', '墨笺博客', 99, 'Position', 'CATALOG', '2024-11-18 11:25:10', '2024-11-18 11:43:25', NULL, '', 0, '', 1);
@@ -422,9 +311,38 @@ INSERT INTO `sys_menu` VALUES (94, '17', '', '', '清空', 2, '', 'BUTTON', '202
 INSERT INTO `sys_menu` VALUES (95, '17', '', '', '列表', 1, '', 'BUTTON', '2024-12-28 22:23:36', NULL, '', '', 1, 'monitor:cache:info', 0);
 INSERT INTO `sys_menu` VALUES (104, '67', '', '', '列表', 1, '', 'BUTTON', '2025-01-03 15:53:46', NULL, '', '', 1, 'monitor:online:list', 0);
 INSERT INTO `sys_menu` VALUES (105, '67', '', '', '强退', 2, '', 'BUTTON', '2025-01-03 15:54:03', NULL, '', '', 1, 'monitor:online:forceLogout', 0);
-INSERT INTO `sys_menu` VALUES (106, '0', '/file', 'Layout', '文件管理', 10, '', 'CATALOG', '2025-01-04 12:08:03', NULL, '', '', 1, '', 0);
-INSERT INTO `sys_menu` VALUES (107, '106', '', '', '上传文件', 1, '', 'BUTTON', '2025-01-04 12:08:25', NULL, '', '', 1, 'sys:file:upload', 0);
-INSERT INTO `sys_menu` VALUES (108, '106', '', '', '删除文件', 2, '', 'BUTTON', '2025-01-04 12:08:36', NULL, '', '', 1, 'sys:file:delete', 0);
+INSERT INTO `sys_menu` VALUES (106, '0', '/file', 'Layout', '文件管理', 10, 'FolderOpened', 'CATALOG', '2025-01-04 12:08:03', NULL, '/file/list', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (107, '109', '', '', '上传文件', 2, '', 'BUTTON', '2025-01-04 12:08:25', NULL, '', '', 1, 'sys:file:upload', 0);
+INSERT INTO `sys_menu` VALUES (108, '109', '', '', '删除文件', 3, '', 'BUTTON', '2025-01-04 12:08:36', NULL, '', '', 1, 'sys:file:delete', 0);
+INSERT INTO `sys_menu` VALUES (109, '106', 'list', '/file/index', '文件列表', 1, 'Files', 'MENU', '2026-07-16 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (110, '109', '', '', '文件列表', 1, '', 'BUTTON', '2026-07-16 00:00:00', NULL, '', '', 1, 'sys:file:list', 0);
+INSERT INTO `sys_menu` VALUES (111, '109', '', '', '下载文件', 4, '', 'BUTTON', '2026-07-17 00:00:00', NULL, '', '', 1, 'sys:file:download', 0);
+
+-- ----------------------------
+-- Table structure for sys_oss_file
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_oss_file`;
+CREATE TABLE `sys_oss_file` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `file_id` varchar(64) NOT NULL COMMENT '文件唯一ID',
+  `file_url` varchar(1000) NOT NULL COMMENT 'OSS访问地址',
+  `file_name` varchar(255) NOT NULL COMMENT 'OSS保存文件名',
+  `original_filename` varchar(255) NULL DEFAULT NULL COMMENT '原始文件名',
+  `content_type` varchar(128) NULL DEFAULT NULL COMMENT 'MIME类型',
+  `file_size` bigint NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
+  `platform` varchar(64) NULL DEFAULT NULL COMMENT '存储平台',
+  `thumbnail_url` varchar(1000) NULL DEFAULT NULL COMMENT '缩略图地址',
+  `uploader_id` bigint NULL DEFAULT NULL COMMENT '上传人ID',
+  `uploader_name` varchar(100) NULL DEFAULT NULL COMMENT '上传人用户名',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_sys_oss_file_file_id` (`file_id`) USING BTREE,
+  INDEX `idx_sys_oss_file_url` (`file_url`(255)) USING BTREE,
+  INDEX `idx_sys_oss_file_original_name` (`original_filename`) USING BTREE,
+  INDEX `idx_sys_oss_file_content_type` (`content_type`) USING BTREE,
+  INDEX `idx_sys_oss_file_uploader` (`uploader_id`, `uploader_name`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'OSS文件流水表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for sys_operate_log
@@ -710,8 +628,6 @@ INSERT INTO `sys_role_menu` VALUES (433, 2, 16);
 INSERT INTO `sys_role_menu` VALUES (434, 2, 17);
 INSERT INTO `sys_role_menu` VALUES (436, 2, 18);
 INSERT INTO `sys_role_menu` VALUES (438, 2, 19);
-INSERT INTO `sys_role_menu` VALUES (442, 2, 30);
-INSERT INTO `sys_role_menu` VALUES (443, 2, 31);
 INSERT INTO `sys_role_menu` VALUES (426, 2, 32);
 INSERT INTO `sys_role_menu` VALUES (427, 2, 33);
 INSERT INTO `sys_role_menu` VALUES (444, 2, 34);
@@ -736,8 +652,6 @@ INSERT INTO `sys_role_menu` VALUES (384, 14, 16);
 INSERT INTO `sys_role_menu` VALUES (385, 14, 17);
 INSERT INTO `sys_role_menu` VALUES (387, 14, 18);
 INSERT INTO `sys_role_menu` VALUES (389, 14, 19);
-INSERT INTO `sys_role_menu` VALUES (391, 14, 30);
-INSERT INTO `sys_role_menu` VALUES (392, 14, 31);
 INSERT INTO `sys_role_menu` VALUES (377, 14, 32);
 INSERT INTO `sys_role_menu` VALUES (378, 14, 33);
 INSERT INTO `sys_role_menu` VALUES (393, 14, 34);

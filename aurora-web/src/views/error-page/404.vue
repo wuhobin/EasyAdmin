@@ -31,7 +31,7 @@ import { HomeFilled, Back, Warning } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const currentTime = ref('')
-let timer: NodeJS.Timer
+let timer: ReturnType<typeof setInterval> | undefined
 
 const goHome = () => {
   router.push('/')
@@ -55,7 +55,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  clearInterval(timer)
+  if (timer) clearInterval(timer)
 })
 </script>
 
@@ -219,4 +219,4 @@ onUnmounted(() => {
     }
   }
 }
-</style> 
+</style>

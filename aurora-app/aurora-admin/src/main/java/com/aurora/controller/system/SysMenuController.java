@@ -2,7 +2,7 @@ package com.aurora.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.annotation.OperationLogger;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.entity.SysMenu;
 import com.aurora.service.SysMenuService;
 import com.aurora.vo.menu.RouterVO;
@@ -24,7 +24,7 @@ public class SysMenuController {
     @GetMapping("/tree")
     @Operation(summary = "获取菜单树列表")
     public Result<List<SysMenu>> getMenuTree() {
-        return Result.success(sysMenuService.getMenuTree());
+        return Result.data(sysMenuService.getMenuTree());
     }
 
     @PostMapping
@@ -57,6 +57,6 @@ public class SysMenuController {
     @GetMapping(value = "/routers")
     @Operation(summary = "获取用户菜单")
     public Result<List<RouterVO>> getCurrentUserMenu() {
-        return Result.success(sysMenuService.getCurrentUserMenu());
+        return Result.data(sysMenuService.getCurrentUserMenu());
     }
-} 
+}

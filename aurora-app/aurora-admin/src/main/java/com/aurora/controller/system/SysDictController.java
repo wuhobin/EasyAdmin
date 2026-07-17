@@ -3,9 +3,10 @@ package com.aurora.controller.system;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.aurora.annotation.OperationLogger;
-import com.aurora.common.Result;
+import com.aurora.starter.webmvc.domain.response.Result;
 import com.aurora.entity.SysDict;
 import com.aurora.service.SysDictService;
+import com.aurora.starter.mybatisplus.model.PageParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,9 @@ public class SysDictController {
     @GetMapping
     @Operation(summary = "获取字典列表")
     public Result<IPage<SysDict>> getDictList(@RequestParam(required = false) String name,
-                                            @RequestParam(required = false) Integer status) {
-        return Result.success(sysDictService.getDictPageList(name,status));
+                                            @RequestParam(required = false) Integer status,
+                                            PageParam pageParam) {
+        return Result.data(sysDictService.getDictPageList(name, status, pageParam));
     }
 
     @PostMapping("/add")

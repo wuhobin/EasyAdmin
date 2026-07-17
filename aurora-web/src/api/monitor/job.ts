@@ -65,7 +65,7 @@ export function changeJobStatusApi(jobId: string | number, status: string) {
 // 定时任务立即执行一次
 export function runJobApi(job: any) {
   return request({
-    url: '/monitor/job/run/',
+    url: '/monitor/job/run',
     method: 'put',
     data: job
   })

@@ -1,26 +1,26 @@
 package com.aurora.service.impl;
 
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.common.RedisConstants;
 import com.aurora.dto.user.UserSaveOrUpdateDto;
 import com.aurora.mapper.SysRoleMapper;
-import com.aurora.utils.PageUtils;
+import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.entity.SysUser;
-import com.aurora.exception.BusinessException;
 import com.aurora.mapper.SysUserMapper;
 import com.aurora.service.SysUserService;
-import com.aurora.utils.RedisUtils;
+import com.aurora.starter.redis.core.RedisCache;
+import com.aurora.starter.common.utils.StringUtils;
+import com.aurora.starter.security.context.SecurityUtils;
+import com.aurora.starter.webmvc.exception.BizException;
 import com.aurora.vo.user.OnlineUserVo;
 import com.aurora.vo.user.SysUserPageListVo;
 import com.aurora.vo.user.SysUserProfileVo;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import cn.dev33.satoken.secure.BCrypt;
-import cn.dev33.satoken.stp.StpUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -35,12 +35,12 @@ import com.aurora.dto.user.UpdatePwdDTO;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private final SysRoleMapper roleMapper;
-    private final RedisUtils redisUtils;
+    private final RedisCache redisCache;
     private final SysUserMapper sysUserMapper;
 
     @Override
-    public IPage<SysUserPageListVo> listUsers(String nickname, Integer status) {
-        return baseMapper.selectUserPage(PageUtils.getPage(), nickname,status);
+    public IPage<SysUserPageListVo> listUsers(String nickname, Integer status, PageParam pageParam) {
+        return baseMapper.selectUserPage(PageUtils.buildPage(pageParam), nickname, status);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 检查用户名是否已存在
         SysUser user = UserSaveOrUpdateDto.getUser();
         if (baseMapper.selectByUsername(user.getUsername()) != null) {
-            throw new RuntimeException("用户名已存在");
+            throw new BizException("用户名已存在");
         }
         user.setPassword(BCrypt.hashpw(user.getPassword(),BCrypt.gensalt()));
         save(user);
@@ -63,7 +63,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public void update(UserSaveOrUpdateDto user) {
         // 检查用户是否存在
         if (getById(user.getUser().getId()) == null) {
-            throw new RuntimeException("用户不存在");
+            throw new BizException("用户不存在");
         }
         updateById(user.getUser());
 
@@ -83,13 +83,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public void updatePwd(UpdatePwdDTO updatePwdDTO) {
 
-        SysUser user = this.getById(StpUtil.getLoginIdAsInt());
+        SysUser user = this.getById(SecurityUtils.getLoginIdAsInt());
         if (user == null) {
-            throw new BusinessException("用户不存在");
+            throw new BizException("用户不存在");
         }
 
         if (!BCrypt.checkpw(updatePwdDTO.getOldPassword(), user.getPassword())) {
-            throw new BusinessException("旧密码错误");
+            throw new BizException("旧密码错误");
         }
 
         user.setPassword(BCrypt.hashpw(updatePwdDTO.getNewPassword(),BCrypt.gensalt()));
@@ -99,7 +99,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public SysUserProfileVo profile() {
 
-        SysUser sysUser = baseMapper.selectById(StpUtil.getLoginIdAsInt());
+        SysUser sysUser = baseMapper.selectById(SecurityUtils.getLoginIdAsInt());
         sysUser.setPassword(null);
         //获取角色
         List<String> roles = roleMapper.selectRolesByUserId(sysUser.getId());
@@ -114,7 +114,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public Boolean verifyPassword(String password) {
-        SysUser user = baseMapper.selectById(StpUtil.getLoginIdAsInt());
+        SysUser user = baseMapper.selectById(SecurityUtils.getLoginIdAsInt());
         return BCrypt.checkpw(password, user.getPassword());
     }
 
@@ -126,17 +126,19 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    public IPage<OnlineUserVo> getOnlineUserList(String username) {
-        Integer pageNum = PageUtils.getPageQuery().getPageNum();
-        Integer pageSize = PageUtils.getPageQuery().getPageSize();
+    public IPage<OnlineUserVo> getOnlineUserList(String username, PageParam pageParam) {
+        Integer pageNum = pageParam.getPageNum() != null ? pageParam.getPageNum() : 1;
+        Integer pageSize = pageParam.getPageSize() != null ? pageParam.getPageSize() : 10;
 
         // 返回数据对象
-        Collection<String> keys = redisUtils.keys(RedisConstants.LOGIN_TOKEN.concat( "*"));
+        Collection<String> keys = redisCache.scan(RedisConstants.LOGIN_TOKEN.concat("*"));
 
         List<OnlineUserVo> totalList = new ArrayList<>();
         for (String key : keys) {
-            Object userObj = redisUtils.get(key);
-            OnlineUserVo onlineUser = JSONUtil.toBean(userObj.toString(), OnlineUserVo.class);
+            OnlineUserVo onlineUser = redisCache.<OnlineUserVo>getCacheObject(key);
+            if (onlineUser == null) {
+                continue;
+            }
             if (StringUtils.isNotBlank(username)) {
                 if (onlineUser.getUsername().contains(username)) {
                     totalList.add(onlineUser);

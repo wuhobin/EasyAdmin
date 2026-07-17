@@ -17,31 +17,34 @@
         <dependency>
             <groupId>com.aurora</groupId>
             <artifactId>aurora-admin</artifactId>
-            <version>${package.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.aurora</groupId>
-            <artifactId>aurora-storage</artifactId>
-            <version>${package.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.aurora</groupId>
-            <artifactId>aurora-scheduler</artifactId>
-            <version>${package.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.aurora</groupId>
-            <artifactId>aurora-auth</artifactId>
-            <version>${package.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
+
+    <build>
+        <finalName>aurora-server</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includeSystemScope>true</includeSystemScope>
+                    <mainClass>com.aurora.AuroraServerApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
