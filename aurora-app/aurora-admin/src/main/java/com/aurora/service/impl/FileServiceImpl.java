@@ -88,7 +88,7 @@ public class FileServiceImpl implements FileService {
                 .platform(result.getPlatform())
                 .thumbnailUrl(result.getThUrl())
                 .uploaderId(user == null || user.getId() == null ? null : user.getId().longValue())
-                .uploaderName(user == null ? null : user.getUsername())
+                .uploaderName(user == null ? null : user.getNickname())
                 .build();
     }
 

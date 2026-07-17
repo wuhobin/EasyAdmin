@@ -88,6 +88,7 @@ CREATE TABLE `sys_dict`  (
 -- ----------------------------
 -- Records of sys_dict
 -- ----------------------------
+INSERT INTO `sys_dict` VALUES (1, '文件类型', 'file_content_type', 1, '文件MIME类型分类', NOW(), NOW(), 1);
 
 -- ----------------------------
 -- Table structure for sys_dict_data
@@ -110,6 +111,12 @@ CREATE TABLE `sys_dict_data`  (
 -- Records of sys_dict_data
 -- ----------------------------
 INSERT INTO `sys_dict_data` VALUES (31, 11, 'aa', 'aa', NULL, NULL, 1, 'a', 1);
+INSERT INTO `sys_dict_data` VALUES (38, 1, '图片', 'image', 'success', NULL, 1, 'image/*', 1);
+INSERT INTO `sys_dict_data` VALUES (39, 1, '视频', 'video', 'danger', NULL, 2, 'video/*', 1);
+INSERT INTO `sys_dict_data` VALUES (40, 1, '音频', 'audio', 'warning', NULL, 3, 'audio/*', 1);
+INSERT INTO `sys_dict_data` VALUES (41, 1, '文档', 'application', 'primary', NULL, 4, 'application/*', 1);
+INSERT INTO `sys_dict_data` VALUES (42, 1, '文本', 'text', 'info', NULL, 5, 'text/*', 1);
+INSERT INTO `sys_dict_data` VALUES (43, 1, '其他', 'other', 'info', NULL, 6, '其他类型', 1);
 
 -- ----------------------------
 -- Table structure for sys_job

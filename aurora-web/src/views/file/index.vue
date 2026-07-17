@@ -10,21 +10,37 @@
             @keyup.enter="handleQuery"
           />
         </el-form-item>
-        <el-form-item label="MIME" prop="contentType">
-          <el-input
+        <el-form-item label="文件类型" prop="contentType">
+          <el-select
             v-model="queryParams.contentType"
-            placeholder="例如 image/png"
+            placeholder="请选择文件类型"
             clearable
-            @keyup.enter="handleQuery"
-          />
+            style="width: 200px"
+            @change="handleQuery"
+          >
+            <el-option
+              v-for="item in contentTypeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="上传人" prop="uploaderName">
-          <el-input
+          <el-select
             v-model="queryParams.uploaderName"
-            placeholder="请输入用户名"
+            placeholder="请选择用户"
             clearable
-            @keyup.enter="handleQuery"
-          />
+            filterable
+            style="width: 200px"
+          >
+            <el-option
+              v-for="user in userOptions"
+              :key="user.id"
+              :label="user.nickname"
+              :value="user.nickname"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :icon="Search" @click="handleQuery">搜索</el-button>
@@ -49,9 +65,9 @@
           </template>
         </el-table-column>
         <el-table-column prop="fileName" label="文件名称" min-width="280" show-overflow-tooltip />
-        <el-table-column prop="contentType" label="MIME" min-width="160" show-overflow-tooltip>
+        <el-table-column prop="contentType" label="文件类型" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
-            <el-tag type="info" effect="plain">{{ row.contentType || '-' }}</el-tag>
+            <el-tag :type="getMimeTagType(row.contentType)" effect="plain">{{ row.contentType || '-' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="大小" min-width="110" align="right">
@@ -71,8 +87,11 @@
             </el-tooltip>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="78" align="center" fixed="right">
+        <el-table-column label="操作" width="118" align="center" fixed="right">
           <template #default="{ row }">
+            <el-tooltip content="下载文件" placement="top">
+              <el-button link :icon="Download" aria-label="下载文件" @click="handleDownload(row)" />
+            </el-tooltip>
             <el-tooltip content="删除文件" placement="top">
               <el-button
                 v-permission="['sys:file:delete']"
@@ -104,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { CopyDocument, Delete, Document, Link, Refresh, Search } from '@element-plus/icons-vue'
+import { CopyDocument, Delete, Document, Download, Link, Refresh, Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import {
   deleteFileApi,
@@ -112,11 +131,15 @@ import {
   type OssFileQuery,
   type OssFileRecord
 } from '@/api/file'
+import { getUserListApi } from '@/api/system/user'
+import { getDictListApi, getDictDataListApi } from '@/api/system/dict'
 
 const queryFormRef = ref<FormInstance>()
 const loading = ref(false)
 const total = ref(0)
 const fileList = ref<OssFileRecord[]>([])
+const userOptions = ref<{ id: number; nickname: string }[]>([])
+const contentTypeOptions = ref<{ label: string; value: string }[]>([])
 
 const queryParams = reactive<OssFileQuery>({
   pageNum: 1,
@@ -125,6 +148,30 @@ const queryParams = reactive<OssFileQuery>({
   contentType: '',
   uploaderName: ''
 })
+
+const loadUserOptions = async () => {
+  try {
+    const { data } = await getUserListApi({ pageNum: 1, pageSize: 1000 })
+    userOptions.value = data.records
+  } catch {
+    // ignore
+  }
+}
+
+const loadContentTypeOptions = async () => {
+  try {
+    const { data: dictList } = await getDictListApi({ pageNum: 1, pageSize: 100 })
+    const dict = dictList.records?.find((d: any) => d.type === 'file_content_type')
+    if (!dict) return
+    const { data: dictData } = await getDictDataListApi({ dictId: dict.id, pageNum: 1, pageSize: 100 })
+    contentTypeOptions.value = dictData.records.map((item: any) => ({
+      label: item.label,
+      value: item.value
+    }))
+  } catch {
+    // ignore
+  }
+}
 
 const getList = async () => {
   loading.value = true
@@ -148,6 +195,15 @@ const resetQuery = () => {
   getList()
 }
 
+const getMimeTagType = (contentType?: string) => {
+  if (!contentType) return 'info'
+  if (contentType.startsWith('image/')) return 'success'
+  if (contentType.startsWith('video/')) return 'danger'
+  if (contentType.startsWith('audio/')) return 'warning'
+  if (contentType.startsWith('application/')) return 'primary'
+  return 'info'
+}
+
 const formatFileSize = (size?: number) => {
   if (!size) return '0 B'
   const units = ['B', 'KB', 'MB', 'GB']
@@ -165,6 +221,18 @@ const copyUrl = async (url: string) => {
   ElMessage.success('URL 已复制')
 }
 
+const handleDownload = (row: unknown) => {
+  const file = row as OssFileRecord
+  const link = document.createElement('a')
+  link.href = file.fileUrl
+  link.download = file.fileName
+  link.target = '_blank'
+  link.rel = 'noopener noreferrer'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 const handleDelete = async (row: unknown) => {
   const file = row as OssFileRecord
   await ElMessageBox.confirm(
@@ -180,6 +248,8 @@ const handleDelete = async (row: unknown) => {
   getList()
 }
 
+loadUserOptions()
+loadContentTypeOptions()
 getList()
 </script>
 
