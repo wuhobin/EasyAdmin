@@ -21,8 +21,7 @@ public class SysUserBizService {
     private final SysUserService sysUserService;
 
     public IPage<SysUserPageListVo> list(SysUserQueryForm form, PageParam pageParam) {
-        return sysUserService.listUsers(SysUserConvert.INSTANCE.toQuery(form), pageParam)
-                .convert(SysUserConvert.INSTANCE::toVo);
+        return sysUserService.listUsers(SysUserConvert.INSTANCE.toQuery(form), pageParam);
     }
     public void add(SysUserForm form) {
         sysUserService.add(SysUserConvert.INSTANCE.toEntity(form.getUser()), form.getRoleIds());
@@ -34,7 +33,7 @@ public class SysUserBizService {
     public void updatePassword(UpdatePasswordForm form) {
         sysUserService.updatePwd(form.getOldPassword(), form.getNewPassword());
     }
-    public SysUserProfileVo profile() { return SysUserConvert.INSTANCE.toVo(sysUserService.profile()); }
+    public SysUserProfileVo profile() { return sysUserService.profile(); }
     public void updateProfile(UserProfileForm form) {
         sysUserService.updateProfile(SysUserConvert.INSTANCE.toEntity(form));
     }

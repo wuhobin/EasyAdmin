@@ -2,7 +2,10 @@ package com.aurora.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.aurora.domain.convert.SysUserConvert;
 import com.aurora.domain.query.system.SysUserQuery;
+import com.aurora.domain.vo.user.SysUserPageListVo;
+import com.aurora.domain.vo.user.SysUserProfileVo;
 import com.aurora.mapper.SysRoleMapper;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
@@ -12,8 +15,6 @@ import com.aurora.mapper.SysUserMapper;
 import com.aurora.service.SysUserService;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.aurora.domain.model.user.SysUserPageData;
-import com.aurora.domain.model.user.SysUserProfileData;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import cn.dev33.satoken.secure.BCrypt;
@@ -31,7 +32,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private final SysUserMapper sysUserMapper;
 
     @Override
-    public IPage<SysUserPageData> listUsers(SysUserQuery query, PageParam pageParam) {
+    public IPage<SysUserPageListVo> listUsers(SysUserQuery query, PageParam pageParam) {
         return baseMapper.selectUserPage(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
     }
 
@@ -88,14 +89,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    public SysUserProfileData profile() {
+    public SysUserProfileVo profile() {
 
         SysUser sysUser = baseMapper.selectById(SecurityUtils.getLoginIdAsInt());
         sysUser.setPassword(null);
         //获取角色
         List<String> roles = roleMapper.selectRolesByUserId(sysUser.getId());
 
-        return new SysUserProfileData(sysUser, roles);
+        return new SysUserProfileVo(SysUserConvert.INSTANCE.toVo(sysUser), roles);
     }
 
     @Override

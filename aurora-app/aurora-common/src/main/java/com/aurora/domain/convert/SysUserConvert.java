@@ -6,10 +6,6 @@ import com.aurora.domain.form.system.SysUserDetailForm;
 import com.aurora.domain.form.system.UserProfileForm;
 import com.aurora.domain.query.system.SysUserQuery;
 import com.aurora.entity.SysUser;
-import com.aurora.domain.model.user.SysUserPageData;
-import com.aurora.domain.model.user.SysUserProfileData;
-import com.aurora.domain.vo.user.SysUserPageListVo;
-import com.aurora.domain.vo.user.SysUserProfileVo;
 import com.aurora.domain.vo.user.SysUserVo;
 import org.mapstruct.Mapper;
 import org.mapstruct.BeanMapping;
@@ -27,6 +23,4 @@ public interface SysUserConvert {
     @BeanMapping(builder = @Builder(disableBuilder = true))
     SysUser toEntity(ResetPasswordForm form);
     SysUserVo toVo(SysUser entity);
-    SysUserPageListVo toVo(SysUserPageData data);
-    SysUserProfileVo toVo(SysUserProfileData data);
 }

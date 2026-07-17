@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.aurora.entity.SysUser;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.domain.query.system.SysUserQuery;
-import com.aurora.domain.model.user.SysUserPageData;
-import com.aurora.domain.model.user.SysUserProfileData;
+import com.aurora.domain.vo.user.SysUserPageListVo;
+import com.aurora.domain.vo.user.SysUserProfileVo;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface SysUserService extends IService<SysUser> {
     /**
      * 分页查询用户
      */
-    IPage<SysUserPageData> listUsers(SysUserQuery query, PageParam pageParam);
+    IPage<SysUserPageListVo> listUsers(SysUserQuery query, PageParam pageParam);
 
     /**
      * 新增用户
@@ -43,7 +43,7 @@ public interface SysUserService extends IService<SysUser> {
      * 获取个人信息
      * @return
      */
-    SysUserProfileData profile();
+    SysUserProfileVo profile();
 
     /**
      * 修改个人信息
