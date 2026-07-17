@@ -15,11 +15,9 @@ public interface SysDictService extends IService<SysDict> {
     /**
      * 新增字典
      */
-    void addDict(SysDict dict);
+    boolean existsByType(String type, Long excludeId);
 
     /**
      * 更新字典
      */
-    void updateDict(SysDict dict);
-
 }

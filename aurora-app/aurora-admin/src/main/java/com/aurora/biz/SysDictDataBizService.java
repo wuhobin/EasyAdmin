@@ -17,10 +17,13 @@ import java.util.List;
 public class SysDictDataBizService {
     private final SysDictDataService sysDictDataService;
     public IPage<SysDictDataVo> list(SysDictDataQueryForm form, PageParam pageParam) {
+        if (pageParam != null && (pageParam.getOrderBy() == null || pageParam.getOrderBy().isBlank())) {
+            pageParam.setOrderBy("sort asc");
+        }
         IPage<SysDictData> page = sysDictDataService.listDictData(SysDictDataConvert.INSTANCE.toQuery(form), pageParam);
         return page.convert(SysDictDataConvert.INSTANCE::toVo);
     }
-    public void add(SysDictDataForm form) { sysDictDataService.addDictData(SysDictDataConvert.INSTANCE.toEntity(form)); }
-    public void update(SysDictDataForm form) { sysDictDataService.updateDictData(SysDictDataConvert.INSTANCE.toEntity(form)); }
+    public void add(SysDictDataForm form) { sysDictDataService.save(SysDictDataConvert.INSTANCE.toEntity(form)); }
+    public void update(SysDictDataForm form) { sysDictDataService.updateById(SysDictDataConvert.INSTANCE.toEntity(form)); }
     public void delete(List<Long> ids) { sysDictDataService.removeBatchByIds(ids); }
 }

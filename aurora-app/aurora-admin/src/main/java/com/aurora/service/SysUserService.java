@@ -6,9 +6,6 @@ import com.aurora.entity.SysUser;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.domain.query.system.SysUserQuery;
 import com.aurora.domain.vo.user.SysUserPageListVo;
-import com.aurora.domain.vo.user.SysUserProfileVo;
-
-import java.util.List;
 
 public interface SysUserService extends IService<SysUser> {
     /**
@@ -19,50 +16,9 @@ public interface SysUserService extends IService<SysUser> {
     /**
      * 新增用户
      */
-    void add(SysUser user, List<Integer> roleIds);
+    SysUser getByUsername(String username);
 
     /**
      * 更新用户
      */
-    void update(SysUser user, List<Integer> roleIds);
-
-    /**
-     * 删除用户
-     */
-    void delete(List<Integer> ids);
-
-
-    /**
-     * 修改密码
-     *
-     * @param updatePwdDTO 修改密码参数
-     */
-    void updatePwd(String oldPassword, String newPassword);
-
-    /**
-     * 获取个人信息
-     * @return
-     */
-    SysUserProfileVo profile();
-
-    /**
-     * 修改个人信息
-     * @param user
-     */
-    void updateProfile(SysUser user);
-
-    /**
-     * 锁屏界面验证密码
-     * @param password
-     * @return
-     */
-    Boolean verifyPassword(String password);
-
-    /**
-     * 重置密码
-     * @param user
-     * @return
-     */
-    Boolean resetPassword(SysUser user);
-
 }

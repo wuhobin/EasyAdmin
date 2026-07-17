@@ -9,22 +9,63 @@ import com.aurora.entity.SysMenu;
 import com.aurora.enums.MenuTypeEnum;
 import com.aurora.service.SysMenuService;
 import com.aurora.starter.common.utils.StringUtils;
+import com.aurora.starter.security.context.SecurityUtils;
+import com.aurora.starter.webmvc.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class SysMenuBizService {
     private final SysMenuService sysMenuService;
 
-    public List<SysMenuVo> getMenuTree() { return SysMenuConvert.INSTANCE.toVoList(sysMenuService.getMenuTree()); }
-    public void add(SysMenuForm form) { sysMenuService.addMenu(SysMenuConvert.INSTANCE.toEntity(form)); }
-    public void update(SysMenuForm form) { sysMenuService.updateMenu(SysMenuConvert.INSTANCE.toEntity(form)); }
-    public void delete(Integer id) { sysMenuService.deleteMenu(id); }
-    public List<SysRouterVo> getCurrentUserMenu() { return buildRouterTree(sysMenuService.getCurrentUserMenus()); }
+    public List<SysMenuVo> getMenuTree() {
+        List<SysMenu> menus = sysMenuService.listOrderedMenus();
+        Map<Integer, List<SysMenu>> childrenMap = menus.stream()
+                .filter(menu -> menu.getParentId() != null && menu.getParentId() != 0)
+                .collect(Collectors.groupingBy(SysMenu::getParentId));
+        menus.forEach(menu -> menu.setChildren(childrenMap.get(menu.getId())));
+        return SysMenuConvert.INSTANCE.toVoList(menus.stream()
+                .filter(menu -> menu.getParentId() != null && menu.getParentId() == 0)
+                .toList());
+    }
+
+    public void add(SysMenuForm form) {
+        SysMenu menu = SysMenuConvert.INSTANCE.toEntity(form);
+        normalizeComponent(menu);
+        sysMenuService.save(menu);
+    }
+
+    public void update(SysMenuForm form) {
+        SysMenu menu = SysMenuConvert.INSTANCE.toEntity(form);
+        normalizeComponent(menu);
+        sysMenuService.updateById(menu);
+    }
+
+    public void delete(Integer id) {
+        if (sysMenuService.countByParentId(id) > 0) {
+            throw new BizException("存在子菜单，不能删除");
+        }
+        sysMenuService.removeById(id);
+    }
+
+    public List<SysRouterVo> getCurrentUserMenu() {
+        String buttonType = MenuTypeEnum.BUTTON.getCode();
+        List<SysMenu> menus;
+        if (SecurityUtils.hasRole(Constants.ADMIN)) {
+            menus = sysMenuService.listOrderedMenus().stream()
+                    .filter(menu -> !buttonType.equals(menu.getType()))
+                    .toList();
+        } else {
+            menus = sysMenuService.listMenusByUserId(SecurityUtils.getLoginIdAsInt(), buttonType);
+        }
+        return buildRouterTree(menus);
+    }
 
     private List<SysRouterVo> buildRouterTree(List<SysMenu> menus) {
         List<SysRouterVo> roots = menus.stream()
@@ -59,5 +100,11 @@ public class SysMenuBizService {
                         menu.getHidden() != null && menu.getHidden() == 1,
                         menu.getIsExternal() != null && menu.getIsExternal() == 1))
                 .build();
+    }
+
+    private static void normalizeComponent(SysMenu menu) {
+        if (MenuTypeEnum.CATALOG.equals(menu.getType())) {
+            menu.setComponent("Layout");
+        }
     }
 }

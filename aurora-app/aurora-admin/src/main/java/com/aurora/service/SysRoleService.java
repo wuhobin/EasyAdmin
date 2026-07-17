@@ -17,17 +17,17 @@ public interface SysRoleService extends IService<SysRole> {
     /**
      * 新增角色
      */
-    void addRole(SysRole role);
+    boolean existsByCode(String code, Integer excludeId);
     
     /**
      * 更新角色
      */
-    void updateRole(SysRole role);
+    void deleteRoleMenus(List<Integer> roleIds);
     
     /**
      * 删除角色
      */
-    void delete(List<Integer> ids);
+    void insertRoleMenus(Integer roleId, List<Integer> menuIds);
 
 
     /**
@@ -43,6 +43,12 @@ public interface SysRoleService extends IService<SysRole> {
      * @param menuIds
      * @return
      */
-    Void updateRoleMenus(Integer id, List<Integer> menuIds);
+    List<String> listRoleNamesByUserId(Object userId);
+
+    List<String> listRoleCodesByUserId(Object userId);
+
+    void deleteUserRoles(List<Integer> userIds);
+
+    void addUserRoles(Integer userId, List<Integer> roleIds);
 
 }

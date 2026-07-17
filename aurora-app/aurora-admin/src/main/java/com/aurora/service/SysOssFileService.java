@@ -7,7 +7,7 @@ import com.aurora.starter.mybatisplus.model.PageParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 
-import java.io.OutputStream;
+import java.util.List;
 
 public interface SysOssFileService extends IService<SysOssFile> {
 
@@ -15,11 +15,5 @@ public interface SysOssFileService extends IService<SysOssFile> {
 
     IPage<SysOssFile> listFiles(OssFileQuery query, PageParam pageParam);
 
-    SysOssFile getDownloadFile(Long id);
-
-    void download(SysOssFile file, OutputStream outputStream);
-
-    void deleteById(Long id);
-
-    boolean deleteByUrl(String url);
+    List<SysOssFile> listByUrl(String url);
 }

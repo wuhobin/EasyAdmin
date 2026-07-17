@@ -76,7 +76,7 @@ public class SysUserController {
     @Operation(summary = "修改个人信息")
     @OperationLogger("修改个人信息")
     @SaCheckPermission("sys:user:update")
-    public Result<SysUserProfileVo> updateProfile(@RequestBody UserProfileForm form) {
+    public Result<Void> updateProfile(@RequestBody UserProfileForm form) {
         sysUserBizService.updateProfile(form);
         return Result.success();
     }

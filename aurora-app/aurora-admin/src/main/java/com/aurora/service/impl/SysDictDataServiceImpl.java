@@ -17,19 +17,6 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
 
     @Override
     public IPage<SysDictData> listDictData(SysDictDataQuery query, PageParam pageParam) {
-        if (pageParam != null && (pageParam.getOrderBy() == null || pageParam.getOrderBy().isBlank())) {
-            pageParam.setOrderBy("sort asc");
-        }
         return page(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
-    }
-
-    @Override
-    public boolean addDictData(SysDictData sysDictData) {
-        return save(sysDictData);
-    }
-
-    @Override
-    public boolean updateDictData(SysDictData sysDictData) {
-        return updateById(sysDictData);
     }
 }

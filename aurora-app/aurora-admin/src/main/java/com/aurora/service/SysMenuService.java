@@ -9,27 +9,27 @@ public interface SysMenuService extends IService<SysMenu> {
     /**
      * 获取菜单树
      */
-    List<SysMenu> getMenuTree();
+    List<SysMenu> listOrderedMenus();
     
     /**
      * 新增菜单
      */
-    void addMenu(SysMenu menu);
+    long countByParentId(Integer parentId);
     
     /**
      * 更新菜单
      */
-    void updateMenu(SysMenu menu);
+    List<SysMenu> listMenusByUserId(Integer userId, String excludedType);
     
     /**
      * 删除菜单
      */
-    void deleteMenu(Integer id);
+    List<String> listPermissionsByUserId(Integer userId, String type);
 
     /**
      * 获取当前登录用户所拥有的菜单
      * @return
      */
-    List<SysMenu> getCurrentUserMenus();
+    List<String> listPermissions(String type);
 
 }

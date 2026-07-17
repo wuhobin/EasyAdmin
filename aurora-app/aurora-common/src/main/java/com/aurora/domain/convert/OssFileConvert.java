@@ -12,5 +12,4 @@ public interface OssFileConvert {
     OssFileConvert INSTANCE = Mappers.getMapper(OssFileConvert.class);
     OssFileQuery toQuery(OssFileQueryForm form);
     SysOssFileVo toVo(SysOssFile entity);
-    SysOssFile toEntity(SysOssFileVo vo);
 }

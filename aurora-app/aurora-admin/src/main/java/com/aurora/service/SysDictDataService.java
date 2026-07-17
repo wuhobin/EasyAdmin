@@ -18,10 +18,4 @@ public interface SysDictDataService extends IService<SysDictData> {
     /**
      * 新增字典数据
      */
-    boolean addDictData(SysDictData sysDictData);
-    
-    /**
-     * 修改字典数据
-     */
-    boolean updateDictData(SysDictData sysDictData);
 }

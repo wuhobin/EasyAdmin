@@ -66,12 +66,14 @@ public class JobController {
     @OperationLogger("修改任务状态")
     @SaCheckPermission("sys:job:changeStatus")
     public Result<Void> changeStatus(@RequestBody QuartzJobStatusForm form) throws SchedulerException {
-        return jobBizService.changeStatus(form) ? Result.success() : Result.error("任务不存在");
+        jobBizService.changeStatus(form);
+        return Result.success();
     }
 
     @PutMapping("/run")
     @Operation(summary = "定时任务立即执行一次")
     public Result<Void> run(@RequestBody QuartzJobRunForm form) throws SchedulerException {
-        return jobBizService.run(form) ? Result.success() : Result.error("任务不存在");
+        jobBizService.run(form);
+        return Result.success();
     }
 }
