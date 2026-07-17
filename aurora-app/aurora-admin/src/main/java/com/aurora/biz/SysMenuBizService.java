@@ -59,7 +59,7 @@ public class SysMenuBizService {
         List<SysMenu> menus;
         if (SecurityUtils.hasRole(Constants.ADMIN)) {
             menus = sysMenuService.listOrderedMenus().stream()
-                    .filter(menu -> !buttonType.equals(menu.getType()))
+                    .filter(menu -> !MenuTypeEnum.BUTTON.equals(menu.getType()))
                     .toList();
         } else {
             menus = sysMenuService.listMenusByUserId(SecurityUtils.getLoginIdAsInt(), buttonType);

@@ -20,6 +20,10 @@ const filterAsyncRoutes = (routes: any[], isRoot = true): RouteRecordRaw[] => {
   const asyncRoutes: RouteRecordRaw[] = [];
 
   routes.forEach((route) => {
+    if (!route || typeof route !== "object" || typeof route.path !== "string") {
+      console.warn("忽略无效的动态路由:", route);
+      return;
+    }
 
     const tmpRoute: any = { ...route }; // ES6扩展运算符复制新对象
     
@@ -39,7 +43,7 @@ const filterAsyncRoutes = (routes: any[], isRoot = true): RouteRecordRaw[] => {
         } 
       }
 
-      if (tmpRoute.children) {
+      if (Array.isArray(tmpRoute.children)) {
         // 递归处理子路由时，传入 false 表示不是根级路由
         tmpRoute.children = filterAsyncRoutes(tmpRoute.children, false);
       }

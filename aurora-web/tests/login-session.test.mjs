@@ -20,6 +20,7 @@ const authApiSource = await readSource('src/api/system/auth.ts')
 const userStoreSource = await readSource('src/store/modules/user.ts')
 const requestSource = await readSource('src/utils/request.ts')
 const permissionSource = await readSource('src/plugins/permission.ts')
+const permissionStoreSource = await readSource('src/store/modules/permission.ts')
 const authSessionSource = await readOptionalSource('src/utils/auth-session.ts')
 const authSessionPluginSource = await readOptionalSource('src/plugins/authSession.ts')
 const mainSource = await readSource('src/main.ts')
@@ -87,6 +88,12 @@ test('route initialization uses explicit user-store state', () => {
   assert.match(permissionSource, /userStore\.markInitialized\(\)/)
   assert.match(userStoreSource, /function markInitialized\(\)/)
   assert.doesNotMatch(permissionSource, /if \(!userStore\.user\.nickname\)/)
+})
+
+test('dynamic route conversion rejects records with null paths before Vue Router registration', () => {
+  assert.match(permissionStoreSource, /typeof route\.path !== ["']string["']/)
+  assert.match(permissionStoreSource, /Array\.isArray\(tmpRoute\.children\)/)
+  assert.match(permissionStoreSource, /return;/)
 })
 
 test('route initialization only clears the session after an unauthorized error', () => {
