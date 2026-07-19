@@ -1,32 +1,22 @@
 package com.aurora.service.impl;
 
-import com.aurora.starter.common.utils.StringUtils;
-import org.springframework.stereotype.Service;
-import com.aurora.mapper.SysOperateLogMapper;
+import com.aurora.domain.query.system.SysOperateLogQuery;
 import com.aurora.entity.SysOperateLog;
+import com.aurora.mapper.SysOperateLogMapper;
 import com.aurora.service.SysOperateLogService;
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import lombok.RequiredArgsConstructor;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.stereotype.Service;
 
-/**
- *  服务实现类
- */
 @Service
-@RequiredArgsConstructor
-public class SysOperateLogServiceImpl extends ServiceImpl<SysOperateLogMapper, SysOperateLog> implements SysOperateLogService {
+public class SysOperateLogServiceImpl extends ServiceImpl<SysOperateLogMapper, SysOperateLog>
+        implements SysOperateLogService {
 
-    /**
-     * 查询分页列表
-     */
     @Override
-    public IPage<SysOperateLog> listSysOperateLog(SysOperateLog sysOperateLog, PageParam pageParam) {
-        LambdaQueryWrapper<SysOperateLog> wrapper = new LambdaQueryWrapper<SysOperateLog>()
-                .like(StringUtils.isNotBlank(sysOperateLog.getUsername()), SysOperateLog::getUsername, sysOperateLog.getUsername());
-
-        return page(PageUtils.buildPage(pageParam), wrapper);
+    public IPage<SysOperateLog> listSysOperateLog(SysOperateLogQuery query, PageParam pageParam) {
+        return page(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
     }
 }

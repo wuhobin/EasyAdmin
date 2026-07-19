@@ -1,6 +1,6 @@
 package com.aurora.task;
 
-import com.aurora.dto.file.OssFileRecordRetryData;
+import com.aurora.entity.SysOssFile;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.redis.core.task.DelayedRetryTask;
 import com.aurora.starter.redis.model.DelayRetry;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class OssFileRecordRetryTask extends DelayedRetryTask<OssFileRecordRetryData> {
+public class OssFileRecordRetryTask extends DelayedRetryTask<SysOssFile> {
 
     static final String TASK_GROUP = "oss:file:record:retry";
     static final int MAX_COUNT = 9;
@@ -21,8 +21,8 @@ public class OssFileRecordRetryTask extends DelayedRetryTask<OssFileRecordRetryD
         this.ossFileService = ossFileService;
     }
 
-    public void submit(OssFileRecordRetryData data) {
-        DelayRetry<OssFileRecordRetryData> retry = new DelayRetry<OssFileRecordRetryData>()
+    public void submit(SysOssFile data) {
+        DelayRetry<SysOssFile> retry = new DelayRetry<SysOssFile>()
                 .setData(data)
                 .setMaxCount(MAX_COUNT)
                 .setInterval(INTERVAL_SECONDS)
@@ -36,7 +36,7 @@ public class OssFileRecordRetryTask extends DelayedRetryTask<OssFileRecordRetryD
     }
 
     @Override
-    protected boolean execute(OssFileRecordRetryData data) {
+    protected boolean execute(SysOssFile data) {
         if (!ossFileService.saveIfAbsent(data)) {
             throw new IllegalStateException("OSS file record insert returned false: " + data.getFileId());
         }
@@ -44,8 +44,8 @@ public class OssFileRecordRetryTask extends DelayedRetryTask<OssFileRecordRetryD
     }
 
     @Override
-    protected void handleException(DelayRetry<OssFileRecordRetryData> task, Exception exception) {
-        OssFileRecordRetryData data = task.getData();
+    protected void handleException(DelayRetry<SysOssFile> task, Exception exception) {
+        SysOssFile data = task.getData();
         if (task.getCount() >= task.getMaxCount() - 1) {
             log.error("OSS file record retry exhausted, fileId={}, url={}",
                     data.getFileId(), data.getFileUrl(), exception);

@@ -2,6 +2,7 @@ import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { getToken } from '@/utils/auth'
 import { notifyUnauthorized } from '@/utils/auth-session'
+import { readBlobApiError } from '@/utils/binary-response'
 
 export interface ApiResponse<T = any> {
   code: number
@@ -51,12 +52,25 @@ service.interceptors.request.use(
 )
 
 service.interceptors.response.use(
-  (response) => {
-    const res = response.data
+  async (response) => {
     // 二进制数据则直接返回
     if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
+      const errorResponse = await readBlobApiError(response.data)
+      if (errorResponse && errorResponse.code !== 200) {
+        if (errorResponse.code === 401) {
+          void notifyUnauthorized()
+        } else {
+          ElMessage.error(errorResponse.message || '请求错误')
+        }
+        return Promise.reject(new RequestError(
+          errorResponse.message || '请求错误',
+          errorResponse.code === 401,
+          errorResponse.code !== 401
+        ))
+      }
       return response.data
     }
+    const res = response.data
     if (res.code !== 200) {
       if (res.code === 401) {
         void notifyUnauthorized()

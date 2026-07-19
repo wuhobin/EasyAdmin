@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.aurora.entity.SysRole;
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.domain.query.system.SysRoleQuery;
 
 import java.util.List;
 
@@ -11,22 +12,22 @@ public interface SysRoleService extends IService<SysRole> {
     /**
      * 分页查询角色
      */
-    IPage<SysRole> listRoles(String name, PageParam pageParam);
+    IPage<SysRole> listRoles(SysRoleQuery query, PageParam pageParam);
     
     /**
      * 新增角色
      */
-    void addRole(SysRole role);
+    boolean existsByCode(String code, Integer excludeId);
     
     /**
      * 更新角色
      */
-    void updateRole(SysRole role);
+    void deleteRoleMenus(List<Integer> roleIds);
     
     /**
      * 删除角色
      */
-    void delete(List<Integer> ids);
+    void insertRoleMenus(Integer roleId, List<Integer> menuIds);
 
 
     /**
@@ -42,6 +43,12 @@ public interface SysRoleService extends IService<SysRole> {
      * @param menuIds
      * @return
      */
-    Void updateRoleMenus(Integer id, List<Integer> menuIds);
+    List<String> listRoleNamesByUserId(Object userId);
+
+    List<String> listRoleCodesByUserId(Object userId);
+
+    void deleteUserRoles(List<Integer> userIds);
+
+    void addUserRoles(Integer userId, List<Integer> roleIds);
 
 }

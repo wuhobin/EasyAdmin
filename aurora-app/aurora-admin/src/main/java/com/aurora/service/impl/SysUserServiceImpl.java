@@ -1,163 +1,44 @@
 package com.aurora.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.aurora.common.RedisConstants;
-import com.aurora.dto.user.UserSaveOrUpdateDto;
-import com.aurora.mapper.SysRoleMapper;
+import com.aurora.domain.query.system.SysUserQuery;
+import com.aurora.domain.vo.user.SysUserPageListVo;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.aurora.entity.SysUser;
 import com.aurora.mapper.SysUserMapper;
 import com.aurora.service.SysUserService;
-import com.aurora.starter.redis.core.RedisCache;
-import com.aurora.starter.common.utils.StringUtils;
-import com.aurora.starter.security.context.SecurityUtils;
-import com.aurora.starter.webmvc.exception.BizException;
-import com.aurora.vo.user.OnlineUserVo;
-import com.aurora.vo.user.SysUserPageListVo;
-import com.aurora.vo.user.SysUserProfileVo;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import cn.dev33.satoken.secure.BCrypt;
-import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-
-import com.aurora.dto.user.UpdatePwdDTO;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
-    private final SysRoleMapper roleMapper;
-    private final RedisCache redisCache;
-    private final SysUserMapper sysUserMapper;
-
     @Override
-    public IPage<SysUserPageListVo> listUsers(String nickname, Integer status, PageParam pageParam) {
-        return baseMapper.selectUserPage(PageUtils.buildPage(pageParam), nickname, status);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void add(UserSaveOrUpdateDto UserSaveOrUpdateDto) {
-        // 检查用户名是否已存在
-        SysUser user = UserSaveOrUpdateDto.getUser();
-        if (baseMapper.selectByUsername(user.getUsername()) != null) {
-            throw new BizException("用户名已存在");
+    public IPage<SysUserPageListVo> listUsers(SysUserQuery query, PageParam pageParam) {
+        IPage<SysUserPageListVo> page = baseMapper.selectUserPage(
+                PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
+        List<Integer> userIds = page.getRecords().stream().map(SysUserPageListVo::getId).toList();
+        if (userIds.isEmpty()) {
+            return page;
         }
-        user.setPassword(BCrypt.hashpw(user.getPassword(),BCrypt.gensalt()));
-        save(user);
-
-        //保存角色信息
-        roleMapper.addRoleUser(user.getId(), UserSaveOrUpdateDto.getRoleIds());
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void update(UserSaveOrUpdateDto user) {
-        // 检查用户是否存在
-        if (getById(user.getUser().getId()) == null) {
-            throw new BizException("用户不存在");
-        }
-        updateById(user.getUser());
-
-        //修改角色 先删除角色再新增
-        roleMapper.deleteRoleByUserId(Collections.singletonList(user.getUser().getId()));
-        roleMapper.addRoleUser(user.getUser().getId(), user.getRoleIds());
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void delete(List<Integer> ids) {
-        removeBatchByIds(ids);
-        roleMapper.deleteRoleByUserId(ids);
-    }
-
-
-    @Override
-    public void updatePwd(UpdatePwdDTO updatePwdDTO) {
-
-        SysUser user = this.getById(SecurityUtils.getLoginIdAsInt());
-        if (user == null) {
-            throw new BizException("用户不存在");
-        }
-
-        if (!BCrypt.checkpw(updatePwdDTO.getOldPassword(), user.getPassword())) {
-            throw new BizException("旧密码错误");
-        }
-
-        user.setPassword(BCrypt.hashpw(updatePwdDTO.getNewPassword(),BCrypt.gensalt()));
-        this.updateById(user);
-    }
-
-    @Override
-    public SysUserProfileVo profile() {
-
-        SysUser sysUser = baseMapper.selectById(SecurityUtils.getLoginIdAsInt());
-        sysUser.setPassword(null);
-        //获取角色
-        List<String> roles = roleMapper.selectRolesByUserId(sysUser.getId());
-
-        return SysUserProfileVo.builder().sysUser(sysUser).roles(roles).build();
-    }
-
-    @Override
-    public void updateProfile(SysUser user) {
-        baseMapper.updateById(user);
-    }
-
-    @Override
-    public Boolean verifyPassword(String password) {
-        SysUser user = baseMapper.selectById(SecurityUtils.getLoginIdAsInt());
-        return BCrypt.checkpw(password, user.getPassword());
-    }
-
-    @Override
-    public Boolean resetPassword(SysUser user) {
-        user.setPassword(BCrypt.hashpw(user.getPassword(),BCrypt.gensalt()));
-        baseMapper.updateById(user);
-        return true;
-    }
-
-    @Override
-    public IPage<OnlineUserVo> getOnlineUserList(String username, PageParam pageParam) {
-        Integer pageNum = pageParam.getPageNum() != null ? pageParam.getPageNum() : 1;
-        Integer pageSize = pageParam.getPageSize() != null ? pageParam.getPageSize() : 10;
-
-        // 返回数据对象
-        Collection<String> keys = redisCache.scan(RedisConstants.LOGIN_TOKEN.concat("*"));
-
-        List<OnlineUserVo> totalList = new ArrayList<>();
-        for (String key : keys) {
-            OnlineUserVo onlineUser = redisCache.<OnlineUserVo>getCacheObject(key);
-            if (onlineUser == null) {
-                continue;
-            }
-            if (StringUtils.isNotBlank(username)) {
-                if (onlineUser.getUsername().contains(username)) {
-                    totalList.add(onlineUser);
-                }
-                continue;
-            }
-            totalList.add(onlineUser);
-        }
-
-        int fromIndex = (pageNum - 1) * pageSize;
-        int toIndex = totalList.size() - fromIndex > pageSize ? fromIndex + pageSize : totalList.size();
-        List<OnlineUserVo> records = totalList.subList(fromIndex, toIndex);
-
-        //根据时间排序
-        records.sort((o1, o2) -> o2.getLastLoginTime().compareTo(o1.getLastLoginTime()));
-
-        IPage<OnlineUserVo> page = new Page<>(pageNum, pageSize);
-        page.setRecords(records);
-        page.setTotal(totalList.size());
+        Map<Integer, SysUserPageListVo> rolesByUserId = baseMapper.selectUserRoles(userIds).stream()
+                .collect(Collectors.toMap(SysUserPageListVo::getId, Function.identity()));
+        page.getRecords().forEach(user -> {
+            SysUserPageListVo roles = rolesByUserId.get(user.getId());
+            user.setRoleIds(roles == null ? List.of() : roles.getRoleIds());
+        });
         return page;
+    }
+
+    @Override
+    public SysUser getByUsername(String username) {
+        return baseMapper.selectByUsername(username);
     }
 }

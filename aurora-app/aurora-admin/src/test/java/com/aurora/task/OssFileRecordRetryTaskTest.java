@@ -1,6 +1,6 @@
 package com.aurora.task;
 
-import com.aurora.dto.file.OssFileRecordRetryData;
+import com.aurora.entity.SysOssFile;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.redis.model.DelayRetry;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ class OssFileRecordRetryTaskTest {
     @Test
     void submitsFiveAttemptRetryConfigurationWithFifteenSecondInitialDelay() {
         CapturingRetryTask task = new CapturingRetryTask(mock(SysOssFileService.class));
-        OssFileRecordRetryData data = data();
+        SysOssFile data = data();
 
         task.submit(data);
 
@@ -35,7 +35,7 @@ class OssFileRecordRetryTaskTest {
     @Test
     void delegatesRetryExecutionToTheRecordService() {
         SysOssFileService service = mock(SysOssFileService.class);
-        OssFileRecordRetryData data = data();
+        SysOssFile data = data();
         when(service.saveIfAbsent(data)).thenReturn(true);
         OssFileRecordRetryTask task = new OssFileRecordRetryTask(service);
 
@@ -47,7 +47,7 @@ class OssFileRecordRetryTaskTest {
     @Test
     void currentStarterCounterProducesFiveAsyncExecutions() {
         SysOssFileService service = mock(SysOssFileService.class);
-        OssFileRecordRetryData data = data();
+        SysOssFile data = data();
         when(service.saveIfAbsent(data)).thenThrow(new IllegalStateException("database unavailable"));
         CapturingRetryTask task = new CapturingRetryTask(service);
         task.submit(data);
@@ -63,8 +63,8 @@ class OssFileRecordRetryTaskTest {
         assertThat(task.delays).containsExactly(15L, 30L, 60L, 90L, 120L);
     }
 
-    private static OssFileRecordRetryData data() {
-        return OssFileRecordRetryData.builder()
+    private static SysOssFile data() {
+        return SysOssFile.builder()
                 .fileId("file-123")
                 .fileUrl("https://oss.example.com/file.png")
                 .build();
@@ -72,7 +72,7 @@ class OssFileRecordRetryTaskTest {
 
     private static class CapturingRetryTask extends OssFileRecordRetryTask {
 
-        private DelayRetry<OssFileRecordRetryData> retry;
+        private DelayRetry<SysOssFile> retry;
         private long delaySeconds;
         private final List<Long> delays = new ArrayList<>();
 
@@ -81,7 +81,7 @@ class OssFileRecordRetryTaskTest {
         }
 
         @Override
-        public void producer(DelayRetry<OssFileRecordRetryData> data, long delay) {
+        public void producer(DelayRetry<SysOssFile> data, long delay) {
             this.retry = data;
             this.delaySeconds = delay;
             this.delays.add(delay);

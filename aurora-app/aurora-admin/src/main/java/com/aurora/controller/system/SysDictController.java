@@ -1,59 +1,57 @@
 package com.aurora.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.aurora.annotation.OperationLogger;
-import com.aurora.starter.webmvc.domain.response.Result;
-import com.aurora.entity.SysDict;
-import com.aurora.service.SysDictService;
+import com.aurora.biz.SysDictBizService;
+import com.aurora.domain.form.query.system.SysDictQueryForm;
+import com.aurora.domain.form.system.SysDictForm;
+import com.aurora.domain.vo.system.SysDictVo;
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.webmvc.domain.response.Result;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
-@Tag(name = "字典管理", description = "系统字典相关接口")
 @RestController
 @RequestMapping("/sys/dict")
 @RequiredArgsConstructor
+@Tag(name = "Dictionary management")
 public class SysDictController {
-
-    private final SysDictService sysDictService;
+    private final SysDictBizService sysDictBizService;
 
     @GetMapping
-    @Operation(summary = "获取字典列表")
-    public Result<IPage<SysDict>> getDictList(@RequestParam(required = false) String name,
-                                            @RequestParam(required = false) Integer status,
-                                            PageParam pageParam) {
-        return Result.data(sysDictService.getDictPageList(name, status, pageParam));
+    @Operation(summary = "List dictionaries")
+    public Result<IPage<SysDictVo>> getDictList(SysDictQueryForm form, PageParam pageParam) {
+        return Result.data(sysDictBizService.list(form, pageParam));
     }
 
     @PostMapping("/add")
-    @Operation(summary = "添加字典")
-    @OperationLogger(value = "添加字典")
+    @Operation(summary = "Add dictionary")
+    @OperationLogger("添加字典")
     @SaCheckPermission("sys:dict:add")
-    public Result<Void> addDict(@RequestBody SysDict dict) {
-        sysDictService.addDict(dict);
+    public Result<Void> addDict(@RequestBody SysDictForm form) {
+        sysDictBizService.add(form);
         return Result.success();
     }
 
     @PutMapping("/update")
-    @Operation(summary = "修改字典")
-    @OperationLogger(value = "修改字典")
+    @Operation(summary = "Update dictionary")
+    @OperationLogger("修改字典")
     @SaCheckPermission("sys:dict:update")
-    public Result<Void> updateDict(@RequestBody SysDict dict) {
-        sysDictService.updateDict(dict);
+    public Result<Void> updateDict(@RequestBody SysDictForm form) {
+        sysDictBizService.update(form);
         return Result.success();
     }
 
     @DeleteMapping("/delete/{ids}")
-    @Operation(summary = "删除字典")
-    @OperationLogger(value = "删除字典")
+    @Operation(summary = "Delete dictionaries")
+    @OperationLogger("删除字典")
     @SaCheckPermission("sys:dict:delete")
     public Result<Void> delete(@PathVariable List<Long> ids) {
-        sysDictService.removeBatchByIds(ids);
+        sysDictBizService.delete(ids);
         return Result.success();
     }
 }

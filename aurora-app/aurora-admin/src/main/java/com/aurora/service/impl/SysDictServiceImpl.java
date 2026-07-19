@@ -5,54 +5,23 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
-import com.aurora.starter.common.utils.StringUtils;
+import com.aurora.domain.query.system.SysDictQuery;
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.aurora.entity.SysDict;
 import com.aurora.mapper.SysDictMapper;
 import com.aurora.service.SysDictService;
-import com.aurora.starter.webmvc.exception.BizException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> implements SysDictService {
 
     @Override
-    public IPage<SysDict> getDictPageList(String name, Integer status, PageParam pageParam) {
-        LambdaQueryWrapper<SysDict> wrapper = new LambdaQueryWrapper<SysDict>()
-                .like(StringUtils.isNotBlank(name),SysDict::getName, name)
-                .eq(status != null,SysDict::getStatus, status)
-                .orderByAsc(SysDict::getSort);
-
-        return baseMapper.selectPage(PageUtils.buildPage(pageParam), wrapper);
+    public IPage<SysDict> getDictPageList(SysDictQuery query, PageParam pageParam) {
+        return baseMapper.selectPage(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
     }
 
     @Override
-    public void addDict(SysDict dict) {
-        // 检查字典类型是否已存在
-        if (checkTypeExists(dict.getType(), null)) {
-            throw new BizException("字典类型已存在");
-        }
-        save(dict);
-    }
-
-    @Override
-    public void updateDict(SysDict dict) {
-        // 检查字典是否存在
-        if (getById(dict.getId()) == null) {
-            throw new BizException("字典不存在");
-        }
-        // 检查字典类型是否已存在
-        if (checkTypeExists(dict.getType(), dict.getId())) {
-            throw new BizException("字典类型已存在");
-        }
-        updateById(dict);
-    }
-
-    /**
-     * 检查字典类型是否已存在
-     */
-    private boolean checkTypeExists(String type, Long excludeId) {
+    public boolean existsByType(String type, Long excludeId) {
         LambdaQueryWrapper<SysDict> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysDict::getType, type);
         if (excludeId != null) {

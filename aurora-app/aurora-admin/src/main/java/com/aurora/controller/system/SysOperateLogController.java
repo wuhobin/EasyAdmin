@@ -1,38 +1,36 @@
 package com.aurora.controller.system;
 
-import java.util.List;
-
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.*;
-import com.aurora.entity.SysOperateLog;
-import com.aurora.service.SysOperateLogService;
+import com.aurora.biz.SysOperateLogBizService;
+import com.aurora.domain.form.query.system.SysOperateLogQueryForm;
+import com.aurora.domain.vo.system.SysOperateLogVo;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/sys/operateLog")
 @RequiredArgsConstructor
-@Tag(name = "操作日志管理", description = "操作日志管理相关接口")
+@Tag(name = "Operation log management")
 public class SysOperateLogController {
-
-    private final SysOperateLogService sysOperateLogService;
+    private final SysOperateLogBizService sysOperateLogBizService;
 
     @GetMapping
-    @Operation(description = "获取操作日志列表")
-    public Result<IPage<SysOperateLog>> list(SysOperateLog sysOperateLog, PageParam pageParam) {
-        return Result.data(sysOperateLogService.listSysOperateLog(sysOperateLog, pageParam));
+    @Operation(summary = "List operation logs")
+    public Result<IPage<SysOperateLogVo>> list(SysOperateLogQueryForm form, PageParam pageParam) {
+        return Result.data(sysOperateLogBizService.list(form, pageParam));
     }
 
     @DeleteMapping("delete/{ids}")
-    @Operation(description = "批量删除操作日志")
+    @Operation(summary = "Delete operation logs")
     @SaCheckPermission("sys:operateLog:delete")
     public Result<Void> delete(@PathVariable List<Long> ids) {
-        sysOperateLogService.removeBatchByIds(ids);
+        sysOperateLogBizService.delete(ids);
         return Result.success();
     }
 }

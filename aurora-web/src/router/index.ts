@@ -25,6 +25,23 @@ export const constantRoutes: RouteRecordRaw[] = [
   },
 
   {
+    path: "/system",
+    component: Layout,
+    meta: { hidden: true },
+    children: [
+      {
+        path: "profile",
+        name: "Profile",
+        component: () => import("@/views/system/user/profile/index.vue"),
+        meta: {
+          title: "个人中心",
+          hidden: true,
+        },
+      },
+    ],
+  },
+
+  {
     path: '/:pathMatch(.*)*',
     component: () => import('@/views/error-page/404.vue'),
     meta: { hidden: true },
