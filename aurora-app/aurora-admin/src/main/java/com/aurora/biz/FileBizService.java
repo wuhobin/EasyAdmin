@@ -87,6 +87,7 @@ public class FileBizService {
 
     public void deleteById(Long id) {
         SysOssFile file = getFile(id);
+        checkDeletePermission(file);
         if (!deleteOssFile(file)) {
             throw new BizException("OSS 文件删除失败");
         }
@@ -100,8 +101,10 @@ public class FileBizService {
     public boolean deleteByUrl(String url) {
         List<SysOssFile> files = ossFileService.listByUrl(url);
         if (files.isEmpty()) {
+            checkAdminDeletePermission();
             return deleteOssFile(SysOssFile.builder().fileUrl(url).build());
         }
+        files.forEach(this::checkDeletePermission);
         if (!deleteOssFile(files.getFirst())) {
             return false;
         }
@@ -140,6 +143,23 @@ public class FileBizService {
 
     private boolean deleteOssFile(SysOssFile file) {
         return ossTemplate.delete(toFileInfo(file));
+    }
+
+    private void checkDeletePermission(SysOssFile file) {
+        if (SecurityUtils.hasRole(Constants.ADMIN)) {
+            return;
+        }
+        Integer currentUserId = SecurityUtils.getLoginIdAsInt();
+        if (file.getUploaderId() == null || currentUserId == null
+                || file.getUploaderId().longValue() != currentUserId.longValue()) {
+            throw new BizException("只能删除自己上传的文件");
+        }
+    }
+
+    private static void checkAdminDeletePermission() {
+        if (!SecurityUtils.hasRole(Constants.ADMIN)) {
+            throw new BizException("只能删除自己上传的文件");
+        }
     }
 
     private FileInfo toFileInfo(SysOssFile file) {

@@ -62,7 +62,6 @@ public class SysUserController {
     @PutMapping("/updatePwd")
     @Operation(summary = "修改密码")
     @OperationLogger("修改密码")
-    @SaCheckPermission("sys:user:reset")
     public Result<Void> updatePwd(@RequestBody UpdatePasswordForm form) {
         sysUserBizService.updatePassword(form);
         return Result.success();
@@ -75,7 +74,6 @@ public class SysUserController {
     @PutMapping("/updProfile")
     @Operation(summary = "修改个人信息")
     @OperationLogger("修改个人信息")
-    @SaCheckPermission("sys:user:update")
     public Result<Void> updateProfile(@RequestBody UserProfileForm form) {
         sysUserBizService.updateProfile(form);
         return Result.success();
@@ -90,7 +88,6 @@ public class SysUserController {
     @PutMapping("/reset")
     @Operation(summary = "重置密码")
     @OperationLogger("重置密码")
-    @SaCheckPermission("sys:user:reset")
     public Result<Boolean> resetPassword(@RequestBody ResetPasswordForm form) {
         return Result.data(sysUserBizService.resetPassword(form));
     }

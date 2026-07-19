@@ -99,7 +99,7 @@
                 @click="handleDownload(row)"
               />
             </el-tooltip>
-            <el-tooltip content="删除文件" placement="top">
+            <el-tooltip v-if="canDeleteFile(row)" content="删除文件" placement="top">
               <el-button
                 v-permission="['sys:file:delete']"
                 link
@@ -141,7 +141,9 @@ import {
 } from '@/api/file'
 import { getUserListApi } from '@/api/system/user'
 import { getDictListApi, getDictDataListApi } from '@/api/system/dict'
+import { useUserStore } from '@/store/modules/user'
 
+const userStore = useUserStore()
 const queryFormRef = ref<FormInstance>()
 const loading = ref(false)
 const total = ref(0)
@@ -228,6 +230,11 @@ const openFile = (url: string) => {
 const copyUrl = async (url: string) => {
   await navigator.clipboard.writeText(url)
   ElMessage.success('URL 已复制')
+}
+
+const canDeleteFile = (row: unknown) => {
+  const file = row as OssFileRecord
+  return userStore.user.roles.includes('admin') || file.uploaderId === userStore.user.id
 }
 
 const handleDownload = async (row: unknown) => {
