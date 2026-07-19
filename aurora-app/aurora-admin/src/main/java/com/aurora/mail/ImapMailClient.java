@@ -20,6 +20,7 @@ import jakarta.mail.UIDFolder;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeUtility;
 import jakarta.servlet.http.HttpServletResponse;
+import org.eclipse.angus.mail.imap.IMAPStore;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
@@ -51,6 +52,12 @@ public class ImapMailClient {
     private static final int CONNECT_TIMEOUT = 10_000;
     private static final int READ_TIMEOUT = 15_000;
     private static final int MAX_INLINE_IMAGE_BYTES = 5 * 1024 * 1024;
+    private static final Map<String, String> NETEASE_CLIENT_ID = Map.of(
+            "name", "EasyAdmin",
+            "version", "1.0",
+            "vendor", "Aurora",
+            "support-email", "support@easyadmin.local"
+    );
 
     public void testConnection(MailAccount account, String authCode) {
         withInbox(account, authCode, folder -> null);
@@ -171,6 +178,7 @@ public class ImapMailClient {
         Session session = Session.getInstance(properties);
         try (Store store = session.getStore("imaps")) {
             store.connect(provider.getHost(), provider.getPort(), account.getEmail(), authCode);
+            identifyClient(store, provider);
             Folder inbox = store.getFolder("INBOX");
             try {
                 inbox.open(Folder.READ_ONLY);
@@ -185,6 +193,16 @@ public class ImapMailClient {
         } catch (Exception exception) {
             throw new BizException("邮箱连接或读取失败：" + safeMessage(exception));
         }
+    }
+
+    static void identifyClient(Store store, MailProviderEnum provider) throws Exception {
+        if (provider == MailProviderEnum.QQ) {
+            return;
+        }
+        if (!(store instanceof IMAPStore imapStore)) {
+            throw new BizException("当前IMAP客户端不支持网易邮箱要求的ID命令");
+        }
+        imapStore.id(NETEASE_CLIENT_ID);
     }
 
     private static void parsePart(Part part, String path, ParsedBody parsed) throws Exception {

@@ -1,12 +1,39 @@
 package com.aurora.mail;
 
+import com.aurora.enums.MailProviderEnum;
 import org.junit.jupiter.api.Test;
+import org.eclipse.angus.mail.imap.IMAPStore;
 
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 class ImapMailClientTest {
+
+    @Test
+    void sendsRfc2971ClientIdentificationForNetEaseBeforeMailboxAccess() throws Exception {
+        IMAPStore store = mock(IMAPStore.class);
+
+        ImapMailClient.identifyClient(store, MailProviderEnum.NETEASE_163);
+
+        verify(store).id(argThat(parameters ->
+                "EasyAdmin".equals(parameters.get("name"))
+                        && "1.0".equals(parameters.get("version"))
+                        && "Aurora".equals(parameters.get("vendor"))));
+    }
+
+    @Test
+    void doesNotSendClientIdentificationForQqMail() throws Exception {
+        IMAPStore store = mock(IMAPStore.class);
+
+        ImapMailClient.identifyClient(store, MailProviderEnum.QQ);
+
+        verify(store, never()).id(argThat(parameters -> true));
+    }
 
     @Test
     void sanitizesScriptsAndTrackingImagesButKeepsInlineCidImages() {
