@@ -143,6 +143,7 @@ CREATE TABLE `sys_job`  (
 INSERT INTO `sys_job` VALUES (1, '系统默认（无参）', 'DEFAULT', 'task.neatNoParams', '* * * * * ? *', '3', '1', '1', '2024-11-17 12:39:45', '2024-11-18 17:26:59', '');
 INSERT INTO `sys_job` VALUES (2, '系统默认（有参）', 'DEFAULT', 'demoTask.ryParams(\'ry\')', '0/15 * * * * ?', '3', '1', '1', '2024-11-17 12:39:45', '2024-11-17 12:39:45', '');
 INSERT INTO `sys_job` VALUES (3, '系统默认（多参）', 'DEFAULT', 'demoTask.ryMultipleParams(\'ry\', true, 2000L, 316.50D, 100)', '0/20 * * * * ?', '3', '1', '1', '2024-11-17 12:39:45', '2024-11-18 09:27:22', '');
+INSERT INTO `sys_job` VALUES (11, '邮箱新邮件检查', 'SYSTEM', 'mailFetchTask.checkNewMails', '0/30 * * * * ?', '3', '1', '0', '2026-07-19 00:00:00', NULL, '只记录邮箱最新UID，邮件正文不落库');
 
 -- ----------------------------
 -- Table structure for sys_job_log
@@ -317,6 +318,40 @@ INSERT INTO `sys_menu` VALUES (108, '109', '', '', '删除文件', 3, '', 'BUTTO
 INSERT INTO `sys_menu` VALUES (109, '106', 'list', '/file/index', '文件列表', 1, 'Files', 'MENU', '2026-07-16 00:00:00', NULL, '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (110, '109', '', '', '文件列表', 1, '', 'BUTTON', '2026-07-16 00:00:00', NULL, '', '', 1, 'sys:file:list', 0);
 INSERT INTO `sys_menu` VALUES (111, '109', '', '', '下载文件', 4, '', 'BUTTON', '2026-07-17 00:00:00', NULL, '', '', 1, 'sys:file:download', 0);
+INSERT INTO `sys_menu` VALUES (117, '0', '/mail', 'Layout', '聚合邮箱', 9, 'Message', 'CATALOG', '2026-07-19 00:00:00', NULL, '/mail/inbox', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (118, '117', 'inbox', '/mail/index', '最新邮件', 1, 'MessageBox', 'MENU', '2026-07-19 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (127, '117', 'account', '/mail/account/index', '邮箱列表', 2, 'Tickets', 'MENU', '2026-07-19 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (119, '127', '', '', '邮箱账户列表', 1, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:account:list', 0);
+INSERT INTO `sys_menu` VALUES (120, '127', '', '', '新增邮箱账户', 2, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:account:add', 0);
+INSERT INTO `sys_menu` VALUES (121, '127', '', '', '修改邮箱账户', 3, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:account:update', 0);
+INSERT INTO `sys_menu` VALUES (122, '127', '', '', '删除邮箱账户', 4, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:account:delete', 0);
+INSERT INTO `sys_menu` VALUES (123, '127', '', '', '测试邮箱连接', 5, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:account:test', 0);
+INSERT INTO `sys_menu` VALUES (124, '118', '', '', '邮件列表', 6, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:inbox:list', 0);
+INSERT INTO `sys_menu` VALUES (125, '118', '', '', '查看邮件', 7, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:inbox:view', 0);
+INSERT INTO `sys_menu` VALUES (126, '118', '', '', '下载附件', 8, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:inbox:download', 0);
+
+-- ----------------------------
+-- Table structure for sys_oss_file
+-- ----------------------------
+DROP TABLE IF EXISTS `mail_account`;
+CREATE TABLE `mail_account` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `account_name` varchar(100) NOT NULL COMMENT '账户名称',
+  `provider` varchar(32) NOT NULL COMMENT '邮箱类型',
+  `email` varchar(255) NOT NULL COMMENT '邮箱地址',
+  `auth_code_ciphertext` varchar(1000) NOT NULL COMMENT '加密后的邮箱授权码',
+  `enabled` tinyint NOT NULL DEFAULT 1 COMMENT '是否启用：0否，1是',
+  `sort` int NOT NULL DEFAULT 0 COMMENT '排序',
+  `last_uid` bigint NULL DEFAULT NULL COMMENT '后台检查到的最新邮件UID',
+  `uid_validity` bigint NULL DEFAULT NULL COMMENT 'IMAP UID有效性标识',
+  `last_connect_time` datetime NULL DEFAULT NULL COMMENT '最后连接时间',
+  `last_error` varchar(1000) NULL DEFAULT NULL COMMENT '最后连接错误',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_mail_account_email` (`email`) USING BTREE,
+  INDEX `idx_mail_account_enabled_sort` (`enabled`, `sort`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '聚合邮箱账户' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for sys_oss_file
