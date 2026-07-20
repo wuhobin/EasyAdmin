@@ -492,6 +492,7 @@ onUnmounted(() => window.clearInterval(refreshTimer))
 .mail-workspace {
   display: grid;
   grid-template-columns: 230px minmax(310px, 390px) minmax(420px, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   height: calc(100vh - 190px);
   min-height: 620px;
   overflow: hidden;
@@ -501,7 +502,7 @@ onUnmounted(() => window.clearInterval(refreshTimer))
   box-shadow: 0 20px 55px rgba(31, 66, 58, .1);
 }
 
-.account-panel, .message-panel { border-right: 1px solid var(--line); min-width: 0; }
+.account-panel, .message-panel { min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--line); }
 .account-panel { display: flex; flex-direction: column; padding: 18px 12px 12px; background: #f8faf9; }
 .panel-label { padding: 0 10px 12px; color: #8a9894; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .account-list { min-height: 0; overflow-y: auto; }
@@ -525,7 +526,7 @@ onUnmounted(() => window.clearInterval(refreshTimer))
 .account-tools { margin-top: auto; padding: 12px 4px 0; }
 .account-tools .el-button { width: 100%; }
 
-.message-panel { display: flex; flex-direction: column; min-width: 0; }
+.message-panel { display: flex; flex-direction: column; }
 .message-toolbar { display: flex; align-items: center; justify-content: space-between; min-height: 64px; padding: 0 16px; border-bottom: 1px solid var(--line); }
 .message-toolbar strong, .message-toolbar span { display: block; }
 .message-toolbar strong { font-size: 14px; }
@@ -543,7 +544,7 @@ onUnmounted(() => window.clearInterval(refreshTimer))
 .subject-row b { overflow: hidden; font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .message-copy small { display: block; overflow: hidden; margin-top: 5px; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 
-.reader-panel { min-width: 0; overflow-y: auto; background: #fff; }
+.reader-panel { min-width: 0; min-height: 0; overflow-y: auto; background: #fff; }
 .reader-header { padding: 28px 32px 22px; border-bottom: 1px solid var(--line); }
 .reader-meta { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; }
 .reader-badge { padding: 3px 9px; border-radius: 99px; color: var(--accent); background: #e5f1ee; font-weight: 700; }

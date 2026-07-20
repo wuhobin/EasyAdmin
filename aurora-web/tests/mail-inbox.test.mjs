@@ -30,6 +30,12 @@ test('mail page auto refreshes, isolates HTML, and notifies for unseen UIDs', ()
   assert.match(pageSource, /邮件实时来自邮箱服务器，系统不保存历史正文/)
 })
 
+test('mail message list is constrained to an independently scrollable grid row', () => {
+  assert.match(pageSource, /grid-template-rows:\s*minmax\(0,\s*1fr\)/)
+  assert.match(pageSource, /\.account-panel,\s*\.message-panel\s*\{[^}]*min-height:\s*0[^}]*overflow:\s*hidden/s)
+  assert.match(pageSource, /\.message-list\s*\{[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/s)
+})
+
 test('mail account page exposes view, test, edit, enable state, and delete controls', () => {
   assert.match(accountPageSource, /邮箱列表/)
   assert.match(accountPageSource, /openDetail\(row\)/)
