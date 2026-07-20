@@ -1,6 +1,6 @@
 package com.aurora.domain.form.mail;
 
-import com.aurora.enums.MailProviderEnum;
+import com.aurora.constants.MailProviderEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

@@ -2,12 +2,12 @@ package com.aurora.biz;
 
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
-import com.aurora.common.Constants;
-import com.aurora.common.ResultCode;
+import com.aurora.constants.Constants;
+import com.aurora.constants.ResultCode;
 import com.aurora.domain.form.auth.LoginForm;
 import com.aurora.domain.vo.auth.LoginUserInfoVo;
 import com.aurora.entity.SysUser;
-import com.aurora.enums.MenuTypeEnum;
+import com.aurora.constants.MenuTypeEnum;
 import com.aurora.service.SysMenuService;
 import com.aurora.service.SysRoleService;
 import com.aurora.service.SysUserService;

@@ -1,7 +1,7 @@
 package com.aurora.config;
 
-import com.aurora.common.Constants;
-import com.aurora.enums.MenuTypeEnum;
+import com.aurora.constants.Constants;
+import com.aurora.constants.MenuTypeEnum;
 import com.aurora.mapper.SysMenuMapper;
 import com.aurora.mapper.SysRoleMapper;
 import com.aurora.starter.security.account.AccountType;

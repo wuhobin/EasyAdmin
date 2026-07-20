@@ -1,6 +1,6 @@
 package com.aurora.mail;
 
-import com.aurora.enums.MailProviderEnum;
+import com.aurora.constants.MailProviderEnum;
 import org.junit.jupiter.api.Test;
 import org.eclipse.angus.mail.imap.IMAPStore;
 
@@ -18,7 +18,7 @@ class ImapMailClientTest {
     void sendsRfc2971ClientIdentificationForNetEaseBeforeMailboxAccess() throws Exception {
         IMAPStore store = mock(IMAPStore.class);
 
-        ImapMailClient.identifyClient(store, MailProviderEnum.NETEASE_163);
+        com.aurora.handler.mail.ImapMailClient.identifyClient(store, MailProviderEnum.NETEASE_163);
 
         verify(store).id(argThat(parameters ->
                 "EasyAdmin".equals(parameters.get("name"))
@@ -30,7 +30,7 @@ class ImapMailClientTest {
     void doesNotSendClientIdentificationForQqMail() throws Exception {
         IMAPStore store = mock(IMAPStore.class);
 
-        ImapMailClient.identifyClient(store, MailProviderEnum.QQ);
+        com.aurora.handler.mail.ImapMailClient.identifyClient(store, MailProviderEnum.QQ);
 
         verify(store, never()).id(argThat(parameters -> true));
     }
@@ -46,7 +46,7 @@ class ImapMailClientTest {
                 </div>
                 """;
 
-        String sanitized = ImapMailClient.sanitizeHtml(html,
+        String sanitized = com.aurora.handler.mail.ImapMailClient.sanitizeHtml(html,
                 Map.of("logo", "data:image/png;base64,AAAA"));
 
         assertThat(sanitized).doesNotContain("script", "onclick", "tracker.example", "javascript:");

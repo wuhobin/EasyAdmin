@@ -1,4 +1,4 @@
-package com.aurora.enums;
+package com.aurora.constants;
 
 import lombok.Getter;
 

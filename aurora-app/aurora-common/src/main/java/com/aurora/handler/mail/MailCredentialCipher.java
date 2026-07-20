@@ -1,4 +1,4 @@
-package com.aurora.mail;
+package com.aurora.handler.mail;
 
 import com.aurora.starter.webmvc.exception.BizException;
 import org.springframework.beans.factory.annotation.Value;

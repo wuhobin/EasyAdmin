@@ -1,6 +1,6 @@
 package com.aurora.exception;
 
-import com.aurora.common.ResultCode;
+import com.aurora.constants.ResultCode;
 import com.aurora.starter.webmvc.enums.DefaultBizCode;
 import com.aurora.starter.webmvc.exception.BizCode;
 import com.aurora.starter.webmvc.exception.BizException;

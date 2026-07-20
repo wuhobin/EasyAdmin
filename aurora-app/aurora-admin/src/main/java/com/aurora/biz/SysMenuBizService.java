@@ -1,12 +1,12 @@
 package com.aurora.biz;
 
-import com.aurora.common.Constants;
+import com.aurora.constants.Constants;
 import com.aurora.domain.convert.SysMenuConvert;
 import com.aurora.domain.form.system.SysMenuForm;
 import com.aurora.domain.vo.menu.SysRouterVo;
 import com.aurora.domain.vo.system.SysMenuVo;
 import com.aurora.entity.SysMenu;
-import com.aurora.enums.MenuTypeEnum;
+import com.aurora.constants.MenuTypeEnum;
 import com.aurora.service.SysMenuService;
 import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.security.context.SecurityUtils;

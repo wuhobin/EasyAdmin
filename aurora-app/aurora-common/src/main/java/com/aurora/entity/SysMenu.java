@@ -1,6 +1,6 @@
 package com.aurora.entity;
 
-import com.aurora.enums.MenuTypeEnum;
+import com.aurora.constants.MenuTypeEnum;
 import com.aurora.starter.mybatisplus.model.BaseEntity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

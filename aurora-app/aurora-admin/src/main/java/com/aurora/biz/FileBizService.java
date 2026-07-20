@@ -1,6 +1,6 @@
 package com.aurora.biz;
 
-import com.aurora.common.Constants;
+import com.aurora.constants.Constants;
 import com.aurora.domain.convert.OssFileConvert;
 import com.aurora.domain.form.query.file.OssFileQueryForm;
 import com.aurora.domain.vo.auth.LoginUserInfoVo;

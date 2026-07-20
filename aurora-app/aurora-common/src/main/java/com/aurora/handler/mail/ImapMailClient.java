@@ -1,13 +1,12 @@
-package com.aurora.mail;
+package com.aurora.handler.mail;
 
 import com.aurora.domain.vo.mail.MailAttachmentVo;
 import com.aurora.domain.vo.mail.MailMessageDetailVo;
 import com.aurora.domain.vo.mail.MailMessageSummaryVo;
 import com.aurora.entity.MailAccount;
-import com.aurora.enums.MailProviderEnum;
+import com.aurora.constants.MailProviderEnum;
 import com.aurora.starter.webmvc.exception.BizException;
 import jakarta.mail.Address;
-import jakarta.mail.BodyPart;
 import jakarta.mail.FetchProfile;
 import jakarta.mail.Flags;
 import jakarta.mail.Folder;

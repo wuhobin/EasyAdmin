@@ -1,6 +1,6 @@
 package com.aurora.biz;
 
-import com.aurora.common.Constants;
+import com.aurora.constants.Constants;
 import com.aurora.entity.SysOssFile;
 import com.aurora.service.SysOssFileService;
 import com.aurora.starter.oss.model.OssUploadResult;

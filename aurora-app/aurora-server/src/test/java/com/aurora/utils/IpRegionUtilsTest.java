@@ -1,6 +1,6 @@
 package com.aurora.utils;
 
-import com.aurora.common.Constants;
+import com.aurora.constants.Constants;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

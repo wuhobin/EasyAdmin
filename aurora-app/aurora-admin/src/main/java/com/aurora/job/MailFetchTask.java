@@ -1,9 +1,9 @@
-package com.aurora.quartz;
+package com.aurora.job;
 
 import com.aurora.entity.MailAccount;
-import com.aurora.mail.ImapMailClient;
-import com.aurora.mail.MailCredentialCipher;
-import com.aurora.mail.MailCursor;
+import com.aurora.handler.mail.ImapMailClient;
+import com.aurora.handler.mail.MailCredentialCipher;
+import com.aurora.handler.mail.MailCursor;
 import com.aurora.service.MailAccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

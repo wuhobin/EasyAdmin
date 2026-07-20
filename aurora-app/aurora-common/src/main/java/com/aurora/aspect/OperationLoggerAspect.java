@@ -1,7 +1,7 @@
 package com.aurora.aspect;
 
 import com.aurora.annotation.OperationLogger;
-import com.aurora.common.Constants;
+import com.aurora.constants.Constants;
 import com.aurora.domain.vo.auth.LoginUserInfoVo;
 import com.aurora.entity.SysOperateLog;
 import com.aurora.mapper.SysOperateLogMapper;
