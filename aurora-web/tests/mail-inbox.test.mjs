@@ -9,6 +9,8 @@ async function readSource(relativePath) {
 const apiSource = await readSource('src/api/mail/index.ts')
 const pageSource = await readSource('src/views/mail/index.vue')
 const accountPageSource = await readSource('src/views/mail/account/index.vue')
+const providerOptionsSource = await readSource('src/composables/useMailProviderOptions.ts')
+const providerValidationSource = await readSource('src/utils/mail-provider.ts')
 
 test('mail API reads messages on demand and downloads attachments without a history endpoint', () => {
   assert.match(apiSource, /getLatestMailsApi/)
@@ -46,4 +48,29 @@ test('mail account page exposes view, test, edit, enable state, and delete contr
   assert.match(accountPageSource, /mail:account:update/)
   assert.match(accountPageSource, /mail:account:delete/)
   assert.match(accountPageSource, /授权码已经加密保存/)
+})
+
+test('mail provider options come from the backend dictionary', () => {
+  assert.match(providerOptionsSource, /MAIL_PROVIDER_DICT_TYPE\s*=\s*['"]mail_provider['"]/)
+  assert.match(providerOptionsSource, /getDictListApi/)
+  assert.match(providerOptionsSource, /getDictDataListApi/)
+  assert.match(pageSource, /useMailProviderOptions/)
+  assert.match(accountPageSource, /useMailProviderOptions/)
+  assert.doesNotMatch(pageSource, /const providerOptions[^=]*=\s*\[/)
+  assert.doesNotMatch(accountPageSource, /const providerOptions[^=]*=\s*\[/)
+})
+
+test('mail address follows the selected provider domain', () => {
+  assert.match(providerValidationSource, /QQ:\s*['"]qq\.com['"]/)
+  assert.match(providerValidationSource, /NETEASE_163:\s*['"]163\.com['"]/)
+  assert.match(providerValidationSource, /buildMailAddress/)
+  assert.match(providerValidationSource, /mailAddressAccount/)
+  assert.match(providerValidationSource, /replaceMailProviderDomain/)
+  assert.match(providerValidationSource, /isMailAddressForProvider/)
+  assert.match(pageSource, /email-domain-suffix/)
+  assert.match(accountPageSource, /email-domain-suffix/)
+  assert.match(pageSource, /emailDomainSuffix/)
+  assert.match(accountPageSource, /emailDomainSuffix/)
+  assert.match(pageSource, /handleEmailBlur/)
+  assert.match(accountPageSource, /handleEmailBlur/)
 })

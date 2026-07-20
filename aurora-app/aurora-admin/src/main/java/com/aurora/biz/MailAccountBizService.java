@@ -29,6 +29,7 @@ public class MailAccountBizService {
         if (form.getAuthCode() == null || form.getAuthCode().isBlank()) {
             throw new BizException("新增邮箱时授权码不能为空");
         }
+        validateAndNormalizeEmail(form);
         checkEmailUnique(form.getEmail(), null);
         MailAccount account = MailAccountConvert.INSTANCE.toEntity(form);
         normalize(account);
@@ -42,6 +43,7 @@ public class MailAccountBizService {
             throw new BizException("邮箱账户ID不能为空");
         }
         MailAccount current = getRequired(form.getId());
+        validateAndNormalizeEmail(form);
         checkEmailUnique(form.getEmail(), form.getId());
         MailAccount account = MailAccountConvert.INSTANCE.toEntity(form);
         normalize(account);
@@ -82,6 +84,15 @@ public class MailAccountBizService {
         if (mailAccountService.existsByEmail(email, excludedId)) {
             throw new BizException("该邮箱已经添加");
         }
+    }
+
+    private static void validateAndNormalizeEmail(MailAccountForm form) {
+        String email = form.getEmail().trim().toLowerCase();
+        if (!form.getProvider().matchesEmail(email)) {
+            throw new BizException(form.getProvider().getDescription()
+                    + "地址必须以 @" + form.getProvider().getEmailDomain() + " 结尾");
+        }
+        form.setEmail(email);
     }
 
     private static void normalize(MailAccount account) {

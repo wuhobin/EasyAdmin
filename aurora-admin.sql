@@ -158,12 +158,13 @@ CREATE TABLE `sys_dict`  (
                              `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
                              `sort` int NULL DEFAULT 0 COMMENT '排序',
                              PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字典表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 35 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字典表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_dict
 -- ----------------------------
 INSERT INTO `sys_dict` VALUES (1, '文件类型', 'file_content_type', 1, '文件MIME类型分类', '2026-07-17 11:50:39', '2026-07-17 11:50:39', 1);
+INSERT INTO `sys_dict` VALUES (34, '邮箱类型', 'mail_provider', 1, '聚合邮箱支持的邮箱服务商', '2026-07-20 00:00:00', '2026-07-20 00:00:00', 2);
 
 -- ----------------------------
 -- Table structure for sys_dict_data
@@ -180,7 +181,7 @@ CREATE TABLE `sys_dict_data`  (
                                   `remark` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
                                   `status` int NULL DEFAULT 1,
                                   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 46 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 50 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_dict_data
@@ -193,6 +194,10 @@ INSERT INTO `sys_dict_data` VALUES (42, 1, 'application/pdf', 'application/pdf',
 INSERT INTO `sys_dict_data` VALUES (43, 1, 'application/zip', 'application/zip', 'info', NULL, 6, 'application/zip', 1);
 INSERT INTO `sys_dict_data` VALUES (44, 1, 'image/png', 'image/png', 'success', NULL, 0, 'image/png', 1);
 INSERT INTO `sys_dict_data` VALUES (45, 1, 'text/plain', 'text/plain', 'info', NULL, 8, 'text/plain', 1);
+INSERT INTO `sys_dict_data` VALUES (46, 34, 'QQ 邮箱', 'QQ', 'primary', '1', 1, 'QQ 邮箱', 1);
+INSERT INTO `sys_dict_data` VALUES (47, 34, '163 邮箱', 'NETEASE_163', 'success', '0', 2, '网易 163 邮箱', 1);
+INSERT INTO `sys_dict_data` VALUES (48, 34, '126 邮箱', 'NETEASE_126', 'warning', '0', 3, '网易 126 邮箱', 1);
+INSERT INTO `sys_dict_data` VALUES (49, 34, 'yeah 邮箱', 'YEAH', 'info', '0', 4, '网易 yeah 邮箱', 1);
 
 -- ----------------------------
 -- Table structure for sys_menu

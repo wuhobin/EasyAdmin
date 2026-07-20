@@ -177,13 +177,22 @@
             <el-input v-model="accountForm.accountName" placeholder="例如：工作 QQ 邮箱" />
           </el-form-item>
           <el-form-item label="邮箱类型" prop="provider">
-            <el-select v-model="accountForm.provider" style="width: 100%">
+            <el-select v-model="accountForm.provider" :loading="providerOptionsLoading" style="width: 100%">
               <el-option v-for="item in providerOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
           </el-form-item>
         </div>
         <el-form-item label="邮箱地址" prop="email">
-          <el-input v-model="accountForm.email" type="email" placeholder="name@qq.com" autocomplete="email" />
+          <el-input
+            v-model="emailAccount"
+            placeholder="请输入邮箱账号/手机号"
+            autocomplete="email"
+            @blur="handleEmailBlur"
+          >
+            <template #suffix>
+              <span class="email-domain-suffix">{{ emailDomainSuffix }}</span>
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item label="邮箱授权码" prop="authCode">
           <el-input
@@ -242,13 +251,22 @@ import {
   type MailMessageSummary,
   type MailProvider
 } from '@/api/mail'
+import { useMailProviderOptions } from '@/composables/useMailProviderOptions'
+import {
+  buildMailAddress,
+  isMailAddressForProvider,
+  mailAddressAccount,
+  mailProviderDomain,
+  replaceMailProviderDomain
+} from '@/utils/mail-provider'
 
-const providerOptions: { label: string; value: MailProvider }[] = [
-  { label: 'QQ 邮箱', value: 'QQ' },
-  { label: '163 邮箱', value: 'NETEASE_163' },
-  { label: '126 邮箱', value: 'NETEASE_126' },
-  { label: 'yeah 邮箱', value: 'YEAH' }
-]
+const {
+  providerOptions,
+  providerOptionsLoading,
+  loadProviderOptions,
+  defaultProvider,
+  providerLabel
+} = useMailProviderOptions()
 const limitOptions = [20, 30, 50]
 const accounts = ref<MailAccount[]>([])
 const messages = ref<MailMessageSummary[]>([])
@@ -271,12 +289,27 @@ const accountEnabled = computed({
   get: () => accountForm.enabled === 1,
   set: (value: boolean) => { accountForm.enabled = value ? 1 : 0 }
 })
+const emailAccount = computed({
+  get: () => mailAddressAccount(accountForm.email),
+  set: (value: string) => { accountForm.email = buildMailAddress(value, accountForm.provider) }
+})
+const emailDomainSuffix = computed(() => {
+  const domain = mailProviderDomain(accountForm.provider)
+  return domain ? `@${domain}` : ''
+})
 const accountRules: FormRules<MailAccountForm> = {
   accountName: [{ required: true, message: '请输入账户名称', trigger: 'blur' }],
   provider: [{ required: true, message: '请选择邮箱类型', trigger: 'change' }],
   email: [
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
+    {
+      validator: (_rule, value, callback) => {
+        if (!value || isMailAddressForProvider(value, accountForm.provider)) callback()
+        else callback(new Error(`当前邮箱类型要求地址以 @${mailProviderDomain(accountForm.provider)} 结尾`))
+      },
+      trigger: 'blur'
+    }
   ],
   authCode: [{
     validator: (_rule, value, callback) => {
@@ -297,7 +330,11 @@ const mailDocument = computed(() => `<!doctype html><html><head><meta charset="u
 </style></head><body>${mailDetail.value?.bodyHtml || ''}</body></html>`)
 
 function emptyAccountForm(): MailAccountForm {
-  return { accountName: '', provider: 'QQ', email: '', authCode: '', enabled: 1, sort: 0 }
+  return { accountName: '', provider: defaultProvider(), email: '', authCode: '', enabled: 1, sort: 0 }
+}
+
+const handleEmailBlur = () => {
+  accountFormRef.value?.validateField('email').catch(() => undefined)
 }
 
 const messageKey = (message: MailMessageSummary) => `${message.accountId}:${message.uidValidity}:${message.uid}`
@@ -426,7 +463,6 @@ const downloadAttachment = async (attachment: MailAttachment) => {
   }
 }
 
-const providerLabel = (provider: MailProvider) => providerOptions.find((item) => item.value === provider)?.label || provider
 const providerMark = (provider: MailProvider) => provider === 'QQ' ? 'Q' : provider === 'NETEASE_163' ? '163' : provider === 'NETEASE_126' ? '126' : 'Y'
 const providerClass = (provider: MailProvider) => provider.toLowerCase().replace('_', '-')
 const senderMark = (message: MailMessageSummary) => (message.fromName || message.fromAddress || '@').slice(0, 1).toUpperCase()
@@ -449,8 +485,17 @@ watch(autoRefresh, (enabled) => {
   refreshTimer = enabled ? window.setInterval(() => loadMessages(true), 15_000) : undefined
 })
 
+watch(() => accountForm.provider, (provider, previousProvider) => {
+  if (previousProvider) {
+    accountForm.email = replaceMailProviderDomain(accountForm.email, previousProvider, provider)
+  }
+  nextTick(() => {
+    if (accountForm.email) accountFormRef.value?.validateField('email').catch(() => undefined)
+  })
+})
+
 onMounted(async () => {
-  await loadAccounts()
+  await Promise.all([loadProviderOptions(), loadAccounts()])
   await loadMessages(false)
   refreshTimer = window.setInterval(() => loadMessages(true), 15_000)
 })
@@ -569,6 +614,7 @@ onUnmounted(() => window.clearInterval(refreshTimer))
 .reader-empty p { margin: 0; color: var(--muted); font-size: 12px; }
 .empty-envelope { display: grid; place-items: center; width: 76px; height: 76px; border: 1px solid #cfe0dc; border-radius: 24px; color: var(--accent); background: #eff6f4; font-size: 34px; transform: rotate(-4deg); }
 .form-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }.form-grid.compact { grid-template-columns: 1fr 1fr; align-items: center; }
+.email-domain-suffix { color: var(--el-text-color-secondary); font-size: 15px; white-space: nowrap; }
 .auth-tip { margin: 6px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }
 
 @media (max-width: 1250px) {
