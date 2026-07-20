@@ -148,13 +148,10 @@
           </div>
 
           <div class="reader-body">
-            <div v-if="mailDetail.bodyHtml" class="external-image-note">
-              <el-icon><Lock /></el-icon> 为保护隐私，外部追踪图片已阻止；邮件内嵌图片可以正常显示。
-            </div>
             <iframe
               v-if="mailDetail.bodyHtml"
               class="mail-frame"
-              sandbox=""
+              sandbox="allow-popups allow-popups-to-escape-sandbox"
               title="邮件正文"
               :srcdoc="mailDocument"
             />
@@ -227,7 +224,6 @@ import {
   Collection,
   Document,
   Download,
-  Lock,
   Message,
   Paperclip,
   Plus,
@@ -323,11 +319,7 @@ const accountRules: FormRules<MailAccountForm> = {
 const currentAccount = computed(() => accounts.value.find((item) => item.id === selectedAccountId.value))
 const selectedMessage = computed(() => messages.value.find((item) => messageKey(item) === selectedMessageKey.value))
 const messageProvider = computed(() => selectedMessage.value?.provider || 'QQ')
-const mailDocument = computed(() => `<!doctype html><html><head><meta charset="utf-8"><style>
-  html,body{margin:0;padding:0;background:#fff;color:#263238;font-family:"Microsoft YaHei",sans-serif;line-height:1.65}
-  body{padding:24px;overflow-wrap:anywhere} img{max-width:100%;height:auto} table{max-width:100%;border-collapse:collapse}
-  a{color:#0f7b6c} pre{white-space:pre-wrap} blockquote{margin:16px 0;padding-left:16px;border-left:3px solid #d5e6e2;color:#60746f}
-</style></head><body>${mailDetail.value?.bodyHtml || ''}</body></html>`)
+const mailDocument = computed(() => `<!doctype html><html><head><meta charset="utf-8"></head><body>${mailDetail.value?.bodyHtml || ''}</body></html>`)
 
 function emptyAccountForm(): MailAccountForm {
   return { accountName: '', provider: defaultProvider(), email: '', authCode: '', enabled: 1, sort: 0 }
@@ -605,7 +597,6 @@ onUnmounted(() => window.clearInterval(refreshTimer))
 .attachment-strip strong, .attachment-strip small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .attachment-strip strong { font-size: 11px; }.attachment-strip small { color: var(--muted); font-size: 10px; }
 .reader-body { padding: 0 16px 24px; }
-.external-image-note { display: flex; align-items: center; gap: 6px; margin: 14px 8px 0; padding: 8px 10px; border-radius: 8px; color: #75662d; background: #fff8dc; font-size: 11px; }
 .mail-frame { width: 100%; min-height: 600px; margin-top: 8px; border: 0; background: #fff; }
 .plain-body { min-height: 500px; margin: 0; padding: 28px 16px; color: #33433f; font-family: "Microsoft YaHei", sans-serif; font-size: 13px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
 .reader-empty, .reader-loading { display: grid; place-items: center; height: 100%; padding: 32px; text-align: center; }

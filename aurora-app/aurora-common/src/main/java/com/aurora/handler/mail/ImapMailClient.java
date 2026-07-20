@@ -24,8 +24,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Safelist;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -270,41 +268,68 @@ public class ImapMailClient {
 
     static String sanitizeHtml(String html, Map<String, String> inlineImages) {
         Document source = Jsoup.parse(html);
-        source.select("script,iframe,object,embed,form,input,button,meta,base,link").remove();
+        List<Element> headAssets = new ArrayList<>(source.head().select("style,link[rel=stylesheet]"));
+        for (int index = headAssets.size() - 1; index >= 0; index--) {
+            Element asset = headAssets.get(index);
+            asset.remove();
+            source.body().prependChild(asset);
+        }
+
+        source.select("script,iframe,object,embed,input,button,textarea,select,meta,base").remove();
+        source.select("form").unwrap();
+        source.select("link:not([rel=stylesheet])").remove();
         for (Element element : source.getAllElements()) {
             List<Attribute> attributes = new ArrayList<>(element.attributes().asList());
             for (Attribute attribute : attributes) {
                 String key = attribute.getKey().toLowerCase(Locale.ROOT);
                 String value = attribute.getValue().trim();
-                if (key.startsWith("on") || ("style".equals(key)
-                        && (value.toLowerCase(Locale.ROOT).contains("url(")
-                        || value.toLowerCase(Locale.ROOT).contains("expression(")))) {
+                if (key.startsWith("on") || isDangerousAttribute(key, value)) {
                     element.removeAttr(attribute.getKey());
                 }
             }
         }
+        for (Element style : source.select("style")) {
+            String css = style.data().toLowerCase(Locale.ROOT);
+            if (css.contains("expression(") || css.contains("javascript:")) {
+                style.remove();
+            }
+        }
+        for (Element link : source.select("a[href]")) {
+            link.attr("target", "_blank");
+            link.attr("rel", "noopener noreferrer");
+        }
         for (Element image : source.select("img[src]")) {
             String src = image.attr("src").trim();
-            if (src.toLowerCase(Locale.ROOT).startsWith("cid:")) {
+            String normalizedSrc = src.toLowerCase(Locale.ROOT);
+            if (normalizedSrc.startsWith("cid:")) {
                 String data = inlineImages.get(src.substring(4));
                 if (data == null) {
                     image.removeAttr("src");
                 } else {
                     image.attr("src", data);
                 }
-            } else if (src.startsWith("http://") || src.startsWith("https://")) {
-                image.removeAttr("src");
-                image.attr("title", "外部图片已阻止加载");
+            } else if (src.startsWith("//")) {
+                image.attr("src", "https:" + src);
+                image.attr("referrerpolicy", "no-referrer");
+            } else if (normalizedSrc.startsWith("http://") || normalizedSrc.startsWith("https://")) {
+                image.attr("referrerpolicy", "no-referrer");
             }
         }
-        Safelist safelist = Safelist.relaxed()
-                .addAttributes(":all", "style", "class", "align")
-                .addAttributes("img", "width", "height", "alt", "title")
-                .addProtocols("img", "src", "data")
-                .addProtocols("a", "href", "http", "https", "mailto");
-        Document cleaned = new Cleaner(safelist).clean(source);
-        cleaned.outputSettings().prettyPrint(false);
-        return cleaned.body().html();
+        source.outputSettings().prettyPrint(false);
+        return source.body().html();
+    }
+
+    private static boolean isDangerousAttribute(String key, String value) {
+        String normalized = value.replaceAll("[\\x00-\\x20]+", "").toLowerCase(Locale.ROOT);
+        if ("style".equals(key)) {
+            return normalized.contains("expression(") || normalized.contains("javascript:");
+        }
+        if (!List.of("href", "src", "background", "action", "formaction", "xlink:href").contains(key)) {
+            return false;
+        }
+        return normalized.startsWith("javascript:")
+                || normalized.startsWith("vbscript:")
+                || normalized.startsWith("data:text/html");
     }
 
     private static byte[] readLimited(InputStream input, int maxBytes) throws IOException {
