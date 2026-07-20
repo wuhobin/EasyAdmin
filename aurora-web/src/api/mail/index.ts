@@ -2,6 +2,15 @@ import request from '@/utils/request'
 
 export type MailProvider = 'QQ' | 'NETEASE_163' | 'NETEASE_126' | 'YEAH'
 
+export interface MailProviderConfig {
+  label: string
+  value: MailProvider
+  domain: string
+  imapHost: string
+  imapPort: number
+  defaultProvider: boolean
+}
+
 export interface MailAccount {
   id: number
   accountName: string
@@ -58,8 +67,18 @@ export interface MailMessageDetail {
   attachments: MailAttachment[]
 }
 
+export interface MailMessagePage {
+  items: MailMessageSummary[]
+  nextCursor?: string
+  hasMore: boolean
+}
+
 export function getMailAccountsApi() {
   return request<MailAccount[]>({ url: '/mail/account/list', method: 'get' })
+}
+
+export function getMailProvidersApi() {
+  return request<MailProviderConfig[]>({ url: '/mail/account/providers', method: 'get' })
 }
 
 export function addMailAccountApi(data: MailAccountForm) {
@@ -78,16 +97,17 @@ export function testMailAccountApi(id: number) {
   return request<void>({ url: `/mail/account/${id}/test`, method: 'post', timeout: 30000 })
 }
 
-export function getLatestMailsApi(accountId?: number, limit = 30) {
-  return request<MailMessageSummary[]>({
+export function getLatestMailsApi(accountId?: number, limit = 30, cursor?: string, signal?: AbortSignal) {
+  return request<MailMessagePage>({
     url: '/mail/inbox/list',
     method: 'get',
-    params: { accountId, limit },
+    params: { accountId, limit, cursor },
+    signal,
     timeout: 30000
   })
 }
 
-export function getMailDetailApi(message: MailMessageSummary) {
+export function getMailDetailApi(message: MailMessageSummary, signal?: AbortSignal) {
   return request<MailMessageDetail>({
     url: '/mail/inbox/detail',
     method: 'get',
@@ -96,6 +116,7 @@ export function getMailDetailApi(message: MailMessageSummary) {
       uid: message.uid,
       uidValidity: message.uidValidity
     },
+    signal,
     timeout: 30000
   })
 }

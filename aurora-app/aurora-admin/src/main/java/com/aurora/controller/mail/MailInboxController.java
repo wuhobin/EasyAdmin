@@ -3,7 +3,7 @@ package com.aurora.controller.mail;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.biz.MailInboxBizService;
 import com.aurora.domain.vo.mail.MailMessageDetailVo;
-import com.aurora.domain.vo.mail.MailMessageSummaryVo;
+import com.aurora.domain.vo.mail.MailMessagePageVo;
 import com.aurora.starter.webmvc.domain.response.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Tag(name = "聚合收件箱")
 @RestController
@@ -26,10 +24,11 @@ public class MailInboxController {
     @GetMapping("/list")
     @Operation(summary = "读取最新邮件")
     @SaCheckPermission("mail:inbox:list")
-    public Result<List<MailMessageSummaryVo>> list(
+    public Result<MailMessagePageVo> list(
             @RequestParam(required = false) Long accountId,
-            @RequestParam(required = false) Integer limit) {
-        return Result.data(mailInboxBizService.list(accountId, limit));
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) String cursor) {
+        return Result.data(mailInboxBizService.list(accountId, limit, cursor));
     }
 
     @GetMapping("/detail")

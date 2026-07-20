@@ -83,6 +83,9 @@ service.interceptors.response.use(
     return res
   },
   (error) => {
+    if (axios.isCancel(error)) {
+      return Promise.reject(error)
+    }
     if (error.response?.status === 401) {
       void notifyUnauthorized()
       return Promise.reject(new RequestError(error.message || '请求错误', true))

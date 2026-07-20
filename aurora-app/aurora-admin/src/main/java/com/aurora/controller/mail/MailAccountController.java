@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.biz.MailAccountBizService;
 import com.aurora.domain.form.mail.MailAccountForm;
 import com.aurora.domain.vo.mail.MailAccountVo;
+import com.aurora.domain.vo.mail.MailProviderVo;
 import com.aurora.starter.webmvc.domain.response.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +32,13 @@ public class MailAccountController {
     @SaCheckPermission("mail:account:list")
     public Result<List<MailAccountVo>> list() {
         return Result.data(mailAccountBizService.list());
+    }
+
+    @GetMapping("/providers")
+    @Operation(summary = "读取邮箱类型配置")
+    @SaCheckPermission("mail:account:list")
+    public Result<List<MailProviderVo>> providers() {
+        return Result.data(mailAccountBizService.listProviders());
     }
 
     @PostMapping

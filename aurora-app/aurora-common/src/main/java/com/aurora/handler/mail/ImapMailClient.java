@@ -49,6 +49,7 @@ public class ImapMailClient {
     private static final int CONNECT_TIMEOUT = 10_000;
     private static final int READ_TIMEOUT = 15_000;
     private static final int MAX_INLINE_IMAGE_BYTES = 5 * 1024 * 1024;
+    private static final int MAX_INLINE_IMAGE_TOTAL_BYTES = 10 * 1024 * 1024;
     private static final Map<String, String> NETEASE_CLIENT_ID = Map.of(
             "name", "EasyAdmin",
             "version", "1.0",
@@ -70,13 +71,31 @@ public class ImapMailClient {
     }
 
     public List<MailMessageSummaryVo> listLatest(MailAccount account, String authCode, int limit) {
+        return listPage(account, authCode, limit, null, 0).items();
+    }
+
+    public MailMessagePage listPage(MailAccount account, String authCode, int limit,
+                                    Long anchorUid, int offset) {
         return withInbox(account, authCode, folder -> {
             int count = folder.getMessageCount();
             if (count == 0) {
-                return List.of();
+                return new MailMessagePage(List.of(), 0, false);
             }
-            int start = Math.max(1, count - limit + 1);
-            Message[] messages = folder.getMessages(start, count);
+
+            UIDFolder uidFolder = uidFolder(folder);
+            Message anchorMessage = anchorUid == null
+                    ? folder.getMessage(count)
+                    : uidFolder.getMessageByUID(anchorUid);
+            if (anchorMessage == null) {
+                throw new BizException("邮件列表已发生变化，请刷新后重试");
+            }
+            long resolvedAnchorUid = uidFolder.getUID(anchorMessage);
+            int end = anchorMessage.getMessageNumber() - Math.max(offset, 0);
+            if (end < 1) {
+                return new MailMessagePage(List.of(), resolvedAnchorUid, false);
+            }
+            int start = Math.max(1, end - limit + 1);
+            Message[] messages = folder.getMessages(start, end);
             FetchProfile profile = new FetchProfile();
             profile.add(FetchProfile.Item.ENVELOPE);
             profile.add(FetchProfile.Item.FLAGS);
@@ -84,7 +103,6 @@ public class ImapMailClient {
             profile.add(UIDFolder.FetchProfileItem.UID);
             folder.fetch(messages, profile);
 
-            UIDFolder uidFolder = uidFolder(folder);
             long uidValidity = uidFolder.getUIDValidity();
             List<MailMessageSummaryVo> result = new ArrayList<>(messages.length);
             for (Message message : messages) {
@@ -105,7 +123,7 @@ public class ImapMailClient {
             }
             result.sort(Comparator.comparing(MailMessageSummaryVo::getReceivedTime,
                     Comparator.nullsLast(Comparator.reverseOrder())));
-            return result;
+            return new MailMessagePage(result, resolvedAnchorUid, start > 1);
         });
     }
 
@@ -217,8 +235,11 @@ public class ImapMailClient {
         String contentId = firstHeader(part, "Content-ID");
         boolean inline = Part.INLINE.equalsIgnoreCase(disposition) || contentId != null;
         if (inline && part.isMimeType("image/*") && contentId != null) {
-            byte[] bytes = readLimited(part.getInputStream(), MAX_INLINE_IMAGE_BYTES);
+            int remaining = MAX_INLINE_IMAGE_TOTAL_BYTES - parsed.inlineImageBytes;
+            byte[] bytes = remaining <= 0 ? null
+                    : readLimited(part.getInputStream(), Math.min(MAX_INLINE_IMAGE_BYTES, remaining));
             if (bytes != null) {
+                parsed.inlineImageBytes += bytes.length;
                 String normalizedCid = contentId.replace("<", "").replace(">", "").trim();
                 parsed.inlineImages.put(normalizedCid, "data:" + baseContentType(part.getContentType())
                         + ";base64," + Base64.getEncoder().encodeToString(bytes));
@@ -439,5 +460,6 @@ public class ImapMailClient {
         private String text;
         private final List<MailAttachmentVo> attachments = new ArrayList<>();
         private final Map<String, String> inlineImages = new HashMap<>();
+        private int inlineImageBytes;
     }
 }

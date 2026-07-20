@@ -5,37 +5,49 @@ import com.aurora.handler.mail.ImapMailClient;
 import com.aurora.handler.mail.MailCredentialCipher;
 import com.aurora.handler.mail.MailCursor;
 import com.aurora.service.MailAccountService;
-import com.aurora.starter.redis.core.RedisCache;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @Component("mailFetchTask")
-@RequiredArgsConstructor
 public class MailFetchTask {
-    private static final String LATEST_UID_KEY = "mail:latest-uid:";
-
     private final MailAccountService mailAccountService;
     private final MailCredentialCipher credentialCipher;
     private final ImapMailClient imapMailClient;
-    private final RedisCache redisCache;
+    private final Executor mailExecutor;
+
+    public MailFetchTask(MailAccountService mailAccountService,
+                         MailCredentialCipher credentialCipher,
+                         ImapMailClient imapMailClient,
+                         @Qualifier("mailExecutor") Executor mailExecutor) {
+        this.mailAccountService = mailAccountService;
+        this.credentialCipher = credentialCipher;
+        this.imapMailClient = imapMailClient;
+        this.mailExecutor = mailExecutor;
+    }
 
     public void checkNewMails() {
-        for (MailAccount account : mailAccountService.listEnabled()) {
-            checkAccount(account);
-        }
+        CompletableFuture.allOf(mailAccountService.listEnabled().stream()
+                .map(account -> CompletableFuture.runAsync(() -> checkAccount(account), mailExecutor))
+                .toArray(CompletableFuture[]::new)).join();
     }
 
     private void checkAccount(MailAccount account) {
         try {
             MailCursor cursor = imapMailClient.latestCursor(account,
                     credentialCipher.decrypt(account.getAuthCodeCiphertext()));
-            String key = LATEST_UID_KEY + account.getId();
-            redisCache.setCacheObject(key, String.valueOf(cursor.latestUid()), 24, TimeUnit.HOURS);
+            if (account.getUidValidity() != null
+                    && account.getUidValidity().longValue() == cursor.uidValidity()
+                    && account.getLastUid() != null
+                    && cursor.latestUid() > account.getLastUid()) {
+                log.info("New mail detected, accountId={}, provider={}, latestUid={}, previousUid={}",
+                        account.getId(), account.getProvider(), cursor.latestUid(), account.getLastUid());
+            }
 
             MailAccount update = new MailAccount();
             update.setId(account.getId());

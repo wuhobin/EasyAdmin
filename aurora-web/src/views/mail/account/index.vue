@@ -124,54 +124,13 @@
       </template>
     </el-drawer>
 
-    <el-dialog v-model="dialogVisible" :title="accountForm.id ? '编辑邮箱账户' : '添加邮箱账户'" width="520px">
-      <el-form ref="formRef" :model="accountForm" :rules="rules" label-position="top">
-        <div class="form-grid">
-          <el-form-item label="账户名称" prop="accountName">
-            <el-input v-model="accountForm.accountName" placeholder="例如：工作 QQ 邮箱" />
-          </el-form-item>
-          <el-form-item label="邮箱类型" prop="provider">
-            <el-select v-model="accountForm.provider" :loading="providerOptionsLoading" style="width: 100%">
-              <el-option v-for="item in providerOptions" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
-          </el-form-item>
-        </div>
-        <el-form-item label="邮箱地址" prop="email">
-          <el-input
-            v-model="emailAccount"
-            placeholder="请输入邮箱账号/手机号"
-            autocomplete="email"
-            @blur="handleEmailBlur"
-          >
-            <template #suffix>
-              <span class="email-domain-suffix">{{ emailDomainSuffix }}</span>
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item label="邮箱授权码" prop="authCode">
-          <el-input
-            v-model="accountForm.authCode"
-            type="password"
-            show-password
-            autocomplete="new-password"
-            :placeholder="accountForm.id ? '不修改授权码请留空' : '请填写邮箱生成的 IMAP 授权码'"
-          />
-          <p class="auth-tip">这里填写的是邮箱授权码，不是邮箱登录密码。</p>
-        </el-form-item>
-        <div class="form-grid compact">
-          <el-form-item label="排序" prop="sort">
-            <el-input-number v-model="accountForm.sort" :min="0" :max="999" />
-          </el-form-item>
-          <el-form-item label="账户状态">
-            <el-switch v-model="accountEnabled" active-text="启用" inactive-text="停用" />
-          </el-form-item>
-        </div>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="saveAccount">保存</el-button>
-      </template>
-    </el-dialog>
+    <MailAccountDialog
+      v-model="dialogVisible"
+      :account="editingAccount"
+      :provider-options="providerOptions"
+      :provider-options-loading="providerOptionsLoading"
+      @saved="loadAccounts"
+    />
   </div>
 </template>
 
@@ -192,37 +151,26 @@ import {
   Warning,
   WarningFilled
 } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  addMailAccountApi,
   deleteMailAccountApi,
   getMailAccountsApi,
   testMailAccountApi,
-  updateMailAccountApi,
   type MailAccount,
-  type MailAccountForm,
   type MailProvider
 } from '@/api/mail'
+import MailAccountDialog from '@/components/MailAccountDialog/index.vue'
 import { useMailProviderOptions } from '@/composables/useMailProviderOptions'
-import {
-  buildMailAddress,
-  isMailAddressForProvider,
-  mailAddressAccount,
-  mailProviderDomain,
-  replaceMailProviderDomain
-} from '@/utils/mail-provider'
 
 const {
   providerOptions,
   providerOptionsLoading,
   loadProviderOptions,
-  defaultProvider,
   providerLabel
 } = useMailProviderOptions()
 
 const accounts = ref<MailAccount[]>([])
 const loading = ref(false)
-const saving = ref(false)
 const testingId = ref<number>()
 const keyword = ref('')
 const providerFilter = ref<MailProvider>()
@@ -230,21 +178,7 @@ const statusFilter = ref<number>()
 const dialogVisible = ref(false)
 const detailVisible = ref(false)
 const detailAccount = ref<MailAccount>()
-const formRef = ref<FormInstance>()
-const accountForm = reactive<MailAccountForm>(emptyForm())
-
-const accountEnabled = computed({
-  get: () => accountForm.enabled === 1,
-  set: (value: boolean) => { accountForm.enabled = value ? 1 : 0 }
-})
-const emailAccount = computed({
-  get: () => mailAddressAccount(accountForm.email),
-  set: (value: string) => { accountForm.email = buildMailAddress(value, accountForm.provider) }
-})
-const emailDomainSuffix = computed(() => {
-  const domain = mailProviderDomain(accountForm.provider)
-  return domain ? `@${domain}` : ''
-})
+const editingAccount = ref<MailAccount>()
 const enabledCount = computed(() => accounts.value.filter((item) => item.enabled === 1).length)
 const errorCount = computed(() => accounts.value.filter((item) => Boolean(item.lastError)).length)
 const filteredAccounts = computed(() => {
@@ -259,37 +193,6 @@ const filteredAccounts = computed(() => {
   })
 })
 
-const rules: FormRules<MailAccountForm> = {
-  accountName: [{ required: true, message: '请输入账户名称', trigger: 'blur' }],
-  provider: [{ required: true, message: '请选择邮箱类型', trigger: 'change' }],
-  email: [
-    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
-    {
-      validator: (_rule, value, callback) => {
-        if (!value || isMailAddressForProvider(value, accountForm.provider)) callback()
-        else callback(new Error(`当前邮箱类型要求地址以 @${mailProviderDomain(accountForm.provider)} 结尾`))
-      },
-      trigger: 'blur'
-    }
-  ],
-  authCode: [{
-    validator: (_rule, value, callback) => {
-      if (!accountForm.id && !value) callback(new Error('请输入邮箱授权码'))
-      else callback()
-    },
-    trigger: 'blur'
-  }]
-}
-
-function emptyForm(): MailAccountForm {
-  return { accountName: '', provider: defaultProvider(), email: '', authCode: '', enabled: 1, sort: 0 }
-}
-
-const handleEmailBlur = () => {
-  formRef.value?.validateField('email').catch(() => undefined)
-}
-
 const loadAccounts = async () => {
   loading.value = true
   try {
@@ -301,44 +204,20 @@ const loadAccounts = async () => {
 }
 
 const openCreateDialog = () => {
-  Object.assign(accountForm, emptyForm())
+  editingAccount.value = undefined
   dialogVisible.value = true
-  nextTick(() => formRef.value?.clearValidate())
 }
 
 const openEditDialog = (row: unknown) => {
   const account = row as MailAccount
-  Object.assign(accountForm, {
-    id: account.id,
-    accountName: account.accountName,
-    provider: account.provider,
-    email: account.email,
-    authCode: '',
-    enabled: account.enabled,
-    sort: account.sort
-  })
+  editingAccount.value = account
   dialogVisible.value = true
-  nextTick(() => formRef.value?.clearValidate())
 }
 
 const openDetail = (row: unknown) => {
   const account = row as MailAccount
   detailAccount.value = account
   detailVisible.value = true
-}
-
-const saveAccount = async () => {
-  await formRef.value?.validate()
-  saving.value = true
-  try {
-    if (accountForm.id) await updateMailAccountApi(accountForm)
-    else await addMailAccountApi(accountForm)
-    ElMessage.success(accountForm.id ? '邮箱账户已更新' : '邮箱账户已添加')
-    dialogVisible.value = false
-    await loadAccounts()
-  } finally {
-    saving.value = false
-  }
 }
 
 const testConnection = async (row: unknown) => {
@@ -367,15 +246,6 @@ const deleteAccount = async (row: unknown) => {
 
 const providerMark = (provider: MailProvider) => provider === 'QQ' ? 'Q' : provider === 'NETEASE_163' ? '163' : provider === 'NETEASE_126' ? '126' : 'Y'
 const providerClass = (provider: MailProvider) => provider.toLowerCase().replace('_', '-')
-
-watch(() => accountForm.provider, (provider, previousProvider) => {
-  if (previousProvider) {
-    accountForm.email = replaceMailProviderDomain(accountForm.email, previousProvider, provider)
-  }
-  nextTick(() => {
-    if (accountForm.email) formRef.value?.validateField('email').catch(() => undefined)
-  })
-})
 
 onMounted(() => Promise.all([loadProviderOptions(), loadAccounts()]))
 </script>

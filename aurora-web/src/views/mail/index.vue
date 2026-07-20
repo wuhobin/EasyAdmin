@@ -106,6 +106,9 @@
           </button>
 
           <el-empty v-if="!mailLoading && !messages.length" description="没有读取到邮件" />
+          <div v-if="hasMore" class="load-more">
+            <el-button :loading="loadingMore" @click="loadMore">加载更多</el-button>
+          </div>
         </div>
       </section>
 
@@ -167,54 +170,13 @@
       </article>
     </main>
 
-    <el-dialog v-model="accountDialogVisible" :title="accountForm.id ? '编辑邮箱账户' : '添加邮箱账户'" width="520px">
-      <el-form ref="accountFormRef" :model="accountForm" :rules="accountRules" label-position="top">
-        <div class="form-grid">
-          <el-form-item label="账户名称" prop="accountName">
-            <el-input v-model="accountForm.accountName" placeholder="例如：工作 QQ 邮箱" />
-          </el-form-item>
-          <el-form-item label="邮箱类型" prop="provider">
-            <el-select v-model="accountForm.provider" :loading="providerOptionsLoading" style="width: 100%">
-              <el-option v-for="item in providerOptions" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
-          </el-form-item>
-        </div>
-        <el-form-item label="邮箱地址" prop="email">
-          <el-input
-            v-model="emailAccount"
-            placeholder="请输入邮箱账号/手机号"
-            autocomplete="email"
-            @blur="handleEmailBlur"
-          >
-            <template #suffix>
-              <span class="email-domain-suffix">{{ emailDomainSuffix }}</span>
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item label="邮箱授权码" prop="authCode">
-          <el-input
-            v-model="accountForm.authCode"
-            type="password"
-            show-password
-            autocomplete="new-password"
-            :placeholder="accountForm.id ? '留空表示不修改' : '不是邮箱登录密码，请填写 IMAP 授权码'"
-          />
-          <p class="auth-tip">请先在邮箱设置中开启 IMAP/SMTP 服务并生成授权码。</p>
-        </el-form-item>
-        <div class="form-grid compact">
-          <el-form-item label="排序" prop="sort">
-            <el-input-number v-model="accountForm.sort" :min="0" :max="999" />
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-switch v-model="accountEnabled" active-text="启用" inactive-text="停用" />
-          </el-form-item>
-        </div>
-      </el-form>
-      <template #footer>
-        <el-button @click="accountDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="accountSaving" @click="saveAccount">保存账户</el-button>
-      </template>
-    </el-dialog>
+    <MailAccountDialog
+      v-model="accountDialogVisible"
+      :account="editingAccount"
+      :provider-options="providerOptions"
+      :provider-options-loading="providerOptionsLoading"
+      @saved="handleAccountSaved"
+    />
   </div>
 </template>
 
@@ -229,38 +191,29 @@ import {
   Plus,
   Refresh
 } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox, ElNotification, type FormInstance, type FormRules } from 'element-plus'
+import axios from 'axios'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import dayjs from 'dayjs'
 import {
-  addMailAccountApi,
   deleteMailAccountApi,
   downloadMailAttachmentApi,
   getLatestMailsApi,
   getMailAccountsApi,
   getMailDetailApi,
   testMailAccountApi,
-  updateMailAccountApi,
   type MailAccount,
-  type MailAccountForm,
   type MailAttachment,
   type MailMessageDetail,
   type MailMessageSummary,
   type MailProvider
 } from '@/api/mail'
+import MailAccountDialog from '@/components/MailAccountDialog/index.vue'
 import { useMailProviderOptions } from '@/composables/useMailProviderOptions'
-import {
-  buildMailAddress,
-  isMailAddressForProvider,
-  mailAddressAccount,
-  mailProviderDomain,
-  replaceMailProviderDomain
-} from '@/utils/mail-provider'
 
 const {
   providerOptions,
   providerOptionsLoading,
   loadProviderOptions,
-  defaultProvider,
   providerLabel
 } = useMailProviderOptions()
 const limitOptions = [20, 30, 50]
@@ -275,59 +228,22 @@ const detailLoading = ref(false)
 const autoRefresh = ref(true)
 const initializedMessages = ref(false)
 const knownMessageKeys = new Set<string>()
+const mailCursor = ref<string>()
+const hasMore = ref(false)
+const loadingMore = ref(false)
 let refreshTimer: number | undefined
+let listController: AbortController | undefined
+let detailController: AbortController | undefined
+let listRequestId = 0
+let detailRequestId = 0
 
 const accountDialogVisible = ref(false)
-const accountSaving = ref(false)
-const accountFormRef = ref<FormInstance>()
-const accountForm = reactive<MailAccountForm>(emptyAccountForm())
-const accountEnabled = computed({
-  get: () => accountForm.enabled === 1,
-  set: (value: boolean) => { accountForm.enabled = value ? 1 : 0 }
-})
-const emailAccount = computed({
-  get: () => mailAddressAccount(accountForm.email),
-  set: (value: string) => { accountForm.email = buildMailAddress(value, accountForm.provider) }
-})
-const emailDomainSuffix = computed(() => {
-  const domain = mailProviderDomain(accountForm.provider)
-  return domain ? `@${domain}` : ''
-})
-const accountRules: FormRules<MailAccountForm> = {
-  accountName: [{ required: true, message: '请输入账户名称', trigger: 'blur' }],
-  provider: [{ required: true, message: '请选择邮箱类型', trigger: 'change' }],
-  email: [
-    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
-    {
-      validator: (_rule, value, callback) => {
-        if (!value || isMailAddressForProvider(value, accountForm.provider)) callback()
-        else callback(new Error(`当前邮箱类型要求地址以 @${mailProviderDomain(accountForm.provider)} 结尾`))
-      },
-      trigger: 'blur'
-    }
-  ],
-  authCode: [{
-    validator: (_rule, value, callback) => {
-      if (!accountForm.id && !value) callback(new Error('请输入邮箱授权码'))
-      else callback()
-    },
-    trigger: 'blur'
-  }]
-}
+const editingAccount = ref<MailAccount>()
 
 const currentAccount = computed(() => accounts.value.find((item) => item.id === selectedAccountId.value))
 const selectedMessage = computed(() => messages.value.find((item) => messageKey(item) === selectedMessageKey.value))
 const messageProvider = computed(() => selectedMessage.value?.provider || 'QQ')
 const mailDocument = computed(() => `<!doctype html><html><head><meta charset="utf-8"></head><body>${mailDetail.value?.bodyHtml || ''}</body></html>`)
-
-function emptyAccountForm(): MailAccountForm {
-  return { accountName: '', provider: defaultProvider(), email: '', authCode: '', enabled: 1, sort: 0 }
-}
-
-const handleEmailBlur = () => {
-  accountFormRef.value?.validateField('email').catch(() => undefined)
-}
 
 const messageKey = (message: MailMessageSummary) => `${message.accountId}:${message.uidValidity}:${message.uid}`
 
@@ -336,12 +252,29 @@ const loadAccounts = async () => {
   accounts.value = data
 }
 
-const loadMessages = async (silent = true) => {
-  if (!silent) mailLoading.value = true
+const loadMessages = async (silent = true, append = false) => {
+  if (append && (!hasMore.value || listController)) return
+  if (silent && listController) return
+  if (!append) {
+    listController?.abort()
+    loadingMore.value = false
+  }
+  const controller = new AbortController()
+  listController = controller
+  const requestId = ++listRequestId
+  const requestedAccountId = selectedAccountId.value
+  if (append) loadingMore.value = true
+  else if (!silent) mailLoading.value = true
   try {
-    const { data } = await getLatestMailsApi(selectedAccountId.value, mailLimit.value)
-    if (initializedMessages.value) {
-      const newMessages = data.filter((item) => !knownMessageKeys.has(messageKey(item)))
+    const { data } = await getLatestMailsApi(
+      requestedAccountId,
+      mailLimit.value,
+      append ? mailCursor.value : undefined,
+      controller.signal
+    )
+    if (requestId !== listRequestId || requestedAccountId !== selectedAccountId.value) return
+    if (!append && initializedMessages.value) {
+      const newMessages = data.items.filter((item) => !knownMessageKeys.has(messageKey(item)))
       if (newMessages.length) {
         ElNotification({
           title: `收到 ${newMessages.length} 封新邮件`,
@@ -351,18 +284,30 @@ const loadMessages = async (silent = true) => {
         })
       }
     }
-    knownMessageKeys.clear()
-    data.forEach((item) => knownMessageKeys.add(messageKey(item)))
+    if (!append) knownMessageKeys.clear()
+    data.items.forEach((item) => knownMessageKeys.add(messageKey(item)))
     initializedMessages.value = true
-    messages.value = data
-    if (selectedMessageKey.value && !data.some((item) => messageKey(item) === selectedMessageKey.value)) {
+    messages.value = append
+      ? [...messages.value, ...data.items.filter((item) => !messages.value.some((existing) => messageKey(existing) === messageKey(item)))]
+      : data.items
+    mailCursor.value = data.nextCursor
+    hasMore.value = data.hasMore
+    if (!append && selectedMessageKey.value && !data.items.some((item) => messageKey(item) === selectedMessageKey.value)) {
       selectedMessageKey.value = ''
       mailDetail.value = undefined
     }
+  } catch (error) {
+    if (!axios.isCancel(error)) throw error
   } finally {
-    if (!silent) mailLoading.value = false
+    if (listController === controller) {
+      listController = undefined
+      if (append) loadingMore.value = false
+      else if (!silent) mailLoading.value = false
+    }
   }
 }
+
+const loadMore = () => loadMessages(false, true)
 
 const selectAccount = async (id?: number) => {
   selectedAccountId.value = id
@@ -370,53 +315,45 @@ const selectAccount = async (id?: number) => {
   mailDetail.value = undefined
   initializedMessages.value = false
   knownMessageKeys.clear()
-  await loadMessages(false)
+  mailCursor.value = undefined
+  hasMore.value = false
+  await loadMessages(false, false)
 }
 
 const openMessage = async (message: MailMessageSummary) => {
+  detailController?.abort()
+  const controller = new AbortController()
+  detailController = controller
+  const requestId = ++detailRequestId
   selectedMessageKey.value = messageKey(message)
   detailLoading.value = true
   try {
-    const { data } = await getMailDetailApi(message)
+    const { data } = await getMailDetailApi(message, controller.signal)
+    if (requestId !== detailRequestId || selectedMessageKey.value !== messageKey(message)) return
     mailDetail.value = data
+  } catch (error) {
+    if (!axios.isCancel(error)) throw error
   } finally {
-    detailLoading.value = false
+    if (detailController === controller) {
+      detailController = undefined
+      detailLoading.value = false
+    }
   }
 }
 
 const openCreateDialog = () => {
-  Object.assign(accountForm, emptyAccountForm())
+  editingAccount.value = undefined
   accountDialogVisible.value = true
-  nextTick(() => accountFormRef.value?.clearValidate())
 }
 
 const openEditDialog = (account: MailAccount) => {
-  Object.assign(accountForm, {
-    id: account.id,
-    accountName: account.accountName,
-    provider: account.provider,
-    email: account.email,
-    authCode: '',
-    enabled: account.enabled,
-    sort: account.sort
-  })
+  editingAccount.value = account
   accountDialogVisible.value = true
-  nextTick(() => accountFormRef.value?.clearValidate())
 }
 
-const saveAccount = async () => {
-  await accountFormRef.value?.validate()
-  accountSaving.value = true
-  try {
-    if (accountForm.id) await updateMailAccountApi(accountForm)
-    else await addMailAccountApi(accountForm)
-    ElMessage.success('邮箱账户已保存')
-    accountDialogVisible.value = false
-    await loadAccounts()
-    await loadMessages(false)
-  } finally {
-    accountSaving.value = false
-  }
+const handleAccountSaved = async () => {
+  await loadAccounts()
+  await loadMessages(false, false)
 }
 
 const handleAccountCommand = async (command: string) => {
@@ -472,27 +409,39 @@ const formatFileSize = (size: number) => {
   return `${(size / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1)} ${units[index]}`
 }
 
-watch(autoRefresh, (enabled) => {
-  window.clearInterval(refreshTimer)
-  refreshTimer = enabled ? window.setInterval(() => loadMessages(true), 15_000) : undefined
-})
+const clearRefreshTimer = () => window.clearTimeout(refreshTimer)
 
-watch(() => accountForm.provider, (provider, previousProvider) => {
-  if (previousProvider) {
-    accountForm.email = replaceMailProviderDomain(accountForm.email, previousProvider, provider)
-  }
-  nextTick(() => {
-    if (accountForm.email) accountFormRef.value?.validateField('email').catch(() => undefined)
-  })
-})
+const scheduleRefresh = () => {
+  clearRefreshTimer()
+  if (!autoRefresh.value || document.visibilityState !== 'visible') return
+  refreshTimer = window.setTimeout(async () => {
+    try {
+      await loadMessages(true, false)
+    } catch {
+      // Request errors are reported by the shared request interceptor.
+    } finally {
+      scheduleRefresh()
+    }
+  }, 15_000)
+}
+
+const handleVisibilityChange = () => scheduleRefresh()
+
+watch(autoRefresh, scheduleRefresh)
 
 onMounted(async () => {
   await Promise.all([loadProviderOptions(), loadAccounts()])
-  await loadMessages(false)
-  refreshTimer = window.setInterval(() => loadMessages(true), 15_000)
+  await loadMessages(false, false)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  scheduleRefresh()
 })
 
-onUnmounted(() => window.clearInterval(refreshTimer))
+onUnmounted(() => {
+  clearRefreshTimer()
+  listController?.abort()
+  detailController?.abort()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+})
 </script>
 
 <style scoped>
@@ -596,6 +545,7 @@ onUnmounted(() => window.clearInterval(refreshTimer))
 .attachment-strip button span { min-width: 0; flex: 1; }
 .attachment-strip strong, .attachment-strip small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .attachment-strip strong { font-size: 11px; }.attachment-strip small { color: var(--muted); font-size: 10px; }
+.load-more { display: flex; justify-content: center; padding: 14px; }
 .reader-body { padding: 0 16px 24px; }
 .mail-frame { width: 100%; min-height: 600px; margin-top: 8px; border: 0; background: #fff; }
 .plain-body { min-height: 500px; margin: 0; padding: 28px 16px; color: #33433f; font-family: "Microsoft YaHei", sans-serif; font-size: 13px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }

@@ -3,12 +3,19 @@ package com.aurora.biz;
 import com.aurora.domain.convert.MailAccountConvert;
 import com.aurora.domain.form.mail.MailAccountForm;
 import com.aurora.domain.vo.mail.MailAccountVo;
+import com.aurora.domain.vo.mail.MailProviderVo;
 import com.aurora.entity.MailAccount;
+import com.aurora.entity.SysDict;
+import com.aurora.entity.SysDictData;
 import com.aurora.handler.mail.ImapMailClient;
 import com.aurora.handler.mail.MailCredentialCipher;
 import com.aurora.service.MailAccountService;
+import com.aurora.service.SysDictDataService;
+import com.aurora.service.SysDictService;
 import com.aurora.starter.webmvc.exception.BizException;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,13 +23,40 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MailAccountBizService {
+    private static final String MAIL_PROVIDER_DICT_TYPE = "mail_provider";
+
     private final MailAccountService mailAccountService;
+    private final SysDictService sysDictService;
+    private final SysDictDataService sysDictDataService;
     private final MailCredentialCipher credentialCipher;
     private final ImapMailClient imapMailClient;
 
     public List<MailAccountVo> list() {
         return MailAccountConvert.INSTANCE.toVoList(mailAccountService.listOrdered());
+    }
+
+    public List<MailProviderVo> listProviders() {
+        SysDict dict = sysDictService.getOne(new LambdaQueryWrapper<SysDict>()
+                .eq(SysDict::getType, MAIL_PROVIDER_DICT_TYPE)
+                .eq(SysDict::getStatus, 1), false);
+        if (dict == null) {
+            throw new BizException("未配置邮箱类型字典 mail_provider");
+        }
+        List<MailProviderVo> providers = sysDictDataService.list(new LambdaQueryWrapper<SysDictData>()
+                        .eq(SysDictData::getDictId, dict.getId())
+                        .eq(SysDictData::getStatus, 1)
+                        .orderByAsc(SysDictData::getSort)
+                        .orderByAsc(SysDictData::getId))
+                .stream()
+                .map(this::toProviderVo)
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        if (providers.isEmpty()) {
+            throw new BizException("邮箱类型字典没有可用数据");
+        }
+        return providers;
     }
 
     public MailAccountVo add(MailAccountForm form) {
@@ -103,6 +137,24 @@ public class MailAccountBizService {
         }
         if (account.getSort() == null) {
             account.setSort(0);
+        }
+    }
+
+    private MailProviderVo toProviderVo(SysDictData item) {
+        try {
+            com.aurora.constants.MailProviderEnum provider =
+                    com.aurora.constants.MailProviderEnum.valueOf(item.getValue());
+            return MailProviderVo.builder()
+                    .label(item.getLabel())
+                    .value(provider.name())
+                    .domain(provider.getEmailDomain())
+                    .imapHost(provider.getHost())
+                    .imapPort(provider.getPort())
+                    .defaultProvider("1".equals(item.getIsDefault()))
+                    .build();
+        } catch (IllegalArgumentException exception) {
+            log.warn("Ignore unsupported mail provider dictionary value: {}", item.getValue());
+            return null;
         }
     }
 
