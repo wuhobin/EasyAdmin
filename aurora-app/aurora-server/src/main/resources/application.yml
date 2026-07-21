@@ -20,3 +20,7 @@ spring:
       - classpath:config/mybatis-plus.yml
       - classpath:config/platform.yml
       - classpath:config/swagger.yml
+
+mail:
+  # 邮箱授权码加密密钥，生产环境必须通过环境变量注入，长度至少16位。
+  credential-secret: ${mail.secret:}

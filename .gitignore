@@ -35,3 +35,5 @@ logs/
 specs/
 # Docker 环境变量（包含敏感信息）
 .env
+
+.pnpm-store

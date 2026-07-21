@@ -1,4 +1,4 @@
-package com.aurora.common;
+package com.aurora.constants;
 
 import com.aurora.starter.webmvc.exception.BizCode;
 

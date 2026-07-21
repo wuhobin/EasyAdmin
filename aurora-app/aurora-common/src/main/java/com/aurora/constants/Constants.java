@@ -1,4 +1,4 @@
-package com.aurora.common;
+package com.aurora.constants;
 
 public class Constants {
     public static final String UTF8 = "UTF-8";

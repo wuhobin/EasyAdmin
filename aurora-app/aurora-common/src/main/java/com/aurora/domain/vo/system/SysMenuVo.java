@@ -1,6 +1,6 @@
 package com.aurora.domain.vo.system;
 
-import com.aurora.enums.MenuTypeEnum;
+import com.aurora.constants.MenuTypeEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

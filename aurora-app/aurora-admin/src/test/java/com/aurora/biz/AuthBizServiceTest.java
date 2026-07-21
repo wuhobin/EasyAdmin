@@ -1,7 +1,7 @@
 package com.aurora.biz;
 
 import com.aurora.domain.form.auth.LoginForm;
-import com.aurora.common.Constants;
+import com.aurora.constants.Constants;
 import com.aurora.entity.SysUser;
 import com.aurora.service.SysMenuService;
 import com.aurora.service.SysRoleService;

@@ -1,6 +1,6 @@
 package com.aurora.utils;
 
-import com.aurora.common.Constants;
+import com.aurora.constants.Constants;
 import com.aurora.starter.common.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.lionsoul.ip2region.xdb.Searcher;
