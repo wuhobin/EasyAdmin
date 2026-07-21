@@ -99,17 +99,17 @@ const handleLock = () => {
 .layout-container {
   height: 100vh;
   overflow: hidden;
-  background-color: var(--el-bg-color);
+  background-color: var(--el-bg-color-page);
   color: var(--el-text-color-primary);
 }
 
 .transition-width {
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.2s ease;
 }
 
 .el-aside {
-  background-color: #304156;
-  box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+  background-color: var(--aurora-sidebar-bg);
+  border-right: 1px solid var(--aurora-sidebar-border);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -120,13 +120,17 @@ const handleLock = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 16px;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  padding: 0 20px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .main-container {
-  padding: 16px;
+  padding: 24px;
   overflow-y: auto;
-  background-color: var(--el-bg-color);
+  background-color: var(--el-bg-color-page);
+}
+
+@media (max-width: 768px) {
+  .main-container { padding: 16px; }
 }
 </style> 

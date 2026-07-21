@@ -93,8 +93,8 @@ const toggleFullscreen = () => {
       font-size: 20px;
       cursor: pointer;
       margin-right: 16px;
-      color: #606266;
-      transition: all 0.3s;
+      color: var(--el-text-color-secondary);
+      transition: color 0.2s ease, background-color 0.2s ease;
       
       &:hover {
         color: v-bind('settingsStore.themeColor');
@@ -105,11 +105,9 @@ const toggleFullscreen = () => {
   .navbar-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     margin-left: auto;
     padding-right: 8px;
-    position: absolute;
-    right: 0;
     height: 100%;
     
     .setting-icon {
@@ -117,8 +115,8 @@ const toggleFullscreen = () => {
       cursor: pointer;
       padding: 6px;
       border-radius: 50%;
-      transition: all 0.3s;
-      color: #606266;
+      transition: color 0.2s ease, background-color 0.2s ease;
+      color: var(--el-text-color-secondary);
       
       &:hover {
         background-color: v-bind('`${settingsStore.themeColor}1a`');

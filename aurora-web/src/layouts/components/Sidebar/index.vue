@@ -8,8 +8,8 @@
         <el-menu style="height: 100%;"
           :default-active="activeMenu"
           :collapse="isCollapse"
-          :background-color="settingsStore.theme === 'dark' ? '#1d1e1f' : '#304156'"
-          :text-color="settingsStore.theme === 'dark' ? '#bfcbd9' : '#bfcbd9'"
+          background-color="transparent"
+          text-color="var(--aurora-sidebar-text)"
           :active-text-color="settingsStore.themeColor"
           :collapse-transition="false"
           @select="handleSelect"
@@ -112,22 +112,22 @@
   <style lang="scss" scoped>
   .sidebar-container {
     height: 100%;
-    background-color: v-bind('settingsStore.theme === "dark" ? "#1d1e1f" : "#304156"');
+    background-color: var(--aurora-sidebar-bg);
     
     .logo-container {
       height: 60px;
       display: flex;
       align-items: center;
       padding: 0 20px;
-      background-color: v-bind('settingsStore.theme === "dark" ? "#1d1e1f" : "#304156"');
+      background-color: var(--aurora-sidebar-bg);
       
       .logo-icon {
         flex-shrink: 0;
       }
       
       .logo-text {
-        color: #fff;
-        font-size: 18px;
+        color: var(--aurora-sidebar-title);
+        font-size: 16px;
         margin-left: 12px;
         font-weight: 600;
         white-space: nowrap;
@@ -139,28 +139,31 @@
 
       // 一级菜单样式
       .el-menu-item, .el-sub-menu__title {
-        height: 56px;
-        line-height: 56px;
+        height: 48px;
+        line-height: 48px;
+        margin: 4px 10px;
+        width: calc(100% - 20px);
+        border-radius: 8px;
         
         .el-icon {
           width: 24px;
           text-align: center;
           font-size: 18px;
-          margin-right: 12px;
+          margin-right: 10px;
         }
       }
 
       // 激活状态
       .el-menu-item.is-active {
-        background-color: v-bind('`${settingsStore.themeColor}1a`');
+        background-color: v-bind('`${settingsStore.themeColor}18`');
         &::before {
           content: '';
           position: absolute;
           left: 0;
           top: 50%;
           transform: translateY(-50%);
-          width: 4px;
-          height: 20px;
+          width: 3px;
+          height: 18px;
           background-color: v-bind('settingsStore.themeColor');
           border-radius: 0 4px 4px 0;
         }
@@ -168,7 +171,7 @@
 
       // 悬停效果
       .el-menu-item:hover, .el-sub-menu__title:hover {
-        background-color: v-bind('`${settingsStore.themeColor}0a`');
+        background-color: var(--aurora-sidebar-hover);
       }
     }
   }
@@ -201,7 +204,7 @@
 
   // 子菜单样式
   :deep(.el-menu .el-menu) {
-    background-color: v-bind('settingsStore.theme === "dark" ? "#181818" : "#263445"');
+    background-color: var(--aurora-sidebar-submenu);
     .el-menu-item {
       height: 50px;
       line-height: 50px;

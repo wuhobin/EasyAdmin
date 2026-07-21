@@ -209,11 +209,10 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .tags-view-container {
-  height: 34px;
+  height: 42px;
   width: 100%;
   background-color: var(--el-bg-color);
-  border-bottom: 1px solid var(--el-border-color-light);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
+  border-bottom: 1px solid var(--el-border-color-lighter);
   position: relative;
   z-index: 10;
 }
@@ -260,36 +259,36 @@ onBeforeUnmount(() => {
 }
 
 .tags-view-wrapper {
-  height: 34px;
+  height: 42px;
   width: 100%;
   
   :deep(.scrollbar-wrapper) {
-    height: 34px;
+    height: 42px;
     white-space: nowrap;
     overflow-y: hidden !important;
   }
 
   :deep(.el-scrollbar__wrap) {
-    height: 34px;
+    height: 42px;
   }
 
   :deep(.el-scrollbar__view) {
-    height: 34px;
+    height: 42px;
     display: inline-flex;
     align-items: center;
     flex-wrap: nowrap;
-    padding: 0 4px;
+    padding: 0 12px;
   }
 
   .tags-view-item {
     display: inline-flex;
     align-items: center;
-    height: 24px;
-    line-height: 24px;
-    margin: 4px 2px;
-    padding: 0 8px;
-    border: 1px solid var(--el-border-color-light);
-    border-radius: 3px;
+    height: 28px;
+    line-height: 28px;
+    margin: 6px 3px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: 7px;
     font-size: 12px;
     color: var(--el-text-color-regular);
     background: var(--el-bg-color);
@@ -311,15 +310,15 @@ onBeforeUnmount(() => {
 
     &:hover {
       color: var(--el-color-primary);
-      border-color: var(--el-color-primary-light-5);
+      border-color: transparent;
       background-color: var(--el-color-primary-light-9);
     }
 
     &.active {
       color: v-bind('settingsStore.themeColor');
       background-color: v-bind('`${settingsStore.themeColor}15`');
-      border-color: v-bind('settingsStore.themeColor');
-      font-weight: bold;
+      border-color: transparent;
+      font-weight: 600;
 
       &::before {
         content: '';
@@ -327,10 +326,10 @@ onBeforeUnmount(() => {
         left: 0;
         top: 50%;
         transform: translateY(-50%);
-        width: 3px;
-        height: 16px;
+        width: 4px;
+        height: 4px;
         background-color: v-bind('settingsStore.themeColor');
-        border-radius: 0 2px 2px 0;
+        border-radius: 50%;
       }
     }
   }

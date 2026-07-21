@@ -18,7 +18,7 @@ export interface SettingsState {
 export const useSettingsStore = defineStore('settings', {
   state: (): SettingsState => ({
     theme: 'light',
-    themeColor: '#409EFF',
+    themeColor: '#2563EB',
     showTags: true,
     showLogo: true,
     fontSize: 'default',
@@ -28,7 +28,7 @@ export const useSettingsStore = defineStore('settings', {
     dynamicTitle: false,
     greyMode: false,
     showFooter: true,
-    title: 'Aurora Admain'
+    title: 'Aurora Admin'
   }),
 
   actions: {
@@ -153,7 +153,7 @@ export const useSettingsStore = defineStore('settings', {
     resetSettings() {
       const defaultSettings: SettingsState = {
         theme: 'light' as const,
-        themeColor: '#409EFF',
+        themeColor: '#2563EB',
         showTags: true,
         showLogo: true,
         fontSize: 'default' as const,
@@ -163,7 +163,7 @@ export const useSettingsStore = defineStore('settings', {
         dynamicTitle: false,
         greyMode: false,
         showFooter: true,
-        title: 'Aurora Admain'
+        title: 'Aurora Admin'
       }
       this.saveSettings(defaultSettings)
     },
