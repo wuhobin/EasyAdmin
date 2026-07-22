@@ -1,14 +1,13 @@
 <template>
   <el-container class="layout-container">
     <el-aside :width="isCollapse ? '64px' : '224px'" class="transition-width" :class="{ 'mobile-collapsed': isCollapse }">
-      <Sidebar :is-collapse="isCollapse" @select="closeMobileSidebar" />
+      <Sidebar :is-collapse="isCollapse" @select="closeMobileSidebar" @lock="handleLock" />
     </el-aside>
     <el-container>
       <el-header class="header">
         <Navbar 
           :is-collapse="isCollapse"
           @toggle-collapse="toggleCollapse"
-          @lock="handleLock"
           @theme-click="drawerVisible = true"
         />
       </el-header>

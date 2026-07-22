@@ -23,11 +23,9 @@
       <!-- 通知中心 -->
       <notification />
       <!-- 用户信息 -->
-      <user-tool @lock="handleLock" />
     </div>
 
     <!-- 添加锁屏组件 -->
-    <lock-screen ref="lockScreenRef" />
   </div>
 </template>
 
@@ -37,13 +35,10 @@ import screenfull from 'screenfull'
 import { useSettingsStore } from '@/store/modules/settings'
 import GlobalSearch from '@/components/GlobalSearch/index.vue'
 import Breadcrumb from './Breadcrumb/index.vue'
-import UserTool from './UserTool/index.vue'
-import LockScreen from '@/components/LockScreen/index.vue'
 import Notification from './Notification/index.vue'
 import { FullScreen, Setting } from '@element-plus/icons-vue'
 
 const settingsStore = useSettingsStore()
-const lockScreenRef = ref()
 const isFullscreen = ref(false)
 
 defineProps({
@@ -61,10 +56,6 @@ const toggleCollapse = () => {
 
 const handleThemeClick = () => {
   emit('theme-click')
-}
-
-const handleLock = () => {
-  lockScreenRef.value?.lock()
 }
 
 const toggleFullscreen = () => {
