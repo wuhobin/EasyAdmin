@@ -1,7 +1,9 @@
 package com.aurora.domain.vo.monitor;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -23,9 +25,11 @@ public class QuartzJobLogVo {
     private String invokeTarget;
 
     @Schema(description = "开始时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startTime;
 
     @Schema(description = "结束时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime stopTime;
 
     @Schema(description = "执行耗时，单位为毫秒")

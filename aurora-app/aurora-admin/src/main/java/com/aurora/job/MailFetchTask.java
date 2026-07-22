@@ -32,6 +32,7 @@ public class MailFetchTask {
     }
 
     public void checkNewMails() {
+        log.info("邮箱检查定时任务开始");
         CompletableFuture.allOf(mailAccountService.listEnabled().stream()
                 .map(account -> CompletableFuture.runAsync(() -> checkAccount(account), mailExecutor))
                 .toArray(CompletableFuture[]::new)).join();
