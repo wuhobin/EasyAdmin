@@ -49,7 +49,6 @@ export const useSettingsStore = defineStore('settings', {
       if (settings.fontSize) {
         document.documentElement.setAttribute('data-size', settings.fontSize)
       }
-      console.log(settings)
       // 更新设置并立即保存
       Object.assign(this, settings)
       sessionStorage.setItem('settings', JSON.stringify(this.$state))
@@ -136,6 +135,9 @@ export const useSettingsStore = defineStore('settings', {
       } else {
         document.documentElement.classList.remove('dark')
       }
+      document.documentElement.setAttribute('data-theme', settings.theme)
+      document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+        ?.setAttribute('content', settings.theme === 'dark' ? '#0f1520' : '#f8fafc')
       if (settings.themeColor) {
         document.documentElement.style.setProperty('--el-color-primary', settings.themeColor)
         const colors = this.generateThemeColors(settings.themeColor)

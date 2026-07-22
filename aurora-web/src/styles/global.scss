@@ -171,7 +171,7 @@ html.dark {
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .slide-enter-from {
@@ -227,7 +227,7 @@ html.dark {
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .slide-enter-from {
@@ -374,8 +374,24 @@ html.dark {
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;
-  transition: all 0.3s;
+  transition: color 0.3s, background-color 0.3s;
   color: #606266;
+}
+
+.setting-icon:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .setting-icon:hover {

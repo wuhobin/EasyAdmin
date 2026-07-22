@@ -90,7 +90,7 @@
             <span class="message-copy">
               <span class="message-row">
                 <strong>{{ message.fromName || message.fromAddress }}</strong>
-                <time>{{ formatMessageTime(message.receivedTime) }}</time>
+                <time :datetime="message.receivedTime">{{ formatMessageTime(message.receivedTime) }}</time>
               </span>
               <span class="subject-row">
                 <b>{{ message.subject }}</b>
@@ -116,7 +116,7 @@
           <header class="reader-header">
             <div class="reader-meta">
               <span class="reader-badge">{{ providerLabel(messageProvider) }}</span>
-              <time>{{ mailDetail.receivedTime || '-' }}</time>
+              <time :datetime="mailDetail.receivedTime">{{ formatDetailTime(mailDetail.receivedTime) }}</time>
             </div>
             <h2>{{ mailDetail.subject }}</h2>
             <div class="sender-line">
@@ -188,7 +188,6 @@ import {
 } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
-import dayjs from 'dayjs'
 import {
   deleteMailAccountApi,
   downloadMailAttachmentApi,
@@ -391,17 +390,38 @@ const providerMark = (provider: MailProvider) => provider === 'QQ' ? 'Q' : provi
 const providerClass = (provider: MailProvider) => provider.toLowerCase().replace('_', '-')
 const senderMark = (message: MailMessageSummary) => (message.fromName || message.fromAddress || '@').slice(0, 1).toUpperCase()
 
+const messageTimeFormatter = new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
+const messageDateFormatter = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit' })
+const detailTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+})
+const fileSizeFormatter = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 })
+
 const formatMessageTime = (value?: string) => {
   if (!value) return '-'
-  const time = dayjs(value)
-  return time.isSame(dayjs(), 'day') ? time.format('HH:mm') : time.format('MM-DD')
+  const time = new Date(value)
+  if (Number.isNaN(time.getTime())) return '-'
+  return time.toDateString() === new Date().toDateString()
+    ? messageTimeFormatter.format(time)
+    : messageDateFormatter.format(time)
+}
+
+const formatDetailTime = (value?: string) => {
+  if (!value) return '-'
+  const time = new Date(value)
+  return Number.isNaN(time.getTime()) ? '-' : detailTimeFormatter.format(time)
 }
 
 const formatFileSize = (size: number) => {
   if (!size) return '未知大小'
   const units = ['B', 'KB', 'MB', 'GB']
   const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1)
-  return `${(size / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1)} ${units[index]}`
+  return `${fileSizeFormatter.format(size / Math.pow(1024, index))}\u00A0${units[index]}`
 }
 
 const clearRefreshTimer = () => window.clearTimeout(refreshTimer)

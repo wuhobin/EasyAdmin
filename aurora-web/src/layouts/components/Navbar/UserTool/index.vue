@@ -1,12 +1,12 @@
 <template>
   <div class="navbar-container">
     <div class="custom-dropdown" v-click-outside="closeDropdown">
-      <div class="avatar-trigger" @click="toggleDropdown">
+      <button class="avatar-trigger" type="button" aria-label="打开用户菜单" :aria-expanded="isOpen" @click="toggleDropdown">
         <el-avatar :size="32" :src="userStore.user.avatar || ''" />
         <el-icon class="dropdown-icon" :class="{ 'is-active': isOpen }">
           <CaretBottom />
         </el-icon>
-      </div>
+      </button>
       
       <transition name="dropdown">
         <div v-show="isOpen" class="dropdown-menu">
@@ -35,7 +35,7 @@
           
           <!-- 菜单项 -->
           <div class="menu-items">
-            <div class="menu-item" @click="toGitee">
+            <a class="menu-item" :href="settings.repository" target="_blank" rel="noopener noreferrer" @click="closeDropdown">
               <div class="menu-icon">
                 <el-icon><Document /></el-icon>
               </div>
@@ -43,11 +43,11 @@
                 <span class="menu-title">仓库地址</span>
                 <span class="menu-desc">查看项目源码</span>
               </div>
-            </div>
+            </a>
             
             <div class="divider"></div>
             
-            <div class="menu-item" @click="toProfile">
+            <router-link class="menu-item" to="/system/profile" @click="closeDropdown">
               <div class="menu-icon">
                 <el-icon><User /></el-icon>
               </div>
@@ -55,9 +55,9 @@
                 <span class="menu-title">个人中心</span>
                 <span class="menu-desc">管理您的账户信息</span>
               </div>
-            </div>
+            </router-link>
 
-            <div class="menu-item" @click="handleLock">
+            <button class="menu-item" type="button" @click="handleLock">
               <div class="menu-icon">
                 <el-icon><Lock /></el-icon>
               </div>
@@ -65,9 +65,9 @@
                 <span class="menu-title">锁定屏幕</span>
                 <span class="menu-desc">锁定屏幕保护您的隐私</span>
               </div>
-            </div>
+            </button>
             
-            <div class="menu-item danger" @click="logout">
+            <button class="menu-item danger" type="button" @click="logout">
               <div class="menu-icon">
                 <el-icon><SwitchButton /></el-icon>
               </div>
@@ -75,7 +75,7 @@
                 <span class="menu-title">退出登录</span>
                 <span class="menu-desc">安全退出系统</span>
               </div>
-            </div>
+            </button>
           </div>
         </div>
       </transition>
@@ -104,16 +104,6 @@ const toggleDropdown = () => {
 // 关闭下拉菜单
 const closeDropdown = () => {
   isOpen.value = false
-}
-
-const toGitee = () => {
-  window.open(settings.repository, '_blank')
-  closeDropdown()
-}
-
-const toProfile = () => {
-  router.push('/system/profile')
-  closeDropdown()
 }
 
 const logout = () => {
@@ -167,11 +157,17 @@ const vClickOutside = {
   padding: 4px 8px;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  transition: background-color 0.3s;
   
   &:hover {
     background-color: v-bind('`${settingsStore.themeColor}1a`');
   }
+
+  &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
   
   .dropdown-icon {
     font-size: 12px;
@@ -193,6 +189,7 @@ const vClickOutside = {
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  overscroll-behavior: contain;
   z-index: 2000;
 }
 
@@ -344,7 +341,16 @@ const vClickOutside = {
   gap: 12px;
   padding: 12px 16px;
   cursor: pointer;
-  transition: all 0.3s;
+  width: 100%;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  transition: color 0.3s, background-color 0.3s;
+
+  &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: -2px; }
   
   .menu-icon {
     width: 36px;
@@ -354,18 +360,18 @@ const vClickOutside = {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s;
+    transition: color 0.3s, background-color 0.3s, transform 0.3s;
     
     .el-icon {
       font-size: 18px;
-      transition: all 0.3s;
+      transition: color 0.3s, transform 0.3s;
     }
   }
   
   .menu-content {
     flex: 1;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: color 0.3s;
     
     .menu-title {
       display: block;
@@ -373,7 +379,7 @@ const vClickOutside = {
       font-weight: 500;
       line-height: 1.4;
       color: var(--el-text-color-primary);
-      transition: all 0.3s;
+      transition: color 0.3s;
     }
     
     .menu-desc {
@@ -381,7 +387,7 @@ const vClickOutside = {
       font-size: 12px;
       color: var(--el-text-color-secondary);
       margin-top: 2px;
-      transition: all 0.3s;
+      transition: color 0.3s;
     }
   }
   
@@ -420,7 +426,17 @@ const vClickOutside = {
 // 下拉动画
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: all 0.3s;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-trigger,
+  .dropdown-enter-active,
+  .dropdown-leave-active,
+  .menu-item,
+  .menu-icon,
+  .decoration-circles .circle,
+  .status-dot { animation: none; transition: none; }
 }
 
 .dropdown-enter-from,
@@ -481,4 +497,4 @@ const vClickOutside = {
     transform: translateY(-20px) rotate(8deg);
   }
 }
-</style> 
+</style>

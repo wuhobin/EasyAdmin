@@ -1,4 +1,5 @@
 <template>
+  <a class="skip-link" href="#main-content">跳到主内容</a>
   <el-container class="layout-container">
     <el-aside :width="isCollapse ? '64px' : '224px'" class="transition-width" :class="{ 'mobile-collapsed': isCollapse }">
       <Sidebar :is-collapse="isCollapse" @select="closeMobileSidebar" @lock="handleLock" />
@@ -14,7 +15,7 @@
       <!-- 标签页 -->
       <tags-view v-if="settingsStore.showTags" />
 
-      <el-main class="main-container">
+      <el-main id="main-content" class="main-container" tabindex="-1">
  
         <router-view v-slot="{ Component }">
           <transition 
@@ -100,6 +101,21 @@ const closeMobileSidebar = () => {
 </script>
 
 <style scoped>
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 3000;
+  padding: 8px 12px;
+  color: #fff;
+  background: var(--el-color-primary);
+  border-radius: 6px;
+  transform: translateY(-150%);
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus-visible { transform: translateY(0); }
+
 .layout-container {
   height: 100vh;
   overflow: hidden;
@@ -145,5 +161,11 @@ const closeMobileSidebar = () => {
     transition: transform 0.2s ease;
   }
   .el-aside.mobile-collapsed { transform: translateX(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link,
+  .transition-width,
+  .el-aside { transition: none; }
 }
 </style> 

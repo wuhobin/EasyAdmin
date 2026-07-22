@@ -1,54 +1,57 @@
 <template>
   <div class="tags-view-container" :class="settingsStore.tagsStyle">
     <el-scrollbar ref="scrollbarRef" class="tags-view-wrapper" wrap-class="scrollbar-wrapper">
-      <router-link
+      <div
         v-for="tag in tagsViewStore.visitedViews"
         :key="tag.path"
         :class="isActive(tag) ? 'active' : ''"
         class="tags-view-item"
-        :to="{ path: tag.path, query: tag.query }"
         @contextmenu.prevent="openMenu($event, tag)"
       >
-        <el-icon v-if="tag.meta?.icon" class="tag-icon">
-          <component :is="tag.meta.icon" />
-        </el-icon>
-        {{ tag.meta?.title }}
-        <el-icon 
+        <router-link class="tag-link" :to="{ path: tag.path, query: tag.query }">
+          <el-icon v-if="tag.meta?.icon" class="tag-icon">
+            <component :is="tag.meta.icon" />
+          </el-icon>
+          <span class="tag-title">{{ tag.meta?.title }}</span>
+        </router-link>
+        <button
           v-if="!isAffix(tag)" 
           class="close-icon"
-          @click.prevent.stop="closeSelectedTag(tag)"
+          type="button"
+          :aria-label="`关闭${tag.meta?.title || '标签页'}`"
+          @click.stop="closeSelectedTag(tag)"
         >
-          <Close />
-        </el-icon>
-      </router-link>
+          <el-icon aria-hidden="true"><Close /></el-icon>
+        </button>
+      </div>
     </el-scrollbar>
 
     <!-- 右键菜单 -->
-    <ul v-show="visible" :style="{ left: left + 'px', top: top + 'px' }" class="contextmenu">
-      <li @click="refreshSelectedTag(selectedTag)">
+    <ul v-show="visible" :style="{ left: left + 'px', top: top + 'px' }" class="contextmenu" role="menu">
+      <li role="none"><button type="button" role="menuitem" @click="refreshSelectedTag(selectedTag)">
         <el-icon><Refresh /></el-icon>
         <span>刷新页面</span>
-      </li>
-      <li v-if="!isAffix(selectedTag)" @click="closeSelectedTag(selectedTag)">
+      </button></li>
+      <li v-if="!isAffix(selectedTag)" role="none"><button type="button" role="menuitem" @click="closeSelectedTag(selectedTag)">
         <el-icon><Close /></el-icon>
         <span>关闭当前</span>
-      </li>
-      <li @click="closeLeftTags(selectedTag)">
+      </button></li>
+      <li role="none"><button type="button" role="menuitem" @click="closeLeftTags(selectedTag)">
         <el-icon><ArrowLeft /></el-icon>
         <span>关闭左侧</span>
-      </li>
-      <li @click="closeRightTags(selectedTag)">
+      </button></li>
+      <li role="none"><button type="button" role="menuitem" @click="closeRightTags(selectedTag)">
         <el-icon><ArrowRight /></el-icon>
         <span>关闭右侧</span>
-      </li>
-      <li @click="closeOthersTags(selectedTag)">
+      </button></li>
+      <li role="none"><button type="button" role="menuitem" @click="closeOthersTags(selectedTag)">
         <el-icon><CircleClose /></el-icon>
         <span>关闭其他</span>
-      </li>
-      <li @click="closeAllTags(selectedTag)">
+      </button></li>
+      <li role="none"><button type="button" role="menuitem" @click="closeAllTags(selectedTag)">
         <el-icon><FolderDelete /></el-icon>
         <span>关闭所有</span>
-      </li>
+      </button></li>
     </ul>
   </div>
 </template>
@@ -294,7 +297,7 @@ onBeforeUnmount(() => {
     background: var(--el-bg-color);
     text-decoration: none;
     user-select: none;
-    transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transition: color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1), background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1), border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1), transform 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
     position: relative;
     white-space: nowrap;
     overflow: hidden;
@@ -335,6 +338,25 @@ onBeforeUnmount(() => {
   }
 }
 
+.tag-link {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid var(--el-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.tag-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .tag-icon {
   margin-right: 4px;
   width: 14px;
@@ -343,17 +365,29 @@ onBeforeUnmount(() => {
 }
 
 .close-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
   margin-left: 4px;
   width: 14px;
   height: 14px;
   padding: 1px;
   border-radius: 50%;
   box-sizing: content-box;
-  transition: all 0.2s;
+  place-items: center;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
     transform: scale(1.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--el-color-primary);
+    outline-offset: 1px;
   }
 }
 
@@ -371,32 +405,41 @@ onBeforeUnmount(() => {
 
   li {
     margin: 0;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: all 0.2s;
+    padding: 0;
 
-    &:hover {
+    button:hover {
       background: var(--el-color-primary-light-9);
       color: var(--el-color-primary);
     }
   }
 }
 
-.contextmenu li {
+.contextmenu li button {
   display: flex;
+  width: 100%;
   align-items: center;
   padding: 8px 16px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s;
+
+  &:focus-visible {
+    outline: 2px solid var(--el-color-primary);
+    outline-offset: -2px;
+  }
 }
 
-.contextmenu li .el-icon {
+.contextmenu li button .el-icon {
   margin-right: 8px;
   width: 14px;
   height: 14px;
 }
 
-.contextmenu li span {
+.contextmenu li button span {
   flex: 1;
 }
 
@@ -416,7 +459,7 @@ onBeforeUnmount(() => {
       border: none;
       border-radius: 8px 8px 0 0;
       background: var(--el-fill-color-light);
-      transition: all 0.2s ease;
+      transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
       min-width: 100px;
       max-width: 160px;
       display: inline-flex;
@@ -432,7 +475,7 @@ onBeforeUnmount(() => {
         width: 8px;
         height: 8px;
         background: transparent;
-        transition: all 0.2s;
+        transition: background-color 0.2s, box-shadow 0.2s;
       }
       
       &::before {
@@ -562,7 +605,7 @@ onBeforeUnmount(() => {
     border: none;
     border-radius: 6px;
     background: var(--el-fill-color-light);
-    transition: all 0.3s;
+    transition: color 0.3s, background-color 0.3s, border-color 0.3s, transform 0.3s;
     position: relative;
     overflow: hidden;
     
@@ -574,7 +617,7 @@ onBeforeUnmount(() => {
       width: 100%;
       height: 2px;
       background: transparent;
-      transition: all 0.3s;
+      transition: color 0.3s, background-color 0.3s, transform 0.3s;
     }
     
     &:hover {
@@ -598,7 +641,7 @@ onBeforeUnmount(() => {
 
     .close-icon {
       opacity: 0;
-      transition: all 0.2s;
+      transition: opacity 0.2s, transform 0.2s;
     }
 
     &:hover .close-icon {

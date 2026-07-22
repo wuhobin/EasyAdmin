@@ -38,7 +38,15 @@
     ctx.rotate(-15 * Math.PI / 180)
     
     // 获取当前时间
-    const currentTime = new Date().toLocaleString()
+    const currentTime = new Intl.DateTimeFormat('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(new Date())
     // 使用系统名称
     const systemName = settings.title + "-" + userStore.user.username
     
@@ -118,4 +126,4 @@
     background-repeat: repeat;
     pointer-events: none;
   }
-  </style> 
+  </style>

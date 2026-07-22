@@ -37,7 +37,7 @@ const currentYear = computed(() => new Date().getFullYear())
   font-size: 14px;
   background: var(--el-bg-color);
   border-top: 1px solid var(--el-border-color-light);
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
   
   .footer-content {
     display: flex;
@@ -101,4 +101,4 @@ const currentYear = computed(() => new Date().getFullYear())
     }
   }
 }
-</style> 
+</style>

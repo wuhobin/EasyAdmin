@@ -6,19 +6,25 @@
           <div class="bar-light"></div>
         </div>
         <!-- 滑块按钮 -->
-        <div 
+        <button
           class="slider-button"
+          type="button"
+          :aria-label="sliderText"
+          :aria-pressed="verified"
           :class="{ 'success': verified, 'error': verifyError }"
           :style="{ left: `${sliderLeft}px` }"
           @mousedown="handleDragStart"
           @touchstart="handleDragStart"
+          @keydown.right.prevent="completeWithKeyboard"
+          @keydown.enter.prevent="completeWithKeyboard"
+          @keydown.space.prevent="completeWithKeyboard"
         >
           <div class="button-inner">
             <el-icon v-if="!verified && !verifyError"><DArrowRight /></el-icon>
             <el-icon v-else-if="verified"><Select /></el-icon>
             <el-icon v-else><Close /></el-icon>
           </div>
-        </div>
+        </button>
         <!-- 提示文本 -->
         <div class="slider-text" :class="{ 'success': verified, 'error': verifyError }">
           {{ sliderText }}
@@ -55,6 +61,13 @@
     document.addEventListener('touchend', handleDragEnd)
     
     startX.value = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX
+  }
+
+  const completeWithKeyboard = () => {
+    if (verified.value) return
+    verified.value = true
+    verifyError.value = false
+    emit('success')
   }
   
   // 处理滑动过程
@@ -160,15 +173,24 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s;
+    border: 0;
+    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
     user-select: none;
+    touch-action: none;
   }
   
   /* 按钮内部样式 */
   .button-inner {
     font-size: 16px;
     color: var(--el-text-color-secondary);
-    transition: all 0.3s;
+    transition: color 0.3s, transform 0.3s;
+  }
+
+  .slider-button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slider-button,
+    .button-inner { transition: none; }
   }
   
   .slider-button:hover {
@@ -224,4 +246,4 @@
       background: var(--el-bg-color);
     }
   }
-  </style> 
+  </style>

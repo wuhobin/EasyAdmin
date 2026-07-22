@@ -45,6 +45,7 @@ html, body {
 
 /* 深色模式样式 */
 :root[data-theme='dark'], :root.dark {
+  color-scheme: dark;
   --el-bg-color: #151b28;
   --el-bg-color-overlay: #1d2635;
   --el-text-color-primary: #edf2f7;

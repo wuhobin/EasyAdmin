@@ -6,10 +6,17 @@
       :hidden="!unreadCount"
       class="notification-badge"
     >
-      <el-icon class="notification-icon" @click="toggleNotification">
-        <Bell />
-      </el-icon>
+      <button
+        class="notification-trigger"
+        type="button"
+        aria-label="打开通知中心"
+        :aria-expanded="isOpen"
+        @click="toggleNotification"
+      >
+        <el-icon class="notification-icon"><Bell /></el-icon>
+      </button>
     </el-badge>
+    <span class="sr-only" aria-live="polite">{{ unreadCount }} 条未读通知</span>
 
     <transition name="dropdown">
       <div v-show="isOpen" class="notification-dropdown">
@@ -29,10 +36,11 @@
           <el-tab-pane label="未读消息" name="unread">
             <el-scrollbar height="300px">
               <template v-if="unreadNotifications.length">
-                <div 
+                <button
                   v-for="notification in unreadNotifications" 
                   :key="notification.id"
                   class="notification-item"
+                  type="button"
                   :class="{ unread: !notification.read }"
                   @click="handleNotificationClick(notification)"
                 >
@@ -46,7 +54,7 @@
                     <div class="notification-message">{{ notification.message }}</div>
                     <div class="notification-time">{{ formatTime(notification.time) }}</div>
                   </div>
-                </div>
+                </button>
               </template>
               <el-empty v-else description="暂无未读消息" />
             </el-scrollbar>
@@ -55,10 +63,11 @@
           <el-tab-pane label="全部消息" name="all">
             <el-scrollbar height="300px">
               <template v-if="notifications.length">
-                <div 
+                <button
                   v-for="notification in notifications" 
                   :key="notification.id"
                   class="notification-item"
+                  type="button"
                   :class="{ unread: !notification.read }"
                   @click="handleNotificationClick(notification)"
                 >
@@ -72,7 +81,7 @@
                     <div class="notification-message">{{ notification.message }}</div>
                     <div class="notification-time">{{ formatTime(notification.time) }}</div>
                   </div>
-                </div>
+                </button>
               </template>
               <el-empty v-else description="暂无消息" />
             </el-scrollbar>
@@ -86,6 +95,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Bell, InfoFilled, SuccessFilled, Warning } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -175,8 +185,17 @@ const markAllRead = () => {
   notifications.value.forEach(n => n.read = true)
 }
 
-const clearAll = () => {
-  notifications.value = []
+const clearAll = async () => {
+  try {
+    await ElMessageBox.confirm('清空后无法恢复，确定清空全部通知吗？', '清空通知', {
+      confirmButtonText: '清空全部',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    notifications.value = []
+  } catch {
+    // 用户取消时保留现有通知。
+  }
 }
 
 // 添加关闭通知的方法
@@ -208,13 +227,40 @@ const vClickOutside = {
   margin-right: 10px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.notification-trigger {
+  display: inline-grid;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid v-bind('settingsStore.themeColor');
+    outline-offset: 2px;
+  }
+}
+
 .notification-badge {
   .notification-icon {
     font-size: 20px;
     cursor: pointer;
     padding: 8px;
     border-radius: 50%;
-    transition: all 0.3s;
+    transition: color 0.3s, background-color 0.3s, transform 0.3s;
     color: #606266;
     
     &:hover {
@@ -235,6 +281,7 @@ const vClickOutside = {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   z-index: 2000;
   overflow: hidden;
+  overscroll-behavior: contain;
   border: 1px solid var(--el-border-color-lighter);
 }
 
@@ -300,12 +347,22 @@ const vClickOutside = {
 
 .notification-item {
   display: flex;
+  width: 100%;
   padding: 12px;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  transition: background-color 0.3s, border-color 0.3s, transform 0.3s;
   margin-bottom: 8px;
   border: 1px solid transparent;
+
+  &:focus-visible {
+    outline: 2px solid v-bind('settingsStore.themeColor');
+    outline-offset: -2px;
+  }
   
   &:hover {
     background-color: var(--el-fill-color-light);
@@ -329,7 +386,7 @@ const vClickOutside = {
       font-size: 18px;
       padding: 8px;
       border-radius: 8px;
-      transition: all 0.3s;
+      transition: color 0.3s, background-color 0.3s;
       
       &.info {
         color: var(--el-color-primary);
@@ -382,7 +439,14 @@ const vClickOutside = {
 // 添加下拉动画
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-icon,
+  .notification-item,
+  .dropdown-enter-active,
+  .dropdown-leave-active { transition: none; }
 }
 
 .dropdown-enter-from,

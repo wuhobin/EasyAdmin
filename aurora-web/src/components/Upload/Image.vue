@@ -12,18 +12,19 @@
       :on-success="handleSuccess"
       :on-exceed="handleExceed"
       :before-upload="beforeUpload"
+      aria-label="上传图片"
     >
-      <el-icon><Plus /></el-icon>
+      <el-icon aria-hidden="true"><Plus /></el-icon>
       <template #tip>
         <div class="upload-tip">
-          只能上传jpg/png/gif文件，且不超过{{ fileSize }}MB
+          只能上传 JPG/PNG/GIF 文件，且不超过 {{ fileSize }}&nbsp;MB
         </div>
       </template>
     </el-upload>
 
     <!-- 图片预览对话框 -->
     <el-dialog v-model="dialogVisible" top="5vh" title="预览图片">
-      <img :src="dialogImageUrl" alt="Preview Image" style="width: 100%; height: 500px; object-fit: contain;" />
+      <img :src="dialogImageUrl" alt="上传图片预览" width="800" height="500" style="width: 100%; height: 500px; object-fit: contain;" />
     </el-dialog>
   </div>
 </template>

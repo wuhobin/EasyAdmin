@@ -28,17 +28,17 @@
           </div>
           <el-form ref="loginFormRef" label-position="top" :model="loginForm" :rules="rules" @keyup.enter="handleLogin">
             <el-form-item label="用户名" prop="username">
-              <el-input v-model="loginForm.username" placeholder="请输入用户名" :prefix-icon="User" size="large" autocomplete="username" />
+              <el-input v-model="loginForm.username" name="username" placeholder="请输入用户名" :prefix-icon="User" size="large" autocomplete="username" :spellcheck="false" />
             </el-form-item>
             <el-form-item label="密码" prop="password">
-              <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password size="large" autocomplete="current-password" />
+              <el-input v-model="loginForm.password" name="password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password size="large" autocomplete="current-password" />
             </el-form-item>
             <div class="login-options">
               <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
-              <a href="#" @click.prevent>忘记密码？</a>
+              <button class="forgot-password" type="button" @click="handleForgotPassword">忘记密码？</button>
             </div>
             <el-button :loading="loading" type="primary" size="large" class="login-button" @click="handleLogin">
-              {{ loading ? '登录中...' : '登录' }}
+              {{ loading ? '登录中…' : '登录' }}
             </el-button>
           </el-form>
           <p class="login-footer">Copyright © 2024 Aurora Admin</p>
@@ -66,6 +66,9 @@ const loginForm = reactive<LoginParams>({ username: '', password: '', rememberMe
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }]
+}
+const handleForgotPassword = () => {
+  ElMessage.info('请联系系统管理员重置密码')
 }
 const isDark = computed(() => settingsStore.theme === 'dark')
 const toggleTheme = () => settingsStore.saveSettings({ theme: isDark.value ? 'light' : 'dark' })
@@ -101,7 +104,7 @@ h1 { font-size: clamp(36px, 4vw, 56px); }
 :deep(.el-form-item__label) { margin-bottom: 7px; color: var(--el-text-color-primary); font-size: 13px; font-weight: 600; line-height: 1.4; }
 :deep(.el-input__wrapper) { min-height: 48px; padding: 0 14px; border: 1px solid var(--el-border-color); border-radius: 9px; box-shadow: none; transition: border-color .2s ease, box-shadow .2s ease; }
 :deep(.el-input__wrapper.is-focus) { border-color: var(--el-color-primary); box-shadow: 0 0 0 3px var(--el-color-primary-light-8); }
-.login-options { display: flex; justify-content: space-between; align-items: center; margin: 2px 0 24px; font-size: 13px; }.login-options a { color: var(--el-color-primary); text-decoration: none; }.login-options a:hover { text-decoration: underline; }.login-options a:focus-visible { border-radius: 4px; outline: 3px solid var(--el-color-primary-light-8); outline-offset: 3px; }
+.login-options { display: flex; justify-content: space-between; align-items: center; margin: 2px 0 24px; font-size: 13px; }.forgot-password { padding: 0; border: 0; color: var(--el-color-primary); background: transparent; font: inherit; cursor: pointer; }.forgot-password:hover { text-decoration: underline; }.forgot-password:focus-visible { border-radius: 4px; outline: 3px solid var(--el-color-primary-light-8); outline-offset: 3px; }
 .login-button { width: 100%; min-height: 48px; font-weight: 600; }.login-footer { margin: 32px 0 0; color: var(--el-text-color-placeholder); font-size: 12px; text-align: center; }
 .theme-toggle { position: fixed; z-index: 5; top: 20px; right: 20px; display: grid; width: 44px; height: 44px; place-items: center; color: var(--el-text-color-secondary); border: 1px solid var(--el-border-color); border-radius: 9px; background: var(--el-bg-color); cursor: pointer; transition: color .2s ease, border-color .2s ease, background .2s ease; }.theme-toggle:hover { color: var(--el-color-primary); border-color: var(--el-color-primary); }.theme-toggle:focus-visible { outline: 3px solid var(--el-color-primary-light-8); outline-offset: 3px; }
 .dark .brand-section { background: #0b1f33; }.dark .login-section { background: var(--el-bg-color-page); }

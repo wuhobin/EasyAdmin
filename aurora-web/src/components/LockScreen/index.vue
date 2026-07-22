@@ -1,6 +1,14 @@
 <template>
-  <div v-if="isLocked" class="lock-screen">
-    <div class="background-overlay"></div>
+  <div
+    v-if="isLocked"
+    ref="lockDialogRef"
+    class="lock-screen"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="lock-screen-title"
+    @keydown="trapFocus"
+  >
+    <div class="background-overlay" aria-hidden="true"></div>
     <div class="lock-box">
       <div class="time-display">
         <div class="time">{{ currentTime }}</div>
@@ -15,13 +23,17 @@
           />
           <div class="avatar-border"></div>
         </div>
-        <h3 class="welcome">欢迎回来, {{ userStore.user?.nickname || '用户' }}</h3>
+        <h2 id="lock-screen-title" class="welcome">欢迎回来，{{ userStore.user?.nickname || '用户' }}</h2>
       </div>
 
       <div class="input-box">
         <el-input
           v-model="password"
+          ref="passwordInputRef"
+          name="lock-password"
+          aria-label="登录密码"
           type="password"
+          autocomplete="current-password"
           placeholder="请输入密码解锁"
           prefix-icon="Lock"
           @keyup.enter="handleUnlock"
@@ -39,7 +51,7 @@
             </el-button>
           </template>
         </el-input>
-        <div v-if="errorMessage" class="error-message">
+        <div v-if="errorMessage" class="error-message" role="alert" aria-live="assertive">
           {{ errorMessage }}
         </div>
       </div>
@@ -50,11 +62,7 @@
 <script setup lang="ts">
 import { useUserStore } from '@/store/modules/user'
 import { ElMessage } from 'element-plus'
-import dayjs from 'dayjs'
-import 'dayjs/locale/zh-cn'
 import { verifyPassword } from '@/api/system/user'
-// 设置 dayjs 语言为中文
-dayjs.locale('zh-cn')
 
 const userStore = useUserStore()
 const password = ref('')
@@ -65,10 +73,47 @@ const loading = ref(false)
 const currentTime = ref('')
 const currentDate = ref('')
 let timer: ReturnType<typeof setInterval> | undefined
+const lockDialogRef = ref<HTMLElement>()
+const passwordInputRef = ref()
+
+const timeFormatter = new Intl.DateTimeFormat('zh-CN', {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false
+})
+const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  weekday: 'long'
+})
 
 const updateTime = () => {
-  currentTime.value = dayjs().format('HH:mm:ss')
-  currentDate.value = dayjs().format('YYYY年MM月DD日 dddd')
+  const now = new Date()
+  currentTime.value = timeFormatter.format(now)
+  currentDate.value = dateFormatter.format(now)
+}
+
+const setPageInert = (locked: boolean) => {
+  const page = document.querySelector<HTMLElement>('.layout-container')
+  if (locked) page?.setAttribute('inert', '')
+  else page?.removeAttribute('inert')
+}
+
+const trapFocus = (event: KeyboardEvent) => {
+  if (event.key !== 'Tab') return
+  const focusable = lockDialogRef.value?.querySelectorAll<HTMLElement>('input, button, [href], [tabindex]:not([tabindex="-1"])')
+  if (!focusable?.length) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
 }
 
 onMounted(() => {
@@ -78,7 +123,16 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
+  setPageInert(false)
 })
+
+watch(isLocked, async (locked) => {
+  setPageInert(locked)
+  if (locked) {
+    await nextTick()
+    passwordInputRef.value?.focus()
+  }
+}, { immediate: true })
 
 const errorMessage = ref('')
 
@@ -93,7 +147,6 @@ const handleUnlock = async () => {
   
   try {
     const {data} = await verifyPassword(password.value)
-    console.log(data)
     if (data) {
       isLocked.value = false
       sessionStorage.removeItem('isLocked')
@@ -235,7 +288,7 @@ defineExpose({
   background: rgba(255, 255, 255, 0.15);
   box-shadow: none !important;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s;
+  transition: border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
 }
 
 :deep(.el-input__wrapper:hover) {
@@ -288,7 +341,7 @@ defineExpose({
 /* 头像悬浮效果 */
 .el-avatar {
   border: 3px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, transform 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -325,6 +378,12 @@ defineExpose({
   .lock-box {
     background: rgba(0, 0, 0, 0.3);
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lock-box,
+  .el-avatar,
+  :deep(.el-input__wrapper) { animation: none; transition: none; }
 }
 
 /* 添加错误消息样式 */
