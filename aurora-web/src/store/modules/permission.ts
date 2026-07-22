@@ -4,10 +4,47 @@ import { store } from "@/store";
 import { getRouters } from "@/api/system/auth";
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { isExternal } from "@/utils/validate";
 const modules = import.meta.glob("../../views/**/**.vue");
 import ParentView from '@/components/ParentView/index.vue'
 
 const Layout = () => import("@/layouts/index.vue");
+
+const resolveRouteComponent = (component: any) => {
+  if (component?.toString() === "Layout") {
+    return Layout;
+  }
+  if (component === "ParentView") {
+    return ParentView;
+  }
+  return modules[`../../views${component}.vue`] || component;
+};
+
+const wrapRootMenuWithLayout = (route: any): RouteRecordRaw => {
+  const pageRoute = {
+    ...route,
+    path: "",
+    component: resolveRouteComponent(route.component),
+    redirect: undefined,
+    children: undefined,
+    meta: {
+      ...route.meta,
+      activeMenu: route.path,
+    },
+  };
+
+  return {
+    ...route,
+    name: route.name ? `${route.name}Layout` : undefined,
+    component: Layout,
+    redirect: undefined,
+    children: [pageRoute],
+    meta: {
+      ...route.meta,
+      singleMenu: true,
+    },
+  } as RouteRecordRaw;
+};
 
 /**
  * 递归过滤有权限的异步(动态)路由
@@ -26,22 +63,25 @@ const filterAsyncRoutes = (routes: any[], isRoot = true): RouteRecordRaw[] => {
     }
 
     const tmpRoute: any = { ...route }; // ES6扩展运算符复制新对象
+
+    const shouldWrapRootMenu = isRoot
+      && tmpRoute.component
+      && tmpRoute.component !== "Layout"
+      && (!Array.isArray(tmpRoute.children) || tmpRoute.children.length === 0)
+      && !tmpRoute.meta?.isExternal
+      && !isExternal(tmpRoute.path);
+
+    if (shouldWrapRootMenu) {
+      asyncRoutes.push(wrapRootMenuWithLayout(tmpRoute));
+      return;
+    }
     
     if (!route.name) {
       tmpRoute.name = route.name;
     }
 
     if(tmpRoute.component) {
-      if (tmpRoute.component?.toString() == "Layout") {
-        tmpRoute.component = Layout;
-      } else if (tmpRoute.component === 'ParentView') {
-        tmpRoute.component = ParentView
-      }  else {
-        const component = modules[`../../views${tmpRoute.component}.vue`];
-        if (component) {
-          tmpRoute.component = component;
-        } 
-      }
+      tmpRoute.component = resolveRouteComponent(tmpRoute.component);
 
       if (Array.isArray(tmpRoute.children)) {
         // 递归处理子路由时，传入 false 表示不是根级路由
