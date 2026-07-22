@@ -254,6 +254,13 @@ const handleSelect = (index: string) => {
       }
     }
 
+    .el-sub-menu__title > .el-sub-menu__icon-arrow {
+      width: 12px;
+      height: 12px;
+      margin-right: 0;
+      font-size: 12px;
+    }
+
     .el-menu-item.is-active {
       background-color: v-bind('`${settingsStore.themeColor}14`');
       color: v-bind('settingsStore.themeColor');
