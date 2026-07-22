@@ -319,8 +319,8 @@ const dialog = reactive({
 // 角色选项
 const roleOptions = ref<any[]>([])
 
-// 表单数据
-const userForm = reactive({
+// 表单初始值（用于重置）
+const initialUserForm = {
   id: undefined,
   username: '',
   nickname: '',
@@ -334,7 +334,10 @@ const userForm = reactive({
   lastLoginTime: undefined,
   createTime: undefined,
   roleIds: [] as number[]
-})
+}
+
+// 表单数据
+const userForm = reactive({ ...initialUserForm })
 
 // 表单校验规则
 const rules = reactive<FormRules>({
@@ -366,8 +369,7 @@ const rules = reactive<FormRules>({
 // 重置密码弹窗控制
 const resetPwdDialog = reactive({
   id: undefined,
-  visible: false,
-  userId: undefined
+  visible: false
 })
 
 // 重置密码表单
@@ -407,6 +409,7 @@ const getList = async () => {
     userList.value = data.records
     total.value = data.total
   } catch (error) {
+    console.error('Failed to fetch user list:', error)
   }
   loading.value = false
 }
@@ -431,6 +434,7 @@ const handleBatchDelete = () => {
       getList()
       selectedIds.value = []
     } catch (error) {
+      console.error('Failed to batch delete users:', error)
     }
   })
 }
@@ -452,19 +456,7 @@ const handleAdd = () => {
   dialog.type = 'add'
   dialog.title = '新增用户'
   dialog.visible = true
-  userForm.id = undefined
-  userForm.username = ''
-  userForm.nickname = ''
-  userForm.password = null
-  userForm.mobile = ''
-  userForm.email = ''
-  userForm.sex = 0
-  userForm.status = 1
-  userForm.ip = undefined
-  userForm.ipLocation = undefined
-  userForm.lastLoginTime = undefined
-  userForm.createTime = undefined
-  userForm.roleIds = []
+  Object.assign(userForm, initialUserForm)
 }
 
 // 修改用户
@@ -495,6 +487,7 @@ const submitForm = async () => {
         dialog.visible = false
         getList()
       } catch (error) {
+        console.error('Failed to submit user form:', error)
       } finally {
         submitLoading.value = false
       }
@@ -514,6 +507,7 @@ const handleDelete = (row: any) => {
       ElMessage.success('删除成功')
       getList()
     } catch (error) {
+      console.error('Failed to delete user:', error)
     }
   })
 }
@@ -541,6 +535,7 @@ const submitResetPwd = async () => {
         ElMessage.success('重置密码成功')
         resetPwdDialog.visible = false
       } catch (error) {
+        console.error('Failed to reset password:', error)
       } finally {
         submitLoading.value = false
       }
@@ -573,6 +568,7 @@ const getRoleOptions = async () => {
 
     roleOptions.value = data
   } catch (error) {
+    console.error('Failed to fetch role options:', error)
   }
 }
 

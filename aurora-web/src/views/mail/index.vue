@@ -150,6 +150,7 @@
               v-if="mailDetail.bodyHtml"
               class="mail-frame"
               sandbox="allow-popups allow-popups-to-escape-sandbox"
+              referrerpolicy="no-referrer"
               title="邮件正文"
               :srcdoc="mailDocument"
             />

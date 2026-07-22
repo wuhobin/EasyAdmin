@@ -237,6 +237,7 @@ const handleBatchDelete = () => {
       ElMessage.success('删除成功')
       getList()
     } catch (error) {
+      console.error('Failed to batch delete operation logs:', error)
     }
   }).catch(() => {
   })
@@ -254,6 +255,7 @@ const handleDelete = (row: any) => {
       ElMessage.success('删除成功')
       getList()
     } catch (error) {
+      console.error('Failed to delete operation log:', error)
     }
   }).catch(() => {
   })

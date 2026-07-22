@@ -166,6 +166,7 @@ const getList = async () => {
     logList.value = data.records
     total.value = data.total
   } catch (error) {
+    console.error('Failed to fetch job log list:', error)
   } finally {
     loading.value = false
   }
@@ -224,6 +225,7 @@ const handleClean = async () => {
     getList()
     ElMessage.success('清空成功')
   } catch (error) {
+    console.error('Failed to clean job logs:', error)
   }
 }
 

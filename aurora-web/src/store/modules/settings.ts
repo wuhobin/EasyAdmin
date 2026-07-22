@@ -178,7 +178,9 @@ export const useSettingsStore = defineStore('settings', {
           const settings = JSON.parse(savedSettings)
           this.saveSettings(settings)
         } catch (error) {
-          console.error('Failed to parse saved settings:', error)
+          console.error('Failed to parse saved settings, using defaults:', error)
+          sessionStorage.removeItem('settings')
+          this.saveSettings(this.$state)
         }
       }
     },

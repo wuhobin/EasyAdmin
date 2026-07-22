@@ -329,6 +329,7 @@ const getList = async () => {
     jobList.value = data.records
     total.value = data.total
   } catch (error) {
+    console.error('Failed to fetch job list:', error)
   } finally {
     loading.value = false
   }
@@ -379,6 +380,7 @@ const handleStatusChange = async (row: any) => {
     await changeJobStatusApi(row.jobId, row.status)
     ElMessage.success(text + '成功')
   } catch (error) {
+    console.error('Failed to change job status:', error)
   }
 }
 
@@ -388,6 +390,7 @@ const handleRun = async (row: any) => {
     await runJobApi(row)
     ElMessage.success('执行成功')
   } catch (error) {
+    console.error('Failed to run job:', error)
   }
 }
 
@@ -412,6 +415,7 @@ const handleUpdate = async (row: any) => {
     open.value = true
     title.value = '修改定时任务'
   } catch (error) {
+    console.error('Failed to fetch job detail for update:', error)
   }
 }
 
@@ -429,6 +433,7 @@ const submitForm = async () => {
     open.value = false
     getList()
   } catch (error) {
+    console.error('Failed to submit job form:', error)
   }
 }
 
@@ -441,6 +446,7 @@ const handleDelete = async (row?: any) => {
     getList()
     ElMessage.success('删除成功')
   } catch (error) {
+    console.error('Failed to delete job:', error)
   }
 }
 
@@ -455,6 +461,7 @@ const handleBatcheDelete = async () => {
     getList()
     ElMessage.success('删除成功')
   } catch (error) {
+    console.error('Failed to batch delete jobs:', error)
   }
 }
 
@@ -464,6 +471,7 @@ const handleExport = async () => {
     await exportJobApi(queryParams)
     ElMessage.success('导出成功')
   } catch (error) {
+    console.error('Failed to export jobs:', error)
   }
 }
 

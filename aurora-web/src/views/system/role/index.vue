@@ -280,6 +280,7 @@ const handleBatchDelete = () => {
       // 清空选中
       selectedIds.value = []
     } catch (error) {
+      console.error('Failed to batch delete roles:', error)
     }
   })
 }
@@ -347,6 +348,7 @@ const submitForm = async () => {
         dialog.visible = false
         getList()
       } catch (error) {
+        console.error('Failed to submit role form:', error)
       }
     }
   })

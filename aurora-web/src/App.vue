@@ -96,7 +96,7 @@ html, body {
     --el-table-border-color: var(--el-border-color);
     --el-table-header-bg-color: var(--el-bg-color-container);
     --el-table-row-hover-bg-color: var(--el-fill-color-light);
-    
+
     th, td {
       background-color: var(--el-bg-color-container);
       border-bottom-color: var(--el-border-color);
@@ -135,7 +135,8 @@ html, body {
   --el-font-size-small: 14px !important;
 }
 
-/* 确保所有组件使用正确的字体大小 */
+/* 确保所有组件使用正确的字体大小
+   合并为单一规则，避免重复声明 */
 .el-button,
 .el-input,
 .el-select,
@@ -162,46 +163,10 @@ html, body {
   font-size: var(--el-font-size-base) !important;
 }
 
-/* 添加过渡效果 */
-* {
-  transition: font-size 0.3s ease;
-}
-
-/* 应用字体大小到所有文本元素 */
+/* 字体大小过渡仅作用于 body，避免全局通配符影响性能 */
 body {
   font-size: var(--el-font-size-base);
-}
-
-/* 全局应用字体大小 */
-.el-container {
-  font-size: var(--el-font-size-base);
-}
-
-/* Element Plus 组件字体大小 */
-.el-button,
-.el-input,
-.el-select,
-.el-menu-item,
-.el-sub-menu__title,
-.el-dropdown-menu__item,
-.el-form-item__label,
-.el-form-item__content,
-.el-table,
-.el-dialog__title,
-.el-card__header,
-.el-tabs__item,
-.el-breadcrumb__item,
-.el-radio__label,
-.el-checkbox__label,
-.el-tag,
-.el-pagination,
-.el-alert__title,
-.el-notification__title,
-.el-message-box__title,
-.el-drawer__title,
-.el-tooltip__trigger,
-.el-popover__title {
-  font-size: var(--el-font-size-base) !important;
+  transition: font-size 0.3s ease;
 }
 
 /* 标题和特殊文本 */
@@ -236,5 +201,4 @@ h6 { font-size: var(--el-font-size-base); }
     font-size: var(--el-font-size-base);
   }
 }
-
-</style> 
+</style>

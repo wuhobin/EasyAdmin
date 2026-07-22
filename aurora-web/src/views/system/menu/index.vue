@@ -269,6 +269,7 @@ const getList = async () => {
     const topMenu = {id: 0,title: '顶级菜单',  children: data}
     menuOptions.value.push(topMenu)
   } catch (error) {
+    console.error('Failed to fetch menu list:', error)
   }
   loading.value = false
 }
@@ -294,6 +295,7 @@ const submitForm = async () => {
         dialogVisible.value = false
         getList()
       } catch (error) {
+        console.error('Failed to submit menu form:', error)
       } finally {
         submitLoading.value = false
       }
@@ -317,6 +319,7 @@ const handleDelete = (row: any) => {
       ElMessage.success('删除成功')
       getList()
     } catch (error) {
+      console.error('Failed to delete menu:', error)
     }
   }).catch(() => {})
 }

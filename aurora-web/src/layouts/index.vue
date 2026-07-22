@@ -87,7 +87,18 @@ const cachedViews = computed(() => tagsViewStore.cachedViews)
 onMounted(() => {
   tagsViewStore.initTags()
   if (window.innerWidth <= 768) isCollapse.value = true
+  window.addEventListener('resize', handleResize)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
+
+const handleResize = () => {
+  if (window.innerWidth <= 768) {
+    isCollapse.value = true
+  }
+}
 
 const lockScreenRef = ref()
 

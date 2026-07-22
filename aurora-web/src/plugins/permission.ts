@@ -101,8 +101,6 @@ export function setupPermission() {
 
   router.afterEach(() => {
     NProgress.done();
-    setTimeout(() => {
-    }, 300)
   });
 }
 

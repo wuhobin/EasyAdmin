@@ -198,6 +198,7 @@ const handleBatchDelete = () => {
       ElMessage.success('删除成功')
       getList()
     } catch (error) {
+      console.error('Failed to batch delete dict data:', error)
     }
   })
 }
@@ -213,6 +214,7 @@ const handleDelete = (row: any) => {
       ElMessage.success('删除成功')
       getList()
     } catch (error) {
+      console.error('Failed to delete dict data:', error)
     }
   })
 }
@@ -224,6 +226,7 @@ const getList = async () => {
     dictDataList.value = data.records
     total.value = data.total // 设置总数
   } catch (error) {
+    console.error('Failed to fetch dict data list:', error)
   }
 }
 
@@ -271,6 +274,7 @@ const submitForm = async () => {
         dialogVisible.value = false
         getList()
       } catch (error) {
+        console.error('Failed to submit dict data form:', error)
       } finally {
         submitLoading.value = false
       }

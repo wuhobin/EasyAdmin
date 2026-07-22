@@ -76,7 +76,7 @@ const handleLogin = async () => {
   if (!loginFormRef.value) return
   await loginFormRef.value.validate()
   loading.value = true
-  userStore.login(loginForm).then(() => { router.push('/'); ElMessage.success('登录成功') }).catch(() => {}).finally(() => { loading.value = false })
+  userStore.login(loginForm).then(() => { router.push('/'); ElMessage.success('登录成功') }).catch((err) => { console.error('Login failed:', err) }).finally(() => { loading.value = false })
 }
 </script>
 
