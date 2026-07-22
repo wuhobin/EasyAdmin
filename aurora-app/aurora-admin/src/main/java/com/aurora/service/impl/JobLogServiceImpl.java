@@ -3,6 +3,7 @@ package com.aurora.service.impl;
 import com.aurora.service.IJobLogService;
 import com.aurora.starter.quartz.domain.QuartzJobLog;
 import com.aurora.starter.quartz.mapper.QuartzJobLogMapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.aurora.domain.query.monitor.QuartzJobLogQuery;
 import com.aurora.starter.mybatisplus.model.PageParam;
@@ -21,6 +22,7 @@ public class JobLogServiceImpl extends ServiceImpl<QuartzJobLogMapper, QuartzJob
 
     @Override
     public void cleanJobLog() {
-        baseMapper.delete(null);
+        baseMapper.delete(Wrappers.<QuartzJobLog>query()
+                .isNotNull("log_id"));
     }
 }
