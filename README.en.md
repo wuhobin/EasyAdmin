@@ -1,25 +1,24 @@
 # Aurora Admin Management System
 
-Aurora Admin is a backend management system based on Spring Boot and Sa-Token, providing features such as user management, role permissions, menu management, system monitoring, scheduled tasks, and more.
+Aurora Admin (EasyAdmin) is an enterprise backend management system based on Spring Boot 3 + Sa-Token, featuring a separated front-end and back-end architecture with RBAC permission control, scheduled tasks, file management, and aggregated email platform.
 
 ## Features
 
-- **User Management**: User list, add user, edit user, delete user, change password, personal information
-- **Role Permissions**: Role list, add role, edit role, delete role, assign permissions
-- **Menu Management**: Menu list, add menu, edit menu, delete menu
-- **System Monitoring**: Server monitoring, cache monitoring, online users
-- **Operation Logs**: Records all operation logs, supports deletion
-- **Scheduled Tasks**: Manage scheduled tasks, supports immediate execution and status changes
-- **Code Generation**: Supports automatic code generation for database tables
-- **File Management**: File upload and deletion
-- **Modular Architecture**: Designed with a modular structure for easy expansion and maintenance
+- **User Management**: User list, add/edit/delete users, reset password, personal profile
+- **Role Permissions**: Role CRUD, menu permission assignment, role-user association
+- **Menu Management**: Tree-structured menu CRUD with button-level permission control
+- **Dictionary Management**: Dictionary type and data maintenance for standardized configuration
+- **Operation Logs**: Automatic AOP-based operation logging with query and deletion
+- **Scheduled Tasks**: Quartz-based job management with Cron visual editor and execution logs
+- **File Management**: OSS file upload, download, preview, and deletion
+- **Aggregated Mailbox**: Multi-account (QQ/163/126/Yeah) email aggregation, inbox reading, attachment download
 
 ## Technology Stack
 
-- **Backend**: Spring Boot, MyBatis Plus, Sa-Token, Redis, Quartz
-- **Frontend**: Vue3, Element Plus, TypeScript
-- **Database**: MySQL
-- **Others**: Swagger, Redis
+- **Backend**: Spring Boot 3.1.x, MyBatis Plus, Sa-Token, Redis, Quartz
+- **Frontend**: Vue 3, Element Plus, Pinia, Vue Router, Axios
+- **Database**: MySQL 8.0+
+- **API Docs**: Knife4j (Swagger)
 
 ## Installation Guide
 
@@ -29,98 +28,33 @@ Aurora Admin is a backend management system based on Spring Boot and Sa-Token, p
    ```
 
 2. Import the database:
-   Import the database using the `aurora-admin.sql` file
-
-3. Modify configuration:
-   Update the database connection information in `admin-app/aurora-server/src/main/resources/application.properties`
-
-4. Start the project:
    ```bash
-   cd aurora-admin
-   mvn spring-boot:run
+   mysql -u root -p
+   CREATE DATABASE easyadmin CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+   USE easyadmin;
+   SOURCE aurora-admin.sql;
    ```
 
-## Usage Instructions
+3. Start the backend:
+   ```bash
+   cd aurora-app
+   mvn clean install -DskipTests
+   cd aurora-server
+   mvn spring-boot:run
+   ```
+   Backend runs at `http://localhost:8800`
 
-### User Management
-```java
-// Get user list
-GET /sys/user
+4. Start the frontend:
+   ```bash
+   cd aurora-web
+   npm install
+   npm run dev
+   ```
 
-// Add user
-POST /sys/user
+## API Documentation
 
-// Edit user
-PUT /sys/user
-
-// Delete user
-DELETE /sys/user/delete/{ids}
-```
-
-### Role Permissions
-```java
-// Get role list
-GET /sys/role
-
-// Add role
-POST /sys/role/add
-
-// Edit role
-PUT /sys/role/update
-
-// Delete role
-DELETE /sys/role/delete/{ids}
-```
-
-### Menu Management
-```java
-// Get menu tree
-GET /sys/menu/tree
-
-// Add menu
-POST /sys/menu
-
-// Edit menu
-PUT /sys/menu
-
-// Delete menu
-DELETE /sys/menu/{id}
-```
-
-### System Monitoring
-```java
-// Get server information
-GET /monitor/server
-
-// Get cache information
-GET /monitor/cache/info
-
-// Get online user list
-GET /monitor/online/list
-```
-
-### Scheduled Tasks
-```java
-// Get scheduled task list
-GET /monitor/job/list
-
-// Add scheduled task
-POST /monitor/job
-
-// Edit scheduled task
-PUT /monitor/job
-
-// Delete scheduled task
-DELETE /monitor/job/delete/{ids}
-```
-
-## Contribution Guide
-
-1. Fork the project
-2. Create a new branch
-3. Submit your code
-4. Create a Pull Request
+Visit `http://localhost:8800/doc.html` after starting the backend.
 
 ## License
 
-This project is licensed under the MIT License. For details, please refer to the LICENSE file in the project root directory.
+This project is licensed under the GNU Affero General Public License v3.0.
