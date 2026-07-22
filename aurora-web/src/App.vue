@@ -26,20 +26,21 @@ html, body {
 /* 默认尺寸 */
 :root {
   --el-header-height: 56px;
-  --el-aside-width: 240px;
+  --el-aside-width: 224px;
   --el-menu-item-height: 50px;
   --el-font-size-base: 14px;
   --el-color-primary: #2563EB;
-  --el-bg-color-page: #f6f7fb;
+  --el-bg-color-page: #f8fafc;
+  --aurora-content-bg: #f8fafc;
   --el-border-color-lighter: #e8eaf0;
   --el-border-radius-base: 8px;
   --el-border-radius-small: 6px;
-  --aurora-sidebar-bg: #172033;
-  --aurora-sidebar-border: rgba(255, 255, 255, 0.08);
-  --aurora-sidebar-text: #b5c0d1;
-  --aurora-sidebar-title: #f8fafc;
-  --aurora-sidebar-hover: rgba(255, 255, 255, 0.06);
-  --aurora-sidebar-submenu: rgba(0, 0, 0, 0.12);
+  --aurora-sidebar-bg: #ffffff;
+  --aurora-sidebar-border: #e8eaf0;
+  --aurora-sidebar-text: #64748b;
+  --aurora-sidebar-title: #1e293b;
+  --aurora-sidebar-hover: #f1f5f9;
+  --aurora-sidebar-submenu: transparent;
 }
 
 /* 深色模式样式 */
@@ -50,6 +51,7 @@ html, body {
   --el-text-color-regular: #c4cedd;
   --el-border-color-light: #2d384a;
   --el-bg-color-page: #0f1520;
+  --aurora-content-bg: #0f1520;
   --el-bg-color-container: #151b28;
   --el-fill-color-blank: #1d2635;
   --el-mask-color: rgba(0, 0, 0, 0.8);
@@ -62,12 +64,12 @@ html, body {
   --el-disabled-text-color: #64748b;
   --el-box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
   --el-box-shadow-light: 0 1px 6px 0 rgba(0, 0, 0, 0.2);
-  --aurora-sidebar-bg: #111827;
+  --aurora-sidebar-bg: #151b28;
   --aurora-sidebar-border: rgba(148, 163, 184, 0.13);
   --aurora-sidebar-text: #a9b5c7;
   --aurora-sidebar-title: #f8fafc;
   --aurora-sidebar-hover: rgba(148, 163, 184, 0.10);
-  --aurora-sidebar-submenu: rgba(0, 0, 0, 0.16);
+  --aurora-sidebar-submenu: transparent;
 }
 
 /* 深色模式下的组件样式 */

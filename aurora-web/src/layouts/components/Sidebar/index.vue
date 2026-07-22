@@ -38,6 +38,8 @@
   const settingsStore = useSettingsStore()
   const router = useRouter()
   // 从 props 接收折叠状态
+  const emit = defineEmits<{ select: [] }>()
+
   defineProps({
     isCollapse: {
       type: Boolean,
@@ -106,6 +108,7 @@
     if (route.path !== index) {
       router.push(index)
     }
+    emit('select')
   }
   </script>
   
@@ -115,11 +118,12 @@
     background-color: var(--aurora-sidebar-bg);
     
     .logo-container {
-      height: 60px;
+      height: 56px;
       display: flex;
       align-items: center;
-      padding: 0 20px;
+      padding: 0 18px;
       background-color: var(--aurora-sidebar-bg);
+      border-bottom: 1px solid var(--aurora-sidebar-border);
       
       .logo-icon {
         flex-shrink: 0;
@@ -128,7 +132,7 @@
       .logo-text {
         color: var(--aurora-sidebar-title);
         font-size: 16px;
-        margin-left: 12px;
+        margin-left: 10px;
         font-weight: 600;
         white-space: nowrap;
       }
@@ -136,14 +140,17 @@
 
     :deep(.el-menu) {
       border-right: none;
+      padding: 8px 0;
 
       // 一级菜单样式
       .el-menu-item, .el-sub-menu__title {
-        height: 48px;
-        line-height: 48px;
-        margin: 4px 10px;
+        height: 46px;
+        line-height: 46px;
+        margin: 0 10px;
         width: calc(100% - 20px);
-        border-radius: 8px;
+        border-radius: 7px;
+        color: var(--aurora-sidebar-text);
+        transition: color 0.2s ease, background-color 0.2s ease;
         
         .el-icon {
           width: 24px;
@@ -156,17 +163,7 @@
       // 激活状态
       .el-menu-item.is-active {
         background-color: v-bind('`${settingsStore.themeColor}18`');
-        &::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 3px;
-          height: 18px;
-          background-color: v-bind('settingsStore.themeColor');
-          border-radius: 0 4px 4px 0;
-        }
+        color: v-bind('settingsStore.themeColor');
       }
 
       // 悬停效果
@@ -206,12 +203,17 @@
   :deep(.el-menu .el-menu) {
     background-color: var(--aurora-sidebar-submenu);
     .el-menu-item {
-      height: 50px;
-      line-height: 50px;
+      height: 42px;
+      line-height: 42px;
+      margin: 0 10px;
       
       &.is-active {
-        background-color: v-bind('`${settingsStore.themeColor}1a`');
+        background-color: v-bind('`${settingsStore.themeColor}18`');
       }
     }
+  }
+
+  :deep(.el-menu .el-menu) {
+    padding: 4px 0;
   }
   </style>

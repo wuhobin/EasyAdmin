@@ -1,7 +1,7 @@
 <template>
   <el-container class="layout-container">
-    <el-aside :width="isCollapse ? '64px' : '240px'" class="transition-width">
-      <Sidebar :is-collapse="isCollapse" />
+    <el-aside :width="isCollapse ? '64px' : '224px'" class="transition-width" :class="{ 'mobile-collapsed': isCollapse }">
+      <Sidebar :is-collapse="isCollapse" @select="closeMobileSidebar" />
     </el-aside>
     <el-container>
       <el-header class="header">
@@ -86,12 +86,17 @@ const cachedViews = computed(() => tagsViewStore.cachedViews)
 // 初始化固定标签
 onMounted(() => {
   tagsViewStore.initTags()
+  if (window.innerWidth <= 768) isCollapse.value = true
 })
 
 const lockScreenRef = ref()
 
 const handleLock = () => {
   lockScreenRef.value?.lock()
+}
+
+const closeMobileSidebar = () => {
+  if (window.innerWidth <= 768) isCollapse.value = true
 }
 </script>
 
@@ -127,10 +132,19 @@ const handleLock = () => {
 .main-container {
   padding: 24px;
   overflow-y: auto;
-  background-color: var(--el-bg-color-page);
+  background-color: var(--aurora-content-bg);
 }
 
 @media (max-width: 768px) {
   .main-container { padding: 16px; }
+  .el-aside {
+    position: fixed;
+    z-index: 1001;
+    width: 224px !important;
+    height: 100%;
+    box-shadow: 12px 0 28px rgba(15, 23, 42, 0.12);
+    transition: transform 0.2s ease;
+  }
+  .el-aside.mobile-collapsed { transform: translateX(-100%); }
 }
 </style> 
