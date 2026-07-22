@@ -26,9 +26,9 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="上传人" prop="uploaderName">
+        <el-form-item label="上传人" prop="uploaderId">
           <el-select
-            v-model="queryParams.uploaderName"
+            v-model="queryParams.uploaderId"
             placeholder="请选择用户"
             clearable
             filterable
@@ -38,7 +38,7 @@
               v-for="user in userOptions"
               :key="user.id"
               :label="user.nickname"
-              :value="user.nickname"
+              :value="user.id"
             />
           </el-select>
         </el-form-item>
@@ -157,7 +157,7 @@ const queryParams = reactive<OssFileQuery>({
   pageSize: 10,
   fileName: '',
   contentType: '',
-  uploaderName: ''
+  uploaderId: undefined
 })
 
 const loadUserOptions = async () => {

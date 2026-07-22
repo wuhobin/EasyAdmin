@@ -26,11 +26,14 @@
                  placement="top"
                  effect="dark"
                >
-                 <div
-                   class="day"
-                   :class="getActivityClass(day.count)"
-                   :data-empty="day.count === -1"
-                 >
+                  <div
+                    class="day"
+                    :class="getActivityClass(day.count)"
+                    :data-empty="day.count === -1"
+                    role="img"
+                    :tabindex="day.date ? 0 : -1"
+                    :aria-label="day.date ? `${formatDate(day.date)}，${day.count} 次贡献` : undefined"
+                  >
                  </div>
                </el-tooltip>
         </div>
@@ -129,9 +132,14 @@ const weeklyData = computed(() => {
   return weeks
 })
 
-const formatDate = (dateStr: string) => {
-  return dayjs(dateStr).format('YYYY年M月D日 dddd')
-}
+const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  weekday: 'long'
+})
+
+const formatDate = (dateStr: string) => dateFormatter.format(new Date(`${dateStr}T00:00:00`))
 
 const getActivityClass = (value: number) => {
   return `activity-${value}`
@@ -200,7 +208,6 @@ const getActivityClass = (value: number) => {
   height: 15px;
   border-radius: 3px;
   background-color: #ebedf0;
-  cursor: pointer;
   transition: transform 0.1s ease;
   &[data-empty="true"] {
     visibility: hidden;
@@ -208,6 +215,12 @@ const getActivityClass = (value: number) => {
 }
 
 .day:hover {
+  transform: scale(1.2);
+}
+
+.day:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
   transform: scale(1.2);
 }
 
@@ -237,4 +250,8 @@ const getActivityClass = (value: number) => {
   .activity-3 { background-color: #26a641; }
   .activity-4 { background-color: #39d353; }
 }
-</style> 
+
+@media (prefers-reduced-motion: reduce) {
+  .day { transition: none; }
+}
+</style>

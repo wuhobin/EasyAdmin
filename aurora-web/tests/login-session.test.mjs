@@ -21,6 +21,7 @@ const userStoreSource = await readSource('src/store/modules/user.ts')
 const requestSource = await readSource('src/utils/request.ts')
 const permissionSource = await readSource('src/plugins/permission.ts')
 const permissionStoreSource = await readSource('src/store/modules/permission.ts')
+const sidebarSource = await readSource('src/layouts/components/Sidebar/index.vue')
 const routerSource = await readSource('src/router/index.ts')
 const authSessionSource = await readOptionalSource('src/utils/auth-session.ts')
 const authSessionPluginSource = await readOptionalSource('src/plugins/authSession.ts')
@@ -96,6 +97,14 @@ test('dynamic route conversion rejects records with null paths before Vue Router
   assert.match(permissionStoreSource, /typeof route\.path !== ["']string["']/)
   assert.match(permissionStoreSource, /Array\.isArray\(tmpRoute\.children\)/)
   assert.match(permissionStoreSource, /return;/)
+})
+
+test('top-level page menus keep the main layout and remain single sidebar items', () => {
+  assert.match(permissionStoreSource, /wrapRootMenuWithLayout/)
+  assert.match(permissionStoreSource, /component:\s*Layout[\s\S]*children:\s*\[pageRoute\]/)
+  assert.match(permissionStoreSource, /singleMenu:\s*true/)
+  assert.match(sidebarSource, /menuRoute\.meta\?\.singleMenu/)
+  assert.match(sidebarSource, /path:\s*menuRoute\.path[\s\S]*children:\s*undefined/)
 })
 
 test('profile is a hidden static route available to every authenticated user', () => {

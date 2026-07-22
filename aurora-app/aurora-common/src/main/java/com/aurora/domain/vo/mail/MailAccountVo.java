@@ -1,5 +1,6 @@
 package com.aurora.domain.vo.mail;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ public class MailAccountVo {
     private String email;
     private Integer enabled;
     private Integer sort;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastConnectTime;
     private String lastError;
 }

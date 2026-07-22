@@ -1,18 +1,18 @@
 <template>
   <div class="global-search">
     <!-- 搜索图标 -->
-    <div class="search-trigger" :class="{ 'is-dark': settingsStore.theme === 'dark' }" @click="handleSearchClick">
+    <button class="search-trigger" :class="{ 'is-dark': settingsStore.theme === 'dark' }" type="button" aria-label="搜索菜单" @click="handleSearchClick">
       <el-icon class="search-icon"><Search /></el-icon>
       <span class="shortcut-hint">
         <span class="key">CTRL</span>
         <span class="key">K</span>
       </span>
-    </div>
+    </button>
 
     <!-- 搜索弹窗 -->
     <el-dialog
       v-model="dialogVisible"
-      title=" "
+      title="搜索菜单"
       width="560px"
       :show-close="false"
       :close-on-click-modal="true"
@@ -23,7 +23,11 @@
     >
       <el-input
         v-model="searchKeyword"
-        placeholder="搜索菜单... (ESC 关闭, ↑↓ 选择, Enter 跳转)"
+        name="menu-search"
+        aria-label="搜索菜单"
+        aria-describedby="menu-search-help"
+        autocomplete="off"
+        placeholder="搜索菜单，例如：用户管理…"
         clearable
         @input="handleSearchInput"
         ref="searchInputRef"
@@ -42,12 +46,13 @@
               <span>{{ group.title }}</span>
               <span class="item-count">{{ group.children.length }}个结果</span>
             </div>
-            <div 
+            <router-link
               v-for="(item, idx) in group.children" 
               :key="item.path"
               class="search-item"
+              :to="item.path"
               :class="{ 'is-active': currentIndex === getItemIndex(group, idx) }"
-              @click="handleSelectMenu(item)"
+              @click="closeSearch"
               @mouseenter="currentIndex = getItemIndex(group, idx)"
             >
               <el-icon class="item-icon"><component :is="item.icon" /></el-icon>
@@ -56,14 +61,14 @@
                 <span class="item-path">{{ item.path }}</span>
               </div>
               <el-icon class="enter-icon"><ArrowRight /></el-icon>
-            </div>
+            </router-link>
           </template>
         </el-scrollbar>
       </div>
       <div v-else-if="searchKeyword" class="no-result">
         <el-empty description="未找到相关菜单" />
       </div>
-      <div class="keyboard-tips">
+      <div id="menu-search-help" class="keyboard-tips">
         <div class="tip-item">
           <span class="key">↑↓</span>
           <span class="desc">选择</span>
@@ -223,6 +228,10 @@ const handleSelectMenu = (item: any) => {
   dialogVisible.value = false
 }
 
+const closeSearch = () => {
+  dialogVisible.value = false
+}
+
 // 添加键盘快捷键
 onMounted(() => {
   window.addEventListener('keydown', (e) => {
@@ -263,13 +272,21 @@ const getItemIndex = (group: any, idx: string | number) => {
     cursor: pointer;
     padding: 6px 10px;
     border-radius: 6px;
-    transition: all 0.3s;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    transition: color 0.3s, background-color 0.3s;
     
     // 明亮模式样式
     background: #f5f7fa;
     
     &:hover {
       background: #e6e8eb;
+    }
+
+    &:focus-visible {
+      outline: 2px solid v-bind('settingsStore.themeColor');
+      outline-offset: 2px;
     }
 
     // 深色模式样式
@@ -379,8 +396,15 @@ const getItemIndex = (group: any, idx: string | number) => {
     cursor: pointer;
     border-radius: 8px;
     margin: 2px 0;
-    transition: all 0.2s;
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s, background-color 0.2s, transform 0.2s;
     position: relative;
+
+    &:focus-visible {
+      outline: 2px solid v-bind('settingsStore.themeColor');
+      outline-offset: -2px;
+    }
 
     &:not(:first-child) {
       margin-left: 24px;
@@ -448,7 +472,7 @@ const getItemIndex = (group: any, idx: string | number) => {
       color: v-bind('settingsStore.themeColor');
       opacity: 0;
       transform: translateX(-4px);
-      transition: all 0.2s;
+      transition: opacity 0.2s, transform 0.2s;
     }
 
     &.is-active {

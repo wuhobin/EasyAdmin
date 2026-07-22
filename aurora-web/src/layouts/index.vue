@@ -1,21 +1,21 @@
 <template>
+  <a class="skip-link" href="#main-content">跳到主内容</a>
   <el-container class="layout-container">
-    <el-aside :width="isCollapse ? '64px' : '240px'" class="transition-width">
-      <Sidebar :is-collapse="isCollapse" />
+    <el-aside :width="isCollapse ? '64px' : '224px'" class="transition-width" :class="{ 'mobile-collapsed': isCollapse }">
+      <Sidebar :is-collapse="isCollapse" @select="closeMobileSidebar" @lock="handleLock" />
     </el-aside>
     <el-container>
       <el-header class="header">
         <Navbar 
           :is-collapse="isCollapse"
           @toggle-collapse="toggleCollapse"
-          @lock="handleLock"
           @theme-click="drawerVisible = true"
         />
       </el-header>
       <!-- 标签页 -->
       <tags-view v-if="settingsStore.showTags" />
 
-      <el-main class="main-container">
+      <el-main id="main-content" class="main-container" tabindex="-1">
  
         <router-view v-slot="{ Component }">
           <transition 
@@ -86,6 +86,7 @@ const cachedViews = computed(() => tagsViewStore.cachedViews)
 // 初始化固定标签
 onMounted(() => {
   tagsViewStore.initTags()
+  if (window.innerWidth <= 768) isCollapse.value = true
 })
 
 const lockScreenRef = ref()
@@ -93,23 +94,42 @@ const lockScreenRef = ref()
 const handleLock = () => {
   lockScreenRef.value?.lock()
 }
+
+const closeMobileSidebar = () => {
+  if (window.innerWidth <= 768) isCollapse.value = true
+}
 </script>
 
 <style scoped>
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 3000;
+  padding: 8px 12px;
+  color: #fff;
+  background: var(--el-color-primary);
+  border-radius: 6px;
+  transform: translateY(-150%);
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus-visible { transform: translateY(0); }
+
 .layout-container {
   height: 100vh;
   overflow: hidden;
-  background-color: var(--el-bg-color);
+  background-color: var(--el-bg-color-page);
   color: var(--el-text-color-primary);
 }
 
 .transition-width {
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.2s ease;
 }
 
 .el-aside {
-  background-color: #304156;
-  box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+  background-color: var(--aurora-sidebar-bg);
+  border-right: 1px solid var(--aurora-sidebar-border);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -120,13 +140,32 @@ const handleLock = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 16px;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  padding: 0 20px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .main-container {
-  padding: 16px;
+  padding: 24px;
   overflow-y: auto;
-  background-color: var(--el-bg-color);
+  background-color: var(--aurora-content-bg);
+}
+
+@media (max-width: 768px) {
+  .main-container { padding: 16px; }
+  .el-aside {
+    position: fixed;
+    z-index: 1001;
+    width: 224px !important;
+    height: 100%;
+    box-shadow: 12px 0 28px rgba(15, 23, 42, 0.12);
+    transition: transform 0.2s ease;
+  }
+  .el-aside.mobile-collapsed { transform: translateX(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link,
+  .transition-width,
+  .el-aside { transition: none; }
 }
 </style> 

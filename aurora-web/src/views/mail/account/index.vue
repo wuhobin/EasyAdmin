@@ -1,11 +1,6 @@
 <template>
   <div class="account-page">
     <header class="page-hero">
-      <div>
-        <p class="eyebrow">MAILBOX DIRECTORY</p>
-        <h1>邮箱列表</h1>
-        <p>集中维护聚合收件箱使用的邮箱账户与 IMAP 授权码。</p>
-      </div>
       <div class="hero-actions">
         <el-button :icon="Refresh" :loading="loading" @click="loadAccounts">刷新</el-button>
         <el-button v-permission="['mail:account:add']" type="primary" :icon="Plus" @click="openCreateDialog">
@@ -252,16 +247,16 @@ onMounted(() => Promise.all([loadProviderOptions(), loadAccounts()]))
 
 <style scoped>
 .account-page {
-  --ink: #20302d;
-  --muted: #74847f;
-  --line: #dde7e4;
-  --accent: #0d7a6b;
+  --ink: #17253f;
+  --muted: #6d7890;
+  --line: #dce4ef;
+  --accent: #3267d6;
   min-height: calc(100vh - 84px);
   padding: 24px;
   color: var(--ink);
   background:
-    radial-gradient(circle at 88% 0, rgba(13, 122, 107, .08), transparent 26%),
-    linear-gradient(145deg, #f8faf9 0%, #eff4f2 100%);
+    radial-gradient(circle at 88% 0, rgba(50, 103, 214, .12), transparent 26%),
+    linear-gradient(145deg, #f8faff 0%, #eef3fa 100%);
 }
 .page-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
 .eyebrow { margin: 0 0 4px; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .18em; }
@@ -273,7 +268,7 @@ onMounted(() => Promise.all([loadProviderOptions(), loadAccounts()]))
 .stat-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; font-size: 20px; }
 .stat-icon.total { color: #236a8d; background: #e6f3f8; }.stat-icon.active { color: #168362; background: #e2f3ed; }.stat-icon.warning { color: #bd692d; background: #fff0df; }
 .stat-card strong, .stat-card small { display: block; }.stat-card strong { font-family: Georgia, serif; font-size: 24px; }.stat-card small { margin-top: 1px; color: var(--muted); font-size: 11px; }
-.account-card { border-color: rgba(201, 216, 211, .9); border-radius: 14px; background: rgba(255,255,255,.94); }
+.account-card { border-color: rgba(198, 211, 232, .9); border-radius: 14px; background: rgba(255,255,255,.94); }
 .filter-bar { display: grid; grid-template-columns: minmax(260px, 1fr) 180px 150px auto; gap: 10px; align-items: center; margin-bottom: 16px; }
 .filter-result { padding-left: 8px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .account-cell { display: flex; align-items: center; gap: 11px; }
@@ -284,7 +279,7 @@ onMounted(() => Promise.all([loadProviderOptions(), loadAccounts()]))
 .state-badge, .connection-state { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; }
 .state-badge i { width: 7px; height: 7px; border-radius: 50%; }.state-badge.enabled { color: #168362; }.state-badge.enabled i { background: #26a77e; }.state-badge.disabled { color: #7f8c88; }.state-badge.disabled i { background: #adb7b4; }
 .connection-state :deep(svg) { width: 14px; }.connection-state.success { color: #168362; }.connection-state.error { color: #d15048; cursor: help; }.connection-state.pending { color: #8a9793; }
-.drawer-account { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding: 16px; border-radius: 13px; background: #f1f6f4; }.drawer-account h3, .drawer-account p { margin: 0; }.drawer-account h3 { font-family: Georgia, "Songti SC", serif; font-size: 20px; }.drawer-account p { margin-top: 4px; color: var(--muted); font-size: 12px; }
+.drawer-account { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding: 16px; border-radius: 13px; background: #eef3ff; }.drawer-account h3, .drawer-account p { margin: 0; }.drawer-account h3 { font-family: Georgia, "Songti SC", serif; font-size: 20px; }.drawer-account p { margin-top: 4px; color: var(--muted); font-size: 12px; }
 .drawer-note { display: flex; gap: 8px; margin-top: 18px; padding: 12px; border-radius: 9px; color: #64736f; background: #f5f8f7; font-size: 12px; line-height: 1.6; }.drawer-note :deep(svg) { flex: 0 0 auto; width: 15px; margin-top: 2px; }
 .error-text { color: #d15048; }.success-text { color: #168362; }
 .form-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }.form-grid.compact { grid-template-columns: 1fr 1fr; align-items: center; }
@@ -295,5 +290,21 @@ onMounted(() => Promise.all([loadProviderOptions(), loadAccounts()]))
   .account-stats { grid-template-columns: 1fr; }
   .filter-bar { grid-template-columns: 1fr 1fr; }
   .filter-result { display: none; }
+}
+@media (max-width: 640px) {
+  .account-page { padding: 14px; }
+  .page-hero h1 { font-size: 27px; }
+  .hero-actions { width: 100%; }
+  .hero-actions .el-button { flex: 1; }
+  .filter-bar { grid-template-columns: 1fr; }
+  .account-card :deep(.el-card__body) { padding: 14px; }
+  .account-table { font-size: 12px; }
+}
+
+.account-table :deep(.el-table__row) { transition: background-color .18s ease; }
+.account-table :deep(.el-table__row:hover > td) { background: #f3f7ff !important; }
+.account-table :deep(.el-button:focus-visible), .hero-actions :deep(.el-button:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .account-table :deep(.el-table__row) { transition: none; }
 }
 </style>

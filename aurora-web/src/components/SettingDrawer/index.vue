@@ -114,10 +114,12 @@
 
       <el-divider>标签页样式</el-divider>
       <div class="tags-style-list">
-        <div
+        <button
           v-for="style in tagsStyles"
           :key="style.value"
           class="style-item"
+          type="button"
+          :aria-pressed="settingsStore.tagsStyle === style.value"
           :class="{ active: settingsStore.tagsStyle === style.value }"
           @click="handlePreview('tagsStyle', style.value)"
         >
@@ -127,7 +129,7 @@
             <span class="tag active">详情页</span>
           </div>
           <div class="style-name">{{ style.label }}</div>
-        </div>
+        </button>
       </div>
 
       <div class="drawer-footer">
@@ -284,7 +286,12 @@ const tagsStyles = [
 .style-item {
   cursor: pointer;
   text-align: center;
-  transition: all 0.3s;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  transition: transform 0.3s;
 
   &:hover {
     transform: translateY(-2px);
@@ -293,6 +300,8 @@ const tagsStyles = [
   &.active .style-preview {
     border-color: v-bind('settingsStore.themeColor');
   }
+
+  &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
 }
 
 .style-preview {

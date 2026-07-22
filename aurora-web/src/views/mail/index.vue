@@ -1,11 +1,6 @@
 <template>
   <div class="mail-page">
     <header class="mail-header">
-      <div>
-        <p class="mail-eyebrow">UNIFIED INBOX</p>
-        <h1>聚合邮箱</h1>
-        <p class="mail-subtitle">邮件实时来自邮箱服务器，系统不保存历史正文。</p>
-      </div>
       <div class="mail-header-actions">
         <span class="refresh-status">
           <i :class="['status-pulse', { active: autoRefresh }]" />
@@ -95,7 +90,7 @@
             <span class="message-copy">
               <span class="message-row">
                 <strong>{{ message.fromName || message.fromAddress }}</strong>
-                <time>{{ formatMessageTime(message.receivedTime) }}</time>
+                <time :datetime="message.receivedTime">{{ formatMessageTime(message.receivedTime) }}</time>
               </span>
               <span class="subject-row">
                 <b>{{ message.subject }}</b>
@@ -121,7 +116,7 @@
           <header class="reader-header">
             <div class="reader-meta">
               <span class="reader-badge">{{ providerLabel(messageProvider) }}</span>
-              <time>{{ mailDetail.receivedTime || '-' }}</time>
+              <time :datetime="mailDetail.receivedTime">{{ formatDetailTime(mailDetail.receivedTime) }}</time>
             </div>
             <h2>{{ mailDetail.subject }}</h2>
             <div class="sender-line">
@@ -193,7 +188,6 @@ import {
 } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
-import dayjs from 'dayjs'
 import {
   deleteMailAccountApi,
   downloadMailAttachmentApi,
@@ -396,17 +390,38 @@ const providerMark = (provider: MailProvider) => provider === 'QQ' ? 'Q' : provi
 const providerClass = (provider: MailProvider) => provider.toLowerCase().replace('_', '-')
 const senderMark = (message: MailMessageSummary) => (message.fromName || message.fromAddress || '@').slice(0, 1).toUpperCase()
 
+const messageTimeFormatter = new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
+const messageDateFormatter = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit' })
+const detailTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+})
+const fileSizeFormatter = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 })
+
 const formatMessageTime = (value?: string) => {
   if (!value) return '-'
-  const time = dayjs(value)
-  return time.isSame(dayjs(), 'day') ? time.format('HH:mm') : time.format('MM-DD')
+  const time = new Date(value)
+  if (Number.isNaN(time.getTime())) return '-'
+  return time.toDateString() === new Date().toDateString()
+    ? messageTimeFormatter.format(time)
+    : messageDateFormatter.format(time)
+}
+
+const formatDetailTime = (value?: string) => {
+  if (!value) return '-'
+  const time = new Date(value)
+  return Number.isNaN(time.getTime()) ? '-' : detailTimeFormatter.format(time)
 }
 
 const formatFileSize = (size: number) => {
   if (!size) return '未知大小'
   const units = ['B', 'KB', 'MB', 'GB']
   const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1)
-  return `${(size / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1)} ${units[index]}`
+  return `${fileSizeFormatter.format(size / Math.pow(1024, index))}\u00A0${units[index]}`
 }
 
 const clearRefreshTimer = () => window.clearTimeout(refreshTimer)
@@ -446,17 +461,17 @@ onUnmounted(() => {
 
 <style scoped>
 .mail-page {
-  --ink: #20302d;
-  --muted: #74847f;
-  --line: #dfe8e5;
-  --paper: #f6f8f7;
-  --accent: #0d7a6b;
+  --ink: #17253f;
+  --muted: #6d7890;
+  --line: #dce4ef;
+  --paper: #f5f8fc;
+  --accent: #3267d6;
   min-height: calc(100vh - 84px);
   padding: 22px;
   color: var(--ink);
   background:
-    radial-gradient(circle at 8% 4%, rgba(13, 122, 107, 0.08), transparent 24%),
-    linear-gradient(145deg, #f8faf9 0%, #eef3f1 100%);
+    radial-gradient(circle at 8% 4%, rgba(50, 103, 214, 0.12), transparent 24%),
+    linear-gradient(145deg, #f8faff 0%, #eef3fa 100%);
 }
 
 .mail-header {
@@ -473,7 +488,7 @@ onUnmounted(() => {
 .mail-header-actions { display: flex; align-items: center; gap: 10px; }
 .refresh-status { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
 .status-pulse { width: 7px; height: 7px; border-radius: 50%; background: #aeb8b5; }
-.status-pulse.active { background: #20a27f; box-shadow: 0 0 0 5px rgba(32, 162, 127, .1); }
+.status-pulse.active { background: #3bb58a; box-shadow: 0 0 0 5px rgba(59, 181, 138, .12); }
 
 .mail-workspace {
   display: grid;
@@ -482,19 +497,19 @@ onUnmounted(() => {
   height: calc(100vh - 190px);
   min-height: 620px;
   overflow: hidden;
-  border: 1px solid rgba(197, 213, 208, .9);
+  border: 1px solid rgba(198, 211, 232, .9);
   border-radius: 16px;
   background: rgba(255, 255, 255, .94);
-  box-shadow: 0 20px 55px rgba(31, 66, 58, .1);
+  box-shadow: 0 20px 55px rgba(41, 72, 125, .12);
 }
 
 .account-panel, .message-panel { min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--line); }
-.account-panel { display: flex; flex-direction: column; padding: 18px 12px 12px; background: #f8faf9; }
+.account-panel { display: flex; flex-direction: column; padding: 18px 12px 12px; background: #f6f8fc; }
 .panel-label { padding: 0 10px 12px; color: #8a9894; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .account-list { min-height: 0; overflow-y: auto; }
 .account-item { display: flex; align-items: center; width: 100%; gap: 10px; padding: 10px; border: 0; border-radius: 11px; color: inherit; background: transparent; text-align: left; cursor: pointer; transition: .18s ease; }
-.account-item:hover { background: #edf3f1; }
-.account-item.active { background: #e4efec; box-shadow: inset 3px 0 var(--accent); }
+.account-item:hover { background: #eaf0fb; }
+.account-item.active { background: #e4edff; box-shadow: inset 3px 0 var(--accent); }
 .account-avatar, .sender-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px; color: #fff; background: #61736f; font-size: 11px; font-weight: 800; }
 .account-avatar.all { background: var(--ink); font-size: 17px; }
 .account-avatar.qq, .sender-avatar.qq { background: #168bd2; }
@@ -505,7 +520,7 @@ onUnmounted(() => {
 .account-copy strong, .account-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-copy strong { font-size: 13px; }
 .account-copy small { margin-top: 2px; color: var(--muted); font-size: 11px; }
-.message-count { min-width: 24px; padding: 2px 7px; border-radius: 99px; color: var(--accent); background: #d8e9e5; font-size: 11px; text-align: center; }
+.message-count { min-width: 24px; padding: 2px 7px; border-radius: 99px; color: var(--accent); background: #dce8ff; font-size: 11px; text-align: center; }
 .connection-dot { width: 8px; height: 8px; border-radius: 50%; background: #28a77f; }
 .connection-dot.error { background: #e35d54; }
 .connection-dot.disabled { background: #b6bfbd; }
@@ -519,8 +534,8 @@ onUnmounted(() => {
 .message-toolbar span { margin-top: 2px; color: var(--muted); font-size: 11px; }
 .message-list { min-height: 0; flex: 1; overflow-y: auto; }
 .message-item { display: flex; width: 100%; gap: 11px; padding: 14px 15px; border: 0; border-bottom: 1px solid #edf1f0; color: inherit; background: #fff; text-align: left; cursor: pointer; transition: .18s ease; }
-.message-item:hover { background: #f6faf8; }
-.message-item.active { background: #ecf5f2; box-shadow: inset 3px 0 var(--accent); }
+.message-item:hover { background: #f4f7fd; }
+.message-item.active { background: #edf3ff; box-shadow: inset 3px 0 var(--accent); }
 .message-item.unread .message-copy > .message-row strong::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: var(--accent); vertical-align: middle; }
 .message-copy { min-width: 0; flex: 1; }
 .message-row, .subject-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -533,14 +548,14 @@ onUnmounted(() => {
 .reader-panel { min-width: 0; min-height: 0; overflow-y: auto; background: #fff; }
 .reader-header { padding: 28px 32px 22px; border-bottom: 1px solid var(--line); }
 .reader-meta { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; }
-.reader-badge { padding: 3px 9px; border-radius: 99px; color: var(--accent); background: #e5f1ee; font-weight: 700; }
+.reader-badge { padding: 3px 9px; border-radius: 99px; color: var(--accent); background: #e6eeff; font-weight: 700; }
 .reader-header h2 { margin: 16px 0 20px; font-family: Georgia, "Songti SC", serif; font-size: 24px; line-height: 1.35; }
 .sender-line { display: flex; align-items: center; gap: 12px; }
 .sender-avatar.large { width: 44px; height: 44px; border-radius: 50%; font-size: 15px; }
 .sender-line strong, .sender-line p, .sender-line small { display: block; margin: 0; }
 .sender-line strong { font-size: 13px; }
 .sender-line p, .sender-line small { margin-top: 2px; color: var(--muted); font-size: 11px; }
-.attachment-strip { display: flex; gap: 8px; overflow-x: auto; padding: 13px 24px; border-bottom: 1px solid var(--line); background: #fafcfb; }
+.attachment-strip { display: flex; gap: 8px; overflow-x: auto; padding: 13px 24px; border-bottom: 1px solid var(--line); background: #f8faff; }
 .attachment-strip button { display: flex; align-items: center; min-width: 210px; gap: 9px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; color: inherit; background: #fff; text-align: left; cursor: pointer; }
 .attachment-strip button span { min-width: 0; flex: 1; }
 .attachment-strip strong, .attachment-strip small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -553,7 +568,8 @@ onUnmounted(() => {
 .reader-loading { display: block; }
 .reader-empty h2 { margin: 18px 0 7px; font-family: Georgia, "Songti SC", serif; font-size: 22px; }
 .reader-empty p { margin: 0; color: var(--muted); font-size: 12px; }
-.empty-envelope { display: grid; place-items: center; width: 76px; height: 76px; border: 1px solid #cfe0dc; border-radius: 24px; color: var(--accent); background: #eff6f4; font-size: 34px; transform: rotate(-4deg); }
+.empty-envelope { display: grid; place-items: center; width: 76px; height: 76px; border: 1px solid #cedcff; border-radius: 24px; color: var(--accent); background: #eef3ff; font-size: 34px; transform: rotate(-4deg); }
+.account-item:focus-visible, .message-item:focus-visible, .attachment-strip button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .form-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }.form-grid.compact { grid-template-columns: 1fr 1fr; align-items: center; }
 .email-domain-suffix { color: var(--el-text-color-secondary); font-size: 15px; white-space: nowrap; }
 .auth-tip { margin: 6px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }
@@ -567,5 +583,23 @@ onUnmounted(() => {
   .mail-header-actions { flex-wrap: wrap; }
   .mail-workspace { grid-template-columns: 190px minmax(300px, 1fr); height: auto; min-height: 720px; }
   .reader-panel { grid-column: 1 / -1; min-height: 620px; border-top: 1px solid var(--line); }
+}
+
+@media (max-width: 640px) {
+  .mail-page { padding: 14px; }
+  .mail-header h1 { font-size: 27px; }
+  .mail-header-actions { width: 100%; }
+  .mail-header-actions .el-button { flex: 1; }
+  .refresh-status { width: 100%; }
+  .mail-workspace { display: flex; flex-direction: column; min-height: 0; height: auto; }
+  .account-panel { max-height: 245px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .message-panel { min-height: 420px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .reader-panel { min-height: 560px; }
+  .reader-header { padding: 22px 18px 18px; }
+  .reader-body { padding: 0 10px 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-item, .message-item { transition: none; }
 }
 </style>

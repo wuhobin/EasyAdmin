@@ -56,7 +56,12 @@
         <el-table-column type="selection"  width="55" align="center" />
         <el-table-column label="头像"  prop="avatar" align="center">
           <template #default="{ row }">
-            <el-image :src="row.avatar" style="width: 40px; height: 40px; border-radius: 5px;" />
+            <el-image
+              :src="row.avatar"
+              fit="contain"
+              class="user-avatar"
+              alt="用户头像"
+            />
           </template>
         </el-table-column>
         <el-table-column label="昵称" align="center" prop="nickname" show-overflow-tooltip />
@@ -580,6 +585,17 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .app-container {
+  .user-avatar {
+    display: block;
+    width: 42px;
+    height: 42px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+    background: var(--el-fill-color-light);
+  }
+
   .pagination-container {
     display: flex;
     justify-content: center;

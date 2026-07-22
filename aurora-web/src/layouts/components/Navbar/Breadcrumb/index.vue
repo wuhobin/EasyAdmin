@@ -73,7 +73,12 @@ watch(
 
 .breadcrumb-enter-active,
 .breadcrumb-leave-active {
-  transition: all 0.5s;
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breadcrumb-enter-active,
+  .breadcrumb-leave-active { transition: none; }
 }
 
 .breadcrumb-enter-from,

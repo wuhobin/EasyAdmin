@@ -10,7 +10,10 @@
       <div class="search-bar">
         <el-input
           v-model="searchText"
-          placeholder="搜索图标"
+          name="icon-search"
+          aria-label="搜索图标"
+          autocomplete="off"
+          placeholder="搜索图标，例如：User…"
           clearable
         >
           <template #prefix>
@@ -20,10 +23,12 @@
       </div>
       <el-scrollbar height="400px">
         <div class="icon-list">
-          <div
+          <button
             v-for="(component, name) in filteredIcons"
             :key="name"
             class="icon-item"
+            type="button"
+            :aria-pressed="modelValue === name"
             :class="{ active: modelValue === name }"
             @click="selectIcon(name)"
           >
@@ -31,7 +36,7 @@
               <component :is="component" />
             </el-icon>
             <span class="icon-name">{{ name }}</span>
-          </div>
+          </button>
         </div>
       </el-scrollbar>
     </div>
@@ -101,9 +106,14 @@ const selectIcon = (iconName: string) => {
   padding: 16px 8px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  transition: color 0.3s, background-color 0.3s, border-color 0.3s;
   border: 1px solid transparent;
 }
+
+.icon-item:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
 
 .icon-item:hover {
   background-color: #ecf5ff;
@@ -131,4 +141,4 @@ const selectIcon = (iconName: string) => {
 .icon-item.active .icon-name {
   color: #409EFF;
 }
-</style> 
+</style>

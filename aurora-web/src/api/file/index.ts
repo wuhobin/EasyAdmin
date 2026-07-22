@@ -20,7 +20,7 @@ export interface OssFileQuery {
   pageSize: number
   fileName?: string
   contentType?: string
-  uploaderName?: string
+  uploaderId?: number
 }
 
 export interface PageResult<T> {

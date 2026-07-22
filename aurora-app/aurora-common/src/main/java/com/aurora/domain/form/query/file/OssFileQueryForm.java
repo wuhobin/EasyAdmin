@@ -12,6 +12,6 @@ public class OssFileQueryForm {
     @Schema(description = "MIME类型")
     private String contentType;
 
-    @Schema(description = "上传人名称")
-    private String uploaderName;
+    @Schema(description = "上传人ID")
+    private Long uploaderId;
 }

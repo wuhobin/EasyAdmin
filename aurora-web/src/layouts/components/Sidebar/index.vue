@@ -1,214 +1,307 @@
 <template>
-    <div class="sidebar-container">
-      <div v-if="settingsStore.showLogo" class="logo-container" :class="{ 'dark': settingsStore.theme === 'dark' }">
-        <Logo :size="32" class="logo-icon" :color="settingsStore.themeColor" />
-        <span v-show="!isCollapse" class="logo-text">{{ settings.title }}</span>
-      </div>
-      <el-scrollbar>
-        <el-menu style="height: 100%;"
-          :default-active="activeMenu"
-          :collapse="isCollapse"
-          :background-color="settingsStore.theme === 'dark' ? '#1d1e1f' : '#304156'"
-          :text-color="settingsStore.theme === 'dark' ? '#bfcbd9' : '#bfcbd9'"
-          :active-text-color="settingsStore.themeColor"
-          :collapse-transition="false"
-          @select="handleSelect"
-          :unique-opened="true"
-        >
-          <template v-for="route in menuRoutes" :key="route.path">
-            <menu-item v-if="!route.meta?.hidden" :route="route" :base-path="route.path" />
-          </template>
-        </el-menu>
-      </el-scrollbar>
+  <div class="sidebar-container">
+    <div v-if="settingsStore.showLogo" class="logo-container">
+      <Logo :size="32" class="logo-icon" :color="settingsStore.themeColor" />
+      <span v-show="!isCollapse" class="logo-text">{{ settings.title }}</span>
     </div>
-  </template>
-  
-  <script setup lang="ts">
-  import { computed } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { usePermissionStore } from '@/store/modules/permission'
-  import { useSettingsStore } from '@/store/modules/settings'
-  import Logo from '@/layouts/components/Sidebar/Logo.vue'
-  import settings from '@/config/settings'
-  import { isExternal } from '@/utils/validate'
-  import MenuItem from './MenuItem.vue'
-  
-  const route = useRoute()
-  const permissionStore = usePermissionStore()
-  const settingsStore = useSettingsStore()
-  const router = useRouter()
-  // 从 props 接收折叠状态
-  defineProps({
-    isCollapse: {
-      type: Boolean,
-      default: false
+
+    <el-scrollbar class="menu-scrollbar">
+      <el-menu
+        :default-active="activeMenu"
+        :collapse="isCollapse"
+        background-color="transparent"
+        text-color="var(--aurora-sidebar-text)"
+        :active-text-color="settingsStore.themeColor"
+        :collapse-transition="false"
+        :unique-opened="true"
+        @select="handleSelect"
+      >
+        <section v-for="group in menuGroups" :key="group.key" class="menu-group">
+          <template v-if="group.title && !isCollapse">
+            <button
+              v-if="group.collapsible"
+              type="button"
+              class="menu-group__title menu-group__toggle"
+              :aria-expanded="!isGroupCollapsed(group.key)"
+              @click="toggleGroup(group.key)"
+            >
+              <span>{{ group.title }}</span>
+              <el-icon :class="{ 'is-collapsed': isGroupCollapsed(group.key) }"><ArrowDown /></el-icon>
+            </button>
+            <div v-else class="menu-group__title">{{ group.title }}</div>
+          </template>
+
+          <el-collapse-transition>
+            <div v-show="isCollapse || !isGroupCollapsed(group.key)" class="menu-group__content">
+              <template v-for="menuRoute in group.routes" :key="menuRoute.path">
+                <menu-item
+                  v-if="!menuRoute.meta?.hidden"
+                  :route="menuRoute"
+                  :base-path="group.basePath"
+                />
+              </template>
+            </div>
+          </el-collapse-transition>
+        </section>
+      </el-menu>
+    </el-scrollbar>
+
+    <UserPanel :is-collapse="isCollapse" @lock="emit('lock')" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ArrowDown } from '@element-plus/icons-vue'
+import { usePermissionStore } from '@/store/modules/permission'
+import { useSettingsStore } from '@/store/modules/settings'
+import Logo from './Logo.vue'
+import MenuItem from './MenuItem.vue'
+import UserPanel from './UserPanel.vue'
+import settings from '@/config/settings'
+import { isExternal } from '@/utils/validate'
+
+defineProps({
+  isCollapse: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits<{ select: []; lock: [] }>()
+const route = useRoute()
+const router = useRouter()
+const permissionStore = usePermissionStore()
+const settingsStore = useSettingsStore()
+const COLLAPSED_GROUPS_KEY = 'aurora-sidebar-collapsed-groups'
+const collapsedGroups = ref(new Set<string>())
+
+try {
+  const savedGroups = JSON.parse(sessionStorage.getItem(COLLAPSED_GROUPS_KEY) || '[]')
+  if (Array.isArray(savedGroups)) collapsedGroups.value = new Set(savedGroups)
+} catch {
+  sessionStorage.removeItem(COLLAPSED_GROUPS_KEY)
+}
+
+const menuRoutes = computed(() => permissionStore.routes.map(menuRoute => {
+  if (menuRoute.path === '/' && menuRoute.children) {
+    const dashboardRoute = menuRoute.children.find(child => child.path === 'dashboard')
+    if (dashboardRoute) {
+      return { ...dashboardRoute, path: '/dashboard', children: undefined }
     }
-  })
-  
-  // 获取路由菜单
-  const menuRoutes = computed(() => {
-    const routes = permissionStore.routes
-    return routes.map(route => {
-      // 如果是根路由且包含 dashboard 子路由
-      if (route.path === '/' && route.children) {
-        const dashboardRoute = route.children.find(child => child.path === 'dashboard')
-        if (dashboardRoute) {
-          // 将 dashboard 提升为一级路由
-          return {
-            ...dashboardRoute,
-            path: '/dashboard',
-            children: undefined
-          }
-        }
+  }
+  if (menuRoute.meta?.singleMenu && menuRoute.children?.length === 1) {
+    const pageRoute = menuRoute.children[0]
+    return {
+      ...pageRoute,
+      path: menuRoute.path,
+      children: undefined,
+      meta: {
+        ...pageRoute.meta,
+        activeMenu: menuRoute.path
       }
-      return route
-    })
-  })
-  // 当前激活的菜单
-  const activeMenu = computed(() => {
-    const { meta, path } = route
-    if (typeof meta?.activeMenu === 'string') {
-      return meta.activeMenu
-    }
-    return path
-  })
-  
-  // 修改路径处理函数
-  const resolvePath = (routePath: string) => {
-    // 如果是外部链接，直接返回原路径
-    if (isExternal(routePath)) {
-      return routePath
-    }
-    
-    // 如果是根路径，直接返回
-    if (routePath === '/') return routePath
-    
-    // 移除开头和结尾的斜杠
-    routePath = routePath.replace(/^\/+|\/+$/g, '')
-    
-    // 如果是仪表盘路径，特殊处理
-    if (routePath === 'dashboard') {
-      return '/dashboard'
-    }
-    
-    // 其他路径，确保只有一个斜杠
-    return '/' + routePath
-  }
-  
-  // 添加 select 事件处理函数
-  const handleSelect = (index: string) => {
-    if (isExternal(index)) {
-      window.open(index, '_blank')
-      return
-    }
-    
-    // 内部路由跳转
-    if (route.path !== index) {
-      router.push(index)
     }
   }
-  </script>
-  
-  <style lang="scss" scoped>
-  .sidebar-container {
-    height: 100%;
-    background-color: v-bind('settingsStore.theme === "dark" ? "#1d1e1f" : "#304156"');
-    
-    .logo-container {
-      height: 60px;
+  return menuRoute
+}))
+
+const menuGroups = computed(() => menuRoutes.value
+  .filter(menuRoute => !menuRoute.meta?.hidden)
+  .map(menuRoute => {
+    if (menuRoute.path === '/dashboard') {
+      return {
+        key: 'overview',
+        title: '总览',
+        basePath: '/',
+        routes: [menuRoute],
+        collapsible: false
+      }
+    }
+    if (menuRoute.children?.length) {
+      return {
+        key: menuRoute.path,
+        title: String(menuRoute.meta?.title || ''),
+        basePath: menuRoute.path,
+        routes: menuRoute.children,
+        collapsible: true
+      }
+    }
+    return {
+      key: menuRoute.path,
+      title: '',
+      basePath: '/',
+      routes: [menuRoute],
+      collapsible: false
+    }
+  }))
+
+const activeMenu = computed(() => typeof route.meta?.activeMenu === 'string'
+  ? route.meta.activeMenu
+  : route.path)
+
+const isGroupCollapsed = (key: string) => collapsedGroups.value.has(key)
+
+const toggleGroup = (key: string) => {
+  const nextGroups = new Set(collapsedGroups.value)
+  if (nextGroups.has(key)) nextGroups.delete(key)
+  else nextGroups.add(key)
+  collapsedGroups.value = nextGroups
+  sessionStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify([...nextGroups]))
+}
+
+const handleSelect = (index: string) => {
+  if (isExternal(index)) {
+    window.open(index, '_blank', 'noopener,noreferrer')
+    return
+  }
+  if (route.path !== index) router.push(index)
+  emit('select')
+}
+</script>
+
+<style lang="scss" scoped>
+.sidebar-container {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--aurora-sidebar-bg);
+
+  .logo-container {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 18px;
+
+    .logo-icon { flex-shrink: 0; }
+    .logo-text {
+      margin-left: 10px;
+      color: var(--aurora-sidebar-title);
+      font-size: 16px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+  }
+
+  .menu-scrollbar { flex: 1; min-height: 0; }
+
+  :deep(.el-menu) {
+    border-right: none;
+    padding: 12px 8px 18px;
+
+    .menu-group + .menu-group { margin-top: 15px; }
+    .menu-group__title {
+      height: 24px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 10px;
+      border: 0;
+      background: transparent;
+      color: var(--el-text-color-placeholder);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 24px;
+      letter-spacing: 0.02em;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .menu-group__toggle {
       display: flex;
       align-items: center;
-      padding: 0 20px;
-      background-color: v-bind('settingsStore.theme === "dark" ? "#1d1e1f" : "#304156"');
-      
-      .logo-icon {
-        flex-shrink: 0;
-      }
-      
-      .logo-text {
-        color: #fff;
-        font-size: 18px;
-        margin-left: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-      }
-    }
+      justify-content: space-between;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color 0.18s ease, background-color 0.18s ease;
 
-    :deep(.el-menu) {
-      border-right: none;
-
-      // 一级菜单样式
-      .el-menu-item, .el-sub-menu__title {
-        height: 56px;
-        line-height: 56px;
-        
-        .el-icon {
-          width: 24px;
-          text-align: center;
-          font-size: 18px;
-          margin-right: 12px;
-        }
+      &:hover {
+        background: var(--aurora-sidebar-hover);
+        color: var(--aurora-sidebar-text);
       }
 
-      // 激活状态
-      .el-menu-item.is-active {
-        background-color: v-bind('`${settingsStore.themeColor}1a`');
-        &::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 4px;
-          height: 20px;
-          background-color: v-bind('settingsStore.themeColor');
-          border-radius: 0 4px 4px 0;
-        }
+      &:focus-visible {
+        outline: 2px solid v-bind('settingsStore.themeColor');
+        outline-offset: 1px;
       }
 
-      // 悬停效果
-      .el-menu-item:hover, .el-sub-menu__title:hover {
-        background-color: v-bind('`${settingsStore.themeColor}0a`');
-      }
-    }
-  }
-
-  // 折叠状态样式
-  :deep(.el-menu--collapse) {
-    width: 64px;
-
-    .el-menu-item, .el-sub-menu__title {
-      padding: 0 20px !important;
-      
       .el-icon {
-        margin: 0 !important;
-        width: 24px !important;
+        margin: 0;
+        font-size: 12px;
+        transition: transform 0.18s ease;
+
+        &.is-collapsed { transform: rotate(-90deg); }
+      }
+    }
+
+    .el-menu-item,
+    .el-sub-menu__title {
+      width: 100%;
+      height: 42px;
+      margin: 2px 0;
+      border-radius: 8px;
+      color: var(--aurora-sidebar-text);
+      line-height: 42px;
+      transition: color 0.18s ease, background-color 0.18s ease;
+
+      .el-icon {
+        width: 24px;
+        margin-right: 9px;
+        font-size: 18px;
         text-align: center;
       }
     }
 
-    // 隐藏文字和箭头
-    .el-sub-menu__title span,
-    .el-menu-item span,
-    .el-sub-menu__title .el-sub-menu__icon-arrow {
-      display: none;
+    .el-sub-menu__title > .el-sub-menu__icon-arrow {
+      width: 12px;
+      height: 12px;
+      margin-right: 0;
+      font-size: 12px;
     }
-  }
 
-  :deep(.el-scrollbar__view) {
-    height: 100% !important;
-  }
-
-  // 子菜单样式
-  :deep(.el-menu .el-menu) {
-    background-color: v-bind('settingsStore.theme === "dark" ? "#181818" : "#263445"');
-    .el-menu-item {
-      height: 50px;
-      line-height: 50px;
-      
-      &.is-active {
-        background-color: v-bind('`${settingsStore.themeColor}1a`');
-      }
+    .el-menu-item.is-active {
+      background-color: v-bind('`${settingsStore.themeColor}14`');
+      color: v-bind('settingsStore.themeColor');
+      font-weight: 600;
     }
+
+    .el-menu-item:hover,
+    .el-sub-menu__title:hover { background-color: var(--aurora-sidebar-hover); }
   }
-  </style>
+}
+
+:deep(.el-menu--collapse) {
+  width: 64px;
+  padding: 12px 8px 18px;
+  .menu-group + .menu-group { margin-top: 8px; }
+  .el-menu-item,
+  .el-sub-menu__title {
+    padding: 0 12px !important;
+    .el-icon { width: 24px !important; margin: 0 !important; text-align: center; }
+  }
+  .el-sub-menu__title span,
+  .el-menu-item span,
+  .el-sub-menu__title .el-sub-menu__icon-arrow { display: none; }
+}
+
+:deep(.el-scrollbar__view) { min-height: 100%; }
+:deep(.el-menu .el-menu) {
+  padding: 4px 0;
+  background-color: transparent;
+  .el-menu-item {
+    height: 40px;
+    margin: 2px 0;
+    line-height: 40px;
+    &.is-active { background-color: v-bind('`${settingsStore.themeColor}14`'); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :deep(.el-menu-item),
+  :deep(.el-sub-menu__title),
+  :deep(.menu-group__toggle),
+  :deep(.menu-group__toggle .el-icon) { transition: none; }
+}
+</style>
