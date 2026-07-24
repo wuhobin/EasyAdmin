@@ -70,53 +70,272 @@ Aurora Admin（亦称 EasyAdmin）是一个基于 Spring Boot 3 + Sa-Token 的�
 - **数据库**：MySQL 8.0+
 - **缓存**：Redis 6.0+
 
-## 安装部署
+## Ubuntu 生产部署
 
-### 环境要求
+本节采用以下部署结构：后端 JAR 由 Docker Compose 管理，MySQL 和 Redis 使用已有的外部服务，前端静态文件由宿主机 Nginx 托管。Docker Compose、Nginx、MySQL 和 Redis 的安装不在本文范围内。
 
-- JDK 21+
-- Node.js 18+
-- MySQL 8.0+
-- Redis 6.0+
+```text
+浏览器
+  └─> Nginx :80
+        ├─> /      -> /opt/easyadmin/web
+        └─> /api/  -> 127.0.0.1:8800（Docker 后端）
 
-### 后端部署
-
-```bash
-# 克隆项目
-git clone https://gitee.com/wuhobin/aurora-admin.git
-cd aurora-admin
-
-# 导入数据库
-mysql -u root -p
-CREATE DATABASE easyadmin CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE easyadmin;
-SOURCE aurora-admin.sql;
-
-# 构建并启动
-cd aurora-app
-mvn clean install -DskipTests
-cd aurora-server
-mvn spring-boot:run
+/opt/easyadmin/
+├── backend/
+│   ├── aurora-server.jar
+│   ├── Dockerfile
+│   └── .dockerignore
+├── logs/
+├── web/
+├── .env
+└── compose.yml
 ```
 
-后端服务默认运行在 `http://localhost:8800`
+### 1. 部署前检查
 
-数据库/Redis 等敏感配置通过环境变量覆盖：
+- 本地构建环境：JDK 21、Maven、Node.js 18+、npm。
+- Ubuntu 服务器：Docker Engine、Docker Compose 插件、Nginx。
+- 外部服务：MySQL 8.0+、Redis 6.0+，且允许后端容器所在服务器访问。
+- 服务器需放行 Nginx 使用的 `80` 端口。后端 `8800` 只绑定 `127.0.0.1`，不需要向公网放行。
+- 已准备七牛 Kodo 的 AK、SK、Bucket 和访问域名。
 
-- `MYSQL_HOST`、`MYSQL_USER`、`MYSQL_PASSWORD`
-- `REDIS_HOST`、`REDIS_PASSWORD`
-- `mail.username`、`mail.password`
+部署模板位于 [`deploy`](deploy) 目录。以下命令中的 `SERVER_USER` 和 `SERVER_IP` 需替换为实际 SSH 用户与服务器 IP。
 
-### 前端部署
+### 2. 初始化数据库
+
+首次部署时，在能够连接 MySQL 的机器上执行：
+
+```bash
+mysql -h MYSQL_HOST -P 3306 -u root -p -e \
+  "CREATE DATABASE IF NOT EXISTS easyadmin CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+mysql -h MYSQL_HOST -P 3306 -u root -p easyadmin < aurora-admin.sql
+```
+
+生产环境建议创建只拥有 `easyadmin` 库权限的独立账号，不要让应用使用 MySQL `root` 账号。
+
+### 3. 本地构建后端 JAR
+
+在项目根目录执行：
+
+```bash
+cd aurora-app
+mvn clean package -DskipTests
+cd ..
+```
+
+构建产物为：
+
+```text
+aurora-app/aurora-server/target/aurora-server.jar
+```
+
+### 4. 创建服务器目录并上传后端
+
+在本地项目根目录执行：
+
+```bash
+ssh SERVER_USER@SERVER_IP \
+  "sudo mkdir -p /opt/easyadmin/backend /opt/easyadmin/logs /opt/easyadmin/web && sudo chown -R \$USER:\$USER /opt/easyadmin"
+
+scp deploy/compose.yml deploy/.env.example \
+  SERVER_USER@SERVER_IP:/opt/easyadmin/
+scp deploy/backend/Dockerfile deploy/backend/.dockerignore \
+  SERVER_USER@SERVER_IP:/opt/easyadmin/backend/
+scp aurora-app/aurora-server/target/aurora-server.jar \
+  SERVER_USER@SERVER_IP:/opt/easyadmin/backend/
+```
+
+如果 SSH 用户无 `sudo` 权限，请由管理员预先创建目录并授予该用户写权限。
+
+### 5. 配置生产环境变量
+
+登录服务器，复制环境变量模板：
+
+```bash
+cd /opt/easyadmin
+cp .env.example .env
+chmod 600 .env
+vi .env
+```
+
+`.env` 会同时用于 Compose 变量替换和后端容器环境变量注入。至少需要检查以下配置：
+
+| 变量 | 说明 |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | 固定为 `prod`，否则项目默认启动 `dev` 配置 |
+| `BACKEND_PORT` / `SERVER_PORT` | 宿主机回环端口和容器内服务端口，默认均为 `8800` |
+| `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PASSWORD` | MySQL 地址和账号 |
+| `REDIS_HOST` / `REDIS_PASSWORD` | Redis 地址和密码 |
+| `MAIL_CREDENTIAL_SECRET` | 邮箱授权码加密密钥，至少 16 位；保存邮箱账号后不可随意更换 |
+| `OSS_QINIU_*` | 七牛 Kodo 的 AK、SK、Bucket 和访问域名 |
+| `JAVA_TOOL_OPTIONS` | JVM 内存、编码和时区参数，按服务器内存调整 |
+| `LOG_PATH` | 容器日志目录，保持 `/app/logs` 即可 |
+| `KNIFE4J_*` / `SPRINGDOC_*` | 生产 API 文档开关，模板默认关闭 |
+
+不要把真实 `.env` 上传到 Git、聊天记录或工单。模板中的所有 `CHANGE_ME` 都必须替换。
+
+MySQL 或 Redis 位于 Docker 宿主机时，地址填写 `host.docker.internal`；`compose.yml` 已通过 `host-gateway` 提供该域名。服务还必须监听 Docker 网桥可访问的地址，不能只监听宿主机 `127.0.0.1`。如果 MySQL 或 Redis 位于其他机器，直接填写其内网 IP 或域名。
+
+> **Redis 密码注意事项：** 当前 `application-prod.yml` 中 `spring.data.redis.password` 仍被注释。使用带密码的 Redis 前，需要先恢复 `password: ${redis.password}` 并重新构建 JAR，否则 `.env` 中的 `REDIS_PASSWORD` 不会生效。
+
+### 6. 构建并启动后端容器
+
+在服务器执行：
+
+```bash
+cd /opt/easyadmin
+
+# 展开并校验 Compose 配置。输出包含敏感配置，不要复制到外部。
+docker compose config >/dev/null
+
+# 首次构建并启动
+docker compose build --pull easyadmin-server
+docker compose up -d
+
+# 查看容器状态和启动日志
+docker compose ps
+docker compose logs --tail=200 easyadmin-server
+```
+
+确认日志中使用 `prod` Profile，且 MySQL、Redis 和七牛配置没有连接或占位符错误。后端端口仅监听本机：
+
+```bash
+curl -i http://127.0.0.1:8800/
+```
+
+根路径可能返回 `401` 或 `404`，但应能收到 Spring Boot 的 HTTP 响应；不能出现连接拒绝或超时。
+
+### 7. 本地构建并上传前端
+
+项目的 `aurora-web/.env.production` 已将生产 API 前缀配置为 `/api`。在本地项目根目录执行：
 
 ```bash
 cd aurora-web
-npm install
-npm run dev        # 开发服，默认 :3000
-npm run build      # 生产构建
+npm ci
+npm run build
+cd ..
+
+scp -r aurora-web/dist/* SERVER_USER@SERVER_IP:/opt/easyadmin/web/
 ```
 
-前端开发时通过 Vite 代理将 `/api` 转发到后端。
+如需清理服务器上已经失效的旧静态资源，应先备份 `/opt/easyadmin/web`，再由管理员清理并重新上传；不要直接覆盖不同版本后留下的旧哈希文件。
+
+### 8. 配置宿主机 Nginx
+
+在服务器创建 `/etc/nginx/sites-available/easyadmin`：
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+
+    root /opt/easyadmin/web;
+    index index.html;
+    client_max_body_size 50m;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8800/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 60s;
+    }
+}
+```
+
+`proxy_pass` 末尾的 `/` 不能省略：它负责将浏览器请求中的 `/api` 前缀去掉，再转发给实际不带 `/api` 前缀的后端接口。
+
+启用并检查站点：
+
+```bash
+sudo ln -sfn /etc/nginx/sites-available/easyadmin /etc/nginx/sites-enabled/easyadmin
+sudo chmod -R a+rX /opt/easyadmin/web
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+如果 Nginx 默认站点同样监听 `80` 且抢先匹配请求，请停用 `/etc/nginx/sites-enabled/default` 后再次执行 `nginx -t` 和 reload。
+
+### 9. 验证部署
+
+```bash
+# 容器应显示为 Up
+cd /opt/easyadmin
+docker compose ps
+
+# 检查后端容器日志
+docker compose logs --tail=100 easyadmin-server
+
+# 验证 Nginx 首页与 API 代理
+curl -I http://127.0.0.1/
+curl -i -X POST http://127.0.0.1/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+最后在浏览器访问 `http://SERVER_IP/`，确认页面加载、登录请求、动态路由和文件资源均正常。浏览器开发者工具中的接口地址应以 `/api/` 开头，不能再出现旧域名。
+
+### 10. 日常运维
+
+```bash
+cd /opt/easyadmin
+
+# 状态、实时日志、重启、停止和启动
+docker compose ps
+docker compose logs -f --tail=200 easyadmin-server
+docker compose restart easyadmin-server
+docker compose stop easyadmin-server
+docker compose start easyadmin-server
+
+# 查看持久化的应用日志
+tail -f logs/info.log
+tail -f logs/error.log
+```
+
+不要使用 `docker compose down -v`，以免误删 Compose 管理的卷。当前配置使用宿主机 `./logs` 绑定目录，执行普通 `docker compose down` 不会删除日志文件。
+
+### 11. 发布新版本与回滚
+
+发布前先在服务器备份当前 JAR：
+
+```bash
+cd /opt/easyadmin
+cp backend/aurora-server.jar \
+  "backend/aurora-server.jar.$(date +%Y%m%d-%H%M%S).bak"
+```
+
+本地重新构建并上传 JAR 后，在服务器重建容器：
+
+```bash
+cd /opt/easyadmin
+docker compose up -d --build --force-recreate easyadmin-server
+docker compose logs --tail=200 easyadmin-server
+```
+
+前端发布前同样备份 `web` 目录，然后上传新的 `dist` 内容并执行 `sudo nginx -t && sudo systemctl reload nginx`。
+
+后端需要回滚时，将对应的 `.bak` 文件复制回 `backend/aurora-server.jar`，再执行：
+
+```bash
+docker compose up -d --build --force-recreate easyadmin-server
+```
+
+### 12. 常见问题
+
+- **启动后使用了开发配置**：确认 `.env` 中 `SPRING_PROFILES_ACTIVE=prod`，再强制重建容器。
+- **MySQL/Redis 连接拒绝**：容器中的 `127.0.0.1` 指向容器自身；宿主机服务应使用 `host.docker.internal`，远程服务使用内网 IP 或域名。
+- **Redis 提示未认证**：确认已在 `application-prod.yml` 启用密码属性，并检查 `REDIS_PASSWORD` 后重新构建 JAR。
+- **后端提示七牛属性无法解析**：检查 `OSS_QINIU_ACCESS_KEY` 和 `OSS_QINIU_SECRET_KEY`，旧项目使用的 `file.qiniu.*` 属性名不适用于当前配置。
+- **Nginx API 返回 502**：先检查 `docker compose ps` 和容器日志，再从宿主机访问 `http://127.0.0.1:8800`。
+- **刷新前端页面返回 404**：确认 Nginx 的 `location /` 中存在 `try_files $uri $uri/ /index.html`。
+- **上传文件返回 413**：确认 Nginx 的 `client_max_body_size` 不小于后端 `50MB` 上传限制。
 
 ## API 文档
 

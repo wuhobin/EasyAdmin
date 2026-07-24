@@ -1,0 +1,15 @@
+services:
+  easyadmin-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: easyadmin-server
+    restart: always
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8800}:${SERVER_PORT:-8800}"
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./logs:/app/logs

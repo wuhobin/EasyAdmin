@@ -21,7 +21,7 @@ spring:
       port: 6379
       # 生产环境建议使用 database 0
       database: 0
-      #password: ${redis.password}
+      password: ${redis.password}
       client-type: lettuce
       lettuce:
         pool:
