@@ -1,5 +1,6 @@
 services:
   nexora-admin:
+    image: nexora-admin:${IMAGE_TAG:-latest}
     build:
       context: ./backend
       dockerfile: Dockerfile

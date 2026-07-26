@@ -1,6 +1,6 @@
 mybatis-plus:
   mapper-locations: classpath:/mapper/*Mapper.xml
-  typeAliasesPackage: com.aurora.entity
+  typeAliasesPackage: com.nexora.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl

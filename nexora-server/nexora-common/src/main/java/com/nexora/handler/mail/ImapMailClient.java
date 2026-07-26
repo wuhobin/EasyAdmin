@@ -51,10 +51,10 @@ public class ImapMailClient {
     private static final int MAX_INLINE_IMAGE_BYTES = 5 * 1024 * 1024;
     private static final int MAX_INLINE_IMAGE_TOTAL_BYTES = 10 * 1024 * 1024;
     private static final Map<String, String> NETEASE_CLIENT_ID = Map.of(
-            "name", "EasyAdmin",
+            "name", "Nexora Admin",
             "version", "1.0",
-            "vendor", "Aurora",
-            "support-email", "support@easyadmin.local"
+            "vendor", "Nexora",
+            "support-email", "support@nexora.local"
     );
 
     public void testConnection(MailAccount account, String authCode) {

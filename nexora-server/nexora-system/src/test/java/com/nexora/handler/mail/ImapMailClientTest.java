@@ -1,7 +1,6 @@
-package com.nexora.mail;
+package com.nexora.handler.mail;
 
 import com.nexora.constants.MailProviderEnum;
-import com.nexora.handler.mail.ImapMailClient;
 import org.junit.jupiter.api.Test;
 import org.eclipse.angus.mail.imap.IMAPStore;
 
@@ -22,9 +21,9 @@ class ImapMailClientTest {
         ImapMailClient.identifyClient(store, MailProviderEnum.NETEASE_163);
 
         verify(store).id(argThat(parameters ->
-                "EasyAdmin".equals(parameters.get("name"))
+                "Nexora Admin".equals(parameters.get("name"))
                         && "1.0".equals(parameters.get("version"))
-                        && "Aurora".equals(parameters.get("vendor"))));
+                        && "Nexora".equals(parameters.get("vendor"))));
     }
 
     @Test

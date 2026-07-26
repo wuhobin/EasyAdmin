@@ -6,10 +6,10 @@ interface Settings {
 }
 
 const settings: Settings = {
-  title: 'AURORA-ADMIN',
-  shortTitle: 'AURORA-ADMIN后台管理',
+  title: 'NEXORA ADMIN',
+  shortTitle: 'NEXORA ADMIN 后台管理',
   description: '一个现代化的后台管理系统',
-  repository: 'https://gitee.com/wuhobin/aurora-admin'
+  repository: 'https://gitee.com/wuhobin/nexora-admin'
 }
 
-export default settings 
+export default settings

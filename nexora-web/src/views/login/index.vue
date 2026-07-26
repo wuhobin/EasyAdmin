@@ -7,8 +7,8 @@
       <section class="brand-section">
         <div class="brand-accent" aria-hidden="true"></div>
         <div class="brand-content">
-          <div class="brand-mark"><Logo :size="38" /><span>AA</span></div>
-          <p class="eyebrow">AURORA ADMIN</p>
+          <div class="brand-mark"><Logo :size="38" /><span>NA</span></div>
+          <p class="eyebrow">NEXORA ADMIN</p>
           <h1>{{ settingsStore.title }}</h1>
           <p class="brand-description">清晰、高效、安全的企业管理工作台</p>
           <div class="feature-list">
@@ -41,7 +41,7 @@
               {{ loading ? '登录中…' : '登录' }}
             </el-button>
           </el-form>
-          <p class="login-footer">Copyright © 2024 Aurora Admin</p>
+          <p class="login-footer">Copyright © 2024 Nexora Admin</p>
         </div>
       </section>
     </main>

@@ -13,7 +13,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class AuroraPermissionProvider implements PermissionProvider {
+public class NexoraPermissionProvider implements PermissionProvider {
 
     private final SysRoleMapper roleMapper;
     private final SysMenuMapper menuMapper;

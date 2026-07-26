@@ -12,7 +12,7 @@ class OssFileSchemaTest {
     @Test
     void initializationSqlContainsTheFileTableAndMenuPermission() throws Exception {
         Path repositoryRoot = Path.of("..", "..").toAbsolutePath().normalize();
-        String initializationSql = Files.readString(repositoryRoot.resolve("aurora-admin.sql"));
+        String initializationSql = Files.readString(repositoryRoot.resolve("nexora-admin.sql"));
 
         assertThat(initializationSql).contains("sys_oss_file");
         assertThat(initializationSql).contains("`id` bigint NOT NULL AUTO_INCREMENT");

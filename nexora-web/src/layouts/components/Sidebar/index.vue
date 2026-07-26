@@ -10,7 +10,7 @@
         :default-active="activeMenu"
         :collapse="isCollapse"
         background-color="transparent"
-        text-color="var(--aurora-sidebar-text)"
+        text-color="var(--nexora-sidebar-text)"
         :active-text-color="settingsStore.themeColor"
         :collapse-transition="false"
         :unique-opened="true"
@@ -74,7 +74,7 @@ const route = useRoute()
 const router = useRouter()
 const permissionStore = usePermissionStore()
 const settingsStore = useSettingsStore()
-const COLLAPSED_GROUPS_KEY = 'aurora-sidebar-collapsed-groups'
+const COLLAPSED_GROUPS_KEY = 'nexora-sidebar-collapsed-groups'
 const collapsedGroups = ref(new Set<string>())
 
 try {
@@ -166,7 +166,7 @@ const handleSelect = (index: string) => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background-color: var(--aurora-sidebar-bg);
+  background-color: var(--nexora-sidebar-bg);
 
   .logo-container {
     height: 60px;
@@ -178,7 +178,7 @@ const handleSelect = (index: string) => {
     .logo-icon { flex-shrink: 0; }
     .logo-text {
       margin-left: 10px;
-      color: var(--aurora-sidebar-title);
+      color: var(--nexora-sidebar-title);
       font-size: 16px;
       font-weight: 600;
       white-space: nowrap;
@@ -218,8 +218,8 @@ const handleSelect = (index: string) => {
       transition: color 0.18s ease, background-color 0.18s ease;
 
       &:hover {
-        background: var(--aurora-sidebar-hover);
-        color: var(--aurora-sidebar-text);
+        background: var(--nexora-sidebar-hover);
+        color: var(--nexora-sidebar-text);
       }
 
       &:focus-visible {
@@ -242,7 +242,7 @@ const handleSelect = (index: string) => {
       height: 42px;
       margin: 2px 0;
       border-radius: 8px;
-      color: var(--aurora-sidebar-text);
+      color: var(--nexora-sidebar-text);
       line-height: 42px;
       transition: color 0.18s ease, background-color 0.18s ease;
 
@@ -268,7 +268,7 @@ const handleSelect = (index: string) => {
     }
 
     .el-menu-item:hover,
-    .el-sub-menu__title:hover { background-color: var(--aurora-sidebar-hover); }
+    .el-sub-menu__title:hover { background-color: var(--nexora-sidebar-hover); }
   }
 }
 

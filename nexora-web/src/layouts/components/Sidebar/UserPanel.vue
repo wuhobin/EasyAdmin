@@ -68,8 +68,8 @@ const handleCommand = async (command: string) => {
 .sidebar-user {
   flex-shrink: 0;
   padding: 10px 10px 12px;
-  border-top: 1px solid var(--aurora-sidebar-border);
-  background: var(--aurora-sidebar-bg);
+  border-top: 1px solid var(--nexora-sidebar-border);
+  background: var(--nexora-sidebar-bg);
   :deep(.el-dropdown) { display: block; width: 100%; }
 }
 
@@ -83,12 +83,12 @@ const handleCommand = async (command: string) => {
   border: 0;
   border-radius: 10px;
   background: transparent;
-  color: var(--aurora-sidebar-title);
+  color: var(--nexora-sidebar-title);
   font: inherit;
   text-align: left;
   cursor: pointer;
   transition: background-color 0.18s ease;
-  &:hover, &:focus-visible { background: var(--aurora-sidebar-hover); }
+  &:hover, &:focus-visible { background: var(--nexora-sidebar-hover); }
   &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
   :deep(.el-avatar) {
     flex-shrink: 0;

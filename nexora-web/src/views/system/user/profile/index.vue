@@ -36,7 +36,7 @@
     <template v-else>
       <section class="identity-pass" aria-label="账户身份凭证">
         <div class="pass-rail" aria-hidden="true">
-          <span>AURORA ADMIN</span>
+          <span>NEXORA ADMIN</span>
           <span>{{ accountSerial }}</span>
         </div>
 
@@ -448,7 +448,7 @@ onMounted(() => getUser())
   padding: clamp(20px, 2.7vw, 36px);
   background:
     linear-gradient(135deg, rgba(37, 99, 235, 0.035) 0, transparent 32%),
-    var(--aurora-content-bg, #f8fafc);
+    var(--nexora-content-bg, #f8fafc);
   color: var(--profile-ink);
 }
 
@@ -713,7 +713,7 @@ onMounted(() => getUser())
   --profile-line: #2b374a;
   --profile-surface: #171f2d;
   --profile-soft: #1d2737;
-  background: var(--aurora-content-bg, #0f1520);
+  background: var(--nexora-content-bg, #0f1520);
 }
 
 :global(html.dark) .account-status,

@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PlatformBizExceptionUsageTest {
 
     @Test
-    void preservesEasyAdminBusinessCodesAndMessages() {
+    void preservesNexoraBusinessCodesAndMessages() {
         BizException codedException = new BizException(ResultCode.ERROR_PASSWORD);
         BizException messageException = new BizException("用户不存在");
 
@@ -31,16 +31,16 @@ class PlatformBizExceptionUsageTest {
 
     @Test
     void productionSourcesUsePlatformBusinessExceptionOnly() throws IOException {
-        Path appRoot = findAuroraAppRoot();
+        Path appRoot = findNexoraServerRoot();
         Path serviceImplementationRoot = appRoot.resolve(
-                "aurora-admin/src/main/java/com/aurora/service/impl");
+                "nexora-system/src/main/java/com/nexora/service/impl");
         Path localBusinessException = appRoot.resolve(
-                "aurora-common/src/main/java/com/aurora/exception/BusinessException.java");
+                "nexora-common/src/main/java/com/nexora/exception/BusinessException.java");
 
         assertThat(localBusinessException).doesNotExist();
 
         List<String> violations = new ArrayList<>();
-        for (String module : List.of("aurora-common", "aurora-admin", "aurora-server")) {
+        for (String module : List.of("nexora-common", "nexora-system", "nexora-boot")) {
             Path sourceRoot = appRoot.resolve(module).resolve("src/main/java");
             if (!Files.isDirectory(sourceRoot)) {
                 continue;
@@ -48,7 +48,7 @@ class PlatformBizExceptionUsageTest {
             try (Stream<Path> sources = Files.walk(sourceRoot)) {
                 for (Path source : sources.filter(path -> path.toString().endsWith(".java")).toList()) {
                     String content = Files.readString(source);
-                    if (content.contains("com.aurora.exception.BusinessException")
+                    if (content.contains("com.nexora.exception.BusinessException")
                             || content.contains("new BusinessException(")
                             || (source.startsWith(serviceImplementationRoot)
                             && content.contains("throw new RuntimeException("))) {
@@ -63,22 +63,22 @@ class PlatformBizExceptionUsageTest {
                 .isEmpty();
     }
 
-    private static Path findAuroraAppRoot() {
+    private static Path findNexoraServerRoot() {
         Path current = Path.of("").toAbsolutePath().normalize();
         for (Path candidate = current; candidate != null; candidate = candidate.getParent()) {
-            if (isAuroraAppRoot(candidate)) {
+            if (isNexoraServerRoot(candidate)) {
                 return candidate;
             }
-            Path nestedApp = candidate.resolve("aurora-app");
-            if (isAuroraAppRoot(nestedApp)) {
-                return nestedApp;
+            Path nestedServer = candidate.resolve("nexora-server");
+            if (isNexoraServerRoot(nestedServer)) {
+                return nestedServer;
             }
         }
-        throw new IllegalStateException("Cannot locate aurora-app root from " + current);
+        throw new IllegalStateException("Cannot locate nexora-server root from " + current);
     }
 
-    private static boolean isAuroraAppRoot(Path candidate) {
-        return Files.isRegularFile(candidate.resolve("aurora-common/pom.xml"))
-                && Files.isRegularFile(candidate.resolve("aurora-admin/pom.xml"));
+    private static boolean isNexoraServerRoot(Path candidate) {
+        return Files.isRegularFile(candidate.resolve("nexora-common/pom.xml"))
+                && Files.isRegularFile(candidate.resolve("nexora-system/pom.xml"));
     }
 }

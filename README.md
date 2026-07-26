@@ -1,6 +1,6 @@
-# Aurora Admin 管理系统
+# Nexora Admin 管理系统
 
-Aurora Admin（亦称 EasyAdmin）是一个基于 Spring Boot 3 + Sa-Token 的企业级后台管理系统，采用前后端分离架构，提供完整的 RBAC 权限管理、定时任务、文件管理、聚合邮箱等功能模块。
+Nexora Admin 是一个基于 Spring Boot 3 + Sa-Token 的企业级后台管理系统，采用前后端分离架构，提供完整的 RBAC 权限管理、定时任务、文件管理、聚合邮箱等功能模块。
 
 ## 功能特性
 
@@ -33,12 +33,12 @@ Aurora Admin（亦称 EasyAdmin）是一个基于 Spring Boot 3 + Sa-Token 的�
 
 ```
 .
-├── aurora-app/          # 后端 Maven 多模块工程
-│   ├── aurora-common/   # 公共模块（实体类、VO/DTO、工具类、配置、注解、AOP）
-│   ├── aurora-admin/    # 核心业务模块（Controller、Service、Mapper）
-│   └── aurora-server/   # 启动模块（入口类、配置文件、MyBatis XML）
-├── aurora-web/          # 前端 Vite + Vue 3 工程
-└── aurora-admin.sql     # MySQL 初始化脚本
+├── nexora-server/        # 后端 Maven 多模块工程
+│   ├── nexora-common/    # 公共模块（实体类、VO/DTO、工具类、配置、注解、AOP）
+│   ├── nexora-system/    # 核心业务模块（Controller、Service、Mapper）
+│   └── nexora-boot/      # 启动模块（入口类、配置文件、MyBatis XML）
+├── nexora-web/           # 前端 Vite + Vue 3 工程
+└── nexora-admin.sql      # MySQL 初始化脚本
 ```
 
 ## 技术栈
@@ -77,12 +77,12 @@ Aurora Admin（亦称 EasyAdmin）是一个基于 Spring Boot 3 + Sa-Token 的�
 ```text
 浏览器
   └─> Nginx :80
-        ├─> /      -> /opt/easyadmin/web
+        ├─> /      -> /opt/nexora/web
         └─> /api/  -> 127.0.0.1:8800（Docker 后端）
 
-/opt/easyadmin/
+/opt/nexora/
 ├── backend/
-│   ├── aurora-server.jar
+│   ├── nexora-admin.jar
 │   ├── Dockerfile
 │   └── .dockerignore
 ├── logs/
@@ -107,18 +107,18 @@ Aurora Admin（亦称 EasyAdmin）是一个基于 Spring Boot 3 + Sa-Token 的�
 
 ```bash
 mysql -h MYSQL_HOST -P 3306 -u root -p -e \
-  "CREATE DATABASE IF NOT EXISTS easyadmin CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-mysql -h MYSQL_HOST -P 3306 -u root -p easyadmin < aurora-admin.sql
+  'CREATE DATABASE IF NOT EXISTS `nexora-admin` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;'
+mysql -h MYSQL_HOST -P 3306 -u root -p nexora-admin < nexora-admin.sql
 ```
 
-生产环境建议创建只拥有 `easyadmin` 库权限的独立账号，不要让应用使用 MySQL `root` 账号。
+生产环境建议创建只拥有 `nexora-admin` 库权限的独立账号，不要让应用使用 MySQL `root` 账号。
 
 ### 3. 本地构建后端 JAR
 
 在项目根目录执行：
 
 ```bash
-cd aurora-app
+cd nexora-server
 mvn clean package -DskipTests
 cd ..
 ```
@@ -126,7 +126,7 @@ cd ..
 构建产物为：
 
 ```text
-aurora-app/aurora-server/target/admin-server.jar
+nexora-server/nexora-boot/target/nexora-admin.jar
 ```
 
 ### 4. 创建服务器目录并上传后端
@@ -139,7 +139,7 @@ aurora-app/aurora-server/target/admin-server.jar
 登录服务器，复制环境变量模板：
 
 ```bash
-cd /opt/easyadmin
+cd /opt/nexora
 cp .env.example .env
 chmod 600 .env
 vi .env
@@ -171,18 +171,18 @@ MySQL 或 Redis 位于 Docker 宿主机时，地址填写 `host.docker.internal`
 在服务器执行：
 
 ```bash
-cd /opt/easyadmin
+cd /opt/nexora
 
 # 展开并校验 Compose 配置。输出包含敏感配置，不要复制到外部。
 docker compose config >/dev/null
 
 # 首次构建并启动
-docker compose build --pull easyadmin-server
+docker compose build --pull nexora-admin
 docker compose up -d
 
 # 查看容器状态和启动日志
 docker compose ps
-docker compose logs --tail=200 easyadmin-server
+docker compose logs --tail=200 nexora-admin
 ```
 
 确认日志中使用 `prod` Profile，且 MySQL、Redis 和七牛配置没有连接或占位符错误。后端端口仅监听本机：
@@ -195,29 +195,29 @@ curl -i http://127.0.0.1:8800/
 
 ### 7. 本地构建并上传前端
 
-项目的 `aurora-web/.env.production` 已将生产 API 前缀配置为 `/api`。在本地项目根目录执行：
+项目的 `nexora-web/.env.production` 已将生产 API 前缀配置为 `/api`。在本地项目根目录执行：
 
 ```bash
-cd aurora-web
+cd nexora-web
 npm ci
 npm run build
 cd ..
 
-scp -r aurora-web/dist/* SERVER_USER@SERVER_IP:/opt/easyadmin/web/
+scp -r nexora-web/dist/* SERVER_USER@SERVER_IP:/opt/nexora/web/
 ```
 
-如需清理服务器上已经失效的旧静态资源，应先备份 `/opt/easyadmin/web`，再由管理员清理并重新上传；不要直接覆盖不同版本后留下的旧哈希文件。
+如需清理服务器上已经失效的旧静态资源，应先备份 `/opt/nexora/web`，再由管理员清理并重新上传；不要直接覆盖不同版本后留下的旧哈希文件。
 
 ### 8. 配置宿主机 Nginx
 
-在服务器创建 `/etc/nginx/sites-available/easyadmin`：
+在服务器创建 `/etc/nginx/sites-available/nexora`：
 
 ```nginx
 server {
     listen 80;
     server_name _;
 
-    root /opt/easyadmin/web;
+    root /opt/nexora/web;
     index index.html;
     client_max_body_size 50m;
 
@@ -243,8 +243,8 @@ server {
 启用并检查站点：
 
 ```bash
-sudo ln -sfn /etc/nginx/sites-available/easyadmin /etc/nginx/sites-enabled/easyadmin
-sudo chmod -R a+rX /opt/easyadmin/web
+sudo ln -sfn /etc/nginx/sites-available/nexora /etc/nginx/sites-enabled/nexora
+sudo chmod -R a+rX /opt/nexora/web
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -255,11 +255,11 @@ sudo systemctl reload nginx
 
 ```bash
 # 容器应显示为 Up
-cd /opt/easyadmin
+cd /opt/nexora
 docker compose ps
 
 # 检查后端容器日志
-docker compose logs --tail=100 easyadmin-server
+docker compose logs --tail=100 nexora-admin
 
 # 验证 Nginx 首页与 API 代理
 curl -I http://127.0.0.1/
@@ -273,14 +273,14 @@ curl -i -X POST http://127.0.0.1/api/auth/login \
 ### 10. 日常运维
 
 ```bash
-cd /opt/easyadmin
+cd /opt/nexora
 
 # 状态、实时日志、重启、停止和启动
 docker compose ps
-docker compose logs -f --tail=200 easyadmin-server
-docker compose restart easyadmin-server
-docker compose stop easyadmin-server
-docker compose start easyadmin-server
+docker compose logs -f --tail=200 nexora-admin
+docker compose restart nexora-admin
+docker compose stop nexora-admin
+docker compose start nexora-admin
 
 # 查看持久化的应用日志
 tail -f logs/info.log
@@ -294,25 +294,25 @@ tail -f logs/error.log
 发布前先在服务器备份当前 JAR：
 
 ```bash
-cd /opt/easyadmin
-cp backend/aurora-server.jar \
-  "backend/aurora-server.jar.$(date +%Y%m%d-%H%M%S).bak"
+cd /opt/nexora
+cp backend/nexora-admin.jar \
+  "backend/nexora-admin.jar.$(date +%Y%m%d-%H%M%S).bak"
 ```
 
 本地重新构建并上传 JAR 后，在服务器重建容器：
 
 ```bash
-cd /opt/easyadmin
-docker compose up -d --build --force-recreate easyadmin-server
-docker compose logs --tail=200 easyadmin-server
+cd /opt/nexora
+docker compose up -d --build --force-recreate nexora-admin
+docker compose logs --tail=200 nexora-admin
 ```
 
 前端发布前同样备份 `web` 目录，然后上传新的 `dist` 内容并执行 `sudo nginx -t && sudo systemctl reload nginx`。
 
-后端需要回滚时，将对应的 `.bak` 文件复制回 `backend/aurora-server.jar`，再执行：
+后端需要回滚时，将对应的 `.bak` 文件复制回 `backend/nexora-admin.jar`，再执行：
 
 ```bash
-docker compose up -d --build --force-recreate easyadmin-server
+docker compose up -d --build --force-recreate nexora-admin
 ```
 
 ### 12. 常见问题

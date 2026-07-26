@@ -28,7 +28,7 @@ export const useSettingsStore = defineStore('settings', {
     dynamicTitle: false,
     greyMode: false,
     showFooter: true,
-    title: 'Aurora Admin'
+    title: 'Nexora Admin'
   }),
 
   actions: {
@@ -165,7 +165,7 @@ export const useSettingsStore = defineStore('settings', {
         dynamicTitle: false,
         greyMode: false,
         showFooter: true,
-        title: 'Aurora Admin'
+        title: 'Nexora Admin'
       }
       this.saveSettings(defaultSettings)
     },

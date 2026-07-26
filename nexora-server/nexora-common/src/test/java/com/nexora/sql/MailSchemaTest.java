@@ -13,7 +13,7 @@ class MailSchemaTest {
     @Test
     void initializationSqlContainsMailAccountDictionaryAndPermissionsWithoutMailHistoryTable() throws Exception {
         Path repositoryRoot = Path.of("..", "..").toAbsolutePath().normalize();
-        String initializationSql = Files.readString(repositoryRoot.resolve("aurora-admin.sql"), StandardCharsets.UTF_8);
+        String initializationSql = Files.readString(repositoryRoot.resolve("nexora-admin.sql"), StandardCharsets.UTF_8);
 
         assertThat(initializationSql).contains("CREATE TABLE `mail_account`");
         assertThat(initializationSql).contains("`auth_code_ciphertext` varchar(1000)");

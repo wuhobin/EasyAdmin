@@ -139,8 +139,8 @@ const closeMobileSidebar = () => {
 }
 
 .el-aside {
-  background-color: var(--aurora-sidebar-bg);
-  border-right: 1px solid var(--aurora-sidebar-border);
+  background-color: var(--nexora-sidebar-bg);
+  border-right: 1px solid var(--nexora-sidebar-border);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -158,7 +158,7 @@ const closeMobileSidebar = () => {
 .main-container {
   padding: 24px;
   overflow-y: auto;
-  background-color: var(--aurora-content-bg);
+  background-color: var(--nexora-content-bg);
 }
 
 @media (max-width: 768px) {

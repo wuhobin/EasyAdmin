@@ -24,7 +24,7 @@
     </parent>
 
     <properties>
-        <!-- easyadmin 专属依赖版本（BOM 未管理的） -->
+        <!-- Nexora 专属依赖版本（BOM 未管理的） -->
         <ip2region.version>2.7.0</ip2region.version>
         <fastexcel.version>1.0.0</fastexcel.version>
         <qiniu.version>7.12.1</qiniu.version>

@@ -9,16 +9,16 @@ springdoc:
   group-configs:
     - group: '登录认证'
       paths-to-match: '/**'
-      packages-to-scan: com.aurora.controller.auth
+      packages-to-scan: com.nexora.controller.auth
     - group: '系统管理'
       paths-to-match: '/**'
-      packages-to-scan: com.aurora.controller.system
+      packages-to-scan: com.nexora.controller.system
     - group: '监控管理'
       paths-to-match: '/**'
-      packages-to-scan: com.aurora.controller.monitor
+      packages-to-scan: com.nexora.controller.monitor
     - group: '文件上传'
       paths-to-match: '/**'
-      packages-to-scan: com.aurora.controller.file
+      packages-to-scan: com.nexora.controller.file
 
 # knife4j的增强配置，不需要增强可以不配
 knife4j:

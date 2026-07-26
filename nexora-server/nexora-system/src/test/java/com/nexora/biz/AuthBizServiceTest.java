@@ -83,7 +83,7 @@ class AuthBizServiceTest {
     @Test
     void onlyLoginRemainsInTheApplicationAuthenticationAllowList() throws Exception {
         String config = Files.readString(Path.of(
-                "..", "aurora-server", "src", "main", "resources", "config", "platform.yml"
+                "..", "nexora-boot", "src", "main", "resources", "config", "platform.yml"
         ));
 
         assertThat(config).contains("exclude-paths:", "- /auth/login");
@@ -93,7 +93,7 @@ class AuthBizServiceTest {
     @Test
     void strictSpringBeanSettingsRemainEnabled() throws Exception {
         String config = Files.readString(Path.of(
-                "..", "aurora-server", "src", "main", "resources", "application.yml"
+                "..", "nexora-boot", "src", "main", "resources", "application.yml"
         ));
 
         assertThat(config).doesNotContain(

@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie'
 
-const TokenKey = 'Aurora-Admin-Token'
+const TokenKey = 'Nexora-Admin-Token'
 const REMEMBER_ME_DAYS = 3
 
 export function setToken(token: string, rememberMe = false) {
