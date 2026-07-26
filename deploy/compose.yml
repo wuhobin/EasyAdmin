@@ -1,9 +1,9 @@
 services:
-  easyadmin-server:
+  nexora-admin:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: easyadmin-server
+    container_name: nexora-admin
     restart: always
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8800}:${SERVER_PORT:-8800}"

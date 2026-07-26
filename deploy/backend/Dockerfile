@@ -2,7 +2,7 @@ FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-COPY admin-server.jar app.jar
+COPY nexora-admin.jar app.jar
 
 EXPOSE 8800
 
