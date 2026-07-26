@@ -7,8 +7,6 @@
       <section class="brand-section">
         <div class="brand-accent" aria-hidden="true"></div>
         <div class="brand-content">
-          <div class="brand-mark"><Logo :size="38" /><span>NA</span></div>
-          <p class="eyebrow">NEXORA ADMIN</p>
           <h1>{{ settingsStore.title }}</h1>
           <p class="brand-description">清晰、高效、安全的企业管理工作台</p>
           <div class="feature-list">
