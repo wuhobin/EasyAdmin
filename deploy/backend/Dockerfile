@@ -2,7 +2,7 @@ FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-COPY aurora-server.jar app.jar
+COPY admin-server.jar app.jar
 
 EXPOSE 8800
 

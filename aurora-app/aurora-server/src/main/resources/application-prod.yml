@@ -58,9 +58,9 @@ dromara:
         # 生产环境 AK/SK 通过环境变量注入，避免硬编码
         access-key: ${oss.qiniu.access-key}
         secret-key: ${oss.qiniu.secret-key}
-        bucket-name: ${oss.qiniu.bucket-name:easyadmin-prod}
-        domain: ${oss.qiniu.domain:https://oss.example.com/}
-        base-path: prod/
+        bucket-name: ${oss.qiniu.bucket-name}
+        domain: ${oss.qiniu.domain}
+        base-path: ${oss.qiniu.base-path}
 
 # ============================== 日志配置 ==============================
 logging:
