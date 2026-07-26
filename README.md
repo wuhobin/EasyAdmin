@@ -126,26 +126,13 @@ cd ..
 构建产物为：
 
 ```text
-aurora-app/aurora-server/target/aurora-server.jar
+aurora-app/aurora-server/target/admin-server.jar
 ```
 
 ### 4. 创建服务器目录并上传后端
 
-在本地项目根目录执行：
+需要把打包好的jar包上传到服务器
 
-```bash
-ssh SERVER_USER@SERVER_IP \
-  "sudo mkdir -p /opt/easyadmin/backend /opt/easyadmin/logs /opt/easyadmin/web && sudo chown -R \$USER:\$USER /opt/easyadmin"
-
-scp deploy/compose.yml deploy/.env.example \
-  SERVER_USER@SERVER_IP:/opt/easyadmin/
-scp deploy/backend/Dockerfile deploy/backend/.dockerignore \
-  SERVER_USER@SERVER_IP:/opt/easyadmin/backend/
-scp aurora-app/aurora-server/target/aurora-server.jar \
-  SERVER_USER@SERVER_IP:/opt/easyadmin/backend/
-```
-
-如果 SSH 用户无 `sudo` 权限，请由管理员预先创建目录并授予该用户写权限。
 
 ### 5. 配置生产环境变量
 
