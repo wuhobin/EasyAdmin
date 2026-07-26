@@ -28,7 +28,7 @@
     </dependencies>
 
     <build>
-        <finalName>aurora-server</finalName>
+        <finalName>admin-server</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
