@@ -170,6 +170,7 @@ vi .env
 | `OSS_QINIU_*` | 七牛 Kodo 的 AK、SK、Bucket 和访问域名 |
 | `JAVA_TOOL_OPTIONS` | JVM 内存、编码和时区参数，按服务器内存调整 |
 | `LOG_PATH` | 容器日志目录，保持 `/app/logs` 即可 |
+| `LOG_RETENTION` | 压缩日志保留时间，默认 `7d`；过期日志在每日滚动时自动清理 |
 | `KNIFE4J_*` / `SPRINGDOC_*` | 生产 API 文档开关，模板默认关闭 |
 
 不要把真实 `.env` 上传到 Git、聊天记录或工单。模板中的所有 `CHANGE_ME` 都必须替换。
