@@ -1,0 +1,26 @@
+server:
+  # 服务端口
+  port: 8800
+
+spring:
+  profiles:
+    # 激活环境
+    active: dev
+  application:
+    name: Nexora-Admin
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  config:
+    import:
+      - classpath:config/mybatis-plus.yml
+      - classpath:config/platform.yml
+      - classpath:config/swagger.yml
+
+mail:
+  # 邮箱授权码加密密钥，生产环境必须通过环境变量注入，长度至少16位。
+  credential-secret: ${mail.secret:}
