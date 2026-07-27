@@ -93,6 +93,25 @@ CREATE TABLE `quartz_job_log`  (
 -- ----------------------------
 
 -- ----------------------------
+-- Table structure for sys_config
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_config`;
+CREATE TABLE `sys_config`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `config_key` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '配置键',
+  `config_value` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '配置值',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_sys_config_key`(`config_key` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统全局配置表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of sys_config
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for sys_dict
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_dict`;
@@ -168,7 +187,7 @@ CREATE TABLE `sys_menu`  (
   `perm` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '权限标识',
   `is_external` int NULL DEFAULT 0 COMMENT '是否外链 0:否  1:是',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 130 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '权限资源表 ' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 135 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '权限资源表 ' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -229,6 +248,11 @@ INSERT INTO `sys_menu` VALUES (124, '118', '', '', '邮件列表', 6, '', 'BUTTO
 INSERT INTO `sys_menu` VALUES (125, '118', '', '', '查看邮件', 7, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:inbox:view', 0);
 INSERT INTO `sys_menu` VALUES (126, '118', '', '', '下载附件', 8, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:inbox:download', 0);
 INSERT INTO `sys_menu` VALUES (127, '117', 'account', '/mail/account/index', '邮箱列表', 2, 'Tickets', 'MENU', '2026-07-19 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (130, '1', 'config', '/system/config/index', '配置管理', 4, 'Tools', 'MENU', '2026-07-26 00:00:00', NULL, '', 'config', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (131, '130', '', '', '新增', 1, '', 'BUTTON', '2026-07-26 00:00:00', NULL, '', '', 1, 'sys:config:add', 0);
+INSERT INTO `sys_menu` VALUES (132, '130', '', '', '修改', 2, '', 'BUTTON', '2026-07-26 00:00:00', NULL, '', '', 1, 'sys:config:update', 0);
+INSERT INTO `sys_menu` VALUES (133, '130', '', '', '删除', 3, '', 'BUTTON', '2026-07-26 00:00:00', NULL, '', '', 1, 'sys:config:delete', 0);
+INSERT INTO `sys_menu` VALUES (134, '130', '', '', '查看', 4, '', 'BUTTON', '2026-07-26 00:00:00', NULL, '', '', 1, 'sys:config:list', 0);
 
 -- ----------------------------
 -- Table structure for sys_operate_log
@@ -318,7 +342,7 @@ CREATE TABLE `sys_role_menu`  (
   `menu_id` int NULL DEFAULT NULL COMMENT '菜单ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `role_id`(`role_id` ASC, `menu_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 527 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色-权限资源关联表 ' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 532 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色-权限资源关联表 ' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_role_menu
@@ -369,6 +393,11 @@ INSERT INTO `sys_role_menu` VALUES (518, 1, 113);
 INSERT INTO `sys_role_menu` VALUES (519, 1, 114);
 INSERT INTO `sys_role_menu` VALUES (520, 1, 115);
 INSERT INTO `sys_role_menu` VALUES (517, 1, 116);
+INSERT INTO `sys_role_menu` VALUES (527, 1, 130);
+INSERT INTO `sys_role_menu` VALUES (528, 1, 131);
+INSERT INTO `sys_role_menu` VALUES (529, 1, 132);
+INSERT INTO `sys_role_menu` VALUES (530, 1, 133);
+INSERT INTO `sys_role_menu` VALUES (531, 1, 134);
 INSERT INTO `sys_role_menu` VALUES (370, 14, 1);
 INSERT INTO `sys_role_menu` VALUES (373, 14, 2);
 INSERT INTO `sys_role_menu` VALUES (374, 14, 3);

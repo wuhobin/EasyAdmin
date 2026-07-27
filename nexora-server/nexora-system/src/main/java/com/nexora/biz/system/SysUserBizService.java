@@ -1,4 +1,4 @@
-package com.nexora.biz;
+package com.nexora.biz.system;
 
 import cn.dev33.satoken.secure.BCrypt;
 import com.nexora.domain.convert.SysUserConvert;
@@ -10,6 +10,7 @@ import com.nexora.domain.form.system.UserProfileForm;
 import com.nexora.domain.vo.user.SysUserPageListVo;
 import com.nexora.domain.vo.user.SysUserProfileVo;
 import com.nexora.entity.SysUser;
+import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.service.SysRoleService;
 import com.nexora.service.SysUserService;
 import com.aurora.starter.mybatisplus.model.PageParam;
@@ -26,6 +27,7 @@ import java.util.List;
 public class SysUserBizService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
+    private final SecurityAuthorizationCache authorizationCache;
 
     public IPage<SysUserPageListVo> list(SysUserQueryForm form, PageParam pageParam) {
         return sysUserService.listUsers(SysUserConvert.INSTANCE.toQuery(form), pageParam);
@@ -39,6 +41,7 @@ public class SysUserBizService {
         user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
         sysUserService.save(user);
         sysRoleService.addUserRoles(user.getId(), form.getRoleIds());
+        authorizationCache.evictUsersAfterCommit(List.of(user.getId()));
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -50,12 +53,14 @@ public class SysUserBizService {
         sysUserService.updateById(user);
         sysRoleService.deleteUserRoles(List.of(user.getId()));
         sysRoleService.addUserRoles(user.getId(), form.getRoleIds());
+        authorizationCache.evictUsersAfterCommit(List.of(user.getId()));
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Integer> ids) {
         sysUserService.removeBatchByIds(ids);
         sysRoleService.deleteUserRoles(ids);
+        authorizationCache.evictUsersAfterCommit(ids);
     }
 
     public void updatePassword(UpdatePasswordForm form) {

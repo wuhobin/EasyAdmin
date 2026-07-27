@@ -1,13 +1,16 @@
-package com.nexora.biz;
+package com.nexora.biz.system;
 
 import com.nexora.domain.form.system.UserProfileForm;
 import com.nexora.entity.SysUser;
+import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.service.SysRoleService;
 import com.nexora.service.SysUserService;
 import com.aurora.starter.security.context.SecurityUtils;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -19,7 +22,8 @@ class SysUserBizServiceTest {
     @Test
     void updatesOnlyTheCurrentUsersProfile() {
         SysUserService userService = mock(SysUserService.class);
-        SysUserBizService service = new SysUserBizService(userService, mock(SysRoleService.class));
+        SysUserBizService service = new SysUserBizService(userService, mock(SysRoleService.class),
+                mock(SecurityAuthorizationCache.class));
         UserProfileForm form = new UserProfileForm();
         form.setNickname("new-name");
         form.setEmail("new@example.com");
@@ -37,5 +41,18 @@ class SysUserBizServiceTest {
         assertThat(captor.getValue().getEmail()).isEqualTo("new@example.com");
         assertThat(captor.getValue().getPassword()).isNull();
         assertThat(captor.getValue().getStatus()).isNull();
+    }
+
+    @Test
+    void evictsAuthorizationWhenUserRolesAreDeleted() {
+        SysUserService userService = mock(SysUserService.class);
+        SysRoleService roleService = mock(SysRoleService.class);
+        SecurityAuthorizationCache authorizationCache = mock(SecurityAuthorizationCache.class);
+        SysUserBizService service = new SysUserBizService(
+                userService, roleService, authorizationCache);
+
+        service.delete(List.of(7, 8));
+
+        verify(authorizationCache).evictUsersAfterCommit(List.of(7, 8));
     }
 }

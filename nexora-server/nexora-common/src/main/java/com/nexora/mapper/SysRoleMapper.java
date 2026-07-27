@@ -24,4 +24,6 @@ public interface SysRoleMapper extends BaseMapper<SysRole> {
 
     void addRoleUser(@Param("userId") Integer userId, @Param("roleIds") List<Integer> roleIds);
 
+    List<Integer> selectUserIdsByRoleIds(@Param("roleIds") List<Integer> roleIds);
+
 }

@@ -1,4 +1,4 @@
-package com.nexora.biz;
+package com.nexora.biz.mail;
 
 import com.nexora.constants.MailProviderEnum;
 import com.nexora.domain.convert.MailAccountConvert;

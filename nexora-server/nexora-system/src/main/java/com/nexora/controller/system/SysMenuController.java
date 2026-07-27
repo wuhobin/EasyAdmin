@@ -2,7 +2,7 @@ package com.nexora.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.nexora.annotation.OperationLogger;
-import com.nexora.biz.SysMenuBizService;
+import com.nexora.biz.system.SysMenuBizService;
 import com.nexora.domain.form.system.SysMenuForm;
 import com.nexora.domain.vo.menu.SysRouterVo;
 import com.nexora.domain.vo.system.SysMenuVo;

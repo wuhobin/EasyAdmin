@@ -1,4 +1,4 @@
-package com.nexora.biz;
+package com.nexora.biz.system;
 
 import com.nexora.constants.Constants;
 import com.nexora.domain.convert.SysMenuConvert;
@@ -6,6 +6,7 @@ import com.nexora.domain.form.system.SysMenuForm;
 import com.nexora.domain.vo.menu.SysRouterVo;
 import com.nexora.domain.vo.system.SysMenuVo;
 import com.nexora.entity.SysMenu;
+import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.constants.MenuTypeEnum;
 import com.nexora.service.SysMenuService;
 import com.aurora.starter.common.utils.StringUtils;
@@ -13,6 +14,7 @@ import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SysMenuBizService {
     private final SysMenuService sysMenuService;
+    private final SecurityAuthorizationCache authorizationCache;
 
     public List<SysMenuVo> getMenuTree() {
         List<SysMenu> menus = sysMenuService.listOrderedMenus();
@@ -35,23 +38,29 @@ public class SysMenuBizService {
                 .toList());
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void add(SysMenuForm form) {
         SysMenu menu = SysMenuConvert.INSTANCE.toEntity(form);
         normalizeComponent(menu);
         sysMenuService.save(menu);
+        authorizationCache.evictAllAfterCommit();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void update(SysMenuForm form) {
         SysMenu menu = SysMenuConvert.INSTANCE.toEntity(form);
         normalizeComponent(menu);
         sysMenuService.updateById(menu);
+        authorizationCache.evictAllAfterCommit();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Integer id) {
         if (sysMenuService.countByParentId(id) > 0) {
             throw new BizException("存在子菜单，不能删除");
         }
         sysMenuService.removeById(id);
+        authorizationCache.evictAllAfterCommit();
     }
 
     public List<SysRouterVo> getCurrentUserMenu() {

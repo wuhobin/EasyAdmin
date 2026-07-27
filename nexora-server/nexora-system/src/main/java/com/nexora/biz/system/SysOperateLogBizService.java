@@ -1,4 +1,4 @@
-package com.nexora.biz;
+package com.nexora.biz.system;
 
 import com.nexora.domain.convert.SysOperateLogConvert;
 import com.nexora.domain.form.query.system.SysOperateLogQueryForm;

@@ -1,4 +1,4 @@
-package com.nexora.biz;
+package com.nexora.biz.file;
 
 import com.nexora.constants.Constants;
 import com.nexora.entity.SysOssFile;

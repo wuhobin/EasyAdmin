@@ -2,7 +2,7 @@ package com.nexora.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.nexora.annotation.OperationLogger;
-import com.nexora.biz.SysUserBizService;
+import com.nexora.biz.system.SysUserBizService;
 import com.nexora.domain.form.query.system.SysUserQueryForm;
 import com.nexora.domain.form.system.ResetPasswordForm;
 import com.nexora.domain.form.system.SysUserForm;

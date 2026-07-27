@@ -1,4 +1,4 @@
-package com.nexora.biz;
+package com.nexora.biz.monitor;
 
 import com.nexora.domain.convert.QuartzJobConvert;
 import com.nexora.domain.form.monitor.QuartzJobForm;

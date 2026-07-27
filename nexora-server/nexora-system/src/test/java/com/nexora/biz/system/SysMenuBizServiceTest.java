@@ -1,8 +1,9 @@
-package com.nexora.biz;
+package com.nexora.biz.system;
 
 import com.nexora.constants.Constants;
 import com.nexora.domain.vo.menu.SysRouterVo;
 import com.nexora.entity.SysMenu;
+import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.constants.MenuTypeEnum;
 import com.nexora.service.SysMenuService;
 import com.aurora.starter.security.context.SecurityUtils;
@@ -14,6 +15,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class SysMenuBizServiceTest {
@@ -29,10 +31,23 @@ class SysMenuBizServiceTest {
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(Constants.ADMIN)).thenReturn(true);
 
-            List<SysRouterVo> routes = new SysMenuBizService(menuService).getCurrentUserMenu();
+            List<SysRouterVo> routes = new SysMenuBizService(menuService,
+                    mock(SecurityAuthorizationCache.class)).getCurrentUserMenu();
 
             assertThat(routes).extracting(SysRouterVo::getId).containsExactly(1);
         }
+    }
+
+    @Test
+    void evictsAllAuthorizationWhenMenuIsDeleted() {
+        SysMenuService menuService = mock(SysMenuService.class);
+        SecurityAuthorizationCache authorizationCache = mock(SecurityAuthorizationCache.class);
+        SysMenuBizService service = new SysMenuBizService(menuService, authorizationCache);
+
+        service.delete(12);
+
+        verify(menuService).removeById(12);
+        verify(authorizationCache).evictAllAfterCommit();
     }
 
     private static SysMenu menu(int id, String path, MenuTypeEnum type) {

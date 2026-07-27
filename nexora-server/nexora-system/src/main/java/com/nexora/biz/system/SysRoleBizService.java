@@ -1,10 +1,11 @@
-package com.nexora.biz;
+package com.nexora.biz.system;
 
 import com.nexora.domain.convert.SysRoleConvert;
 import com.nexora.domain.form.query.system.SysRoleQueryForm;
 import com.nexora.domain.form.system.SysRoleForm;
 import com.nexora.domain.vo.system.SysRoleVo;
 import com.nexora.entity.SysRole;
+import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.service.SysRoleService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.nexora.utils.FastExcelUtils;
@@ -21,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SysRoleBizService {
     private final SysRoleService sysRoleService;
+    private final SecurityAuthorizationCache authorizationCache;
 
     public IPage<SysRoleVo> list(SysRoleQueryForm form, PageParam pageParam) {
         if (pageParam != null && (pageParam.getOrderBy() == null || pageParam.getOrderBy().isBlank())) {
@@ -39,6 +41,7 @@ public class SysRoleBizService {
         sysRoleService.save(role);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void update(SysRoleForm form) {
         SysRole role = SysRoleConvert.INSTANCE.toEntity(form);
         if (sysRoleService.getById(role.getId()) == null) {
@@ -47,23 +50,29 @@ public class SysRoleBizService {
         if (sysRoleService.existsByCode(role.getCode(), role.getId())) {
             throw new BizException("角色编码已存在");
         }
+        List<Integer> userIds = sysRoleService.listUserIdsByRoleIds(List.of(role.getId()));
         sysRoleService.updateById(role);
+        authorizationCache.evictUsersAfterCommit(userIds);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Integer> ids) {
+        List<Integer> userIds = sysRoleService.listUserIdsByRoleIds(ids);
         sysRoleService.removeBatchByIds(ids);
         sysRoleService.deleteRoleMenus(ids);
+        authorizationCache.evictUsersAfterCommit(userIds);
     }
 
     public List<Integer> getRoleMenus(Integer id) { return sysRoleService.getRoleMenus(id); }
 
     @Transactional(rollbackFor = Exception.class)
     public void updateRoleMenus(Integer id, List<Integer> menuIds) {
+        List<Integer> userIds = sysRoleService.listUserIdsByRoleIds(List.of(id));
         sysRoleService.deleteRoleMenus(List.of(id));
         if (menuIds != null && !menuIds.isEmpty()) {
             sysRoleService.insertRoleMenus(id, menuIds);
         }
+        authorizationCache.evictUsersAfterCommit(userIds);
     }
     public List<SysRoleVo> all() { return sysRoleService.list().stream().map(SysRoleConvert.INSTANCE::toVo).toList(); }
     public void export(HttpServletResponse response) throws IOException {

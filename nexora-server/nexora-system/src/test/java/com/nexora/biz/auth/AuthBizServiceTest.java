@@ -1,11 +1,12 @@
-package com.nexora.biz;
+package com.nexora.biz.auth;
 
 import com.nexora.domain.form.auth.LoginForm;
+import com.nexora.config.NexoraPermissionProvider;
+import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.constants.Constants;
 import com.nexora.entity.SysUser;
-import com.nexora.service.SysMenuService;
-import com.nexora.service.SysRoleService;
 import com.nexora.service.SysUserService;
+import com.aurora.starter.security.account.AccountType;
 import com.aurora.starter.security.context.SecurityUtils;
 import cn.dev33.satoken.secure.BCrypt;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +15,7 @@ import org.mockito.MockedStatic;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -65,7 +67,7 @@ class AuthBizServiceTest {
                 .build();
         when(userService.getByUsername("admin")).thenReturn(user);
         AuthBizService service = new AuthBizService(
-                userService, mock(SysRoleService.class), mock(SysMenuService.class));
+                userService, mock(NexoraPermissionProvider.class));
         LoginForm form = new LoginForm();
         form.setUsername("admin");
         form.setPassword("secret");
@@ -77,6 +79,27 @@ class AuthBizServiceTest {
 
             securityUtils.verify(() -> SecurityUtils.setSessionAttribute(
                     Constants.CURRENT_USER, loginUserInfo));
+        }
+    }
+
+    @Test
+    void getsRolesAndPermissionsThroughCachedPermissionProvider() {
+        SysUserService userService = mock(SysUserService.class);
+        NexoraPermissionProvider permissionProvider = mock(NexoraPermissionProvider.class);
+        SysUser user = SysUser.builder().id(7).username("admin").build();
+        when(userService.getById(7)).thenReturn(user);
+        when(permissionProvider.getAuthorization(7, AccountType.LOGIN))
+                .thenReturn(new SecurityAuthorizationCache.Authorization(
+                        List.of("admin"), List.of("sys:config:list")));
+        AuthBizService service = new AuthBizService(userService, permissionProvider);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(SecurityUtils::getLoginIdAsLong).thenReturn(7L);
+
+            var loginUserInfo = service.getLoginUserInfo();
+
+            assertThat(loginUserInfo.getRoles()).containsExactly("admin");
+            assertThat(loginUserInfo.getPermissions()).containsExactly("sys:config:list");
         }
     }
 

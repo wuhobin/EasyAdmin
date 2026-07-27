@@ -1,4 +1,4 @@
-package com.nexora.biz;
+package com.nexora.biz.monitor;
 
 import com.nexora.domain.convert.QuartzJobLogConvert;
 import com.nexora.domain.form.query.monitor.QuartzJobLogQueryForm;

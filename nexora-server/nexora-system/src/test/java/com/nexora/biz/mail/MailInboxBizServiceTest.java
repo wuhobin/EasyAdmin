@@ -1,4 +1,4 @@
-package com.nexora.biz;
+package com.nexora.biz.mail;
 
 import com.nexora.domain.vo.mail.MailMessagePageVo;
 import com.nexora.domain.vo.mail.MailMessageSummaryVo;

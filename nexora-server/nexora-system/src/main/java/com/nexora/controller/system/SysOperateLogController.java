@@ -1,7 +1,7 @@
 package com.nexora.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.nexora.biz.SysOperateLogBizService;
+import com.nexora.biz.system.SysOperateLogBizService;
 import com.nexora.domain.form.query.system.SysOperateLogQueryForm;
 import com.nexora.domain.vo.system.SysOperateLogVo;
 import com.aurora.starter.mybatisplus.model.PageParam;

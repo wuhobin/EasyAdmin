@@ -1,23 +1,20 @@
-package com.nexora.biz;
+package com.nexora.biz.auth;
 
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
+import com.aurora.starter.security.account.AccountType;
+import com.nexora.config.NexoraPermissionProvider;
 import com.nexora.constants.Constants;
 import com.nexora.constants.ResultCode;
 import com.nexora.domain.form.auth.LoginForm;
 import com.nexora.domain.vo.auth.LoginUserInfoVo;
 import com.nexora.entity.SysUser;
-import com.nexora.constants.MenuTypeEnum;
-import com.nexora.service.SysMenuService;
-import com.nexora.service.SysRoleService;
 import com.nexora.service.SysUserService;
 import com.aurora.starter.common.utils.bean.BeanUtils;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +24,7 @@ public class AuthBizService {
     private static final long REMEMBER_ME_TIMEOUT_SECONDS = 3 * 24 * 60 * 60;
 
     private final SysUserService sysUserService;
-    private final SysRoleService sysRoleService;
-    private final SysMenuService sysMenuService;
+    private final NexoraPermissionProvider permissionProvider;
 
     public LoginUserInfoVo login(LoginForm form) {
         SysUser user = sysUserService.getByUsername(form.getUsername());
@@ -52,15 +48,11 @@ public class AuthBizService {
             throw new BizException(ResultCode.ERROR_USER_NOT_EXIST);
         }
 
-        List<String> roles = sysRoleService.listRoleCodesByUserId(userId);
-        String buttonType = MenuTypeEnum.BUTTON.getCode();
-        List<String> permissions = roles.contains(Constants.ADMIN)
-                ? sysMenuService.listPermissions(buttonType)
-                : sysMenuService.listPermissionsByUserId(userId, buttonType);
+        var authorization = permissionProvider.getAuthorization(userId, AccountType.LOGIN);
 
         LoginUserInfoVo loginUserInfo = toLoginUserInfo(user);
-        loginUserInfo.setRoles(roles);
-        loginUserInfo.setPermissions(permissions);
+        loginUserInfo.setRoles(authorization.roles());
+        loginUserInfo.setPermissions(authorization.permissions());
         return loginUserInfo;
     }
 
