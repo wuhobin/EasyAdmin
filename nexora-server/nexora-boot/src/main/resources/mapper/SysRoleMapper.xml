@@ -55,4 +55,13 @@
     <select id="selectRolesCodeByUserId" resultType="java.lang.String">
         select r.code from sys_role r left join sys_user_role ur on r.id = ur.role_id where ur.user_id = #{userId}
     </select>
-</mapper> 
+
+    <select id="selectUserIdsByRoleIds" resultType="java.lang.Integer">
+        select distinct user_id
+        from sys_user_role
+        where role_id in
+        <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
+    </select>
+</mapper>

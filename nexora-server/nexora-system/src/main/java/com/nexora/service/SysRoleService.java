@@ -51,4 +51,6 @@ public interface SysRoleService extends IService<SysRole> {
 
     void addUserRoles(Integer userId, List<Integer> roleIds);
 
+    List<Integer> listUserIdsByRoleIds(List<Integer> roleIds);
+
 }

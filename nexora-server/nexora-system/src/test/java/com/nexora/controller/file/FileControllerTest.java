@@ -1,6 +1,6 @@
 package com.nexora.controller.file;
 
-import com.nexora.biz.FileBizService;
+import com.nexora.biz.file.FileBizService;
 import com.nexora.domain.form.query.file.OssFileQueryForm;
 import com.nexora.domain.vo.file.SysOssFileVo;
 import com.aurora.starter.mybatisplus.model.PageParam;

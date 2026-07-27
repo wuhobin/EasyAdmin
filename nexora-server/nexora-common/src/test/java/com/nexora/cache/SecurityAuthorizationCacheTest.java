@@ -1,0 +1,120 @@
+package com.nexora.cache;
+
+import com.aurora.starter.redis.core.RedisCache;
+import com.aurora.starter.security.account.AccountType;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+class SecurityAuthorizationCacheTest {
+
+    private final RedisCache redisCache = mock(RedisCache.class);
+    private final SecurityAuthorizationCache cache = new SecurityAuthorizationCache(redisCache);
+
+    @Test
+    void returnsCachedAuthorizationWithoutLoadingDatabase() {
+        SecurityAuthorizationCache.Authorization authorization = authorization();
+        when(redisCache.getCacheObject("nexora:security:authorization:login:7"))
+                .thenReturn(authorization);
+        AtomicInteger loads = new AtomicInteger();
+
+        SecurityAuthorizationCache.Authorization result = cache.get(7, AccountType.LOGIN, () -> {
+            loads.incrementAndGet();
+            return authorization();
+        });
+
+        assertThat(result).isSameAs(authorization);
+        assertThat(loads).hasValue(0);
+    }
+
+    @Test
+    void loadsDatabaseAndWritesRedisOnCacheMiss() {
+        SecurityAuthorizationCache.Authorization authorization = authorization();
+
+        SecurityAuthorizationCache.Authorization result =
+                cache.get(7, AccountType.LOGIN, () -> authorization);
+
+        assertThat(result).isSameAs(authorization);
+        verify(redisCache).setCacheObject("nexora:security:authorization:login:7",
+                authorization, 24L, TimeUnit.HOURS);
+    }
+
+    @Test
+    void fallsBackToDatabaseWhenRedisIsUnavailable() {
+        when(redisCache.getCacheObject("nexora:security:authorization:login:7"))
+                .thenThrow(new RedisConnectionFailureException("redis unavailable"));
+
+        SecurityAuthorizationCache.Authorization result =
+                cache.get(7, AccountType.LOGIN, SecurityAuthorizationCacheTest::authorization);
+
+        assertThat(result.roles()).containsExactly("admin");
+    }
+
+    @Test
+    void authorizationCanRoundTripThroughStarterJsonSerializer() {
+        GenericJackson2JsonRedisSerializer serializer =
+                new GenericJackson2JsonRedisSerializer();
+        SecurityAuthorizationCache.Authorization authorization = authorization();
+
+        Object restored = serializer.deserialize(serializer.serialize(authorization));
+
+        assertThat(restored).isEqualTo(authorization);
+    }
+
+    @Test
+    void evictsUsersOnlyAfterTransactionCommit() {
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            cache.evictUsersAfterCommit(List.of(7));
+
+            verifyNoInteractions(redisCache);
+            TransactionSynchronizationManager.getSynchronizations()
+                    .forEach(TransactionSynchronization::afterCommit);
+
+            verify(redisCache).deleteObject(List.of(
+                    "nexora:security:authorization:login:7",
+                    "nexora:security:authorization:user:7",
+                    "nexora:security:authorization:admin:7",
+                    "nexora:security:authorization:merchant:7"));
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    @Test
+    void evictsAllAuthorizationKeysOnlyAfterTransactionCommit() {
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            cache.evictAllAfterCommit();
+
+            verifyNoInteractions(redisCache);
+            TransactionSynchronizationManager.getSynchronizations()
+                    .forEach(TransactionSynchronization::afterCommit);
+
+            verify(redisCache).deleteByPattern("nexora:security:authorization:*");
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    private static SecurityAuthorizationCache.Authorization authorization() {
+        return new SecurityAuthorizationCache.Authorization(
+                List.of("admin"), List.of("sys:config:list"));
+    }
+}

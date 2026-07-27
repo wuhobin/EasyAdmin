@@ -2,7 +2,7 @@ package com.nexora.controller.monitor;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.nexora.annotation.OperationLogger;
-import com.nexora.biz.JobLogBizService;
+import com.nexora.biz.monitor.JobLogBizService;
 import com.nexora.domain.form.query.monitor.QuartzJobLogQueryForm;
 import com.nexora.domain.vo.monitor.QuartzJobLogVo;
 import com.aurora.starter.mybatisplus.model.PageParam;

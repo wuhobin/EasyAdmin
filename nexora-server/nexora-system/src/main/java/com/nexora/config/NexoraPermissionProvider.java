@@ -6,6 +6,7 @@ import com.nexora.mapper.SysMenuMapper;
 import com.nexora.mapper.SysRoleMapper;
 import com.aurora.starter.security.account.AccountType;
 import com.aurora.starter.security.spi.PermissionProvider;
+import com.nexora.cache.SecurityAuthorizationCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -17,20 +18,34 @@ public class NexoraPermissionProvider implements PermissionProvider {
 
     private final SysRoleMapper roleMapper;
     private final SysMenuMapper menuMapper;
+    private final SecurityAuthorizationCache authorizationCache;
 
     @Override
     public List<String> getPermissionList(Object loginId, AccountType loginType) {
-        Integer userId = toInt(loginId);
-        List<String> roles = roleMapper.selectRolesCodeByUserId(userId);
-        if (roles.contains(Constants.ADMIN)) {
-            return menuMapper.getPermissionList(MenuTypeEnum.BUTTON.getCode());
-        }
-        return menuMapper.getPermissionListByUserId(userId, MenuTypeEnum.BUTTON.getCode());
+        return getAuthorization(loginId, loginType).permissions();
     }
 
     @Override
     public List<String> getRoleList(Object loginId, AccountType loginType) {
-        return roleMapper.selectRolesCodeByUserId(toInt(loginId));
+        return getAuthorization(loginId, loginType).roles();
+    }
+
+    public SecurityAuthorizationCache.Authorization getAuthorization(
+            Object loginId, AccountType loginType) {
+        Integer userId = toInt(loginId);
+        return authorizationCache.get(userId, loginType,
+                () -> loadAuthorization(userId));
+    }
+
+    private SecurityAuthorizationCache.Authorization loadAuthorization(Integer userId) {
+        List<String> roles = roleMapper.selectRolesCodeByUserId(userId);
+        List<String> permissions;
+        if (roles.contains(Constants.ADMIN)) {
+            permissions = menuMapper.getPermissionList(MenuTypeEnum.BUTTON.getCode());
+        } else {
+            permissions = menuMapper.getPermissionListByUserId(userId, MenuTypeEnum.BUTTON.getCode());
+        }
+        return new SecurityAuthorizationCache.Authorization(roles, permissions);
     }
 
     private Integer toInt(Object loginId) {

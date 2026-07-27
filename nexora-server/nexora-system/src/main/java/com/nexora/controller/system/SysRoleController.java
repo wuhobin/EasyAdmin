@@ -2,7 +2,7 @@ package com.nexora.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.nexora.annotation.OperationLogger;
-import com.nexora.biz.SysRoleBizService;
+import com.nexora.biz.system.SysRoleBizService;
 import com.nexora.domain.form.query.system.SysRoleQueryForm;
 import com.nexora.domain.form.system.SysRoleForm;
 import com.nexora.domain.vo.system.SysRoleVo;

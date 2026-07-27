@@ -10,8 +10,6 @@ mybatis-plus:
     banner: false
     db-config:
       id-type: AUTO
-      insert-strategy: NOT_NULL
-      update-strategy: NOT_NULL
       table-underline: true
 
 platform:

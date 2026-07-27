@@ -1,6 +1,6 @@
 package com.nexora.controller.auth;
 
-import com.nexora.biz.AuthBizService;
+import com.nexora.biz.auth.AuthBizService;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.nexora.domain.form.auth.LoginForm;
 import com.nexora.domain.vo.auth.LoginUserInfoVo;

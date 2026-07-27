@@ -1,7 +1,7 @@
 package com.nexora.controller.mail;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.nexora.biz.MailInboxBizService;
+import com.nexora.biz.mail.MailInboxBizService;
 import com.nexora.domain.vo.mail.MailMessageDetailVo;
 import com.nexora.domain.vo.mail.MailMessagePageVo;
 import com.aurora.starter.webmvc.domain.response.Result;

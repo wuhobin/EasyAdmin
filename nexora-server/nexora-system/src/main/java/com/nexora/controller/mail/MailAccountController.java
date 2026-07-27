@@ -1,7 +1,7 @@
 package com.nexora.controller.mail;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.nexora.biz.MailAccountBizService;
+import com.nexora.biz.mail.MailAccountBizService;
 import com.nexora.domain.form.mail.MailAccountForm;
 import com.nexora.domain.vo.mail.MailAccountVo;
 import com.nexora.domain.vo.mail.MailProviderVo;
