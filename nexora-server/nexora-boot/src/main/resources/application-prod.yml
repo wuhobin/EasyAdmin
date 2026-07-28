@@ -2,9 +2,9 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${mysql.address}:3306/nexora-admin?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=GMT%2B8
-    username: ${mysql.username}
-    password: ${mysql.password}
+    url: jdbc:mysql://${MYSQL_HOST}:3306/nexora-admin?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=GMT%2B8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
     hikari:
       # 生产环境调大连接池
       minimum-idle: 10
@@ -17,11 +17,11 @@ spring:
       connection-test-query: SELECT 1
   data:
     redis:
-      host: ${redis.address}
+      host: ${REDIS_HOST}
       port: 6379
       # 生产环境建议使用 database 0
       database: 0
-      password: ${redis.password}
+      password: ${REDIS_PASSWORD}
       client-type: lettuce
       lettuce:
         pool:
@@ -63,12 +63,11 @@ dromara:
     qiniu-kodo:
       - platform: qiniu-kodo-1
         enable-storage: true
-        # 生产环境 AK/SK 通过环境变量注入，避免硬编码
-        access-key: ${oss.qiniu.access-key}
-        secret-key: ${oss.qiniu.secret-key}
-        bucket-name: ${oss.qiniu.bucket-name}
-        domain: ${oss.qiniu.domain}
-        base-path: ${oss.qiniu.base-path}
+        access-key: ${OSS_QINIU_ACCESS_KEY}
+        secret-key: ${OSS_QINIU_SECRET_KEY}
+        bucket-name: ${OSS_QINIU_BUCKET_NAME}
+        domain: ${OSS_QINIU_DOMAIN}
+        base-path: ${OSS_QINIU_BASE_PATH}
 
 # ============================== 日志配置 ==============================
 logging:
