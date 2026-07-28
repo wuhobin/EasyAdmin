@@ -1,7 +1,7 @@
 import request, { type ApiResponse } from '@/utils/request'
 
 export interface LoginParams {
-  username: string
+  email: string
   password: string
   rememberMe: boolean
   source?: string
@@ -9,7 +9,7 @@ export interface LoginParams {
 
 export interface CurrentUserResult {
   id: number
-  username: string
+  email: string
   nickname: string | null
   avatar: string | null
   roles: string[] | null

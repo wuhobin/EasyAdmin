@@ -3,7 +3,7 @@ package com.nexora.biz.auth;
 import com.nexora.domain.form.auth.LoginForm;
 import com.nexora.config.NexoraPermissionProvider;
 import com.nexora.cache.SecurityAuthorizationCache;
-import com.nexora.constants.Constants;
+import com.nexora.constants.CommonConstants;
 import com.nexora.entity.SysUser;
 import com.nexora.service.SysUserService;
 import com.aurora.starter.security.account.AccountType;
@@ -38,17 +38,18 @@ class AuthBizServiceTest {
     @Test
     void defaultsRememberMeToFalseWhenTheFieldIsMissing() throws Exception {
         LoginForm loginForm = new ObjectMapper().readValue(
-                "{\"username\":\"admin\",\"password\":\"secret\"}",
+                "{\"email\":\" Admin@Example.com \",\"password\":\"secret\"}",
                 LoginForm.class
         );
 
         assertThat(loginForm.isRememberMe()).isFalse();
+        assertThat(loginForm.getEmail()).isEqualTo("admin@example.com");
     }
 
     @Test
     void bindsRememberMeWhenTheFieldIsProvided() throws Exception {
         LoginForm loginForm = new ObjectMapper().readValue(
-                "{\"username\":\"admin\",\"password\":\"secret\",\"rememberMe\":true}",
+                "{\"email\":\"admin@example.com\",\"password\":\"secret\",\"rememberMe\":true}",
                 LoginForm.class
         );
 
@@ -60,16 +61,16 @@ class AuthBizServiceTest {
         SysUserService userService = mock(SysUserService.class);
         SysUser user = SysUser.builder()
                 .id(1)
-                .username("admin")
+                .email("admin@example.com")
                 .nickname("Administrator")
                 .password(BCrypt.hashpw("secret", BCrypt.gensalt()))
                 .status(1)
                 .build();
-        when(userService.getByUsername("admin")).thenReturn(user);
+        when(userService.getByEmail("admin@example.com")).thenReturn(user);
         AuthBizService service = new AuthBizService(
                 userService, mock(NexoraPermissionProvider.class));
         LoginForm form = new LoginForm();
-        form.setUsername("admin");
+        form.setEmail(" Admin@Example.com ");
         form.setPassword("secret");
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
@@ -78,7 +79,7 @@ class AuthBizServiceTest {
             var loginUserInfo = service.login(form);
 
             securityUtils.verify(() -> SecurityUtils.setSessionAttribute(
-                    Constants.CURRENT_USER, loginUserInfo));
+                    CommonConstants.CURRENT_USER, loginUserInfo));
         }
     }
 
@@ -86,7 +87,7 @@ class AuthBizServiceTest {
     void getsRolesAndPermissionsThroughCachedPermissionProvider() {
         SysUserService userService = mock(SysUserService.class);
         NexoraPermissionProvider permissionProvider = mock(NexoraPermissionProvider.class);
-        SysUser user = SysUser.builder().id(7).username("admin").build();
+        SysUser user = SysUser.builder().id(7).email("admin@example.com").build();
         when(userService.getById(7)).thenReturn(user);
         when(permissionProvider.getAuthorization(7, AccountType.LOGIN))
                 .thenReturn(new SecurityAuthorizationCache.Authorization(

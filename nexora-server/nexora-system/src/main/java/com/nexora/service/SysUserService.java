@@ -14,9 +14,9 @@ public interface SysUserService extends IService<SysUser> {
     IPage<SysUserPageListVo> listUsers(SysUserQuery query, PageParam pageParam);
 
     /**
-     * 新增用户
+     * 根据规范化邮箱查询用户
      */
-    SysUser getByUsername(String username);
+    SysUser getByEmail(String email);
 
     /**
      * 更新用户

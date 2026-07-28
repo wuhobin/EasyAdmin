@@ -13,7 +13,7 @@ import { removeToken, setToken } from '@/utils/auth'
 
 export interface CurrentUser {
   id: number | null
-  username: string
+  email: string
   nickname: string | null
   avatar: string | null
   roles: string[]
@@ -23,7 +23,7 @@ export interface CurrentUser {
 function createEmptyUser(): CurrentUser {
   return {
     id: null,
-    username: '',
+    email: '',
     nickname: null,
     avatar: null,
     roles: [],
@@ -34,7 +34,7 @@ function createEmptyUser(): CurrentUser {
 function toCurrentUser(data: CurrentUserResult): CurrentUser {
   return {
     id: data.id,
-    username: data.username,
+    email: data.email,
     nickname: data.nickname,
     avatar: data.avatar,
     roles: data.roles ?? [],

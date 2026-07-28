@@ -24,8 +24,8 @@ public class SysOperateLog extends BaseEntity implements Serializable {
     @Schema(description = "主键ID")
     private Long id;
 
-    @Schema(description = "操作用户")
-    private String username;
+    @Schema(description = "操作用户ID")
+    private Integer userId;
 
     @Schema(description = "请求接口")
     private String requestUrl;

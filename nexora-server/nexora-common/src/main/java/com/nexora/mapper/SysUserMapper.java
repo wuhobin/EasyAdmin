@@ -14,12 +14,12 @@ import java.util.List;
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
     /**
-     * 根据用户名查询用户
+     * 根据邮箱查询用户
      *
-     * @param username 用户名
+     * @param email 邮箱
      * @return 用户信息
      */
-    SysUser selectByUsername(@Param("username") String username);
+    SysUser selectByEmail(@Param("email") String email);
 
     IPage<SysUserPageListVo> selectUserPage(@Param("page") Page<Object> page,
                                             @Param("ew") Wrapper<SysUser> wrapper);

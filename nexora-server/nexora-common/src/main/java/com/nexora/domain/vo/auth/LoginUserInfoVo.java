@@ -11,8 +11,8 @@ public class LoginUserInfoVo implements Serializable {
     @Schema(description = "用户ID")
     private Integer id;
 
-    @Schema(description = "用户名")
-    private String username;
+    @Schema(description = "邮箱")
+    private String email;
 
     @Schema(description = "用户昵称")
     private String nickname;

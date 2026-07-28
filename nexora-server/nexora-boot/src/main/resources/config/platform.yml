@@ -1,6 +1,15 @@
 # platform-boot-starter 配置（业务功能，与环境无关）
 # 包含：Quartz 定时任务、Sa-Token 认证
 platform:
+  verification:
+    key-prefix: nexora:verification
+    mail:
+      enabled: ${MAIL_VERIFICATION_ENABLED:false}
+      from: ${SMTP_FROM:${SMTP_USERNAME:}}
+      from-name: ${SMTP_FROM_NAME:Nexora Admin}
+      code-length: 6
+      expire-time: 5m
+      cooldown: 60s
   redis:
     two-level-cache:
       enabled: true

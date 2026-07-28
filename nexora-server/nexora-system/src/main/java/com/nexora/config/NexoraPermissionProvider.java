@@ -1,6 +1,6 @@
 package com.nexora.config;
 
-import com.nexora.constants.Constants;
+import com.nexora.constants.CommonConstants;
 import com.nexora.constants.MenuTypeEnum;
 import com.nexora.mapper.SysMenuMapper;
 import com.nexora.mapper.SysRoleMapper;
@@ -40,7 +40,7 @@ public class NexoraPermissionProvider implements PermissionProvider {
     private SecurityAuthorizationCache.Authorization loadAuthorization(Integer userId) {
         List<String> roles = roleMapper.selectRolesCodeByUserId(userId);
         List<String> permissions;
-        if (roles.contains(Constants.ADMIN)) {
+        if (roles.contains(CommonConstants.ADMIN)) {
             permissions = menuMapper.getPermissionList(MenuTypeEnum.BUTTON.getCode());
         } else {
             permissions = menuMapper.getPermissionListByUserId(userId, MenuTypeEnum.BUTTON.getCode());

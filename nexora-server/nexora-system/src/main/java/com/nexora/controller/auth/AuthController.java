@@ -6,6 +6,7 @@ import com.nexora.domain.form.auth.LoginForm;
 import com.nexora.domain.vo.auth.LoginUserInfoVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +22,7 @@ public class AuthController {
 
     @Operation(summary = "用户登录")
     @PostMapping("/auth/login")
-    public Result<LoginUserInfoVo> login(@RequestBody LoginForm form) {
+    public Result<LoginUserInfoVo> login(@Valid @RequestBody LoginForm form) {
         return Result.data(authBizService.login(form));
     }
 

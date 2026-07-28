@@ -154,6 +154,7 @@ vi .env
 | `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PASSWORD` | MySQL 地址和账号 |
 | `REDIS_HOST` / `REDIS_PASSWORD` | Redis 地址和密码 |
 | `MAIL_CREDENTIAL_SECRET` | 邮箱授权码加密密钥，至少 16 位；保存邮箱账号后不可随意更换 |
+| `MAIL_VERIFICATION_ENABLED` / `SMTP_*` | 邮箱换绑验证码开关与 SMTP 发件配置；配置完成后再启用 |
 | `OSS_QINIU_*` | 七牛 Kodo 的 AK、SK、Bucket 和访问域名 |
 | `JAVA_TOOL_OPTIONS` | JVM 内存、编码和时区参数，按服务器内存调整 |
 | `LOG_PATH` | 容器日志目录，保持 `/app/logs` 即可 |
@@ -351,6 +352,8 @@ POST   /sys/user              # 新增用户
 PUT    /sys/user              # 修改用户
 DELETE /sys/user/delete/{ids} # 删除用户
 PUT    /sys/user/reset        # 重置密码
+POST   /sys/user/profile/email/sendCode # 发送换绑邮箱验证码
+PUT    /sys/user/profile/changeEmail    # 修改当前用户邮箱
 ```
 
 **角色权限：**

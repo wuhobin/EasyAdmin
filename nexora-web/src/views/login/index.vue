@@ -25,8 +25,8 @@
             <p>请输入账号信息继续</p>
           </div>
           <el-form ref="loginFormRef" label-position="top" :model="loginForm" :rules="rules" @keyup.enter="handleLogin">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="loginForm.username" name="username" placeholder="请输入用户名" :prefix-icon="User" size="large" autocomplete="username" :spellcheck="false" />
+            <el-form-item label="邮箱" prop="email">
+              <el-input v-model="loginForm.email" name="email" type="email" placeholder="请输入邮箱" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
             </el-form-item>
             <el-form-item label="密码" prop="password">
               <el-input v-model="loginForm.password" name="password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password size="large" autocomplete="current-password" />
@@ -50,7 +50,7 @@
 import router from '@/router'
 import type { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { Histogram, Lock, Monitor, Moon, Sunny, User } from '@element-plus/icons-vue'
+import { Histogram, Lock, Message, Monitor, Moon, Sunny } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 import { useSettingsStore } from '@/store/modules/settings'
 import type { LoginParams } from '@/api/system/auth'
@@ -60,9 +60,9 @@ const userStore = useUserStore()
 const settingsStore = useSettingsStore()
 const loginFormRef = ref<FormInstance>()
 const loading = ref(false)
-const loginForm = reactive<LoginParams>({ username: '', password: '', rememberMe: false, source: 'ADMIN' })
+const loginForm = reactive<LoginParams>({ email: '', password: '', rememberMe: false, source: 'ADMIN' })
 const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }],
+  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }]
 }
 const handleForgotPassword = () => {

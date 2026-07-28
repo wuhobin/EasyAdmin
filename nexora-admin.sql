@@ -260,7 +260,7 @@ INSERT INTO `sys_menu` VALUES (134, '130', '', '', '查看', 4, '', 'BUTTON', '2
 DROP TABLE IF EXISTS `sys_operate_log`;
 CREATE TABLE `sys_operate_log`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '操作用户',
+  `user_id` int NULL DEFAULT NULL COMMENT '操作用户ID',
   `request_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '请求接口',
   `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '请求方式',
   `operation_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '操作名称',
@@ -278,8 +278,8 @@ CREATE TABLE `sys_operate_log`  (
 -- ----------------------------
 -- Records of sys_operate_log
 -- ----------------------------
-INSERT INTO `sys_operate_log` VALUES (2363, 'admin', '/sys/user/delete/1811', 'DELETE', '批量删除用户', '127.0.0.1', '内网IP|内网IP', 167, '2026-07-24 17:25:33', '{\"ids\":[1811]}', 'com.aurora.controller.system.SysUserController', 'delete', '2026-07-24 17:25:33');
-INSERT INTO `sys_operate_log` VALUES (2364, 'admin', '/sys/role/delete/2', 'DELETE', '批量删除角色', '127.0.0.1', '内网IP|内网IP', 18, '2026-07-24 17:25:39', '{\"ids\":[2]}', 'com.aurora.controller.system.SysRoleController', 'delete', '2026-07-24 17:25:39');
+INSERT INTO `sys_operate_log` VALUES (2363, 1, '/sys/user/delete/1811', 'DELETE', '批量删除用户', '127.0.0.1', '内网IP|内网IP', 167, '2026-07-24 17:25:33', '{\"ids\":[1811]}', 'com.aurora.controller.system.SysUserController', 'delete', '2026-07-24 17:25:33');
+INSERT INTO `sys_operate_log` VALUES (2364, 1, '/sys/role/delete/2', 'DELETE', '批量删除角色', '127.0.0.1', '内网IP|内网IP', 18, '2026-07-24 17:25:39', '{\"ids\":[2]}', 'com.aurora.controller.system.SysRoleController', 'delete', '2026-07-24 17:25:39');
 
 -- ----------------------------
 -- Table structure for sys_oss_file
@@ -446,7 +446,6 @@ INSERT INTO `sys_role_menu` VALUES (369, 14, 101);
 DROP TABLE IF EXISTS `sys_user`;
 CREATE TABLE `sys_user`  (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `username` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '账号',
   `password` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '登录密码',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -456,20 +455,20 @@ CREATE TABLE `sys_user`  (
   `os` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '登录系统',
   `last_login_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最后登录时间',
   `browser` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '浏览器',
-  `nickname` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '昵称',
+  `nickname` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '昵称',
   `avatar` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '头像',
   `mobile` varchar(15) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '手机号',
-  `email` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '登录邮箱',
   `sex` int NULL DEFAULT NULL COMMENT '性别',
   `login_type` int NULL DEFAULT NULL COMMENT '登录方式',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `username`(`username` ASC) USING BTREE
+  UNIQUE INDEX `uk_sys_user_email`(`email` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1812 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '用户信息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, 'admin', '$2a$10$Olf5IWFsSL5uw6lQQxCCX.Yx9gFvdIbiyXrXPmCm9N9OVesHYMBQy', '2024-12-27 14:16:17', '2026-07-22 11:31:03', 1, '127.0.0.1', '内网IP|内网IP', 'Windows', '2026-07-03 14:17:04', 'Chrome', '系统管理员', 'https://oss.wuhobin.top/base/20260717/6a59a182555419c251de00f2.jpg', '18772916901', '1289066006@qq.com', 2, NULL);
+INSERT INTO `sys_user` VALUES (1, '$2a$10$Olf5IWFsSL5uw6lQQxCCX.Yx9gFvdIbiyXrXPmCm9N9OVesHYMBQy', '2024-12-27 14:16:17', '2026-07-22 11:31:03', 1, '127.0.0.1', '内网IP|内网IP', 'Windows', '2026-07-03 14:17:04', 'Chrome', '系统管理员', 'https://oss.wuhobin.top/base/20260717/6a59a182555419c251de00f2.jpg', '18772916901', '1289066006@qq.com', 2, NULL);
 
 -- ----------------------------
 -- Table structure for sys_user_role

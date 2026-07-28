@@ -12,8 +12,8 @@ public class SysOperateLogVo {
     @Schema(description = "日志ID")
     private Long id;
 
-    @Schema(description = "操作用户名")
-    private String username;
+    @Schema(description = "操作用户ID")
+    private Integer userId;
 
     @Schema(description = "请求地址")
     private String requestUrl;

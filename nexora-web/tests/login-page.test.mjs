@@ -9,8 +9,9 @@ const indexHtmlSource = await readFile(indexHtmlPath, 'utf8')
 const logoPath = new URL('../src/layouts/components/Sidebar/Logo.vue', import.meta.url)
 const logoSource = await readFile(logoPath, 'utf8')
 
-test('login page keeps the account login form', () => {
-  assert.match(loginPageSource, /v-model="loginForm\.username"/)
+test('login page keeps the email login form', () => {
+  assert.match(loginPageSource, /v-model="loginForm\.email"/)
+  assert.match(loginPageSource, /autocomplete="email"/)
   assert.match(loginPageSource, /v-model="loginForm\.password"/)
   assert.match(loginPageSource, /v-model="loginForm\.rememberMe"/)
   assert.match(loginPageSource, /@click="handleLogin"/)
@@ -22,9 +23,9 @@ test('login page submits the remember-me value from the form model', () => {
 })
 
 test('login page does not prefill demo credentials', () => {
-  assert.match(loginPageSource, /username:\s*['"]["']/)
+  assert.match(loginPageSource, /email:\s*['"]["']/)
   assert.match(loginPageSource, /password:\s*['"]["']/)
-  assert.doesNotMatch(loginPageSource, /username:\s*['"]test['"]/)
+  assert.doesNotMatch(loginPageSource, /email:\s*['"]test['"]/)
   assert.doesNotMatch(loginPageSource, /password:\s*['"]123456['"]/)
 })
 
@@ -41,6 +42,7 @@ test('login page only exposes account password login', () => {
   for (const marker of removedFeatureMarkers) {
     assert.doesNotMatch(loginPageSource, new RegExp(marker, 'i'))
   }
+  assert.doesNotMatch(loginPageSource, /loginForm\.username/)
 })
 
 test('app uses the Nexora brand mark in the page and browser chrome', () => {

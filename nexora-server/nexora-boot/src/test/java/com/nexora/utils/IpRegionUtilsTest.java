@@ -1,6 +1,6 @@
 package com.nexora.utils;
 
-import com.nexora.constants.Constants;
+import com.nexora.constants.CommonConstants;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,11 +11,11 @@ class IpRegionUtilsTest {
     void resolvesAddressFromClasspathDatabase() {
         assertThat(IpRegionUtils.resolve("58.20.50.137"))
                 .isNotBlank()
-                .isNotEqualTo(Constants.UNKNOWN);
+                .isNotEqualTo(CommonConstants.UNKNOWN);
     }
 
     @Test
     void returnsUnknownForInvalidIp() {
-        assertThat(IpRegionUtils.resolve("not-an-ip")).isEqualTo(Constants.UNKNOWN);
+        assertThat(IpRegionUtils.resolve("not-an-ip")).isEqualTo(CommonConstants.UNKNOWN);
     }
 }

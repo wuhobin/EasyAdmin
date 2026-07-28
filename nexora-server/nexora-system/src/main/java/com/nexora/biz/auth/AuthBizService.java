@@ -2,9 +2,10 @@ package com.nexora.biz.auth;
 
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
+import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.security.account.AccountType;
 import com.nexora.config.NexoraPermissionProvider;
-import com.nexora.constants.Constants;
+import com.nexora.constants.CommonConstants;
 import com.nexora.constants.ResultCode;
 import com.nexora.domain.form.auth.LoginForm;
 import com.nexora.domain.vo.auth.LoginUserInfoVo;
@@ -27,13 +28,13 @@ public class AuthBizService {
     private final NexoraPermissionProvider permissionProvider;
 
     public LoginUserInfoVo login(LoginForm form) {
-        SysUser user = sysUserService.getByUsername(form.getUsername());
+        SysUser user = sysUserService.getByEmail(StringUtils.normalizeEmail(form.getEmail()));
         validateLogin(form.getPassword(), user);
         SecurityUtils.login(user.getId(), new SaLoginParameter().setTimeout(tokenTimeout(form.isRememberMe())));
 
         LoginUserInfoVo loginUserInfo = toLoginUserInfo(user);
         loginUserInfo.setToken(SecurityUtils.getTokenValue());
-        SecurityUtils.setSessionAttribute(Constants.CURRENT_USER, loginUserInfo);
+        SecurityUtils.setSessionAttribute(CommonConstants.CURRENT_USER, loginUserInfo);
         return loginUserInfo;
     }
 
@@ -57,10 +58,8 @@ public class AuthBizService {
     }
 
     private static void validateLogin(String password, SysUser user) {
-        if (user == null) {
-            throw new BizException(ResultCode.ERROR_USER_NOT_EXIST);
-        }
-        if (!BCrypt.checkpw(password, user.getPassword())) {
+        if (user == null || user.getPassword() == null
+                || !BCrypt.checkpw(password, user.getPassword())) {
             throw new BizException(ResultCode.ERROR_PASSWORD);
         }
         if (user.getStatus() == null || user.getStatus() != 1) {

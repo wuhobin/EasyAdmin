@@ -16,9 +16,6 @@ public class SysUserPageListVo {
     @Schema(description = "用户ID")
     private Integer id;
 
-    @Schema(description = "用户名")
-    private String username;
-
     @Schema(description = "状态")
     private Integer status;
 

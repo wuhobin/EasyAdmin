@@ -1,6 +1,6 @@
 package com.nexora.biz.file;
 
-import com.nexora.constants.Constants;
+import com.nexora.constants.CommonConstants;
 import com.nexora.entity.SysOssFile;
 import com.nexora.service.SysOssFileService;
 import com.aurora.starter.oss.model.OssUploadResult;
@@ -109,7 +109,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(Constants.ADMIN)).thenReturn(false);
+            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
 
             service.deleteById(1L);
@@ -125,7 +125,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(Constants.ADMIN)).thenReturn(false);
+            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
 
             assertThatThrownBy(() -> service.deleteById(1L))
@@ -144,7 +144,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(Constants.ADMIN)).thenReturn(true);
+            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(true);
 
             service.deleteById(1L);
         }
@@ -163,7 +163,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(Constants.ADMIN)).thenReturn(false);
+            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
 
             assertThatThrownBy(() -> service.deleteByUrl(url))

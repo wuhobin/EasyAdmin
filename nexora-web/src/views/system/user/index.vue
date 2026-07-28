@@ -3,10 +3,18 @@
     <!-- 搜索表单 -->
     <div class="search-wrapper">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-        <el-form-item label="用户名" prop="nickname">
+        <el-form-item label="昵称" prop="nickname">
           <el-input
             v-model="queryParams.nickname"
-            placeholder="请输入用户名"
+            placeholder="请输入昵称"
+            clearable
+            @keyup.enter="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input
+            v-model="queryParams.email"
+            placeholder="请输入邮箱"
             clearable
             @keyup.enter="handleQuery"
           />
@@ -53,7 +61,7 @@
         style="width: 100%"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection"  width="55" align="center" />
+        <el-table-column type="selection" :selectable="row => row.id !== 1" width="55" align="center" />
         <el-table-column label="头像"  prop="avatar" align="center">
           <template #default="{ row }">
             <el-image
@@ -65,6 +73,11 @@
           </template>
         </el-table-column>
         <el-table-column label="昵称" align="center" prop="nickname" show-overflow-tooltip />
+        <el-table-column label="邮箱" align="center" prop="email" min-width="190" show-overflow-tooltip />
+        <el-table-column label="手机号" align="center" prop="mobile" width="130" />
+        <el-table-column label="角色" align="center" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">{{ roleNames(row.roleIds) }}</template>
+        </el-table-column>
         <el-table-column label="登录IP" align="center" prop="ip" show-overflow-tooltip />
         <el-table-column label="登录地址" align="center" prop="ipLocation" show-overflow-tooltip />
         <el-table-column label="状态" align="center" width="80">
@@ -96,6 +109,7 @@
               type="danger"
               link
               icon="Delete"
+              :disabled="scope.row.id === 1"
               @click="handleDelete(scope.row)"
             >删除</el-button>
           </template>
@@ -135,21 +149,22 @@
       >
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="用户名" prop="username">
-              <el-input 
-                v-model="userForm.username" 
-                placeholder="请输入用户名" 
-                :disabled="dialog.type === 'edit'"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
             <el-form-item label="昵称" prop="nickname">
               <el-input 
                 v-model="userForm.nickname" 
                 placeholder="请输入昵称"
                 clearable 
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="邮箱" prop="email">
+              <el-input
+                v-model="userForm.email"
+                type="email"
+                placeholder="请输入邮箱"
+                :disabled="dialog.type === 'edit'"
+                clearable
               />
             </el-form-item>
           </el-col>
@@ -161,15 +176,6 @@
               <el-input 
                 v-model="userForm.mobile" 
                 placeholder="请输入手机号"
-                clearable 
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
-              <el-input 
-                v-model="userForm.email" 
-                placeholder="请输入邮箱"
                 clearable 
               />
             </el-form-item>
@@ -205,7 +211,7 @@
             multiple
             placeholder="请选择角色"
             style="width: 100%"
-            :disabled="userForm.username === 'admin'"
+            :disabled="userForm.id === 1"
             clearable
       
           >
@@ -219,7 +225,7 @@
         </el-form-item>
 
         <el-form-item label="状态">
-          <el-radio-group v-model="userForm.status">
+          <el-radio-group v-model="userForm.status" :disabled="userForm.id === 1">
             <el-radio :value="1">启用</el-radio>
             <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
@@ -296,6 +302,7 @@ const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
   nickname: '',
+  email: '',
   status: ''
 })
 
@@ -307,7 +314,7 @@ const userFormRef = ref<FormInstance>()
 const submitLoading = ref(false)
 
 // 选中项数组
-const selectedIds = ref<string[]>([])
+const selectedIds = ref<number[]>([])
 
 // 弹窗控制
 const dialog = reactive({
@@ -321,10 +328,9 @@ const roleOptions = ref<any[]>([])
 
 // 表单初始值（用于重置）
 const initialUserForm = {
-  id: undefined,
-  username: '',
+  id: undefined as number | undefined,
   nickname: '',
-  password: null,
+  password: '',
   mobile: '',
   email: '',
   sex: 0,
@@ -341,10 +347,6 @@ const userForm = reactive({ ...initialUserForm })
 
 // 表单校验规则
 const rules = reactive<FormRules>({
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
-  ],
   nickname: [
     { required: true, message: '请输入昵称', trigger: 'blur' }
   ],
@@ -356,6 +358,7 @@ const rules = reactive<FormRules>({
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ],
   email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
   ],
   roleIds: [
@@ -465,7 +468,7 @@ const handleUpdate = (row: any) => {
   dialog.title = '修改用户'
   dialog.visible = true
   Object.assign(userForm, row)
-  userForm.password = null
+  userForm.password = ''
 }
 
 // 提交表单
@@ -476,12 +479,26 @@ const submitForm = async () => {
     if (valid) {
       submitLoading.value = true
       try {
-        const data = {user: userForm, roleIds: userForm.roleIds}
         if (dialog.type === 'add') {
-          await createUserApi(data)
+          await createUserApi({
+            nickname: userForm.nickname,
+            email: userForm.email,
+            password: userForm.password,
+            mobile: userForm.mobile,
+            sex: userForm.sex,
+            status: userForm.status,
+            roleIds: userForm.roleIds
+          })
           ElMessage.success('新增成功')
         } else {
-          await updateUserApi(data)
+          await updateUserApi({
+            id: userForm.id!,
+            nickname: userForm.nickname,
+            mobile: userForm.mobile,
+            sex: userForm.sex,
+            status: userForm.status,
+            roleIds: userForm.roleIds
+          })
           ElMessage.success('修改成功')
         }
         dialog.visible = false
@@ -497,7 +514,7 @@ const submitForm = async () => {
 
 // 删除用户
 const handleDelete = (row: any) => {
-  ElMessageBox.confirm(`是否确认删除用户"${row.username}"?`, '警告', {
+  ElMessageBox.confirm(`是否确认删除用户“${row.nickname}”（ID: ${row.id}）?`, '警告', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
@@ -570,6 +587,13 @@ const getRoleOptions = async () => {
   } catch (error) {
     console.error('Failed to fetch role options:', error)
   }
+}
+
+const roleNames = (roleIds: number[] = []) => {
+  const names = roleOptions.value
+    .filter(role => roleIds.includes(role.id))
+    .map(role => role.name)
+  return names.join('、') || '-'
 }
 
 // 初始化
