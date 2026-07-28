@@ -33,7 +33,7 @@ openspec/
 .playwright-mcp/
 logs/
 specs/
-# Docker 环境变量（包含敏感信息）
+# 本地环境配置（包含敏感信息）
 .env
-application.properties
+nexora-server/nexora-boot/src/main/resources/application.properties
 .pnpm-store
