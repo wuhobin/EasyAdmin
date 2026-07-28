@@ -260,6 +260,7 @@
       </div>
 
       <el-dialog v-model="emailDialogVisible" title="更换登录邮箱" width="460px" destroy-on-close>
+        <p class="dialog-form-intro">验证新邮箱后更新后续登录使用的邮箱地址。</p>
         <el-form ref="emailFormRef" :model="emailForm" :rules="emailRules" label-position="top">
           <el-form-item label="新邮箱" prop="email">
             <el-input

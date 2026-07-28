@@ -1,5 +1,6 @@
 <template>
   <el-dialog v-model="visible" :title="form.id ? '编辑邮箱账户' : '添加邮箱账户'" width="520px" destroy-on-close>
+    <p class="dialog-form-intro">配置邮箱服务信息，用于收取和发送邮件。</p>
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
       <div class="form-grid">
         <el-form-item label="账户名称" prop="accountName">
@@ -169,7 +170,7 @@ watch(() => form.provider, (provider, previousProvider) => {
 </script>
 
 <style scoped>
-.form-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }
+.form-grid { display: grid; grid-template-columns: 1.2fr 1fr; column-gap: 24px; }
 .form-grid.compact { grid-template-columns: 1fr 1fr; align-items: center; }
 .email-domain-suffix { color: var(--el-text-color-secondary); font-size: 15px; white-space: nowrap; }
 .auth-tip { margin: 6px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }

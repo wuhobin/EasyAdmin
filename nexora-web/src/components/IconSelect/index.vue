@@ -6,6 +6,7 @@
     append-to-body
     top="5vh"
   >
+    <p class="dialog-form-intro">从图标库中搜索并选择一个菜单图标。</p>
     <div class="icon-container">
       <div class="search-bar">
         <el-input
@@ -84,18 +85,18 @@ const selectIcon = (iconName: string) => {
 
 <style scoped>
 .icon-container {
-  padding: 20px;
+  padding: 0;
 }
 
 .search-bar {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .icon-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 12px;
-  padding: 12px;
+  gap: 10px;
+  padding: 4px 6px 10px;
 }
 
 .icon-item {
@@ -103,27 +104,30 @@ const selectIcon = (iconName: string) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px 8px;
-  border-radius: 4px;
+  min-height: 88px;
+  padding: 14px 8px;
+  border-radius: 6px;
   cursor: pointer;
   color: inherit;
-  background: transparent;
+  background: var(--nexora-control-muted-bg);
   font: inherit;
-  transition: color 0.3s, background-color 0.3s, border-color 0.3s;
-  border: 1px solid transparent;
+  transition: color 0.18s, background-color 0.18s, border-color 0.18s, transform 0.18s;
+  border: 1px solid var(--el-border-color-lighter);
 }
 
 .icon-item:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
 
 .icon-item:hover {
-  background-color: #ecf5ff;
-  border-color: #409EFF;
+  background-color: color-mix(in srgb, var(--el-color-primary) 8%, var(--nexora-overlay-surface));
+  border-color: color-mix(in srgb, var(--el-color-primary) 45%, var(--el-border-color));
+  transform: translateY(-1px);
 }
 
 .icon-item.active {
-  background-color: #ecf5ff;
-  border-color: #409EFF;
-  color: #409EFF;
+  background-color: color-mix(in srgb, var(--el-color-primary) 11%, var(--nexora-overlay-surface));
+  border-color: var(--el-color-primary);
+  color: var(--el-color-primary);
+  box-shadow: 0 6px 16px -12px var(--el-color-primary);
 }
 
 .icon-item .el-icon {
@@ -133,12 +137,14 @@ const selectIcon = (iconName: string) => {
 
 .icon-name {
   font-size: 12px;
-  color: #606266;
+  color: var(--el-text-color-regular);
+  line-height: 17px;
   word-break: break-all;
   text-align: center;
 }
 
 .icon-item.active .icon-name {
-  color: #409EFF;
+  color: var(--el-color-primary);
+  font-weight: 600;
 }
 </style>

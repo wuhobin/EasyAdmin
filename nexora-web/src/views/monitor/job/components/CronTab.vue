@@ -539,8 +539,10 @@ const handleConfirm = () => {
 
   .specific-select {
     padding: 16px;
-    border-radius: 8px;
-    background-color: #9093994d;;
+    background: var(--el-fill-color-blank);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+
     .el-checkbox-group {
       display: flex;
       flex-wrap: wrap;  // 添加自动换行
@@ -665,9 +667,13 @@ html.dark {
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     }
 
-    .cycle-select,
-    .specific-select {
+    .cycle-select {
       background: var(--el-fill-color-dark);
+    }
+
+    .specific-select {
+      background: var(--el-fill-color-blank);
+      border-color: var(--el-border-color);
     }
   }
 }

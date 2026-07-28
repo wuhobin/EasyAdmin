@@ -14,13 +14,13 @@
       v-model="dialogVisible"
       title="搜索菜单"
       width="560px"
-      :show-close="false"
       :close-on-click-modal="true"
       :close-on-press-escape="true"
       destroy-on-close
       class="search-dialog"
       :modal-class="'search-dialog-modal'"
     >
+      <p class="dialog-form-intro">输入菜单名称或路径，快速跳转到目标页面。</p>
       <el-input
         v-model="searchKeyword"
         name="menu-search"
@@ -330,29 +330,39 @@ const getItemIndex = (group: any, idx: string | number) => {
 }
 
 :deep(.search-dialog) {
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
 
-  .el-dialog__header {
-    display: none;
-  }
-
   .el-dialog__body {
-    padding: 16px;
+    padding: 24px;
   }
 }
 
 .search-input {
   :deep(.el-input__wrapper) {
-    padding: 8px 12px;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    min-height: 48px;
+    padding: 0 14px;
+    background: var(--el-fill-color-blank);
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px var(--nexora-control-border);
+    transition: background-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  :deep(.el-input__wrapper:hover) {
+    box-shadow: inset 0 0 0 1px var(--nexora-control-hover);
+  }
+
+  :deep(.el-input__wrapper.is-focus) {
+    background: var(--el-fill-color-blank);
+    box-shadow:
+      inset 0 0 0 1px var(--el-color-primary),
+      0 0 0 3px var(--nexora-control-focus-ring);
   }
 
   .search-prefix-icon {
     font-size: 18px;
     margin-right: 8px;
-    color: #909399;
+    color: var(--el-text-color-placeholder);
   }
 
   .esc-hint {
@@ -394,7 +404,7 @@ const getItemIndex = (group: any, idx: string | number) => {
     align-items: center;
     padding: 10px 16px;
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: 6px;
     margin: 2px 0;
     color: inherit;
     text-decoration: none;

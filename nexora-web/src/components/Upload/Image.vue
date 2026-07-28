@@ -24,6 +24,7 @@
 
     <!-- 图片预览对话框 -->
     <el-dialog v-model="dialogVisible" top="5vh" title="预览图片">
+      <p class="dialog-form-intro">查看图片原始内容与显示效果。</p>
       <img :src="dialogImageUrl" alt="上传图片预览" width="800" height="500" style="width: 100%; height: 500px; object-fit: contain;" />
     </el-dialog>
   </div>

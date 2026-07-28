@@ -70,13 +70,14 @@
       width="700px"
       append-to-body
     >
+      <p class="dialog-form-intro">配置菜单层级、路由信息与访问权限。</p>
       <el-form
         ref="menuFormRef"
         :model="menuForm"
         :rules="rules"
-        label-width="100px"
+        label-position="top"
       >
-        <el-row :gutter="20">
+        <el-row :gutter="24">
           <el-col :span="24">
             <el-form-item label="上级菜单" prop="parentId">
               <el-tree-select
@@ -180,8 +181,8 @@
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取 消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="submitForm">确 定</el-button>
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="submitForm">确定</el-button>
         </div>
       </template>
     </el-dialog>
