@@ -11,27 +11,8 @@
         </header>
 
         <div class="brand-content">
-          <p class="brand-kicker">SECURE ACCESS / 安全接入</p>
-          <h1 id="brand-title">从一次可信验证，<br />进入整个工作台。</h1>
-          <p class="brand-description">统一身份、权限与业务入口，让每次访问都有清晰边界。</p>
-
-          <div class="access-route" role="list" aria-label="进入工作台的访问流程">
-            <div class="route-step route-step-active" role="listitem" aria-current="step">
-              <span class="route-node" aria-hidden="true"></span>
-              <span class="route-number">01</span>
-              <span class="route-copy"><strong>身份验证</strong><small>确认邮箱与访问凭证</small></span>
-            </div>
-            <div class="route-step" role="listitem">
-              <span class="route-node" aria-hidden="true"></span>
-              <span class="route-number">02</span>
-              <span class="route-copy"><strong>权限装载</strong><small>匹配账号角色与边界</small></span>
-            </div>
-            <div class="route-step" role="listitem">
-              <span class="route-node" aria-hidden="true"></span>
-              <span class="route-number">03</span>
-              <span class="route-copy"><strong>进入工作台</strong><small>开始处理你的业务</small></span>
-            </div>
-          </div>
+          <h1 id="brand-title">安全进入你的<br />管理工作台</h1>
+          <p class="brand-description">统一身份与权限边界，让每次访问清晰可控。</p>
         </div>
 
         <footer class="brand-meta">
@@ -54,8 +35,15 @@
           </button>
         </div>
 
-        <section class="login-box" aria-labelledby="auth-title">
-          <div v-if="registerEnabled" class="auth-tabs" role="tablist" aria-label="认证方式">
+        <section class="login-box" aria-label="账号访问">
+          <div
+            v-if="registerEnabled || !registerConfigLoaded"
+            class="auth-tabs"
+            :class="{ 'is-loading': !registerConfigLoaded }"
+            role="tablist"
+            aria-label="认证方式"
+            :aria-hidden="!registerConfigLoaded"
+          >
             <button
               id="login-tab"
               type="button"
@@ -84,79 +72,79 @@
             </button>
           </div>
 
-          <div class="login-heading">
-            <p class="eyebrow">{{ activeMode === 'login' ? 'WELCOME BACK' : 'CREATE ACCESS' }}</p>
-            <h2 id="auth-title">{{ activeMode === 'login' ? '欢迎回来' : '创建你的账号' }}</h2>
-            <p>{{ activeMode === 'login' ? '使用工作邮箱进入管理工作台' : '完成邮箱验证，即可创建账号' }}</p>
-          </div>
+          <p class="mode-description" aria-live="polite">
+            {{ activeMode === 'login' ? '使用工作邮箱进入管理工作台' : '验证邮箱并创建新账号' }}
+          </p>
 
-          <transition name="auth-form" mode="out-in">
-            <el-form
-              v-if="activeMode === 'login'"
-              id="login-panel"
-              ref="loginFormRef"
-              key="login"
-              :role="registerEnabled ? 'tabpanel' : undefined"
-              :aria-labelledby="registerEnabled ? 'login-tab' : undefined"
-              label-position="top"
-              :model="loginForm"
-              :rules="loginRules"
-              @keyup.enter="handleLogin"
-            >
-              <el-form-item label="邮箱" prop="email">
-                <el-input v-model="loginForm.email" name="email" type="email" placeholder="name@company.com" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
-              </el-form-item>
-              <el-form-item label="密码" prop="password">
-                <el-input v-model="loginForm.password" name="password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password size="large" autocomplete="current-password" />
-              </el-form-item>
-              <div class="login-options">
-                <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
-                <button class="forgot-password" type="button" @click="handleForgotPassword">忘记密码？</button>
-              </div>
-              <el-button :loading="loading" type="primary" size="large" class="login-button" @click="handleLogin">
-                {{ loading ? '正在验证…' : '进入工作台' }}
-              </el-button>
-            </el-form>
-
-            <el-form
-              v-else
-              id="register-panel"
-              ref="registerFormRef"
-              key="register"
-              role="tabpanel"
-              aria-labelledby="register-tab"
-              label-position="top"
-              :model="registerForm"
-              :rules="registerRules"
-              @keyup.enter="handleRegister"
-            >
-              <el-form-item label="邮箱" prop="email">
-                <el-input v-model="registerForm.email" name="register-email" type="email" placeholder="name@company.com" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
-              </el-form-item>
-              <el-form-item label="邮箱验证码" prop="code">
-                <div class="verification-row">
-                  <el-input v-model="registerForm.code" name="register-code" inputmode="numeric" maxlength="8" placeholder="请输入验证码" :prefix-icon="Key" size="large" autocomplete="one-time-code" />
-                  <el-button
-                    class="code-button"
-                    size="large"
-                    :loading="codeSending"
-                    :disabled="codeCountdown > 0"
-                    :aria-label="codeCountdown > 0 ? `${codeCountdown} 秒后可重新获取验证码` : '获取邮箱验证码'"
-                    @click="handleSendRegisterCode"
-                  >
-                    {{ codeCountdown > 0 ? `${codeCountdown} 秒` : '获取验证码' }}
-                  </el-button>
+          <div class="auth-form-stage">
+            <transition name="auth-form" mode="out-in">
+              <el-form
+                v-if="activeMode === 'login'"
+                id="login-panel"
+                ref="loginFormRef"
+                key="login"
+                :role="registerEnabled ? 'tabpanel' : undefined"
+                :aria-labelledby="registerEnabled ? 'login-tab' : undefined"
+                label-position="top"
+                :model="loginForm"
+                :rules="loginRules"
+                @keyup.enter="handleLogin"
+              >
+                <el-form-item label="邮箱" prop="email">
+                  <el-input v-model="loginForm.email" name="email" type="email" placeholder="name@company.com" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
+                </el-form-item>
+                <el-form-item label="密码" prop="password">
+                  <el-input v-model="loginForm.password" name="password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password size="large" autocomplete="current-password" />
+                </el-form-item>
+                <div class="login-options">
+                  <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
+                  <button class="forgot-password" type="button" @click="handleForgotPassword">忘记密码？</button>
                 </div>
-              </el-form-item>
-              <el-form-item label="密码" prop="password">
-                <el-input v-model="registerForm.password" name="register-password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password size="large" autocomplete="new-password" />
-                <p class="field-hint">使用 6～20 位字符</p>
-              </el-form-item>
-              <el-button :loading="registering" type="primary" size="large" class="login-button" @click="handleRegister">
-                {{ registering ? '正在创建…' : '创建账号' }}
-              </el-button>
-            </el-form>
-          </transition>
+                <el-button :loading="loading" type="primary" size="large" class="login-button" @click="handleLogin">
+                  {{ loading ? '正在验证…' : '进入工作台' }}
+                </el-button>
+              </el-form>
+
+              <el-form
+                v-else
+                id="register-panel"
+                ref="registerFormRef"
+                key="register"
+                role="tabpanel"
+                aria-labelledby="register-tab"
+                label-position="top"
+                :model="registerForm"
+                :rules="registerRules"
+                @keyup.enter="handleRegister"
+              >
+                <el-form-item label="邮箱" prop="email">
+                  <el-input v-model="registerForm.email" name="register-email" type="email" placeholder="name@company.com" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
+                </el-form-item>
+                <el-form-item label="邮箱验证码" prop="code">
+                  <div class="verification-row">
+                    <el-input v-model="registerForm.code" name="register-code" inputmode="numeric" maxlength="8" placeholder="请输入验证码" :prefix-icon="Key" size="large" autocomplete="one-time-code" />
+                    <el-button
+                      class="code-button"
+                      size="large"
+                      :loading="codeSending"
+                      :disabled="codeCountdown > 0"
+                      :aria-label="codeCountdown > 0 ? `${codeCountdown} 秒后可重新获取验证码` : '获取邮箱验证码'"
+                      @click="handleSendRegisterCode"
+                    >
+                      {{ codeCountdown > 0 ? `${codeCountdown} 秒` : '获取验证码' }}
+                    </el-button>
+                  </div>
+                </el-form-item>
+                <el-form-item label="密码" prop="password">
+                  <el-input v-model="registerForm.password" name="register-password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password size="large" autocomplete="new-password" />
+                  <p class="field-hint">使用 6～20 位字符</p>
+                </el-form-item>
+                <el-button :loading="registering" type="primary" size="large" class="login-button" @click="handleRegister">
+                  {{ registering ? '正在创建…' : '创建账号' }}
+                </el-button>
+              </el-form>
+            </transition>
+          </div>
 
           <div class="security-note">
             <el-icon aria-hidden="true"><Lock /></el-icon>
@@ -193,6 +181,7 @@ const registering = ref(false)
 const codeSending = ref(false)
 const codeCountdown = ref(0)
 const registerEnabled = ref(false)
+const registerConfigLoaded = ref(false)
 const activeMode = ref<AuthMode>('login')
 let countdownTimer: ReturnType<typeof setInterval> | undefined
 
@@ -246,6 +235,8 @@ const loadRegisterConfig = async () => {
     registerEnabled.value = data === 'true'
   } catch {
     registerEnabled.value = false
+  } finally {
+    registerConfigLoaded.value = true
   }
 }
 
@@ -321,10 +312,13 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .login-container {
-  --auth-brand: #071d2d;
-  --auth-brand-deep: #041520;
-  --auth-signal: #38bdf8;
-  --auth-signal-soft: rgba(56, 189, 248, .16);
+  --auth-brand: #dce8ee;
+  --auth-brand-soft: #e8f1f4;
+  --auth-brand-text: #183747;
+  --auth-brand-muted: #5d7481;
+  --auth-brand-border: rgba(3, 105, 161, .12);
+  --auth-brand-grid: rgba(3, 105, 161, .07);
+  --auth-brand-mark: rgba(255, 255, 255, .34);
   --auth-success: #36d399;
   --auth-action: #0369a1;
   --auth-action-hover: #075985;
@@ -336,7 +330,7 @@ onBeforeUnmount(() => {
   --auth-muted: #607083;
   --auth-border: #d8e1e8;
   --auth-fill: #edf2f6;
-  --auth-shadow: 0 24px 70px rgba(22, 43, 65, .1);
+  --auth-shadow: 0 16px 44px rgba(22, 43, 65, .07);
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
@@ -346,15 +340,20 @@ onBeforeUnmount(() => {
 }
 
 .login-container.dark {
-  --auth-brand: #061722;
-  --auth-brand-deep: #031018;
+  --auth-brand: #0c2432;
+  --auth-brand-soft: #102b3a;
+  --auth-brand-text: #e8f0f7;
+  --auth-brand-muted: #9fb5c3;
+  --auth-brand-border: rgba(125, 211, 252, .1);
+  --auth-brand-grid: rgba(125, 211, 252, .05);
+  --auth-brand-mark: rgba(255, 255, 255, .07);
   --auth-canvas: #08111b;
   --auth-surface: #101c28;
   --auth-text: #e8f0f7;
   --auth-muted: #9cabb9;
   --auth-border: #293847;
   --auth-fill: #172533;
-  --auth-shadow: 0 28px 80px rgba(0, 0, 0, .32);
+  --auth-shadow: 0 18px 48px rgba(0, 0, 0, .22);
   --auth-action: #38bdf8;
   --auth-action-hover: #7dd3fc;
   --auth-action-on: #041520;
@@ -363,9 +362,11 @@ onBeforeUnmount(() => {
 
 .split-screen {
   display: grid;
+  box-sizing: border-box;
   min-height: 100vh;
   min-height: 100dvh;
-  grid-template-columns: minmax(480px, 1.06fr) minmax(440px, .94fr);
+  grid-template-columns: minmax(400px, 9fr) minmax(500px, 11fr);
+  padding: 18px;
 }
 
 .brand-section {
@@ -377,20 +378,22 @@ onBeforeUnmount(() => {
   min-height: 100%;
   flex-direction: column;
   padding: clamp(32px, 4vw, 64px);
-  color: #f2f8fc;
-  background: var(--auth-brand);
+  color: var(--auth-brand-text);
+  border: 1px solid var(--auth-brand-border);
+  border-radius: 24px;
+  background: linear-gradient(145deg, var(--auth-brand), var(--auth-brand-soft));
 }
 
 .brand-section::after {
   position: absolute;
   z-index: -1;
-  right: -18%;
-  bottom: -35%;
-  width: 68%;
+  right: -24%;
+  bottom: -30%;
+  width: 56%;
   aspect-ratio: 1;
-  border: 1px solid rgba(56, 189, 248, .18);
+  border: 1px solid var(--auth-brand-border);
   border-radius: 50%;
-  box-shadow: 0 0 0 56px rgba(56, 189, 248, .035), 0 0 0 112px rgba(56, 189, 248, .018);
+  box-shadow: 0 0 0 64px var(--auth-brand-grid);
   content: "";
 }
 
@@ -398,13 +401,13 @@ onBeforeUnmount(() => {
   position: absolute;
   z-index: -2;
   inset: 0;
-  opacity: .34;
+  opacity: .18;
   background-image:
-    linear-gradient(rgba(125, 211, 252, .07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(125, 211, 252, .07) 1px, transparent 1px);
+    linear-gradient(var(--auth-brand-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--auth-brand-grid) 1px, transparent 1px);
   background-position: -1px -1px;
-  background-size: 48px 48px;
-  mask-image: linear-gradient(135deg, #000 8%, transparent 68%);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(135deg, #000 4%, transparent 64%);
 }
 
 .brand-lockup,
@@ -422,123 +425,48 @@ onBeforeUnmount(() => {
   width: 44px;
   height: 44px;
   place-items: center;
-  border: 1px solid rgba(186, 230, 253, .2);
+  border: 1px solid var(--auth-brand-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, .06);
+  background: var(--auth-brand-mark);
 }
 
 .brand-mark img { display: block; }
 .brand-mark-small { width: 38px; height: 38px; border-color: var(--auth-border); background: var(--auth-fill); }
 
 .brand-content {
-  width: min(100%, 620px);
+  width: min(100%, 420px);
   margin: auto 0;
-  padding: 72px 0;
+  padding: 48px 0;
 }
 
-.brand-kicker,
-.eyebrow,
-.route-number {
-  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
-}
-
-.brand-kicker {
-  margin: 0 0 22px;
-  color: #7dd3fc;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .12em;
-}
-
-h1,
-h2 { margin: 0; letter-spacing: -.035em; }
+h1 { margin: 0; letter-spacing: -.03em; }
 
 h1 {
-  max-width: 620px;
-  font-size: clamp(38px, 4.2vw, 64px);
-  font-weight: 680;
-  line-height: 1.14;
+  max-width: 420px;
+  font-size: clamp(32px, 3.2vw, 44px);
+  font-weight: 650;
+  line-height: 1.22;
 }
 
 .brand-description {
-  max-width: 500px;
-  margin: 24px 0 48px;
-  color: #afc2d1;
-  font-size: 17px;
-  line-height: 1.75;
+  max-width: 360px;
+  margin: 18px 0 0;
+  color: var(--auth-brand-muted);
+  font-size: 15px;
+  line-height: 1.7;
 }
-
-.access-route {
-  position: relative;
-  display: grid;
-  max-width: 500px;
-  gap: 0;
-}
-
-.route-step {
-  position: relative;
-  display: grid;
-  min-height: 72px;
-  grid-template-columns: 16px 34px minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
-}
-
-.route-step:not(:last-child)::after {
-  position: absolute;
-  top: 18px;
-  bottom: -2px;
-  left: 7px;
-  width: 1px;
-  background: rgba(148, 180, 201, .28);
-  content: "";
-}
-
-.route-step-active::after {
-  background: linear-gradient(var(--auth-signal), rgba(148, 180, 201, .28));
-}
-
-.route-node {
-  position: relative;
-  z-index: 1;
-  width: 9px;
-  height: 9px;
-  margin-top: 5px;
-  border: 2px solid #7892a5;
-  border-radius: 50%;
-  background: var(--auth-brand);
-}
-
-.route-step-active .route-node {
-  border-color: var(--auth-signal);
-  background: var(--auth-signal);
-  box-shadow: 0 0 0 6px var(--auth-signal-soft);
-  animation: route-pulse 2.4s ease-out infinite;
-}
-
-.route-number {
-  padding-top: 1px;
-  color: #7892a5;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.route-step-active .route-number { color: #7dd3fc; }
-.route-copy { display: grid; gap: 5px; }
-.route-copy strong { color: #eaf4fa; font-size: 15px; font-weight: 600; }
-.route-copy small { color: #8fa7b9; font-size: 13px; line-height: 1.5; }
 
 .brand-meta {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #8fa7b9;
+  color: var(--auth-brand-muted);
   font-size: 12px;
 }
 
-.service-status { display: inline-flex; align-items: center; gap: 9px; color: #bad0de; }
+.service-status { display: inline-flex; align-items: center; gap: 9px; color: var(--auth-brand-text); }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--auth-success); box-shadow: 0 0 0 4px rgba(54, 211, 153, .12); }
-.meta-divider { width: 1px; height: 12px; background: rgba(186, 208, 222, .25); }
+.meta-divider { width: 1px; height: 12px; background: var(--auth-brand-border); }
 
 .login-section {
   position: relative;
@@ -546,8 +474,8 @@ h1 {
   box-sizing: border-box;
   min-width: 0;
   grid-template-rows: auto 1fr auto;
-  padding: 28px clamp(40px, 6vw, 96px) 26px;
-  background: var(--auth-canvas);
+  padding: 24px clamp(24px, 4vw, 56px) 22px;
+  background: transparent;
 }
 
 .auth-topbar { display: flex; min-height: 48px; justify-content: flex-end; align-items: center; }
@@ -578,11 +506,11 @@ h1 {
   --el-color-primary: var(--auth-action);
   box-sizing: border-box;
   align-self: center;
-  width: min(100%, 530px);
+  width: min(100%, 430px);
   margin: 16px auto;
-  padding: clamp(28px, 4vw, 44px);
+  padding: 30px;
   border: 1px solid var(--auth-border);
-  border-radius: 24px;
+  border-radius: 18px;
   background: var(--auth-surface);
   box-shadow: var(--auth-shadow);
 }
@@ -591,10 +519,15 @@ h1 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
-  margin-bottom: 34px;
+  margin-bottom: 20px;
   padding: 4px;
   border-radius: 13px;
   background: var(--auth-fill);
+}
+
+.auth-tabs.is-loading {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .auth-tabs button {
@@ -618,17 +551,16 @@ h1 {
   box-shadow: 0 2px 8px rgba(22, 43, 65, .08);
 }
 
-.login-heading { margin-bottom: 32px; }
-.eyebrow { margin: 0 0 12px; color: var(--auth-action); font-size: 11px; font-weight: 700; letter-spacing: .1em; }
-.login-heading h2 { font-size: clamp(28px, 3vw, 34px); font-weight: 680; line-height: 1.2; }
-.login-heading > p:last-child { margin: 12px 0 0; color: var(--auth-muted); font-size: 15px; line-height: 1.6; }
+.mode-description { margin: 0 0 20px; color: var(--auth-muted); font-size: 14px; line-height: 1.6; }
+.auth-form-stage { min-height: 340px; }
 
-:deep(.el-form-item) { margin-bottom: 24px; }
-:deep(.el-form-item__label) { margin-bottom: 8px; color: var(--auth-text); font-size: 14px; font-weight: 600; line-height: 1.4; }
+:deep(.el-form-item) { margin-bottom: 16px; }
+:deep(.el-form-item.is-error) { margin-bottom: 28px; }
+:deep(.el-form-item__label) { margin-bottom: 6px; color: var(--auth-text); font-size: 13px; font-weight: 600; line-height: 1.4; }
 :deep(.el-form-item__error) { padding-top: 5px; }
 :deep(.el-input__wrapper) {
-  min-height: 50px;
-  padding: 0 15px;
+  min-height: 46px;
+  padding: 0 13px;
   border: 1px solid var(--auth-border);
   border-radius: 11px;
   background: var(--auth-surface);
@@ -638,15 +570,25 @@ h1 {
 
 :deep(.el-input__wrapper:hover) { border-color: var(--auth-action); }
 :deep(.el-input__wrapper.is-focus) { border-color: var(--auth-action); box-shadow: 0 0 0 3px var(--auth-focus); }
-:deep(.el-input__inner) { min-width: 0; color: var(--auth-text); font-size: 15px; }
+:deep(.el-input__inner) { min-width: 0; color: var(--auth-text); font-size: 14px; }
+:deep(.el-input__inner:-webkit-autofill),
+:deep(.el-input__inner:-webkit-autofill:hover),
+:deep(.el-input__inner:-webkit-autofill:focus),
+:deep(.el-input__inner:-webkit-autofill:active) {
+  caret-color: var(--auth-text);
+  -webkit-text-fill-color: var(--auth-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--auth-surface) inset;
+  box-shadow: 0 0 0 1000px var(--auth-surface) inset;
+  transition: background-color 9999s ease-out 0s;
+}
 :deep(.el-checkbox__label) { color: var(--auth-muted); font-size: 13px; }
 
-.verification-row { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) 122px; gap: 10px; }
-.code-button { min-height: 50px; margin: 0; border-radius: 11px; font-weight: 600; }
+.verification-row { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
+.code-button { min-height: 46px; margin: 0; padding-inline: 12px; border-radius: 11px; font-weight: 600; }
 .code-button:disabled { cursor: not-allowed; }
 .field-hint { width: 100%; margin: 7px 0 0; color: var(--auth-muted); font-size: 12px; line-height: 1.5; }
 
-.login-options { display: flex; justify-content: space-between; align-items: center; margin: -2px 0 26px; font-size: 13px; }
+.login-options { display: flex; justify-content: space-between; align-items: center; margin: -2px 0 14px; font-size: 13px; }
 .forgot-password { min-height: 44px; padding: 0 2px; border: 0; color: var(--auth-action); background: transparent; font: inherit; cursor: pointer; touch-action: manipulation; }
 .forgot-password:hover { text-decoration: underline; text-underline-offset: 4px; }
 
@@ -660,76 +602,58 @@ h1 {
   --el-button-active-bg-color: var(--auth-action-hover);
   --el-button-active-border-color: var(--auth-action-hover);
   width: 100%;
-  min-height: 50px;
+  min-height: 46px;
   border-radius: 11px;
   font-size: 15px;
   font-weight: 650;
   letter-spacing: .01em;
 }
-.security-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 24px; color: var(--auth-muted); font-size: 12px; line-height: 1.55; }
+.security-note { display: flex; align-items: flex-start; gap: 8px; min-height: 19px; margin-top: 14px; color: var(--auth-muted); font-size: 12px; line-height: 1.55; }
 .security-note .el-icon { flex: 0 0 auto; margin-top: 2px; color: var(--auth-action); }
 .login-footer { align-self: end; margin: 12px 0 0; color: var(--auth-muted); font-size: 11px; text-align: center; }
 
-.auth-form-enter-active { transition: opacity .26s ease-out, transform .26s cubic-bezier(.16, 1, .3, 1); }
-.auth-form-leave-active { transition: opacity .16s ease-in, transform .16s ease-in; }
-.auth-form-enter-from { opacity: 0; transform: translateY(8px); }
-.auth-form-leave-to { opacity: 0; transform: translateY(-4px); }
-
-@keyframes route-pulse {
-  0%, 55% { box-shadow: 0 0 0 6px var(--auth-signal-soft); }
-  80%, 100% { box-shadow: 0 0 0 12px rgba(56, 189, 248, 0); }
-}
+.auth-form-enter-active { transition: opacity .15s ease-out; }
+.auth-form-leave-active { transition: opacity .1s ease-in; }
+.auth-form-enter-from,
+.auth-form-leave-to { opacity: 0; }
 
 @media (max-width: 1024px) {
-  .split-screen { grid-template-columns: minmax(390px, .9fr) minmax(420px, 1.1fr); }
+  .split-screen { grid-template-columns: minmax(340px, 9fr) minmax(480px, 11fr); }
   .brand-section { padding: 36px; }
-  .brand-content { padding: 56px 0; }
-  h1 { font-size: clamp(36px, 5vw, 48px); }
-  .brand-description { margin-bottom: 40px; }
-  .login-section { padding-inline: 40px; }
+  .brand-content { padding: 36px 0; }
+  h1 { font-size: clamp(32px, 4vw, 40px); }
+  .login-section { padding-inline: 32px; }
 }
 
 @media (max-height: 800px) and (min-width: 821px) {
   .brand-section { padding-block: 28px; }
   .brand-content { padding: 24px 0; }
-  .brand-kicker { margin-bottom: 16px; }
-  h1 { font-size: clamp(36px, 4vw, 48px); }
-  .brand-description { margin: 16px 0 28px; font-size: 15px; }
-  .route-step { min-height: 58px; }
+  h1 { font-size: clamp(30px, 3.4vw, 38px); }
+  .brand-description { margin-top: 14px; font-size: 14px; }
   .login-section { padding-block: 16px 14px; }
   .auth-topbar { min-height: 44px; }
-  .login-box { margin-block: 8px; padding: 20px 36px; }
-  .auth-tabs { margin-bottom: 22px; }
-  .login-heading { margin-bottom: 22px; }
-  .login-heading h2 { font-size: 30px; }
-  .login-heading > p:last-child { margin-top: 8px; }
-  :deep(.el-form-item) { margin-bottom: 16px; }
-  :deep(.el-input__wrapper) { min-height: 46px; }
-  .login-options { margin: -2px 0 12px; }
-  .login-button,
-  .code-button { min-height: 46px; }
-  .security-note { margin-top: 12px; }
+  .login-box { margin-block: 8px; padding: 26px 28px; }
+  .auth-tabs { margin-bottom: 18px; }
+  .mode-description { margin-bottom: 16px; }
   .login-footer { margin-top: 8px; }
 }
 
 @media (max-width: 820px) {
-  .split-screen { grid-template-columns: 1fr; }
+  .split-screen { grid-template-columns: 1fr; padding: 0; }
   .brand-section { display: none; }
   .login-section { min-height: 100vh; min-height: 100dvh; padding: 24px clamp(24px, 7vw, 56px); }
   .auth-topbar { justify-content: space-between; }
   .mobile-brand { display: flex; }
   .login-box { margin-block: 32px; }
+  .auth-form-stage { min-height: 0; }
 }
 
 @media (max-width: 480px) {
   .login-section { padding: 18px 16px 20px; }
-  .login-box { width: 100%; margin-block: 24px; padding: 26px 20px; border-radius: 20px; }
-  .auth-tabs { margin-bottom: 28px; }
-  .login-heading { margin-bottom: 28px; }
-  .login-heading h2 { font-size: 28px; }
-  .login-heading > p:last-child { font-size: 14px; }
+  .login-box { width: 100%; margin-block: 24px; padding: 24px 20px; border-radius: 18px; }
+  .auth-tabs { margin-bottom: 20px; }
+  .mode-description { margin-bottom: 18px; }
   .verification-row { grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
-  .code-button { padding-inline: 12px; }
   .login-footer { font-size: 10px; }
 }
 
