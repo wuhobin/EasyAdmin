@@ -19,6 +19,12 @@ public class CommonConstants {
 
     public static final String CURRENT_USER = "current_user";
 
+    public static final String REGISTER_ENABLED_CONFIG_KEY = "register.enabled";
+
+    public static final String REGISTER_ROLE_CODE_CONFIG_KEY = "register.role-code";
+
+    public static final String TRUE_VALUE = "true";
+
     public static final String PARENT_VIEW = "ParentView";
 
     public static final Object USER = "user";
@@ -60,6 +66,34 @@ public class CommonConstants {
     public static final String EMAIL_CODE_VERIFY_FAILED_MESSAGE = "验证码校验失败，请稍后重试";
 
     public static final String EMAIL_CODE_INVALID_MESSAGE = "验证码不正确或已过期，请重新输入";
+
+    public static final String EMAIL_CODE_FORMAT_INVALID_MESSAGE = "邮箱验证码格式不正确";
+
+    public static final String EMAIL_CODE_PATTERN = "\\d{4,8}";
+
+    public static final String REGISTER_DISABLED_MESSAGE = "系统暂未开放注册";
+
+    public static final String REGISTER_CONFIG_INCOMPLETE_MESSAGE = "注册配置不完整，请联系管理员";
+
+    public static final String REGISTER_FAILED_MESSAGE = "注册失败，请稍后重试";
+
+    public static final int MAX_NICKNAME_LENGTH = 30;
+
+    public static final String CONFIG_KEY_EXISTS_MESSAGE = "配置键已存在";
+
+    public static final String CONFIG_ADD_FAILED_MESSAGE = "新增配置失败";
+
+    public static final String CONFIG_ID_REQUIRED_MESSAGE = "配置ID不能为空";
+
+    public static final String CONFIG_NOT_FOUND_MESSAGE = "配置不存在";
+
+    public static final String CONFIG_KEY_IMMUTABLE_MESSAGE = "配置键创建后不允许修改";
+
+    public static final String CONFIG_UPDATE_FAILED_MESSAGE = "修改配置失败";
+
+    public static final String CONFIG_DELETE_FAILED_MESSAGE = "删除配置失败";
+
+    public static final String CONFIG_DEFAULT_ORDER = "update_time desc";
 
     public static final String VERIFICATION_TITLE_PLACEHOLDER = "{verificationTitle}";
 

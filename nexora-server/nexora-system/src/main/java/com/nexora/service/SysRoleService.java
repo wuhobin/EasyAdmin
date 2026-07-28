@@ -18,6 +18,8 @@ public interface SysRoleService extends IService<SysRole> {
      * 新增角色
      */
     boolean existsByCode(String code, Integer excludeId);
+
+    SysRole getByCode(String code);
     
     /**
      * 更新角色

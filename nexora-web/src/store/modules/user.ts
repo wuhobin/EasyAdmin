@@ -5,7 +5,7 @@ import {
   loginApi,
   logoutApi,
   type CurrentUserResult,
-  type LoginParams,
+  type AuthParams,
 } from '@/api/system/auth'
 import { resetRouter } from '@/router'
 import { store } from '@/store'
@@ -52,7 +52,7 @@ export const useUserStore = defineStore("user", () => {
    * @param {LoginData}
    * @returns
    */
-  async function login(loginData: LoginParams) {
+  async function login(loginData: AuthParams) {
     const { data } = await loginApi(loginData)
     setToken(data.token, loginData.rememberMe)
   }

@@ -29,3 +29,6 @@ platform:
     is-log: true
     exclude-paths:
       - /auth/login
+      - /auth/register/sendCode
+      - /auth/register
+      - /sys/config/value/**

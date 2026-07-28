@@ -1,17 +1,20 @@
 package com.nexora.biz.auth;
 
-import com.nexora.domain.form.auth.LoginForm;
+import com.nexora.domain.form.auth.AuthForm;
 import com.nexora.config.NexoraPermissionProvider;
+import com.nexora.config.SysConfigReader;
 import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.constants.CommonConstants;
 import com.nexora.entity.SysUser;
 import com.nexora.service.SysUserService;
+import com.nexora.service.SysRoleService;
 import com.aurora.starter.security.account.AccountType;
 import com.aurora.starter.security.context.SecurityUtils;
 import cn.dev33.satoken.secure.BCrypt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,9 +40,9 @@ class AuthBizServiceTest {
 
     @Test
     void defaultsRememberMeToFalseWhenTheFieldIsMissing() throws Exception {
-        LoginForm loginForm = new ObjectMapper().readValue(
+        AuthForm loginForm = new ObjectMapper().readValue(
                 "{\"email\":\" Admin@Example.com \",\"password\":\"secret\"}",
-                LoginForm.class
+                AuthForm.class
         );
 
         assertThat(loginForm.isRememberMe()).isFalse();
@@ -48,9 +51,9 @@ class AuthBizServiceTest {
 
     @Test
     void bindsRememberMeWhenTheFieldIsProvided() throws Exception {
-        LoginForm loginForm = new ObjectMapper().readValue(
+        AuthForm loginForm = new ObjectMapper().readValue(
                 "{\"email\":\"admin@example.com\",\"password\":\"secret\",\"rememberMe\":true}",
-                LoginForm.class
+                AuthForm.class
         );
 
         assertThat(loginForm.isRememberMe()).isTrue();
@@ -67,9 +70,8 @@ class AuthBizServiceTest {
                 .status(1)
                 .build();
         when(userService.getByEmail("admin@example.com")).thenReturn(user);
-        AuthBizService service = new AuthBizService(
-                userService, mock(NexoraPermissionProvider.class));
-        LoginForm form = new LoginForm();
+        AuthBizService service = createService(userService, mock(NexoraPermissionProvider.class));
+        AuthForm form = new AuthForm();
         form.setEmail(" Admin@Example.com ");
         form.setPassword("secret");
 
@@ -92,7 +94,7 @@ class AuthBizServiceTest {
         when(permissionProvider.getAuthorization(7, AccountType.LOGIN))
                 .thenReturn(new SecurityAuthorizationCache.Authorization(
                         List.of("admin"), List.of("sys:config:list")));
-        AuthBizService service = new AuthBizService(userService, permissionProvider);
+        AuthBizService service = createService(userService, permissionProvider);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsLong).thenReturn(7L);
@@ -105,12 +107,17 @@ class AuthBizServiceTest {
     }
 
     @Test
-    void onlyLoginRemainsInTheApplicationAuthenticationAllowList() throws Exception {
+    void publicAuthenticationEndpointsRemainInTheApplicationAllowList() throws Exception {
         String config = Files.readString(Path.of(
                 "..", "nexora-boot", "src", "main", "resources", "config", "platform.yml"
         ));
 
-        assertThat(config).contains("exclude-paths:", "- /auth/login");
+        assertThat(config).contains(
+                "exclude-paths:",
+                "- /auth/login",
+                "- /auth/register/sendCode",
+                "- /auth/register",
+                "- /sys/config/value/**");
         assertThat(config).doesNotContain("- /auth/info", "- /auth/logout", "- /auth/verify");
     }
 
@@ -122,5 +129,16 @@ class AuthBizServiceTest {
 
         assertThat(config).doesNotContain(
                 "allow-circular-references", "allow-bean-definition-overriding");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static AuthBizService createService(
+            SysUserService userService, NexoraPermissionProvider permissionProvider) {
+        return new AuthBizService(
+                userService,
+                mock(SysRoleService.class),
+                permissionProvider,
+                mock(SysConfigReader.class),
+                mock(ObjectProvider.class));
     }
 }

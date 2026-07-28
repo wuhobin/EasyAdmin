@@ -110,6 +110,9 @@ CREATE TABLE `sys_config`  (
 -- ----------------------------
 -- Records of sys_config
 -- ----------------------------
+INSERT INTO `sys_config` (`config_key`, `config_value`, `remark`) VALUES
+('register.enabled', 'false', '是否开放用户注册，只有 true 表示开启'),
+('register.role-code', 'user', '注册用户默认角色编码，对应 sys_role.code');
 
 -- ----------------------------
 -- Table structure for sys_dict

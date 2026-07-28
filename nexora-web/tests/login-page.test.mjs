@@ -22,6 +22,35 @@ test('login page submits the remember-me value from the form model', () => {
   assert.match(loginPageSource, /rememberMe:\s*false/)
 })
 
+test('login page exposes registration only when the public system setting is true', () => {
+  assert.match(loginPageSource, /getConfigValueApi\(REGISTER_ENABLED_CONFIG_KEY\)/)
+  assert.match(loginPageSource, /data === ['"]true['"]/)
+  assert.match(loginPageSource, /v-if="registerEnabled" class="auth-tabs"/)
+  assert.match(loginPageSource, /activeMode === ['"]register['"]/)
+})
+
+test('registration uses email code and password with a sixty-second cooldown', () => {
+  assert.match(loginPageSource, /v-model="registerForm\.email"/)
+  assert.match(loginPageSource, /v-model="registerForm\.code"/)
+  assert.match(loginPageSource, /v-model="registerForm\.password"/)
+  assert.match(loginPageSource, /sendRegisterCodeApi\(registerForm\)/)
+  assert.match(loginPageSource, /registerApi\(registerForm\)/)
+  assert.match(loginPageSource, /codeCountdown\.value = 60/)
+  assert.match(loginPageSource, /loginForm\.email = registerForm\.email/)
+  assert.doesNotMatch(loginPageSource, /confirmPassword/)
+})
+
+test('login and registration navigation remains accessible and motion-safe', () => {
+  assert.match(loginPageSource, /role="tablist"/)
+  assert.match(loginPageSource, /aria-controls="login-panel"/)
+  assert.match(loginPageSource, /aria-controls="register-panel"/)
+  assert.match(loginPageSource, /:tabindex="activeMode === 'login' \? 0 : -1"/)
+  assert.match(loginPageSource, /document\.getElementById\(`\$\{mode\}-tab`\)\?\.focus\(\)/)
+  assert.match(loginPageSource, /aria-label="codeCountdown > 0/)
+  assert.match(loginPageSource, /@media \(prefers-reduced-motion: reduce\)/)
+  assert.match(loginPageSource, /min-height:\s*100dvh/)
+})
+
 test('login page does not prefill demo credentials', () => {
   assert.match(loginPageSource, /email:\s*['"]["']/)
   assert.match(loginPageSource, /password:\s*['"]["']/)
@@ -29,7 +58,7 @@ test('login page does not prefill demo credentials', () => {
   assert.doesNotMatch(loginPageSource, /password:\s*['"]123456['"]/)
 })
 
-test('login page only exposes account password login', () => {
+test('login page does not restore removed alternative login methods', () => {
   const removedFeatureMarkers = [
     'SliderCaptcha',
     '<slider-captcha',

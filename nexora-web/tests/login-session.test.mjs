@@ -44,17 +44,21 @@ test('token cookie supports session and three-day remember-me lifetimes', () => 
   assert.match(authSource, /Cookies\.remove\(TokenKey,\s*\{\s*path:\s*['"]\/['"]\s*\}\)/)
 })
 
-test('login API types match the active email-password form', () => {
-  assert.match(authApiSource, /export interface LoginParams/)
+test('authentication API types match the shared login and registration form', () => {
+  assert.match(authApiSource, /export interface AuthParams/)
   assert.match(authApiSource, /export interface CurrentUserResult/)
   assert.match(authApiSource, /export interface LoginResult extends CurrentUserResult/)
   assert.match(authApiSource, /rememberMe:\s*boolean/)
   assert.match(authApiSource, /email:\s*string/)
+  assert.match(authApiSource, /password:\s*string/)
+  assert.match(authApiSource, /code:\s*string/)
   assert.doesNotMatch(authApiSource, /username:\s*string/)
   assert.match(authApiSource, /Promise<ApiResponse<LoginResult>>/)
   assert.match(authApiSource, /Promise<ApiResponse<CurrentUserResult>>/)
   assert.match(authApiSource, /request<LoginResult>/)
   assert.match(authApiSource, /request<CurrentUserResult>/)
+  assert.match(authApiSource, /\/auth\/register\/sendCode/)
+  assert.match(authApiSource, /\/auth\/register/)
   assert.doesNotMatch(authApiSource, /as unknown as Promise/)
   assert.doesNotMatch(authApiSource, /captchaCode|captchaKey/)
 })

@@ -2,6 +2,7 @@ package com.nexora.biz.system;
 
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.cache.SysConfigCache;
+import com.nexora.config.SysConfigReader;
 import com.nexora.domain.form.system.SysConfigForm;
 import com.nexora.entity.SysConfig;
 import com.nexora.service.SysConfigService;
@@ -19,7 +20,16 @@ class SysConfigBizServiceTest {
 
     private final SysConfigService configService = mock(SysConfigService.class);
     private final SysConfigCache configCache = mock(SysConfigCache.class);
-    private final SysConfigBizService bizService = new SysConfigBizService(configService, configCache);
+    private final SysConfigReader configReader = mock(SysConfigReader.class);
+    private final SysConfigBizService bizService = new SysConfigBizService(
+            configService, configCache, configReader);
+
+    @Test
+    void returnsPublicConfigurationValueByKey() {
+        when(configReader.getString("register.enabled", null)).thenReturn("true");
+
+        assertThat(bizService.getValue("register.enabled")).isEqualTo("true");
+    }
 
     @Test
     void rejectsDuplicateKeys() {

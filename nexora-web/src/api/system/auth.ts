@@ -1,8 +1,9 @@
 import request, { type ApiResponse } from '@/utils/request'
 
-export interface LoginParams {
+export interface AuthParams {
   email: string
   password: string
+  code: string
   rememberMe: boolean
   source?: string
 }
@@ -21,9 +22,25 @@ export interface LoginResult extends CurrentUserResult {
 }
 
 // 登录接口
-export function loginApi(data: LoginParams): Promise<ApiResponse<LoginResult>> {
+export function loginApi(data: AuthParams): Promise<ApiResponse<LoginResult>> {
   return request<LoginResult>({
     url: '/auth/login',
+    method: 'post',
+    data
+  })
+}
+
+export function sendRegisterCodeApi(data: AuthParams): Promise<ApiResponse<void>> {
+  return request<void>({
+    url: '/auth/register/sendCode',
+    method: 'post',
+    data
+  })
+}
+
+export function registerApi(data: AuthParams): Promise<ApiResponse<void>> {
+  return request<void>({
+    url: '/auth/register',
     method: 'post',
     data
   })
