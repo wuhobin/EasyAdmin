@@ -29,6 +29,12 @@ test('login page submits the remember-me value from the form model', () => {
   assert.match(loginPageSource, /rememberMe:\s*false/)
 })
 
+test('authentication validation runs on actions instead of field blur or change', () => {
+  const validationRulesSource = loginPageSource.match(/const emailRules:[\s\S]*?const isDark/)?.[0] ?? ''
+  assert.match(validationRulesSource, /trigger:\s*['"]submit['"]/)
+  assert.doesNotMatch(validationRulesSource, /trigger:\s*['"](?:blur|change)['"]/)
+})
+
 test('login page exposes registration only when the public system setting is true', () => {
   assert.match(loginPageSource, /getConfigValueApi\(REGISTER_ENABLED_CONFIG_KEY\)/)
   assert.match(loginPageSource, /data === ['"]true['"]/)
@@ -47,11 +53,42 @@ test('registration uses email code and password with a sixty-second cooldown', (
   assert.match(loginPageSource, /v-model="registerForm\.email"/)
   assert.match(loginPageSource, /v-model="registerForm\.code"/)
   assert.match(loginPageSource, /v-model="registerForm\.password"/)
+  assert.match(loginPageSource, /v-model="registerForm\.password"[^>]*placeholder="请输入密码（6～20 位字符）"/)
   assert.match(loginPageSource, /sendRegisterCodeApi\(registerForm\)/)
   assert.match(loginPageSource, /registerApi\(registerForm\)/)
   assert.match(loginPageSource, /codeCountdown\.value = 60/)
   assert.match(loginPageSource, /loginForm\.email = registerForm\.email/)
-  assert.doesNotMatch(loginPageSource, /confirmPassword/)
+  assert.doesNotMatch(loginPageSource, /registerForm\.confirmPassword/)
+})
+
+test('forgot password opens an email verification dialog and resets the password', () => {
+  assert.match(loginPageSource, /v-model="resetDialogVisible"/)
+  assert.match(loginPageSource, /v-model="resetPasswordForm\.email"/)
+  assert.match(loginPageSource, /v-model="resetPasswordForm\.code"/)
+  assert.match(loginPageSource, /v-model="resetPasswordForm\.password"/)
+  assert.match(loginPageSource, /v-model="resetPasswordForm\.password"[\s\S]*?placeholder="请输入新密码（6～20 位字符）"/)
+  assert.match(loginPageSource, /v-model="resetPasswordForm\.confirmPassword"/)
+  assert.match(loginPageSource, /sendResetPasswordCodeApi\(\{ email: resetPasswordForm\.email \}\)/)
+  assert.match(loginPageSource, /resetPasswordApi\(\{/)
+  assert.match(loginPageSource, /resetCodeCountdown\.value = 60/)
+  assert.match(loginPageSource, /两次输入的密码不一致/)
+  assert.match(loginPageSource, /loginForm\.email = resetPasswordForm\.email/)
+  assert.match(loginPageSource, /密码重置成功，请使用新密码登录/)
+  assert.doesNotMatch(loginPageSource, /class="field-hint"/)
+})
+
+test('reset dialog reserves validation space without changing height', () => {
+  assert.match(loginPageSource, /\.reset-password-dialog \.el-form-item\)[^{]*\{[^}]*margin-bottom:\s*28px/s)
+  assert.match(loginPageSource, /\.reset-password-dialog \.el-dialog__body > \.el-form:last-child \.el-form-item:last-child\)[^{]*\{[^}]*margin-bottom:\s*36px/s)
+  assert.match(loginPageSource, /\.reset-password-dialog \.el-form-item__error\)[^{]*\{[^}]*position:\s*absolute/s)
+  assert.match(loginPageSource, /\.reset-password-dialog \.el-form-item__error\)[^{]*\{[^}]*top:\s*100%/s)
+})
+
+test('reset dialog avoids internal scrolling and separates footer actions', () => {
+  assert.match(loginPageSource, /\.reset-password-dialog \.el-dialog__body\)[^{]*\{[^}]*overflow:\s*hidden/s)
+  assert.match(loginPageSource, /\.reset-password-dialog \.el-dialog__footer\)[^{]*\{[^}]*padding:\s*14px 26px 20px/s)
+  assert.match(loginPageSource, /@media \(max-height:\s*620px\)[\s\S]*?\.reset-password-dialog \.el-form-item\)[^{]*\{[^}]*margin-bottom:\s*24px/s)
+  assert.match(loginPageSource, /@media \(max-height:\s*620px\)[\s\S]*?\.reset-password-dialog \.el-dialog__body\)[^{]*\{[^}]*padding:\s*14px 22px 16px/s)
 })
 
 test('login and registration navigation remains accessible and motion-safe', () => {

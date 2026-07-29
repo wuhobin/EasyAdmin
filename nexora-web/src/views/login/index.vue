@@ -136,8 +136,7 @@
                   </div>
                 </el-form-item>
                 <el-form-item prop="password">
-                  <el-input v-model="registerForm.password" name="register-password" type="password" placeholder="请输入密码" aria-label="密码" :prefix-icon="Lock" show-password size="large" autocomplete="new-password" />
-                  <p class="field-hint">使用 6～20 位字符</p>
+                  <el-input v-model="registerForm.password" name="register-password" type="password" placeholder="请输入密码（6～20 位字符）" aria-label="密码" :prefix-icon="Lock" show-password size="large" autocomplete="new-password" />
                 </el-form-item>
                 <el-button :loading="registering" type="primary" size="large" class="login-button" @click="handleRegister">
                   {{ registering ? '正在创建…' : '创建账号' }}
@@ -155,6 +154,107 @@
         <p class="login-footer">© 2026 Nexora Admin · Secure Access</p>
       </section>
     </main>
+
+    <el-dialog
+      v-model="resetDialogVisible"
+      class="reset-password-dialog"
+      width="480px"
+      :close-on-click-modal="false"
+      destroy-on-close
+      @closed="handleResetDialogClosed"
+    >
+      <template #header>
+        <div class="reset-dialog-heading">
+          <span class="reset-dialog-icon" aria-hidden="true"><el-icon><Message /></el-icon></span>
+          <div>
+            <h2>重置登录密码</h2>
+            <p>验证当前绑定邮箱后设置新密码</p>
+          </div>
+        </div>
+      </template>
+
+      <el-form
+        ref="resetPasswordFormRef"
+        :model="resetPasswordForm"
+        :rules="resetPasswordRules"
+        label-position="top"
+        @keyup.enter="handleResetPassword"
+      >
+        <el-form-item prop="email">
+          <el-input
+            v-model="resetPasswordForm.email"
+            name="reset-email"
+            type="email"
+            placeholder="请输入当前绑定邮箱"
+            aria-label="当前绑定邮箱"
+            :prefix-icon="Message"
+            size="large"
+            autocomplete="email"
+            :spellcheck="false"
+          />
+        </el-form-item>
+        <el-form-item prop="code">
+          <div class="verification-row">
+            <el-input
+              v-model="resetPasswordForm.code"
+              name="reset-code"
+              inputmode="numeric"
+              maxlength="8"
+              placeholder="请输入验证码"
+              aria-label="密码重置邮箱验证码"
+              :prefix-icon="Key"
+              size="large"
+              autocomplete="one-time-code"
+            />
+            <el-button
+              class="code-button"
+              size="large"
+              :loading="resetCodeSending"
+              :disabled="resetCodeCountdown > 0"
+              :aria-label="resetCodeCountdown > 0 ? `${resetCodeCountdown} 秒后可重新获取验证码` : '获取密码重置验证码'"
+              @click="handleSendResetCode"
+            >
+              {{ resetCodeCountdown > 0 ? `${resetCodeCountdown} 秒` : '获取验证码' }}
+            </el-button>
+          </div>
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-input
+            v-model="resetPasswordForm.password"
+            name="reset-password"
+            type="password"
+            placeholder="请输入新密码（6～20 位字符）"
+            aria-label="新密码"
+            :prefix-icon="Lock"
+            show-password
+            size="large"
+            autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item prop="confirmPassword">
+          <el-input
+            v-model="resetPasswordForm.confirmPassword"
+            name="reset-confirm-password"
+            type="password"
+            placeholder="请再次输入新密码"
+            aria-label="确认新密码"
+            :prefix-icon="Lock"
+            show-password
+            size="large"
+            autocomplete="new-password"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <div class="reset-dialog-actions">
+          <el-button size="large" @click="resetDialogVisible = false">取消</el-button>
+          <el-button type="primary" size="large" :loading="resettingPassword" @click="handleResetPassword">
+            {{ resettingPassword ? '正在重置…' : '重置密码' }}
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -166,24 +266,39 @@ import { Key, Lock, Message, Moon, Sunny } from '@element-plus/icons-vue'
 import logoUrl from '@/assets/brand/nexora-logo.svg'
 import { useUserStore } from '@/store/modules/user'
 import { useSettingsStore } from '@/store/modules/settings'
-import { registerApi, sendRegisterCodeApi, type AuthParams } from '@/api/system/auth'
+import {
+  registerApi,
+  resetPasswordApi,
+  sendRegisterCodeApi,
+  sendResetPasswordCodeApi,
+  type AuthParams
+} from '@/api/system/auth'
 import { getConfigValueApi } from '@/api/system/config'
 
 type AuthMode = 'login' | 'register'
+interface ResetPasswordForm extends AuthParams {
+  confirmPassword: string
+}
 
 const REGISTER_ENABLED_CONFIG_KEY = 'register.enabled'
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
 const loginFormRef = ref<FormInstance>()
 const registerFormRef = ref<FormInstance>()
+const resetPasswordFormRef = ref<FormInstance>()
 const loading = ref(false)
 const registering = ref(false)
 const codeSending = ref(false)
 const codeCountdown = ref(0)
+const resetDialogVisible = ref(false)
+const resetCodeSending = ref(false)
+const resetCodeCountdown = ref(0)
+const resettingPassword = ref(false)
 const registerEnabled = ref(false)
 const registerConfigLoaded = ref(false)
 const activeMode = ref<AuthMode>('login')
 let countdownTimer: ReturnType<typeof setInterval> | undefined
+let resetCountdownTimer: ReturnType<typeof setInterval> | undefined
 
 const createAuthForm = (): AuthParams => ({
   email: '',
@@ -194,14 +309,18 @@ const createAuthForm = (): AuthParams => ({
 })
 const loginForm = reactive<AuthParams>(createAuthForm())
 const registerForm = reactive<AuthParams>(createAuthForm())
+const resetPasswordForm = reactive<ResetPasswordForm>({
+  ...createAuthForm(),
+  confirmPassword: ''
+})
 
 const emailRules: FormItemRule[] = [
-  { required: true, message: '请输入邮箱', trigger: 'blur' },
-  { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  { required: true, message: '请输入邮箱', trigger: 'submit' },
+  { type: 'email', message: '请输入正确的邮箱地址', trigger: 'submit' }
 ]
 const passwordRules: FormItemRule[] = [
-  { required: true, message: '请输入密码', trigger: 'blur' },
-  { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+  { required: true, message: '请输入密码', trigger: 'submit' },
+  { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'submit' }
 ]
 const loginRules: FormRules<AuthParams> = {
   email: emailRules,
@@ -210,10 +329,31 @@ const loginRules: FormRules<AuthParams> = {
 const registerRules: FormRules<AuthParams> = {
   email: emailRules,
   code: [
-    { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
-    { pattern: /^\d{4,8}$/, message: '邮箱验证码格式不正确', trigger: 'blur' }
+    { required: true, message: '请输入邮箱验证码', trigger: 'submit' },
+    { pattern: /^\d{4,8}$/, message: '邮箱验证码格式不正确', trigger: 'submit' }
   ],
   password: passwordRules
+}
+const confirmPasswordRule: FormItemRule = {
+  validator: (_rule, value, callback) => {
+    if (!value) {
+      callback(new Error('请再次输入新密码'))
+    } else if (value !== resetPasswordForm.password) {
+      callback(new Error('两次输入的密码不一致'))
+    } else {
+      callback()
+    }
+  },
+  trigger: 'submit'
+}
+const resetPasswordRules: FormRules<ResetPasswordForm> = {
+  email: emailRules,
+  code: [
+    { required: true, message: '请输入邮箱验证码', trigger: 'submit' },
+    { pattern: /^\d{4,8}$/, message: '邮箱验证码格式不正确', trigger: 'submit' }
+  ],
+  password: passwordRules,
+  confirmPassword: [confirmPasswordRule]
 }
 
 const isDark = computed(() => settingsStore.theme === 'dark')
@@ -241,7 +381,12 @@ const loadRegisterConfig = async () => {
 }
 
 const handleForgotPassword = () => {
-  ElMessage.info('请联系系统管理员重置密码')
+  resetPasswordForm.email = loginForm.email.trim()
+  resetPasswordForm.code = ''
+  resetPasswordForm.password = ''
+  resetPasswordForm.confirmPassword = ''
+  resetDialogVisible.value = true
+  nextTick(() => resetPasswordFormRef.value?.clearValidate())
 }
 
 const handleLogin = async () => {
@@ -266,6 +411,18 @@ const startCodeCountdown = () => {
     if (codeCountdown.value <= 0 && countdownTimer) {
       clearInterval(countdownTimer)
       countdownTimer = undefined
+    }
+  }, 1000)
+}
+
+const startResetCodeCountdown = () => {
+  if (resetCountdownTimer) clearInterval(resetCountdownTimer)
+  resetCodeCountdown.value = 60
+  resetCountdownTimer = setInterval(() => {
+    resetCodeCountdown.value -= 1
+    if (resetCodeCountdown.value <= 0 && resetCountdownTimer) {
+      clearInterval(resetCountdownTimer)
+      resetCountdownTimer = undefined
     }
   }, 1000)
 }
@@ -304,9 +461,50 @@ const handleRegister = async () => {
   }
 }
 
+const handleSendResetCode = async () => {
+  if (!resetPasswordFormRef.value) return
+  const emailValid = await resetPasswordFormRef.value.validateField('email').then(() => true).catch(() => false)
+  if (!emailValid) return
+  resetCodeSending.value = true
+  try {
+    await sendResetPasswordCodeApi({ email: resetPasswordForm.email })
+    startResetCodeCountdown()
+    ElMessage.success('验证码已发送，请查收邮箱')
+  } catch (error) {
+    console.error('Reset password code send failed:', error)
+  } finally {
+    resetCodeSending.value = false
+  }
+}
+
+const handleResetPassword = async () => {
+  if (!resetPasswordFormRef.value || !(await resetPasswordFormRef.value.validate().catch(() => false))) return
+  resettingPassword.value = true
+  try {
+    await resetPasswordApi({
+      email: resetPasswordForm.email,
+      code: resetPasswordForm.code,
+      password: resetPasswordForm.password
+    })
+    loginForm.email = resetPasswordForm.email
+    loginForm.password = ''
+    resetDialogVisible.value = false
+    ElMessage.success('密码重置成功，请使用新密码登录')
+  } catch (error) {
+    console.error('Reset password failed:', error)
+  } finally {
+    resettingPassword.value = false
+  }
+}
+
+const handleResetDialogClosed = () => {
+  resetPasswordFormRef.value?.resetFields()
+}
+
 onMounted(loadRegisterConfig)
 onBeforeUnmount(() => {
   if (countdownTimer) clearInterval(countdownTimer)
+  if (resetCountdownTimer) clearInterval(resetCountdownTimer)
 })
 </script>
 
@@ -579,7 +777,7 @@ h1 {
 .mode-description { margin: 0 0 24px; color: var(--auth-muted); font-size: 14px; line-height: 1.6; }
 .auth-form-stage { position: relative; min-height: 300px; }
 
-:deep(.el-form-item) { margin-bottom: 24px; }
+:deep(.el-form-item) { margin-bottom: 28px; }
 :deep(.el-form-item__error) { padding-top: 5px; }
 :deep(.el-input__wrapper) {
   min-height: 46px;
@@ -588,7 +786,7 @@ h1 {
   border-radius: 8px;
   background: var(--auth-input-bg);
   box-shadow: none;
-  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+  transition: border-color .2s ease, box-shadow .2s ease;
 }
 
 :deep(.el-input__wrapper:hover) { border-color: #c8d2dc; background: var(--auth-surface); }
@@ -616,8 +814,6 @@ h1 {
 .verification-row { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
 .code-button { min-height: 46px; margin: 0; padding-inline: 12px; border-radius: 8px; font-weight: 600; }
 .code-button:disabled { cursor: not-allowed; }
-.field-hint { width: 100%; margin: 7px 0 0; color: var(--auth-muted); font-size: 12px; line-height: 1.5; }
-
 .login-options { display: flex; justify-content: space-between; align-items: center; margin: -2px 0 14px; font-size: 13px; }
 .forgot-password { min-height: 44px; padding: 0 2px; border: 0; color: var(--auth-action); background: transparent; font: inherit; cursor: pointer; touch-action: manipulation; }
 .forgot-password:hover { text-decoration: underline; text-underline-offset: 4px; }
@@ -641,6 +837,54 @@ h1 {
 .security-note { display: flex; align-items: flex-start; gap: 8px; min-height: 19px; margin-top: 14px; color: var(--auth-muted); font-size: 12px; line-height: 1.55; }
 .security-note .el-icon { flex: 0 0 auto; margin-top: 2px; color: var(--auth-action); }
 .login-footer { align-self: end; margin: 12px 0 0; color: var(--auth-muted); font-size: 11px; text-align: center; }
+
+:deep(.reset-password-dialog) {
+  --el-color-primary: var(--auth-action);
+  overflow: hidden;
+  max-width: calc(100vw - 32px);
+  border: 1px solid var(--auth-border);
+  border-radius: 18px;
+  background: var(--auth-surface);
+  box-shadow: 0 24px 64px rgba(8, 24, 40, .18);
+}
+
+:deep(.reset-password-dialog .el-dialog__header) {
+  margin: 0;
+  padding: 24px 26px 18px;
+  border-bottom: 1px solid var(--auth-border);
+}
+
+:deep(.reset-password-dialog .el-dialog__body) { padding: 24px 26px 20px; overflow: hidden; }
+:deep(.reset-password-dialog .el-dialog__footer) { padding: 14px 26px 20px; }
+:deep(.reset-password-dialog .el-dialog__close) { color: var(--auth-muted); }
+:deep(.reset-password-dialog .el-form-item) { position: relative; margin-bottom: 28px; }
+:deep(.reset-password-dialog .el-dialog__body > .el-form:last-child .el-form-item:last-child) {
+  margin-bottom: 36px;
+}
+:deep(.reset-password-dialog .el-form-item__error) {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding-top: 5px;
+  line-height: 18px;
+}
+
+.reset-dialog-heading { display: flex; align-items: center; gap: 13px; padding-right: 28px; text-align: left; }
+.reset-dialog-heading h2 { margin: 0; color: var(--auth-text); font-size: 18px; font-weight: 680; line-height: 1.35; }
+.reset-dialog-heading p { margin: 4px 0 0; color: var(--auth-muted); font-size: 13px; line-height: 1.5; }
+.reset-dialog-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--auth-action);
+  border: 1px solid var(--auth-border);
+  border-radius: 12px;
+  background: var(--auth-fill);
+}
+.reset-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.reset-dialog-actions .el-button { min-width: 104px; border-radius: 8px; }
 
 .auth-form-enter-active {
   transition: opacity .18s ease-out;
@@ -678,6 +922,21 @@ h1 {
   .login-footer { margin-top: 8px; }
 }
 
+@media (max-height: 620px) {
+  :deep(.reset-password-dialog) {
+    max-height: calc(100dvh - 20px);
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  :deep(.reset-password-dialog .el-dialog__header) { padding: 14px 22px 12px; }
+  :deep(.reset-password-dialog .el-dialog__body) { padding: 14px 22px 16px; }
+  :deep(.reset-password-dialog .el-dialog__footer) { padding: 12px 22px 14px; }
+  :deep(.reset-password-dialog .el-form-item) { margin-bottom: 24px; }
+  .reset-dialog-heading { gap: 11px; }
+  .reset-dialog-heading p { margin-top: 2px; }
+  .reset-dialog-icon { width: 38px; height: 38px; border-radius: 10px; }
+}
+
 @media (max-width: 820px) {
   .split-screen { grid-template-columns: 1fr; padding: 0; }
   .brand-section { display: none; }
@@ -694,6 +953,11 @@ h1 {
   .mode-description { margin-bottom: 18px; }
   .verification-row { grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
   .login-footer { font-size: 10px; }
+  :deep(.reset-password-dialog .el-dialog__header) { padding: 20px 20px 16px; }
+  :deep(.reset-password-dialog .el-dialog__body) { padding: 20px 20px 16px; }
+  :deep(.reset-password-dialog .el-dialog__footer) { padding: 12px 20px 16px; }
+  .reset-dialog-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .reset-dialog-actions .el-button { width: 100%; min-width: 0; margin: 0; }
 }
 
 @media (max-width: 360px) {

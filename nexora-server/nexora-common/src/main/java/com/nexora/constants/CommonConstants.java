@@ -33,6 +33,8 @@ public class CommonConstants {
 
     public static final String EMAIL_IN_USE_MESSAGE = "邮箱已经被使用";
 
+    public static final String EMAIL_NOT_REGISTERED_MESSAGE = "该邮箱未注册";
+
     public static final String EMAIL_UNCHANGED_MESSAGE = "新邮箱不能与当前邮箱相同";
 
     public static final String USER_NOT_FOUND_MESSAGE = "用户不存在";
@@ -46,6 +48,8 @@ public class CommonConstants {
     public static final String PASSWORD_REQUIRED_MESSAGE = "密码不能为空";
 
     public static final String PASSWORD_LENGTH_INVALID_MESSAGE = "密码长度必须在6到20个字符之间";
+
+    public static final String PASSWORD_RESET_FAILED_MESSAGE = "密码重置失败，请稍后重试";
 
     public static final String OLD_PASSWORD_INCORRECT_MESSAGE = "旧密码错误";
 

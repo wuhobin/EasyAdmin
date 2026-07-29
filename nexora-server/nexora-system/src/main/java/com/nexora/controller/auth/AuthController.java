@@ -40,6 +40,20 @@ public class AuthController {
         return Result.success();
     }
 
+    @Operation(summary = "发送密码重置邮箱验证码")
+    @PostMapping("/auth/password/reset/sendCode")
+    public Result<Void> sendResetPasswordCode(@Valid @RequestBody AuthForm form) {
+        authBizService.sendResetPasswordCode(form);
+        return Result.success();
+    }
+
+    @Operation(summary = "通过邮箱验证码重置密码")
+    @PostMapping("/auth/password/reset")
+    public Result<Void> resetPassword(@Valid @RequestBody AuthForm form) {
+        authBizService.resetPassword(form);
+        return Result.success();
+    }
+
     @Operation(summary = "用户登出")
     @PostMapping("/auth/logout")
     public Result<Void> logout() {

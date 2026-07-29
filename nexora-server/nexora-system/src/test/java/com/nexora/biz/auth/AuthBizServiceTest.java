@@ -117,6 +117,8 @@ class AuthBizServiceTest {
                 "- /auth/login",
                 "- /auth/register/sendCode",
                 "- /auth/register",
+                "- /auth/password/reset/sendCode",
+                "- /auth/password/reset",
                 "- /sys/config/value/**");
         assertThat(config).doesNotContain("- /auth/info", "- /auth/logout", "- /auth/verify");
     }

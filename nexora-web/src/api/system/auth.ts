@@ -8,6 +8,8 @@ export interface AuthParams {
   source?: string
 }
 
+export type ResetPasswordParams = Pick<AuthParams, 'email' | 'password' | 'code'>
+
 export interface CurrentUserResult {
   id: number
   email: string
@@ -41,6 +43,22 @@ export function sendRegisterCodeApi(data: AuthParams): Promise<ApiResponse<void>
 export function registerApi(data: AuthParams): Promise<ApiResponse<void>> {
   return request<void>({
     url: '/auth/register',
+    method: 'post',
+    data
+  })
+}
+
+export function sendResetPasswordCodeApi(data: Pick<ResetPasswordParams, 'email'>): Promise<ApiResponse<void>> {
+  return request<void>({
+    url: '/auth/password/reset/sendCode',
+    method: 'post',
+    data
+  })
+}
+
+export function resetPasswordApi(data: ResetPasswordParams): Promise<ApiResponse<void>> {
+  return request<void>({
+    url: '/auth/password/reset',
     method: 'post',
     data
   })

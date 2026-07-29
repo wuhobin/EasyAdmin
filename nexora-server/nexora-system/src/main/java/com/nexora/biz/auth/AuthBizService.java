@@ -103,6 +103,43 @@ public class AuthBizService {
         sysRoleService.addUserRoles(user.getId(), List.of(role.getId()));
     }
 
+    public void sendResetPasswordCode(AuthForm form) {
+        String email = StringUtils.normalizeEmail(
+                requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
+        requireExistingUser(email);
+
+        MailVerificationService verificationService = mailVerificationServiceProvider.getIfAvailable();
+        if (verificationService == null) {
+            throw new BizException(CommonConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
+        }
+        try {
+            verificationService.send(VerificationMailTemplateUtils.createRequest(
+                    email, CommonVerificationScene.RESET_PASSWORD));
+        } catch (VerificationCooldownException exception) {
+            throw new BizException(CommonConstants.EMAIL_CODE_SEND_TOO_FREQUENT_MESSAGE);
+        } catch (VerificationException | IllegalArgumentException exception) {
+            throw new BizException(CommonConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void resetPassword(AuthForm form) {
+        String email = StringUtils.normalizeEmail(
+                requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
+        String code = requireVerificationCode(form.getCode());
+        String password = requirePassword(form.getPassword());
+        SysUser user = requireExistingUser(email);
+        verifyResetPasswordCode(email, code);
+
+        SysUser update = new SysUser();
+        update.setId(user.getId());
+        update.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+        if (!sysUserService.updateById(update)) {
+            throw new BizException(CommonConstants.PASSWORD_RESET_FAILED_MESSAGE);
+        }
+        SecurityUtils.kickout(user.getId());
+    }
+
     public void logout() {
         SecurityUtils.logout();
     }
@@ -153,6 +190,31 @@ public class AuthBizService {
         if (!verified) {
             throw new BizException(CommonConstants.EMAIL_CODE_INVALID_MESSAGE);
         }
+    }
+
+    private void verifyResetPasswordCode(String email, String code) {
+        MailVerificationService verificationService = mailVerificationServiceProvider.getIfAvailable();
+        if (verificationService == null) {
+            throw new BizException(CommonConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
+        }
+        boolean verified;
+        try {
+            verified = verificationService.verifyAndConsume(new MailVerificationVerifyRequest(
+                    email, CommonVerificationScene.RESET_PASSWORD, code));
+        } catch (VerificationException | IllegalArgumentException exception) {
+            throw new BizException(CommonConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
+        }
+        if (!verified) {
+            throw new BizException(CommonConstants.EMAIL_CODE_INVALID_MESSAGE);
+        }
+    }
+
+    private SysUser requireExistingUser(String email) {
+        SysUser user = sysUserService.getByEmail(email);
+        if (user == null) {
+            throw new BizException(CommonConstants.EMAIL_NOT_REGISTERED_MESSAGE);
+        }
+        return user;
     }
 
     private void ensureEmailAvailable(String email) {

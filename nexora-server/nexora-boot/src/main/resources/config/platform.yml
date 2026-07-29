@@ -31,4 +31,6 @@ platform:
       - /auth/login
       - /auth/register/sendCode
       - /auth/register
+      - /auth/password/reset/sendCode
+      - /auth/password/reset
       - /sys/config/value/**
