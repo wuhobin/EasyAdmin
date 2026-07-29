@@ -14,6 +14,7 @@ public interface MailAccountConvert {
     MailAccountConvert INSTANCE = Mappers.getMapper(MailAccountConvert.class);
 
     @Mapping(target = "authCodeCiphertext", ignore = true)
+    @Mapping(target = "ownerId", ignore = true)
     MailAccount toEntity(MailAccountForm form);
 
     MailAccountVo toVo(MailAccount entity);

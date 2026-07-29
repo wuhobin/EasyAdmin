@@ -17,6 +17,7 @@ import com.nexora.entity.SysUser;
 import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.service.SysRoleService;
 import com.nexora.service.SysUserService;
+import com.nexora.service.MailAccountService;
 import com.nexora.utils.VerificationMailTemplateUtils;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.security.context.SecurityUtils;
@@ -37,6 +38,7 @@ public class SysUserBizService {
     private final SysRoleService sysRoleService;
     private final SecurityAuthorizationCache authorizationCache;
     private final ObjectProvider<MailVerificationService> mailVerificationServiceProvider;
+    private final MailAccountService mailAccountService;
 
     public IPage<SysUserPageListVo> list(SysUserQueryForm form, PageParam pageParam) {
         return sysUserService.listUsers(SysUserConvert.INSTANCE.toQuery(form), pageParam);
@@ -95,6 +97,7 @@ public class SysUserBizService {
         if (ids.contains(CommonConstants.ROOT_USER_ID)) {
             throw new BizException(CommonConstants.ROOT_USER_DELETE_FORBIDDEN_MESSAGE);
         }
+        mailAccountService.removeByOwnerIds(ids);
         sysUserService.removeBatchByIds(ids);
         sysRoleService.deleteUserRoles(ids);
         authorizationCache.evictUsersAfterCommit(ids);

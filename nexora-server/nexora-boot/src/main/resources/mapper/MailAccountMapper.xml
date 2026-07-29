@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nexora.mapper.MailAccountMapper">
+    <select id="selectEnabledForActiveOwners" resultType="com.nexora.entity.MailAccount">
+        SELECT ma.*
+        FROM mail_account ma
+        INNER JOIN sys_user su ON su.id = ma.owner_id
+        WHERE ma.enabled = 1
+          AND su.status = 1
+        ORDER BY ma.sort ASC, ma.id ASC
+    </select>
+</mapper>

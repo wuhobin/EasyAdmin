@@ -10,6 +10,7 @@ import com.nexora.entity.SysUser;
 import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.service.SysRoleService;
 import com.nexora.service.SysUserService;
+import com.nexora.service.MailAccountService;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,8 @@ class SysUserBizServiceTest {
     void updatesOnlyTheCurrentUsersProfile() {
         SysUserService userService = mock(SysUserService.class);
         SysUserBizService service = new SysUserBizService(userService, mock(SysRoleService.class),
-                mock(SecurityAuthorizationCache.class), mailProvider(null));
+                mock(SecurityAuthorizationCache.class), mailProvider(null),
+                mock(MailAccountService.class));
         SysUserForm form = new SysUserForm();
         form.setNickname("new-name");
 
@@ -52,15 +54,17 @@ class SysUserBizServiceTest {
     }
 
     @Test
-    void evictsAuthorizationWhenUserRolesAreDeleted() {
+    void deletesMailAccountsAndEvictsAuthorizationWhenUsersAreDeleted() {
         SysUserService userService = mock(SysUserService.class);
         SysRoleService roleService = mock(SysRoleService.class);
         SecurityAuthorizationCache authorizationCache = mock(SecurityAuthorizationCache.class);
+        MailAccountService mailAccountService = mock(MailAccountService.class);
         SysUserBizService service = new SysUserBizService(
-                userService, roleService, authorizationCache, mailProvider(null));
+                userService, roleService, authorizationCache, mailProvider(null), mailAccountService);
 
         service.delete(List.of(7, 8));
 
+        verify(mailAccountService).removeByOwnerIds(List.of(7, 8));
         verify(authorizationCache).evictUsersAfterCommit(List.of(7, 8));
     }
 
@@ -84,7 +88,8 @@ class SysUserBizServiceTest {
                 userService,
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
-                mailProvider(verificationService));
+                mailProvider(verificationService),
+                mock(MailAccountService.class));
         SysUserForm form = new SysUserForm();
         form.setEmail(" New@Example.com ");
         form.setCode("123456");
@@ -107,7 +112,8 @@ class SysUserBizServiceTest {
                 mock(SysUserService.class),
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
-                mailProvider(null));
+                mailProvider(null),
+                mock(MailAccountService.class));
 
         assertThatThrownBy(() -> service.delete(List.of(1, 7)))
                 .isInstanceOf(BizException.class)
@@ -122,7 +128,8 @@ class SysUserBizServiceTest {
                 userService,
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
-                mailProvider(null));
+                mailProvider(null),
+                mock(MailAccountService.class));
         SysUserForm form = new SysUserForm();
         form.setId(1);
         form.setNickname("Root");
@@ -145,7 +152,8 @@ class SysUserBizServiceTest {
                 userService,
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
-                mailProvider(null));
+                mailProvider(null),
+                mock(MailAccountService.class));
         SysUserForm form = new SysUserForm();
         form.setEmail(" Used@Example.com ");
 
@@ -168,7 +176,8 @@ class SysUserBizServiceTest {
                 userService,
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
-                mailProvider(verificationService));
+                mailProvider(verificationService),
+                mock(MailAccountService.class));
         SysUserForm form = new SysUserForm();
         form.setEmail("new@example.com");
 
@@ -197,7 +206,8 @@ class SysUserBizServiceTest {
                 userService,
                 roleService,
                 mock(SecurityAuthorizationCache.class),
-                mailProvider(null));
+                mailProvider(null),
+                mock(MailAccountService.class));
         SysUserForm form = new SysUserForm();
         form.setId(7);
         form.setNickname("new-name");

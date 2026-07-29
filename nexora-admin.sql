@@ -23,6 +23,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `mail_account`;
 CREATE TABLE `mail_account`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `owner_id` int NOT NULL COMMENT '所属用户ID',
   `account_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '账户名称',
   `provider` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '邮箱类型',
   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '邮箱地址',
@@ -36,16 +37,17 @@ CREATE TABLE `mail_account`  (
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_mail_account_email`(`email` ASC) USING BTREE,
+  UNIQUE INDEX `uk_mail_account_owner_email`(`owner_id` ASC, `email` ASC) USING BTREE,
+  INDEX `idx_mail_account_owner_sort`(`owner_id` ASC, `sort` ASC, `id` ASC) USING BTREE,
   INDEX `idx_mail_account_enabled_sort`(`enabled` ASC, `sort` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '聚合邮箱账户' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mail_account
 -- ----------------------------
-INSERT INTO `mail_account` VALUES (1, 'QQ邮箱', 'QQ', '1289066006@qq.com', 'v1:2jdaO+DSabB/rHuv:YDskUtAw10RUebiHvDOO8SEOIeoYacs47qcdPRFayfI=', 1, 0, 3066, 1763133047, '2026-07-24 17:25:53', '', '2026-07-19 21:23:12', '2026-07-24 17:25:53');
-INSERT INTO `mail_account` VALUES (2, '网易邮箱', 'NETEASE_163', 'wuhongbinyos@163.com', 'v1:PraA3Styz5bgaZlp:ep5JyA4rcv3kDWYmOpVbrVwfjkRx9F68dB70h5B0NpY=', 1, 1, 1672974450, 1, '2026-07-24 17:25:51', '', '2026-07-19 21:54:58', '2026-07-24 17:25:51');
-INSERT INTO `mail_account` VALUES (3, '126邮箱', 'NETEASE_126', 'wuhobin@126.com', 'v1:mvC+jFbn0KjEsPmq:vEjeTZKk1bCenSFkmcjODllLW/21+s4sdUoLwoGAM08=', 1, 3, 1784626138, 1, '2026-07-24 17:25:51', '', '2026-07-21 17:29:44', '2026-07-24 17:25:51');
+INSERT INTO `mail_account` VALUES (1, 1, 'QQ邮箱', 'QQ', '1289066006@qq.com', 'v1:2jdaO+DSabB/rHuv:YDskUtAw10RUebiHvDOO8SEOIeoYacs47qcdPRFayfI=', 1, 0, 3066, 1763133047, '2026-07-24 17:25:53', '', '2026-07-19 21:23:12', '2026-07-24 17:25:53');
+INSERT INTO `mail_account` VALUES (2, 1, '网易邮箱', 'NETEASE_163', 'wuhongbinyos@163.com', 'v1:PraA3Styz5bgaZlp:ep5JyA4rcv3kDWYmOpVbrVwfjkRx9F68dB70h5B0NpY=', 1, 1, 1672974450, 1, '2026-07-24 17:25:51', '', '2026-07-19 21:54:58', '2026-07-24 17:25:51');
+INSERT INTO `mail_account` VALUES (3, 1, '126邮箱', 'NETEASE_126', 'wuhobin@126.com', 'v1:mvC+jFbn0KjEsPmq:vEjeTZKk1bCenSFkmcjODllLW/21+s4sdUoLwoGAM08=', 1, 3, 1784626138, 1, '2026-07-24 17:25:51', '', '2026-07-21 17:29:44', '2026-07-24 17:25:51');
 
 -- ----------------------------
 -- Table structure for quartz_job
