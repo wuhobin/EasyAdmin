@@ -323,13 +323,14 @@ onBeforeUnmount(() => {
   --auth-action: #0369a1;
   --auth-action-hover: #075985;
   --auth-action-on: #ffffff;
-  --auth-focus: rgba(3, 105, 161, .24);
+  --auth-focus: rgba(3, 105, 161, .15);
   --auth-canvas: #f1f5f8;
   --auth-surface: #ffffff;
   --auth-text: #142333;
   --auth-muted: #607083;
-  --auth-border: #d8e1e8;
-  --auth-fill: #edf2f6;
+  --auth-border: #e2e8f0;
+  --auth-fill: #f7f9fb;
+  --auth-input-bg: #f8fafb;
   --auth-shadow: 0 16px 44px rgba(22, 43, 65, .07);
   min-height: 100vh;
   min-height: 100dvh;
@@ -351,14 +352,19 @@ onBeforeUnmount(() => {
   --auth-surface: #101c28;
   --auth-text: #e8f0f7;
   --auth-muted: #9cabb9;
-  --auth-border: #293847;
+  --auth-border: #1e2d3a;
   --auth-fill: #172533;
+  --auth-input-bg: #141f2c;
   --auth-shadow: 0 18px 48px rgba(0, 0, 0, .22);
   --auth-action: #38bdf8;
   --auth-action-hover: #7dd3fc;
   --auth-action-on: #041520;
-  --auth-focus: rgba(56, 189, 248, .34);
+  --auth-focus: rgba(56, 189, 248, .18);
 }
+
+:deep(.login-container.dark .el-input__wrapper:hover) { border-color: #344a5a; }
+:deep(.login-container.dark .el-input__prefix) { color: #6b7d8e; }
+:deep(.login-container.dark .el-input__inner)::placeholder { color: #5a6d7e; }
 
 .split-screen {
   display: grid;
@@ -570,24 +576,31 @@ h1 {
   color: var(--auth-text);
 }
 
-.mode-description { margin: 0 0 20px; color: var(--auth-muted); font-size: 14px; line-height: 1.6; }
+.mode-description { margin: 0 0 24px; color: var(--auth-muted); font-size: 14px; line-height: 1.6; }
 .auth-form-stage { position: relative; min-height: 300px; }
 
-:deep(.el-form-item) { margin-bottom: 28px; }
+:deep(.el-form-item) { margin-bottom: 24px; }
 :deep(.el-form-item__error) { padding-top: 5px; }
 :deep(.el-input__wrapper) {
   min-height: 46px;
   padding: 0 13px;
   border: 1px solid var(--auth-border);
-  border-radius: 11px;
-  background: var(--auth-surface);
+  border-radius: 8px;
+  background: var(--auth-input-bg);
   box-shadow: none;
-  transition: border-color .2s ease, box-shadow .2s ease;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
 }
 
-:deep(.el-input__wrapper:hover) { border-color: var(--auth-action); }
-:deep(.el-input__wrapper.is-focus) { border-color: var(--auth-action); box-shadow: 0 0 0 3px var(--auth-focus); }
+:deep(.el-input__wrapper:hover) { border-color: #c8d2dc; background: var(--auth-surface); }
+:deep(.el-input__wrapper.is-focus) {
+  border-color: var(--auth-action);
+  background: var(--auth-surface);
+  box-shadow: 0 0 0 2px var(--auth-focus);
+}
 :deep(.el-input__inner) { min-width: 0; color: var(--auth-text); font-size: 14px; }
+:deep(.el-input__inner)::placeholder { color: #a2aebb; }
+:deep(.el-input__prefix) { color: #a2aebb; transition: color .2s ease; }
+:deep(.el-input__wrapper.is-focus .el-input__prefix) { color: var(--auth-action); }
 :deep(.el-input__inner:-webkit-autofill),
 :deep(.el-input__inner:-webkit-autofill:hover),
 :deep(.el-input__inner:-webkit-autofill:focus),
@@ -601,7 +614,7 @@ h1 {
 :deep(.el-checkbox__label) { color: var(--auth-muted); font-size: 13px; }
 
 .verification-row { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
-.code-button { min-height: 46px; margin: 0; padding-inline: 12px; border-radius: 11px; font-weight: 600; }
+.code-button { min-height: 46px; margin: 0; padding-inline: 12px; border-radius: 8px; font-weight: 600; }
 .code-button:disabled { cursor: not-allowed; }
 .field-hint { width: 100%; margin: 7px 0 0; color: var(--auth-muted); font-size: 12px; line-height: 1.5; }
 
@@ -620,7 +633,7 @@ h1 {
   --el-button-active-border-color: var(--auth-action-hover);
   width: 100%;
   min-height: 46px;
-  border-radius: 11px;
+  border-radius: 8px;
   font-size: 15px;
   font-weight: 650;
   letter-spacing: .01em;
