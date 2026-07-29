@@ -39,7 +39,7 @@
           <div
             v-if="registerEnabled || !registerConfigLoaded"
             class="auth-tabs"
-            :class="{ 'is-loading': !registerConfigLoaded }"
+            :class="{ 'is-loading': !registerConfigLoaded, 'is-register': activeMode === 'register' }"
             role="tablist"
             aria-label="认证方式"
             :aria-hidden="!registerConfigLoaded"
@@ -77,7 +77,7 @@
           </p>
 
           <div class="auth-form-stage">
-            <transition name="auth-form" mode="out-in">
+            <transition name="auth-form">
               <el-form
                 v-if="activeMode === 'login'"
                 id="login-panel"
@@ -90,11 +90,11 @@
                 :rules="loginRules"
                 @keyup.enter="handleLogin"
               >
-                <el-form-item label="邮箱" prop="email">
-                  <el-input v-model="loginForm.email" name="email" type="email" placeholder="name@company.com" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
+                <el-form-item prop="email">
+                  <el-input v-model="loginForm.email" name="email" type="email" placeholder="请输入邮箱" aria-label="邮箱" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
                 </el-form-item>
-                <el-form-item label="密码" prop="password">
-                  <el-input v-model="loginForm.password" name="password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password size="large" autocomplete="current-password" />
+                <el-form-item prop="password">
+                  <el-input v-model="loginForm.password" name="password" type="password" placeholder="请输入密码" aria-label="密码" :prefix-icon="Lock" show-password size="large" autocomplete="current-password" />
                 </el-form-item>
                 <div class="login-options">
                   <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
@@ -117,12 +117,12 @@
                 :rules="registerRules"
                 @keyup.enter="handleRegister"
               >
-                <el-form-item label="邮箱" prop="email">
-                  <el-input v-model="registerForm.email" name="register-email" type="email" placeholder="name@company.com" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
+                <el-form-item prop="email">
+                  <el-input v-model="registerForm.email" name="register-email" type="email" placeholder="请输入邮箱" aria-label="邮箱" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
                 </el-form-item>
-                <el-form-item label="邮箱验证码" prop="code">
+                <el-form-item prop="code">
                   <div class="verification-row">
-                    <el-input v-model="registerForm.code" name="register-code" inputmode="numeric" maxlength="8" placeholder="请输入验证码" :prefix-icon="Key" size="large" autocomplete="one-time-code" />
+                    <el-input v-model="registerForm.code" name="register-code" inputmode="numeric" maxlength="8" placeholder="请输入验证码" aria-label="邮箱验证码" :prefix-icon="Key" size="large" autocomplete="one-time-code" />
                     <el-button
                       class="code-button"
                       size="large"
@@ -135,8 +135,8 @@
                     </el-button>
                   </div>
                 </el-form-item>
-                <el-form-item label="密码" prop="password">
-                  <el-input v-model="registerForm.password" name="register-password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password size="large" autocomplete="new-password" />
+                <el-form-item prop="password">
+                  <el-input v-model="registerForm.password" name="register-password" type="password" placeholder="请输入密码" aria-label="密码" :prefix-icon="Lock" show-password size="large" autocomplete="new-password" />
                   <p class="field-hint">使用 6～20 位字符</p>
                 </el-form-item>
                 <el-button :loading="registering" type="primary" size="large" class="login-button" @click="handleRegister">
@@ -516,6 +516,7 @@ h1 {
 }
 
 .auth-tabs {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
@@ -525,12 +526,32 @@ h1 {
   background: var(--auth-fill);
 }
 
+.auth-tabs::before {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 12px) / 2);
+  border-radius: 10px;
+  background: var(--auth-surface);
+  box-shadow: 0 2px 8px rgba(22, 43, 65, .08);
+  content: "";
+  transition: transform .24s cubic-bezier(.22, 1, .36, 1);
+}
+
+.auth-tabs.is-register::before {
+  transform: translateX(calc(100% + 4px));
+}
+
 .auth-tabs.is-loading {
   visibility: hidden;
   pointer-events: none;
 }
 
 .auth-tabs button {
+  position: relative;
+  z-index: 1;
   min-height: 44px;
   padding: 0 16px;
   color: var(--auth-muted);
@@ -547,16 +568,12 @@ h1 {
 
 .auth-tabs button.active {
   color: var(--auth-text);
-  background: var(--auth-surface);
-  box-shadow: 0 2px 8px rgba(22, 43, 65, .08);
 }
 
 .mode-description { margin: 0 0 20px; color: var(--auth-muted); font-size: 14px; line-height: 1.6; }
-.auth-form-stage { min-height: 340px; }
+.auth-form-stage { position: relative; min-height: 300px; }
 
-:deep(.el-form-item) { margin-bottom: 16px; }
-:deep(.el-form-item.is-error) { margin-bottom: 28px; }
-:deep(.el-form-item__label) { margin-bottom: 6px; color: var(--auth-text); font-size: 13px; font-weight: 600; line-height: 1.4; }
+:deep(.el-form-item) { margin-bottom: 28px; }
 :deep(.el-form-item__error) { padding-top: 5px; }
 :deep(.el-input__wrapper) {
   min-height: 46px;
@@ -565,7 +582,7 @@ h1 {
   border-radius: 11px;
   background: var(--auth-surface);
   box-shadow: none;
-  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+  transition: border-color .2s ease, box-shadow .2s ease;
 }
 
 :deep(.el-input__wrapper:hover) { border-color: var(--auth-action); }
@@ -612,8 +629,18 @@ h1 {
 .security-note .el-icon { flex: 0 0 auto; margin-top: 2px; color: var(--auth-action); }
 .login-footer { align-self: end; margin: 12px 0 0; color: var(--auth-muted); font-size: 11px; text-align: center; }
 
-.auth-form-enter-active { transition: opacity .15s ease-out; }
-.auth-form-leave-active { transition: opacity .1s ease-in; }
+.auth-form-enter-active {
+  transition: opacity .18s ease-out;
+}
+
+.auth-form-leave-active {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  pointer-events: none;
+  transition: opacity .12s ease-in;
+}
+
 .auth-form-enter-from,
 .auth-form-leave-to { opacity: 0; }
 
@@ -645,7 +672,6 @@ h1 {
   .auth-topbar { justify-content: space-between; }
   .mobile-brand { display: flex; }
   .login-box { margin-block: 32px; }
-  .auth-form-stage { min-height: 0; }
 }
 
 @media (max-width: 480px) {
@@ -658,6 +684,7 @@ h1 {
 }
 
 @media (max-width: 360px) {
+  .auth-form-stage { min-height: 354px; }
   .verification-row { grid-template-columns: 1fr; }
   .code-button { width: 100%; }
 }

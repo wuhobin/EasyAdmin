@@ -17,6 +17,13 @@ test('login page keeps the email login form', () => {
   assert.match(loginPageSource, /@click="handleLogin"/)
 })
 
+test('authentication fields use placeholders without visible labels', () => {
+  assert.doesNotMatch(loginPageSource, /<el-form-item\s+label=/)
+  assert.match(loginPageSource, /v-model="loginForm\.email"[^>]*placeholder="请输入邮箱"[^>]*aria-label="邮箱"/)
+  assert.match(loginPageSource, /v-model="loginForm\.password"[^>]*placeholder="请输入密码"[^>]*aria-label="密码"/)
+  assert.match(loginPageSource, /v-model="registerForm\.code"[^>]*placeholder="请输入验证码"[^>]*aria-label="邮箱验证码"/)
+})
+
 test('login page submits the remember-me value from the form model', () => {
   assert.doesNotMatch(loginPageSource, /const rememberMe = ref\(/)
   assert.match(loginPageSource, /rememberMe:\s*false/)
@@ -58,15 +65,22 @@ test('login and registration navigation remains accessible and motion-safe', () 
   assert.match(loginPageSource, /min-height:\s*100dvh/)
 })
 
-test('login and registration share a compact stable form stage', () => {
+test('login and registration use a stable overlapping form transition', () => {
   assert.match(loginPageSource, /class="auth-form-stage"/)
-  assert.match(loginPageSource, /\.auth-form-stage\s*\{\s*min-height:\s*340px;/)
-  assert.doesNotMatch(loginPageSource, /\.auth-form-stage\s*\{\s*height:\s*340px;/)
-  assert.match(loginPageSource, /\.auth-form-enter-active\s*\{\s*transition:\s*opacity \.15s/)
-  assert.doesNotMatch(loginPageSource, /\.auth-form-(?:enter-from|leave-to)\s*\{[^}]*transform:/)
+  assert.match(loginPageSource, /\.auth-form-stage\s*\{\s*position:\s*relative;\s*min-height:\s*300px;/)
+  assert.match(loginPageSource, /\.auth-form-leave-active\s*\{[^}]*position:\s*absolute;/s)
+  assert.match(loginPageSource, /\.auth-form-enter-active\s*\{[^}]*opacity \.18s/s)
+  assert.doesNotMatch(loginPageSource, /\.auth-form-(?:enter-from|leave-to)\s*\{[^}]*transform:/s)
+  assert.doesNotMatch(loginPageSource, /<transition name="auth-form" mode="out-in">/)
   assert.doesNotMatch(loginPageSource, /WELCOME BACK|CREATE ACCESS|欢迎回来|创建你的账号/)
   assert.doesNotMatch(loginPageSource, /class="access-route"/)
   assert.match(loginPageSource, /安全进入你的(?:<br \/>)?管理工作台/)
+})
+
+test('active authentication tab uses a sliding selection indicator', () => {
+  assert.match(loginPageSource, /'is-register': activeMode === 'register'/)
+  assert.match(loginPageSource, /\.auth-tabs::before\s*\{[^}]*transition:\s*transform \.24s/s)
+  assert.match(loginPageSource, /\.auth-tabs\.is-register::before\s*\{[^}]*translateX/s)
 })
 
 test('login page does not prefill demo credentials', () => {
@@ -82,8 +96,15 @@ test('browser autofill keeps the active login theme colors', () => {
   assert.match(loginPageSource, /box-shadow:\s*0 0 0 1000px var\(--auth-surface\) inset/)
 })
 
-test('validation errors keep space before the next form field', () => {
-  assert.match(loginPageSource, /\.el-form-item\.is-error\)\s*\{\s*margin-bottom:\s*28px;/)
+test('input backgrounds switch themes without a delayed white flash', () => {
+  const inputWrapperRule = loginPageSource.match(/:deep\(\.el-input__wrapper\)\s*\{([^}]*)\}/s)?.[1] ?? ''
+  assert.match(inputWrapperRule, /transition:\s*border-color \.2s ease, box-shadow \.2s ease;/)
+  assert.doesNotMatch(inputWrapperRule, /background-color/)
+})
+
+test('validation errors use reserved space without changing the form height', () => {
+  assert.match(loginPageSource, /\.el-form-item\)\s*\{\s*margin-bottom:\s*28px;/)
+  assert.doesNotMatch(loginPageSource, /\.el-form-item\.is-error\)/)
 })
 
 test('login page does not restore removed alternative login methods', () => {
