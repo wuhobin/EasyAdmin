@@ -286,7 +286,7 @@ server {
 
     root /opt/nexora/web;
     index index.html;
-    client_max_body_size 50m;
+    client_max_body_size 51m;
 
     location / {
         try_files $uri $uri/ /index.html;
@@ -390,7 +390,7 @@ docker compose up -d --build --force-recreate nexora-admin
 - **后端提示七牛属性无法解析**：检查 `OSS_QINIU_ACCESS_KEY` 和 `OSS_QINIU_SECRET_KEY`，旧项目使用的 `file.qiniu.*` 属性名不适用于当前配置。
 - **Nginx API 返回 502**：先检查 `docker compose ps` 和容器日志，再从宿主机访问 `http://127.0.0.1:8800`。
 - **刷新前端页面返回 404**：确认 Nginx 的 `location /` 中存在 `try_files $uri $uri/ /index.html`。
-- **上传文件返回 413**：确认 Nginx 的 `client_max_body_size` 不小于后端 `50MB` 上传限制。
+- **上传文件返回 413**：确认 Nginx 的 `client_max_body_size` 不小于后端 `max-request-size`（当前为 `51MB`，用于容纳 50MB 文件及 multipart 边界）。
 
 ## API 文档
 

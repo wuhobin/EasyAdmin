@@ -14,7 +14,8 @@ spring:
   servlet:
     multipart:
       max-file-size: 50MB
-      max-request-size: 50MB
+      # 请求体包含 multipart 边界，需略高于单文件上限。
+      max-request-size: 51MB
   config:
     import:
       - classpath:config/mybatis-plus.yml
