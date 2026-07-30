@@ -1,5 +1,6 @@
 package com.nexora.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nexora.domain.query.system.SysUserQuery;
@@ -40,5 +41,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public SysUser getByEmail(String email) {
         return baseMapper.selectByEmail(email);
+    }
+
+    @Override
+    public boolean existsByAvatar(String avatar) {
+        if (avatar == null || avatar.isBlank()) {
+            return false;
+        }
+        return baseMapper.exists(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getAvatar, avatar));
     }
 }

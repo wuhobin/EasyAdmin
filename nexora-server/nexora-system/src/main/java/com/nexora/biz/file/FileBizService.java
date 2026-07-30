@@ -7,6 +7,7 @@ import com.nexora.domain.query.OssFileQuery;
 import com.nexora.domain.vo.file.SysOssFileVo;
 import com.nexora.entity.SysOssFile;
 import com.nexora.service.SysOssFileService;
+import com.nexora.service.SysUserService;
 import com.aurora.starter.common.utils.DateUtils;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.model.OssUploadResult;
@@ -38,6 +39,7 @@ public class FileBizService {
 
     private final OssTemplate ossTemplate;
     private final SysOssFileService ossFileService;
+    private final SysUserService sysUserService;
     private final OssFileRecordRetryTask retryTask;
 
     public String upload(MultipartFile file) {
@@ -93,6 +95,9 @@ public class FileBizService {
 
     public void deleteById(Long id) {
         SysOssFile file = getAccessibleFile(id);
+        if (sysUserService.existsByAvatar(file.getFileUrl())) {
+            throw new BizException(CommonConstants.FILE_AVATAR_IN_USE_MESSAGE);
+        }
         if (!deleteOssFile(file)) {
             throw new BizException(CommonConstants.FILE_OSS_DELETE_FAILED_MESSAGE);
         }

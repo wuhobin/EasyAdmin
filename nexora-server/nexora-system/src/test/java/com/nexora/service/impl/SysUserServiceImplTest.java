@@ -17,6 +17,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -61,6 +62,17 @@ class SysUserServiceImplTest {
         service.listUsers(new SysUserQuery(), new PageParam(1, 10));
 
         verify(mapper, never()).selectUserRoles(any());
+    }
+
+    @Test
+    void checksWhetherAnAvatarUrlIsInUse() {
+        when(mapper.exists(any())).thenReturn(true, false);
+
+        assertThat(service.existsByAvatar("https://oss.example.com/avatar.png")).isTrue();
+        assertThat(service.existsByAvatar("https://oss.example.com/unused.png")).isFalse();
+        assertThat(service.existsByAvatar(" ")).isFalse();
+
+        verify(mapper, times(2)).exists(any());
     }
 
     private static SysUserPageListVo user(int id) {

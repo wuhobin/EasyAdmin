@@ -5,6 +5,7 @@ import com.nexora.domain.form.query.file.OssFileQueryForm;
 import com.nexora.domain.query.OssFileQuery;
 import com.nexora.entity.SysOssFile;
 import com.nexora.service.SysOssFileService;
+import com.nexora.service.SysUserService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
@@ -41,6 +42,9 @@ class FileBizServiceTest {
     private SysOssFileService ossFileService;
 
     @Mock
+    private SysUserService sysUserService;
+
+    @Mock
     private OssFileRecordRetryTask retryTask;
 
     @Test
@@ -49,7 +53,7 @@ class FileBizServiceTest {
         OssUploadResult uploadResult = uploadResult("native-id");
         when(ossTemplate.upload(any(MockMultipartFile.class), anyString())).thenReturn(uploadResult);
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         String url;
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
@@ -71,7 +75,7 @@ class FileBizServiceTest {
         OssUploadResult uploadResult = uploadResult(null);
         when(ossTemplate.upload(any(MockMultipartFile.class), anyString())).thenReturn(uploadResult);
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
@@ -85,7 +89,7 @@ class FileBizServiceTest {
 
     @Test
     void rejectsUploadBeforeCallingOssWhenTheCurrentUserIsMissing() {
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(0);
@@ -103,7 +107,7 @@ class FileBizServiceTest {
         MockMultipartFile file = file();
         when(ossTemplate.upload(any(MockMultipartFile.class), anyString())).thenReturn(uploadResult("file-123"));
         when(ossFileService.saveIfAbsent(any())).thenThrow(new IllegalStateException("database unavailable"));
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         String url;
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
@@ -122,7 +126,7 @@ class FileBizServiceTest {
         when(ossFileService.saveIfAbsent(any())).thenReturn(false);
         doThrow(new IllegalStateException("redis unavailable"))
                 .when(retryTask).submit(any(SysOssFile.class));
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
@@ -141,7 +145,7 @@ class FileBizServiceTest {
         form.setUploaderId(99L);
         Page<SysOssFile> page = new Page<>(1, 10);
         when(ossFileService.listFiles(any(), any())).thenReturn(page);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
@@ -160,7 +164,7 @@ class FileBizServiceTest {
         form.setUploaderId(99L);
         Page<SysOssFile> page = new Page<>(1, 10);
         when(ossFileService.listFiles(any(), any())).thenReturn(page);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(true);
@@ -178,7 +182,7 @@ class FileBizServiceTest {
         when(ossFileService.getById(1L)).thenReturn(file);
         when(ossTemplate.delete(any(FileInfo.class))).thenReturn(true);
         when(ossFileService.removeById(1L)).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
@@ -187,14 +191,34 @@ class FileBizServiceTest {
             service.deleteById(1L);
         }
 
+        verify(sysUserService).existsByAvatar(file.getFileUrl());
         verify(ossTemplate).delete(any(FileInfo.class));
         verify(ossFileService).removeById(1L);
     }
 
     @Test
+    void rejectsDeletingAFileUsedAsAnAvatarEvenForAdmin() {
+        SysOssFile file = storedFile(1L, 20L);
+        when(ossFileService.getById(1L)).thenReturn(file);
+        when(sysUserService.existsByAvatar(file.getFileUrl())).thenReturn(true);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(true);
+
+            assertThatThrownBy(() -> service.deleteById(1L))
+                    .hasMessage(CommonConstants.FILE_AVATAR_IN_USE_MESSAGE);
+        }
+
+        verify(sysUserService).existsByAvatar(file.getFileUrl());
+        verify(ossTemplate, never()).delete(any(FileInfo.class));
+        verify(ossFileService, never()).removeById(any());
+    }
+
+    @Test
     void rejectsDeletingAnotherUsersFile() {
         when(ossFileService.getById(1L)).thenReturn(storedFile(1L, 20L));
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
@@ -204,6 +228,7 @@ class FileBizServiceTest {
                     .hasMessage(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
         }
 
+        verify(sysUserService, never()).existsByAvatar(anyString());
         verify(ossTemplate, never()).delete(any(FileInfo.class));
         verify(ossFileService, never()).removeById(any());
     }
@@ -211,11 +236,12 @@ class FileBizServiceTest {
     @Test
     void reportsTheSameMessageWhenDeletingAMissingFile() {
         when(ossFileService.getById(1L)).thenReturn(null);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.deleteById(1L))
                 .hasMessage(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
 
+        verify(sysUserService, never()).existsByAvatar(anyString());
         verify(ossTemplate, never()).delete(any(FileInfo.class));
     }
 
@@ -224,7 +250,7 @@ class FileBizServiceTest {
         when(ossFileService.getById(1L)).thenReturn(storedFile(1L, 20L));
         when(ossTemplate.delete(any(FileInfo.class))).thenReturn(true);
         when(ossFileService.removeById(1L)).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(true);
@@ -239,7 +265,7 @@ class FileBizServiceTest {
     @Test
     void rejectsDownloadingAnotherUsersFileWithTheUnifiedMessage() {
         when(ossFileService.getById(1L)).thenReturn(storedFile(1L, 20L));
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, retryTask);
+        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);

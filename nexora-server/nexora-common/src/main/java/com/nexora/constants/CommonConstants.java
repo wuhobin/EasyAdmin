@@ -29,6 +29,8 @@ public class CommonConstants {
 
     public static final String FILE_OSS_DELETE_FAILED_MESSAGE = "OSS 文件删除失败";
 
+    public static final String FILE_AVATAR_IN_USE_MESSAGE = "该文件正在作为用户头像使用，请先更换头像后再删除";
+
     public static final String FILE_RECORD_DELETE_FAILED_MESSAGE = "文件记录删除失败, id=%s, fileId=%s";
 
     public static final String FILE_OBJECT_KEY_UNAVAILABLE_MESSAGE = "无法解析 OSS 文件对象名称";

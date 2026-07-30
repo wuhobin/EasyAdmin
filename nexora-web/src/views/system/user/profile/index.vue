@@ -526,6 +526,7 @@ const handleAvatarUpload = async (options: any) => {
       avatar: data
     })
     userInfo.value.sysUser.avatar = data
+    await userStore.getUserInfo()
     ElMessage.success('头像已更新')
   } catch (error) {
     console.error('头像上传失败:', error)
