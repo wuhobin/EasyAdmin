@@ -26,7 +26,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="上传人" prop="uploaderId">
+        <el-form-item v-if="isAdmin" label="上传人" prop="uploaderId">
           <el-select
             v-model="queryParams.uploaderId"
             placeholder="请选择用户"
@@ -59,9 +59,6 @@
         </el-table-column>
         <el-table-column label="大小" min-width="110" align="right">
           <template #default="{ row }">{{ formatFileSize(row.fileSize) }}</template>
-        </el-table-column>
-        <el-table-column prop="uploaderName" label="上传人" min-width="120" align="center">
-          <template #default="{ row }">{{ row.uploaderName || '-' }}</template>
         </el-table-column>
         <el-table-column prop="createTime" label="上传时间" min-width="180" align="center" />
         <el-table-column label="预览" width="88" align="center">
@@ -144,6 +141,7 @@ import { getDictListApi, getDictDataListApi } from '@/api/system/dict'
 import { useUserStore } from '@/store/modules/user'
 
 const userStore = useUserStore()
+const isAdmin = computed(() => userStore.user.roles.includes('admin'))
 const queryFormRef = ref<FormInstance>()
 const loading = ref(false)
 const total = ref(0)
@@ -274,7 +272,9 @@ const handleDelete = async (row: unknown) => {
   getList()
 }
 
-loadUserOptions()
+if (isAdmin.value) {
+  loadUserOptions()
+}
 loadContentTypeOptions()
 getList()
 </script>

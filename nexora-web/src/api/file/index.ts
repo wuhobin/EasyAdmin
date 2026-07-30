@@ -11,7 +11,6 @@ export interface OssFileRecord {
   platform?: string
   thumbnailUrl?: string
   uploaderId?: number
-  uploaderName?: string
   createTime?: string
 }
 
@@ -63,4 +62,3 @@ export function deleteFileApi(id: number) {
     method: 'delete'
   })
 }
-

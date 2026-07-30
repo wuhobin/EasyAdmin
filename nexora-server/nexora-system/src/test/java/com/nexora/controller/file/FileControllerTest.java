@@ -7,6 +7,7 @@ import com.aurora.starter.mybatisplus.model.PageParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -26,11 +27,21 @@ class FileControllerTest {
 
         controller.list(form, pageParam);
         controller.deleteById(1L);
-        controller.delete("https://oss.example.com/file.png");
 
         verify(fileBizService).list(form, pageParam);
         verify(fileBizService).deleteById(1L);
-        verify(fileBizService).deleteByUrl("https://oss.example.com/file.png");
+    }
+
+    @Test
+    void delegatesUploadToTheBizService() {
+        FileBizService fileBizService = mock(FileBizService.class);
+        FileController controller = new FileController(fileBizService);
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "report.pdf", "application/pdf", new byte[]{1, 2, 3});
+
+        controller.upload(file);
+
+        verify(fileBizService).upload(file);
     }
 
     @Test

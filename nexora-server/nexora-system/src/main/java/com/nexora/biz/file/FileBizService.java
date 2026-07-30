@@ -3,12 +3,11 @@ package com.nexora.biz.file;
 import com.nexora.constants.CommonConstants;
 import com.nexora.domain.convert.OssFileConvert;
 import com.nexora.domain.form.query.file.OssFileQueryForm;
-import com.nexora.domain.vo.auth.LoginUserInfoVo;
+import com.nexora.domain.query.OssFileQuery;
 import com.nexora.domain.vo.file.SysOssFileVo;
 import com.nexora.entity.SysOssFile;
 import com.nexora.service.SysOssFileService;
 import com.aurora.starter.common.utils.DateUtils;
-import com.aurora.starter.common.utils.JsonUtil;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
@@ -31,7 +30,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -44,30 +42,38 @@ public class FileBizService {
 
     public String upload(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new BizException("上传文件不能为空");
+            throw new BizException(CommonConstants.FILE_EMPTY_MESSAGE);
         }
+        Long uploaderId = currentUploaderId();
         String datePath = DateUtils.parseDateToStr(DateUtils.YYYYMMDD, DateUtils.getNowDate());
         OssUploadResult result = ossTemplate.upload(file, datePath + "/");
         if (result == null || result.getUrl() == null) {
-            throw new BizException("上传文件失败");
+            throw new BizException(CommonConstants.FILE_UPLOAD_FAILED_MESSAGE);
         }
         if (result.getId() == null || result.getId().isBlank()) {
             result.setId(IdWorker.getIdStr());
         }
-        recordUpload(file, result);
+        recordUpload(file, result, uploaderId);
         return result.getUrl();
     }
 
     public IPage<SysOssFileVo> list(OssFileQueryForm form, PageParam pageParam) {
         if (pageParam != null && (pageParam.getOrderBy() == null || pageParam.getOrderBy().isBlank())) {
-            pageParam.setOrderBy("create_time desc");
+            pageParam.setOrderBy(CommonConstants.FILE_DEFAULT_ORDER);
         }
-        IPage<SysOssFile> page = ossFileService.listFiles(OssFileConvert.INSTANCE.toQuery(form), pageParam);
+        OssFileQuery query = OssFileConvert.INSTANCE.toQuery(form);
+        if (query == null) {
+            query = new OssFileQuery();
+        }
+        if (!SecurityUtils.hasRole(CommonConstants.ADMIN)) {
+            query.setUploaderId(currentUploaderId());
+        }
+        IPage<SysOssFile> page = ossFileService.listFiles(query, pageParam);
         return page.convert(OssFileConvert.INSTANCE::toVo);
     }
 
     public void download(Long id, HttpServletResponse response) throws IOException {
-        SysOssFile file = getFile(id);
+        SysOssFile file = getAccessibleFile(id);
         String filename = file.getOriginalFilename();
         if (filename == null || filename.isBlank()) {
             filename = file.getFileName();
@@ -86,40 +92,20 @@ public class FileBizService {
     }
 
     public void deleteById(Long id) {
-        SysOssFile file = getFile(id);
-        checkDeletePermission(file);
+        SysOssFile file = getAccessibleFile(id);
         if (!deleteOssFile(file)) {
-            throw new BizException("OSS 文件删除失败");
+            throw new BizException(CommonConstants.FILE_OSS_DELETE_FAILED_MESSAGE);
         }
         if (!ossFileService.removeById(id)) {
             log.error("OSS file deleted but database record deletion failed, id={}, fileId={}, url={}",
                     file.getId(), file.getFileId(), file.getFileUrl());
-            throw new BizException("文件记录删除失败, id=" + file.getId() + ", fileId=" + file.getFileId());
+            throw new BizException(CommonConstants.FILE_RECORD_DELETE_FAILED_MESSAGE.formatted(
+                    file.getId(), file.getFileId()));
         }
     }
 
-    public boolean deleteByUrl(String url) {
-        List<SysOssFile> files = ossFileService.listByUrl(url);
-        if (files.isEmpty()) {
-            checkAdminDeletePermission();
-            return deleteOssFile(SysOssFile.builder().fileUrl(url).build());
-        }
-        files.forEach(this::checkDeletePermission);
-        if (!deleteOssFile(files.getFirst())) {
-            return false;
-        }
-        List<Long> recordIds = files.stream().map(SysOssFile::getId).toList();
-        if (!ossFileService.removeBatchByIds(recordIds)) {
-            List<String> fileIds = files.stream().map(SysOssFile::getFileId).toList();
-            log.error("OSS file deleted but database records deletion failed, ids={}, fileIds={}, url={}",
-                    recordIds, fileIds, url);
-            throw new BizException("文件记录删除失败, ids=" + recordIds + ", fileIds=" + fileIds);
-        }
-        return true;
-    }
-
-    private void recordUpload(MultipartFile file, OssUploadResult result) {
-        SysOssFile data = buildRecordData(file, result, currentUser());
+    private void recordUpload(MultipartFile file, OssUploadResult result, Long uploaderId) {
+        SysOssFile data = buildRecordData(file, result, uploaderId);
         boolean saved;
         try {
             saved = ossFileService.saveIfAbsent(data);
@@ -133,10 +119,13 @@ public class FileBizService {
         }
     }
 
-    private SysOssFile getFile(Long id) {
+    private SysOssFile getAccessibleFile(Long id) {
+        if (id == null) {
+            throw new BizException(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
+        }
         SysOssFile file = ossFileService.getById(id);
-        if (file == null) {
-            throw new BizException("文件记录不存在");
+        if (file == null || !canAccess(file)) {
+            throw new BizException(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
         }
         return file;
     }
@@ -145,21 +134,21 @@ public class FileBizService {
         return ossTemplate.delete(toFileInfo(file));
     }
 
-    private void checkDeletePermission(SysOssFile file) {
+    private static boolean canAccess(SysOssFile file) {
         if (SecurityUtils.hasRole(CommonConstants.ADMIN)) {
-            return;
+            return true;
         }
-        Integer currentUserId = SecurityUtils.getLoginIdAsInt();
-        if (file.getUploaderId() == null || currentUserId == null
-                || file.getUploaderId().longValue() != currentUserId.longValue()) {
-            throw new BizException("只能删除自己上传的文件");
-        }
+        int currentUserId = SecurityUtils.getLoginIdAsInt();
+        return file.getUploaderId() != null && currentUserId > 0
+                && file.getUploaderId().longValue() == currentUserId;
     }
 
-    private static void checkAdminDeletePermission() {
-        if (!SecurityUtils.hasRole(CommonConstants.ADMIN)) {
-            throw new BizException("只能删除自己上传的文件");
+    private static Long currentUploaderId() {
+        int currentUserId = SecurityUtils.getLoginIdAsInt();
+        if (currentUserId <= 0) {
+            throw new BizException(CommonConstants.FILE_CURRENT_USER_REQUIRED_MESSAGE);
         }
+        return (long) currentUserId;
     }
 
     private FileInfo toFileInfo(SysOssFile file) {
@@ -172,7 +161,7 @@ public class FileBizService {
             objectKey = file.getFileName();
         }
         if (objectKey == null || objectKey.isBlank()) {
-            throw new BizException("无法解析 OSS 文件对象名称");
+            throw new BizException(CommonConstants.FILE_OBJECT_KEY_UNAVAILABLE_MESSAGE);
         }
         return new FileInfo()
                 .setUrl(file.getFileUrl())
@@ -201,7 +190,7 @@ public class FileBizService {
     }
 
     private static SysOssFile buildRecordData(MultipartFile file, OssUploadResult result,
-                                               LoginUserInfoVo user) {
+                                               Long uploaderId) {
         String originalFilename = result.getOriginalFilename();
         if (originalFilename == null || originalFilename.isBlank()) {
             originalFilename = file.getOriginalFilename();
@@ -219,19 +208,8 @@ public class FileBizService {
                 .fileSize(result.getSize())
                 .platform(result.getPlatform())
                 .thumbnailUrl(result.getThUrl())
-                .uploaderId(user == null || user.getId() == null ? null : user.getId().longValue())
-                .uploaderName(user == null ? null : user.getNickname())
+                .uploaderId(uploaderId)
                 .build();
-    }
-
-    private static LoginUserInfoVo currentUser() {
-        try {
-            Object sessionUser = SecurityUtils.getSessionAttribute(CommonConstants.CURRENT_USER);
-            return JsonUtil.parse(JsonUtil.toJson(sessionUser), LoginUserInfoVo.class);
-        } catch (Exception exception) {
-            log.debug("Current upload user is unavailable", exception);
-            return null;
-        }
     }
 
     private static MediaType resolveMediaType(String contentType) {

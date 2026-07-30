@@ -13,8 +13,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssFile>
         implements SysOssFileService {
@@ -36,13 +34,6 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
     @Override
     public IPage<SysOssFile> listFiles(OssFileQuery query, PageParam pageParam) {
         return page(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
-    }
-
-    @Override
-    public List<SysOssFile> listByUrl(String url) {
-        LambdaQueryWrapper<SysOssFile> wrapper = new LambdaQueryWrapper<SysOssFile>()
-                .eq(SysOssFile::getFileUrl, url);
-        return list(wrapper);
     }
 
 }

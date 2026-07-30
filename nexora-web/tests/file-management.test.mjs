@@ -30,12 +30,12 @@ test('file API exposes typed list, download, and id-based delete operations', ()
   assert.match(apiSource, /url:\s*`\/file\/\$\{id\}\/download`/)
   assert.match(apiSource, /responseType:\s*['"]blob['"]/)
   assert.match(apiSource, /timeout:\s*0/)
+  assert.doesNotMatch(apiSource, /uploaderName/)
 })
 
 test('file page supports search, preview, authenticated download, URL commands, and permission-controlled delete', () => {
   assert.match(pageSource, /queryParams\.fileName/)
   assert.match(pageSource, /queryParams\.contentType/)
-  assert.match(pageSource, /queryParams\.uploaderName/)
   assert.match(pageSource, /startsWith\(['"]image\/['"]\)/)
   assert.match(pageSource, /window\.open/)
   assert.match(pageSource, /navigator\.clipboard\.writeText/)
@@ -50,6 +50,14 @@ test('file page supports search, preview, authenticated download, URL commands, 
   assert.match(pageSource, /file\.uploaderId\s*===\s*userStore\.user\.id/)
   assert.match(pageSource, /deleteFileApi/)
   assert.doesNotMatch(pageSource, /上传文件|uploadApi/)
+})
+
+test('file page limits uploader filtering to administrators and omits the uploader column', () => {
+  assert.match(pageSource, /const isAdmin = computed\(\(\) => userStore\.user\.roles\.includes\(['"]admin['"]\)\)/)
+  assert.match(pageSource, /<el-form-item v-if=["']isAdmin["'] label=["']上传人["'] prop=["']uploaderId["']>/)
+  assert.match(pageSource, /v-model=["']queryParams\.uploaderId["']/)
+  assert.match(pageSource, /if \(isAdmin\.value\) \{\s*loadUserOptions\(\)\s*\}/)
+  assert.doesNotMatch(pageSource, /<el-table-column[^>]*prop=["']uploaderName["']/)
 })
 
 test('binary response helper reads JSON business errors from blobs', async () => {

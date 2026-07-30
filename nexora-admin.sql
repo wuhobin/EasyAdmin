@@ -300,8 +300,7 @@ CREATE TABLE `sys_oss_file`  (
   `file_size` bigint NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
   `platform` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '存储平台',
   `thumbnail_url` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '缩略图地址',
-  `uploader_id` bigint NULL DEFAULT NULL COMMENT '上传人ID',
-  `uploader_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '上传人用户名',
+  `uploader_id` bigint NOT NULL COMMENT '上传人ID',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
@@ -309,14 +308,14 @@ CREATE TABLE `sys_oss_file`  (
   INDEX `idx_sys_oss_file_url`(`file_url`(255) ASC) USING BTREE,
   INDEX `idx_sys_oss_file_original_name`(`original_filename` ASC) USING BTREE,
   INDEX `idx_sys_oss_file_content_type`(`content_type` ASC) USING BTREE,
-  INDEX `idx_sys_oss_file_uploader`(`uploader_id` ASC, `uploader_name` ASC) USING BTREE
+  INDEX `idx_sys_oss_file_uploader`(`uploader_id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'OSS文件流水表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_oss_file
 -- ----------------------------
-INSERT INTO `sys_oss_file` VALUES (2, '2077958748180103170', 'https://oss.wuhobin.top/base/20260717/6a59a182555419c251de00f2.jpg', '6a59a182555419c251de00f2.jpg', '03ac9bca77b33fcc8dc3d99529ee3553.jpg', 'image/jpeg', 59285, 'qiniu-kodo-1', NULL, 1, '系统管理员', '2026-07-17 11:29:07', '2026-07-17 11:29:07');
-INSERT INTO `sys_oss_file` VALUES (5, '2078768869686726657', 'https://oss.wuhobin.top/base/20260719/6a5c93fd80e6bd74478afdc1.jpg', '6a5c93fd80e6bd74478afdc1.jpg', '微信图片_20260716221806_14559_11.jpg', 'image/jpeg', 35213, 'qiniu-kodo-1', NULL, 1811, '普通用户', '2026-07-19 17:08:15', '2026-07-19 17:08:15');
+INSERT INTO `sys_oss_file` VALUES (2, '2077958748180103170', 'https://oss.wuhobin.top/base/20260717/6a59a182555419c251de00f2.jpg', '6a59a182555419c251de00f2.jpg', '03ac9bca77b33fcc8dc3d99529ee3553.jpg', 'image/jpeg', 59285, 'qiniu-kodo-1', NULL, 1, '2026-07-17 11:29:07', '2026-07-17 11:29:07');
+INSERT INTO `sys_oss_file` VALUES (5, '2078768869686726657', 'https://oss.wuhobin.top/base/20260719/6a5c93fd80e6bd74478afdc1.jpg', '6a5c93fd80e6bd74478afdc1.jpg', '微信图片_20260716221806_14559_11.jpg', 'image/jpeg', 35213, 'qiniu-kodo-1', NULL, 1811, '2026-07-19 17:08:15', '2026-07-19 17:08:15');
 
 -- ----------------------------
 -- Table structure for sys_role

@@ -69,14 +69,6 @@ class SysOssFileServiceImplTest {
         assertThat(result.getRecords()).containsExactly(file);
     }
 
-    @Test
-    void listsAllRecordsForAStoredUrl() {
-        SysOssFile file = file();
-        when(mapper.selectList(any())).thenReturn(List.of(file));
-
-        assertThat(service.listByUrl(file.getFileUrl())).containsExactly(file);
-    }
-
     private static SysOssFile file() {
         return SysOssFile.builder()
                 .id(1L)
