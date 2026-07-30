@@ -9,6 +9,9 @@ public class SysUserQueryForm {
     @Schema(description = "用户昵称关键字")
     private String nickname;
 
+    @Schema(description = "用户邮箱关键字")
+    private String email;
+
     @Schema(description = "用户状态")
     private Integer status;
 }

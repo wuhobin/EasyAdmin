@@ -1,86 +1,47 @@
 package com.nexora.cache;
 
-import com.aurora.starter.redis.core.TwoLevelCache;
-import com.aurora.starter.redis.core.manager.TwoLevelCacheManager;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.redis.RedisConnectionFailureException;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class SysConfigCacheTest {
 
-    private final TwoLevelCacheManager cacheManager = mock(TwoLevelCacheManager.class);
-    private final TwoLevelCache twoLevelCache = mock(TwoLevelCache.class);
-    private final SysConfigCache configCache = new SysConfigCache(cacheManager);
+    private final TwoLevelCacheTemplate cacheTemplate = mock(TwoLevelCacheTemplate.class);
+    private final SysConfigCache configCache = new SysConfigCache(cacheTemplate);
 
     @Test
-    void fallsBackToDatabaseLoaderWhenRedisIsUnavailable() {
-        when(cacheManager.get("sysConfig")).thenReturn(twoLevelCache);
-        when(twoLevelCache.get(eq("nexora:sys-config:site.title"), any(),
-                eq(5L), eq(TimeUnit.MINUTES)))
-                .thenThrow(new RedisConnectionFailureException("redis unavailable"));
-        AtomicInteger databaseLoads = new AtomicInteger();
+    void readsFromTheSystemConfigCacheRegion() {
+        Supplier<String> loader = () -> "database value";
+        when(cacheTemplate.get(
+                "sysConfig", "nexora:sys-config:site.title", loader, 5L, TimeUnit.MINUTES))
+                .thenReturn("Nexora");
 
-        String value = configCache.get("site.title", () -> {
-            databaseLoads.incrementAndGet();
-            return "Nexora";
-        });
+        String value = configCache.get("site.title", loader);
 
         assertThat(value).isEqualTo("Nexora");
-        assertThat(databaseLoads).hasValue(1);
+        verify(cacheTemplate).get(
+                "sysConfig", "nexora:sys-config:site.title", loader, 5L, TimeUnit.MINUTES);
     }
 
     @Test
-    void evictsOnlyAfterActiveTransactionCommits() {
-        when(cacheManager.get("sysConfig")).thenReturn(twoLevelCache);
-        TransactionSynchronizationManager.initSynchronization();
-        TransactionSynchronizationManager.setActualTransactionActive(true);
-        try {
-            configCache.evictAfterCommit("site.title");
+    void evictsFromTheSystemConfigCacheRegionAfterCommit() {
+        configCache.evictAfterCommit("site.title");
 
-            verifyNoInteractions(cacheManager);
-            for (TransactionSynchronization synchronization
-                    : TransactionSynchronizationManager.getSynchronizations()) {
-                synchronization.afterCommit();
-            }
-
-            verify(twoLevelCache).evict("nexora:sys-config:site.title");
-        } finally {
-            TransactionSynchronizationManager.clearSynchronization();
-            TransactionSynchronizationManager.setActualTransactionActive(false);
-        }
+        verify(cacheTemplate).evictAfterCommit(
+                "sysConfig", "nexora:sys-config:site.title");
     }
 
     @Test
-    void writesValueOnlyAfterActiveTransactionCommits() {
-        when(cacheManager.get("sysConfig")).thenReturn(twoLevelCache);
-        TransactionSynchronizationManager.initSynchronization();
-        TransactionSynchronizationManager.setActualTransactionActive(true);
-        try {
-            configCache.setAfterCommit("site.title", "Nexora");
+    void writesToTheSystemConfigCacheRegionAfterCommit() {
+        configCache.setAfterCommit("site.title", "Nexora");
 
-            verifyNoInteractions(cacheManager);
-            for (TransactionSynchronization synchronization
-                    : TransactionSynchronizationManager.getSynchronizations()) {
-                synchronization.afterCommit();
-            }
-
-            verify(twoLevelCache).set(
-                    "nexora:sys-config:site.title", "Nexora", 5L, TimeUnit.MINUTES);
-        } finally {
-            TransactionSynchronizationManager.clearSynchronization();
-            TransactionSynchronizationManager.setActualTransactionActive(false);
-        }
+        verify(cacheTemplate).setAfterCommit(
+                "sysConfig", "nexora:sys-config:site.title", "Nexora", 5L, TimeUnit.MINUTES);
     }
 }

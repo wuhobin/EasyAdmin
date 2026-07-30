@@ -108,11 +108,12 @@
       append-to-body
       destroy-on-close
     >
+      <p class="dialog-form-intro">维护角色名称、编码和说明信息。</p>
       <el-form
         ref="roleFormRef"
         :model="roleForm"
         :rules="rules"
-        label-width="100px"
+        label-position="top"
       >
         <el-form-item label="角色名称" prop="name">
           <el-input v-model="roleForm.name" placeholder="请输入角色名称" />
@@ -126,8 +127,8 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="cancel">取 消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取消</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="submitForm">确定</el-button>
 
         </div>
       </template>
@@ -142,7 +143,8 @@
       destroy-on-close
       top="5vh"
     >
-      <el-form label-width="80px">
+      <p class="dialog-form-intro">为当前角色选择可访问的菜单和操作权限。</p>
+      <el-form label-position="top">
         <el-form-item label="角色名称">
           <el-input v-model="permissionDialog.roleInfo.name" disabled />
         </el-form-item>
@@ -161,8 +163,8 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" :loading="submitLoading" @click="submitPermission">确 定</el-button>
-          <el-button @click="permissionDialog.visible = false">取 消</el-button>
+          <el-button @click="permissionDialog.visible = false">取消</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="submitPermission">确定</el-button>
         </div>
       </template>
     </el-dialog>

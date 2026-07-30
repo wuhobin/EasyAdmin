@@ -18,6 +18,8 @@ public class MailAccount extends BaseEntity implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    private Integer ownerId;
+
     private String accountName;
 
     private String provider;

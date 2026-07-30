@@ -1,5 +1,6 @@
 package com.nexora.biz.mail;
 
+import com.nexora.constants.CommonConstants;
 import com.nexora.domain.vo.mail.MailMessageDetailVo;
 import com.nexora.domain.vo.mail.MailMessagePageVo;
 import com.nexora.domain.vo.mail.MailMessageSummaryVo;
@@ -8,6 +9,7 @@ import com.nexora.handler.mail.ImapMailClient;
 import com.nexora.handler.mail.MailCredentialCipher;
 import com.nexora.handler.mail.MailMessagePage;
 import com.nexora.service.MailAccountService;
+import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -59,10 +61,11 @@ public class MailInboxBizService {
             return buildPage(List.of(accountPage), normalizedLimit);
         }
 
-        List<CompletableFuture<AccountPage>> futures = mailAccountService.listEnabled().stream()
+        List<CompletableFuture<AccountPage>> futures =
+                mailAccountService.listEnabledByOwnerId(currentOwnerId()).stream()
                 .map(account -> CompletableFuture.supplyAsync(
                         () -> listAccount(account, normalizedLimit,
-                                cursorState.accounts().get(account.getId()), accountId != null),
+                                cursorState.accounts().get(account.getId()), false),
                         mailExecutor))
                 .toList();
         List<AccountPage> accountPages = futures.stream().map(CompletableFuture::join).toList();
@@ -127,9 +130,9 @@ public class MailInboxBizService {
     }
 
     private MailAccount getEnabledAccount(Long id) {
-        MailAccount account = mailAccountService.getById(id);
+        MailAccount account = mailAccountService.getByIdAndOwnerId(id, currentOwnerId());
         if (account == null || !Integer.valueOf(1).equals(account.getEnabled())) {
-            throw new BizException("邮箱账户不存在或未启用");
+            throw new BizException(CommonConstants.MAIL_ACCOUNT_UNAVAILABLE_MESSAGE);
         }
         return account;
     }
@@ -158,7 +161,7 @@ public class MailInboxBizService {
             return new CursorState(Map.of());
         }
         if (cursor.length() > 8_192) {
-            throw new BizException("邮件分页游标无效，请刷新后重试");
+            throw new BizException(CommonConstants.MAIL_CURSOR_INVALID_MESSAGE);
         }
         try {
             byte[] json = Base64.getUrlDecoder().decode(cursor);
@@ -170,7 +173,7 @@ public class MailInboxBizService {
             }
             return state;
         } catch (Exception exception) {
-            throw new BizException("邮件分页游标无效，请刷新后重试");
+            throw new BizException(CommonConstants.MAIL_CURSOR_INVALID_MESSAGE);
         }
     }
 
@@ -179,8 +182,12 @@ public class MailInboxBizService {
             byte[] json = objectMapper.writeValueAsBytes(state);
             return Base64.getUrlEncoder().withoutPadding().encodeToString(json);
         } catch (Exception exception) {
-            throw new BizException("邮件分页游标生成失败");
+            throw new BizException(CommonConstants.MAIL_CURSOR_CREATE_FAILED_MESSAGE);
         }
+    }
+
+    private static Integer currentOwnerId() {
+        return SecurityUtils.getLoginIdAsInt();
     }
 
     private static int normalizeLimit(Integer limit) {

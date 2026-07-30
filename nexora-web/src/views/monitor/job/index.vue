@@ -132,95 +132,90 @@
       <el-dialog
         :title="title"
         v-model="open"
-        width="700px"
+        width="720px"
         append-to-body
+        class="job-form-dialog"
       >
-        <el-form ref="jobFormRef" :model="form" :rules="rules" label-width="120px">
-          <el-row>
-            <el-col :span="12">
-              <el-form-item label="任务名称" prop="jobName">
-                <el-input v-model="form.jobName" placeholder="请输入任务名称" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="任务组名" prop="jobGroup">
-                <el-select v-model="form.jobGroup" placeholder="请选择任务组名">
-                  <el-option
-                    v-for="dict in jobGroupOptions"
-                    :key="dict.value"
-                    :label="dict.label"
-                    :value="dict.value"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="24">
-              <el-form-item label="调用方法" prop="invokeTarget" >
-                <el-input v-model="form.invokeTarget" placeholder="请输入调用目标字符串">
-                  <template #append>
-                    <el-tooltip  placement="top">
-                        <template #content>
-                            Bean调用示例:neatTask.neatParams('neat')
-                            <br />Class类调用示例:com.neat.quartz.taskQuartz.neatParams('neat')
-                            <br />参数说明：支持字符串，布尔类型，长整型，浮点型，整型
-                        </template>
-                      <el-icon><QuestionFilled /></el-icon>
-                    </el-tooltip>
-                  </template>
-                </el-input>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="24">
-              <el-form-item label="cron表达式" prop="cronExpression">
-                <el-input v-model="form.cronExpression" placeholder="请输入cron执行表达式">
-                  <template #append>
-                    <el-tooltip content="Cron表达式生成器" placement="top">
-                      <el-button @click="handleShowCron">
-                        <el-icon><Timer /></el-icon>
-                      </el-button>
-                    </el-tooltip>
-                  </template>
-                </el-input>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="24">
-              <el-form-item label="执行策略" prop="misfirePolicy">
-                <el-radio-group v-model="form.misfirePolicy">
-                  <el-radio value="1">立即执行</el-radio>
-                  <el-radio value="2">执行一次</el-radio>
-                  <el-radio value="3">放弃执行</el-radio>
-                </el-radio-group>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="24">
-              <el-form-item label="是否并发" prop="concurrent">
-                <el-radio-group v-model="form.concurrent">
-                  <el-radio value="0">允许</el-radio>
-                  <el-radio value="1">禁止</el-radio>
-                </el-radio-group>
-              </el-form-item>
-            </el-col>
-          </el-row>
+        <p class="dialog-form-intro">配置任务调用目标、执行周期与异常处理策略。</p>
+        <el-form
+          ref="jobFormRef"
+          :model="form"
+          :rules="rules"
+          label-position="top"
+          class="job-form"
+        >
+          <div class="job-form-grid">
+            <el-form-item label="任务名称" prop="jobName">
+              <el-input v-model="form.jobName" placeholder="请输入任务名称" />
+            </el-form-item>
+
+            <el-form-item label="任务组名" prop="jobGroup">
+              <el-select v-model="form.jobGroup" placeholder="请选择任务组名">
+                <el-option
+                  v-for="dict in jobGroupOptions"
+                  :key="dict.value"
+                  :label="dict.label"
+                  :value="dict.value"
+                />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item label="调用方法" prop="invokeTarget" class="is-wide">
+              <el-input v-model="form.invokeTarget" placeholder="请输入调用目标字符串">
+                <template #append>
+                  <el-tooltip placement="top">
+                    <template #content>
+                      Bean调用示例: neatTask.neatParams('neat')
+                      <br />Class类调用示例: com.neat.quartz.taskQuartz.neatParams('neat')
+                      <br />参数说明：支持字符串、布尔、长整型、浮点型和整型
+                    </template>
+                    <el-icon class="invoke-help"><QuestionFilled /></el-icon>
+                  </el-tooltip>
+                </template>
+              </el-input>
+            </el-form-item>
+
+            <el-form-item label="Cron 表达式" prop="cronExpression" class="is-wide">
+              <el-input v-model="form.cronExpression" placeholder="请输入 Cron 执行表达式">
+                <template #append>
+                  <el-tooltip content="打开 Cron 表达式生成器" placement="top">
+                    <el-button aria-label="打开 Cron 表达式生成器" @click="handleShowCron">
+                      <el-icon><Timer /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+                </template>
+              </el-input>
+            </el-form-item>
+
+            <el-form-item label="执行策略" prop="misfirePolicy" class="choice-field">
+              <el-radio-group v-model="form.misfirePolicy">
+                <el-radio value="1">立即执行</el-radio>
+                <el-radio value="2">执行一次</el-radio>
+                <el-radio value="3">放弃执行</el-radio>
+              </el-radio-group>
+            </el-form-item>
+
+            <el-form-item label="并发策略" prop="concurrent" class="choice-field">
+              <el-radio-group v-model="form.concurrent">
+                <el-radio value="0">允许并发</el-radio>
+                <el-radio value="1">禁止并发</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </div>
         </el-form>
         <template #footer>
           <div class="dialog-footer">
-            <el-button @click="cancel">取 消</el-button>
-            <el-button type="primary" @click="submitForm">确 定</el-button>
-
+            <el-button @click="cancel">取消</el-button>
+            <el-button type="primary" :loading="submitLoading" @click="submitForm">
+              {{ form.jobId ? '保存修改' : '创建任务' }}
+            </el-button>
           </div>
         </template>
       </el-dialog>
 
       <!-- Cron表达式生成器 -->
       <el-dialog top="5vh" title="Cron表达式生成器" v-model="cronVisible" width="700px" append-to-body>
+        <p class="dialog-form-intro">通过可视化规则生成并预览 Cron 表达式。</p>
         <CronTab
           v-model="form.cronExpression"
           :visible="cronVisible"
@@ -265,6 +260,7 @@ const open = ref(false)
 // cron表达式弹出层
 const cronVisible = ref(false)
 const loading = ref(false)
+const submitLoading = ref(false)
 // 是否显示详细信息
 const detailOpen = ref(false)
 // 查询参数
@@ -421,6 +417,7 @@ const handleUpdate = async (row: any) => {
 
 /** 提交按钮 */
 const submitForm = async () => {
+  submitLoading.value = true
   try {
     await jobFormRef.value.validate()
     if (form.jobId) {
@@ -434,6 +431,8 @@ const submitForm = async () => {
     getList()
   } catch (error) {
     console.error('Failed to submit job form:', error)
+  } finally {
+    submitLoading.value = false
   }
 }
 
@@ -501,4 +500,106 @@ onMounted(() => {
 .mb8 {
   margin-bottom: 8px;
 }
-</style> 
+</style>
+
+<!-- 弹窗使用 append-to-body，需要用独立的全局类命中传送后的 DOM。 -->
+<style lang="scss">
+.job-form-dialog {
+  .el-dialog__body {
+    padding: 24px;
+  }
+
+  .job-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 20px;
+  }
+
+  .job-form-grid .el-form-item {
+    min-width: 0;
+    margin-bottom: 0;
+
+    &.is-wide {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .el-form-item__label {
+    height: auto;
+    padding: 0;
+    margin-bottom: 7px;
+    color: var(--el-text-color-regular);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 20px;
+  }
+
+  .el-form-item__content {
+    min-width: 0;
+  }
+
+  .el-input__wrapper,
+  .el-select__wrapper {
+    min-height: 42px;
+    border-radius: 6px;
+  }
+
+  .el-select {
+    width: 100%;
+  }
+
+  .el-input-group__append {
+    min-width: 44px;
+    padding: 0;
+  }
+
+  .invoke-help {
+    width: 44px;
+    height: 42px;
+    color: var(--el-text-color-secondary);
+    cursor: help;
+  }
+
+  .choice-field .el-form-item__content {
+    min-height: 42px;
+    align-items: center;
+  }
+
+  .el-radio-group {
+    min-height: 42px;
+    display: flex;
+    width: auto;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+  }
+
+  .el-radio {
+    justify-content: flex-start;
+    padding-inline: 0 !important;
+    margin-right: 0;
+  }
+
+  .el-form-item__error {
+    position: static;
+    padding-top: 6px;
+  }
+}
+
+@media (max-width: 640px) {
+  .job-form-dialog {
+    .el-dialog__body {
+      padding: 20px;
+    }
+
+    .job-form-grid {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 20px;
+    }
+
+    .job-form-grid .el-form-item.is-wide {
+      grid-column: auto;
+    }
+  }
+}
+</style>

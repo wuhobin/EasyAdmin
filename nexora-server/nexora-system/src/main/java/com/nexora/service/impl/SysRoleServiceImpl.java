@@ -33,6 +33,12 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     @Override
+    public SysRole getByCode(String code) {
+        return baseMapper.selectOne(new LambdaQueryWrapper<SysRole>()
+                .eq(SysRole::getCode, code));
+    }
+
+    @Override
     public void deleteRoleMenus(List<Integer> roleIds) {
         baseMapper.deleteMenuByRoleId(roleIds);
     }

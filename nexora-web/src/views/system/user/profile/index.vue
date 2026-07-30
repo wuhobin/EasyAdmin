@@ -66,7 +66,7 @@
               <h2>{{ displayName }}</h2>
               <span class="verified-badge"><el-icon><CircleCheckFilled /></el-icon> 已启用</span>
             </div>
-            <p class="username">@{{ userInfo.sysUser.username || 'user' }}</p>
+            <p class="identity-email">{{ userInfo.sysUser.email }}</p>
             <div class="role-list">
               <span v-for="role in userInfo.roles" :key="role" class="role-chip">{{ role }}</span>
               <span v-if="!userInfo.roles.length" class="role-chip">普通用户</span>
@@ -174,14 +174,11 @@
                     placeholder="请输入手机号码"
                   />
                 </el-form-item>
-                <el-form-item label="邮箱地址" prop="email">
-                  <el-input
-                    v-model="userForm.email"
-                    type="email"
-                    maxlength="50"
-                    autocomplete="email"
-                    placeholder="请输入邮箱地址"
-                  />
+                <el-form-item label="登录邮箱">
+                  <div class="email-setting">
+                    <el-input :model-value="userInfo.sysUser.email" disabled />
+                    <el-button @click="openEmailDialog">更换邮箱</el-button>
+                  </div>
                 </el-form-item>
                 <el-form-item label="性别" class="full-field gender-field">
                   <el-radio-group v-model="userForm.sex">
@@ -261,6 +258,37 @@
           </section>
         </main>
       </div>
+
+      <el-dialog v-model="emailDialogVisible" title="更换登录邮箱" width="460px" destroy-on-close>
+        <p class="dialog-form-intro">验证新邮箱后更新后续登录使用的邮箱地址。</p>
+        <el-form ref="emailFormRef" :model="emailForm" :rules="emailRules" label-position="top">
+          <el-form-item label="新邮箱" prop="email">
+            <el-input
+              v-model="emailForm.email"
+              type="email"
+              autocomplete="email"
+              placeholder="请输入新邮箱"
+            />
+          </el-form-item>
+          <el-form-item label="邮箱验证码" prop="code">
+            <div class="email-setting">
+              <el-input
+                v-model="emailForm.code"
+                inputmode="numeric"
+                maxlength="8"
+                placeholder="请输入验证码"
+              />
+              <el-button :loading="codeSending" :disabled="codeCountdown > 0" @click="sendEmailCode">
+                {{ codeCountdown > 0 ? `${codeCountdown} 秒后重试` : '发送验证码' }}
+              </el-button>
+            </div>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="emailDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="changeEmailLoading" @click="submitEmailChange">确认更换</el-button>
+        </template>
+      </el-dialog>
     </template>
   </div>
 </template>
@@ -268,19 +296,28 @@
 <script lang="ts" setup>
 import { ElMessage } from 'element-plus'
 import { Camera } from '@element-plus/icons-vue'
-import { getUserProfileApi, updateUserProfileApi, updateUserPwdApi } from '@/api/system/user'
+import {
+  changeEmailApi,
+  getUserProfileApi,
+  sendChangeEmailCodeApi,
+  updateUserProfileApi,
+  updateUserPwdApi
+} from '@/api/system/user'
 import { uploadApi } from '@/api/file'
+import { useUserStore } from '@/store/modules/user'
 
+const userStore = useUserStore()
 const activeTab = ref<'basic' | 'password'>('basic')
 const userFormRef = ref()
 const pwdFormRef = ref()
+const emailFormRef = ref()
 
 const userInfo = ref<any>({
   sysUser: {},
   roles: []
 })
 
-const displayName = computed(() => userInfo.value.sysUser.nickname || userInfo.value.sysUser.username || '用户')
+const displayName = computed(() => userInfo.value.sysUser.nickname || userInfo.value.sysUser.email || '用户')
 const avatarInitial = computed(() => displayName.value.slice(0, 1).toUpperCase())
 const accountSerial = computed(() => {
   const id = String(userInfo.value.sysUser.id || '0').padStart(6, '0')
@@ -300,11 +337,22 @@ const completionHint = computed(() => {
 })
 
 const userForm = reactive({
-  id: undefined as number | undefined,
   nickname: '',
   mobile: '',
-  email: '',
   sex: 1
+})
+
+const emailDialogVisible = ref(false)
+const emailForm = reactive({ email: '', code: '' })
+const emailRules = reactive<any>({
+  email: [
+    { required: true, message: '请输入新邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  code: [
+    { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
+    { pattern: /^\d{4,8}$/, message: '请输入正确的邮箱验证码', trigger: 'blur' }
+  ]
 })
 
 const pwdForm = reactive({
@@ -315,7 +363,6 @@ const pwdForm = reactive({
 
 const userRules = reactive<any>({
   nickname: [{ required: true, message: '请输入用户昵称', trigger: 'blur' }],
-  email: [{ type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }],
   mobile: [
     { required: true, message: '请输入手机号码', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
@@ -343,8 +390,12 @@ const pwdRules = reactive<any>({
 const submitLoading = ref(false)
 const pwdLoading = ref(false)
 const avatarLoading = ref(false)
+const codeSending = ref(false)
+const changeEmailLoading = ref(false)
+const codeCountdown = ref(0)
 const profileLoading = ref(true)
 const profileLoadFailed = ref(false)
+let codeCountdownTimer: ReturnType<typeof setInterval> | undefined
 
 const getUser = async (showLoading = true) => {
   if (showLoading) {
@@ -355,10 +406,8 @@ const getUser = async (showLoading = true) => {
     const { data } = await getUserProfileApi()
     Object.assign(userInfo.value, data)
     Object.assign(userForm, {
-      id: data.sysUser.id,
       nickname: data.sysUser.nickname,
       mobile: data.sysUser.mobile,
-      email: data.sysUser.email,
       sex: data.sysUser.sex
     })
   } catch (error) {
@@ -377,10 +426,60 @@ const submitUserForm = async () => {
     await updateUserProfileApi(userForm)
     ElMessage.success('个人资料已更新')
     await getUser(false)
+    await userStore.getUserInfo()
   } catch (error) {
     console.error('提交失败:', error)
   } finally {
     submitLoading.value = false
+  }
+}
+
+const openEmailDialog = () => {
+  Object.assign(emailForm, { email: '', code: '' })
+  emailDialogVisible.value = true
+}
+
+const startCodeCountdown = () => {
+  if (codeCountdownTimer) clearInterval(codeCountdownTimer)
+  codeCountdown.value = 60
+  codeCountdownTimer = setInterval(() => {
+    codeCountdown.value -= 1
+    if (codeCountdown.value <= 0 && codeCountdownTimer) {
+      clearInterval(codeCountdownTimer)
+      codeCountdownTimer = undefined
+    }
+  }, 1000)
+}
+
+const sendEmailCode = async () => {
+  if (!emailFormRef.value) return
+  try {
+    await emailFormRef.value.validateField('email')
+    codeSending.value = true
+    await sendChangeEmailCodeApi(emailForm.email)
+    startCodeCountdown()
+    ElMessage.success('验证码已发送')
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+  } finally {
+    codeSending.value = false
+  }
+}
+
+const submitEmailChange = async () => {
+  if (!emailFormRef.value) return
+  try {
+    await emailFormRef.value.validate()
+    changeEmailLoading.value = true
+    await changeEmailApi(emailForm.email, emailForm.code)
+    ElMessage.success('登录邮箱已更新')
+    emailDialogVisible.value = false
+    await getUser(false)
+    await userStore.getUserInfo()
+  } catch (error) {
+    console.error('更换邮箱失败:', error)
+  } finally {
+    changeEmailLoading.value = false
   }
 }
 
@@ -420,7 +519,12 @@ const handleAvatarUpload = async (options: any) => {
     const formData = new FormData()
     formData.append('file', options.file)
     const { data } = await uploadApi(formData)
-    await updateUserProfileApi({ id: userInfo.value.sysUser.id, avatar: data })
+    await updateUserProfileApi({
+      nickname: userInfo.value.sysUser.nickname,
+      mobile: userInfo.value.sysUser.mobile,
+      sex: userInfo.value.sysUser.sex,
+      avatar: data
+    })
     userInfo.value.sysUser.avatar = data
     ElMessage.success('头像已更新')
   } catch (error) {
@@ -430,6 +534,10 @@ const handleAvatarUpload = async (options: any) => {
     avatarLoading.value = false
   }
 }
+
+onBeforeUnmount(() => {
+  if (codeCountdownTimer) clearInterval(codeCountdownTimer)
+})
 
 onMounted(() => getUser())
 </script>
@@ -574,7 +682,7 @@ onMounted(() => getUser())
 .identity-copy { min-width: 0; }
 .identity-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .identity-title-row h2 { margin: 0; font-size: 24px; letter-spacing: -0.035em; }
-.username { margin: 4px 0 12px; color: var(--profile-muted); font-size: 13px; }
+.identity-email { margin: 4px 0 12px; color: var(--profile-muted); font-size: 13px; }
 
 .verified-badge {
   padding: 4px 8px;
@@ -681,6 +789,9 @@ onMounted(() => getUser())
 .profile-form :deep(.el-input__wrapper.is-focus) { background: #fff; box-shadow: 0 0 0 1px var(--profile-primary) inset, 0 0 0 4px rgba(37, 99, 235, 0.08); }
 
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+.email-setting { display: flex; width: 100%; gap: 10px; }
+.email-setting .el-input { min-width: 0; }
+.email-setting .el-button { flex: 0 0 auto; min-height: 44px; }
 .full-field { grid-column: 1 / -1; }
 .gender-field :deep(.el-radio-button__inner) { min-width: 78px; min-height: 40px; border-color: var(--profile-line); background: var(--profile-soft); color: var(--profile-ink); box-shadow: none; }
 .gender-field :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) { border-color: var(--profile-primary); background: var(--profile-primary); box-shadow: -1px 0 0 var(--profile-primary); }

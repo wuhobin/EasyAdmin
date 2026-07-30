@@ -1,15 +1,18 @@
 import request, { type ApiResponse } from '@/utils/request'
 
-export interface LoginParams {
-  username: string
+export interface AuthParams {
+  email: string
   password: string
+  code: string
   rememberMe: boolean
   source?: string
 }
 
+export type ResetPasswordParams = Pick<AuthParams, 'email' | 'password' | 'code'>
+
 export interface CurrentUserResult {
   id: number
-  username: string
+  email: string
   nickname: string | null
   avatar: string | null
   roles: string[] | null
@@ -21,9 +24,41 @@ export interface LoginResult extends CurrentUserResult {
 }
 
 // 登录接口
-export function loginApi(data: LoginParams): Promise<ApiResponse<LoginResult>> {
+export function loginApi(data: AuthParams): Promise<ApiResponse<LoginResult>> {
   return request<LoginResult>({
     url: '/auth/login',
+    method: 'post',
+    data
+  })
+}
+
+export function sendRegisterCodeApi(data: AuthParams): Promise<ApiResponse<void>> {
+  return request<void>({
+    url: '/auth/register/sendCode',
+    method: 'post',
+    data
+  })
+}
+
+export function registerApi(data: AuthParams): Promise<ApiResponse<void>> {
+  return request<void>({
+    url: '/auth/register',
+    method: 'post',
+    data
+  })
+}
+
+export function sendResetPasswordCodeApi(data: Pick<ResetPasswordParams, 'email'>): Promise<ApiResponse<void>> {
+  return request<void>({
+    url: '/auth/password/reset/sendCode',
+    method: 'post',
+    data
+  })
+}
+
+export function resetPasswordApi(data: ResetPasswordParams): Promise<ApiResponse<void>> {
+  return request<void>({
+    url: '/auth/password/reset',
     method: 'post',
     data
   })

@@ -29,6 +29,12 @@ public class SysConfigController {
 
     private final SysConfigBizService sysConfigBizService;
 
+    @GetMapping("/value/{configKey}")
+    @Operation(summary = "按配置键获取配置值")
+    public Result<String> getValue(@PathVariable String configKey) {
+        return Result.data(sysConfigBizService.getValue(configKey));
+    }
+
     @GetMapping
     @SaCheckPermission("sys:config:list")
     @Operation(summary = "分页查询配置")

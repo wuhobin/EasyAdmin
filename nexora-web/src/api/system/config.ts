@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+import request, { type ApiResponse } from '@/utils/request'
 
 export interface SysConfigRecord {
   id: number
@@ -34,6 +34,13 @@ export function getConfigListApi(params: SysConfigQuery) {
     url: '/sys/config',
     method: 'get',
     params
+  })
+}
+
+export function getConfigValueApi(configKey: string): Promise<ApiResponse<string | null>> {
+  return request<string | null>({
+    url: `/sys/config/value/${encodeURIComponent(configKey)}`,
+    method: 'get'
   })
 }
 

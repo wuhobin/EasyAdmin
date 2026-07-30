@@ -34,7 +34,7 @@ const emit = defineEmits<{ lock: [] }>()
 const router = useRouter()
 const userStore = useUserStore()
 
-const displayName = computed(() => userStore.user.nickname || userStore.user.username || '管理员')
+const displayName = computed(() => userStore.user.nickname || userStore.user.email || '管理员')
 const avatarText = computed(() => displayName.value.slice(0, 1).toUpperCase())
 const roleLabel = computed(() => {
   const role = userStore.user.roles?.[0]

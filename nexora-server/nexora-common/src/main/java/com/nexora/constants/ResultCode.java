@@ -16,7 +16,7 @@ public enum ResultCode implements BizCode {
 
     NO_PERMISSION(-7,"无权限"),
 
-    ERROR_PASSWORD(-8,"用户帐号或者密码错误!"),
+    ERROR_PASSWORD(-8,"邮箱或密码错误"),
 
     DISABLE_ACCOUNT(-12,"该账号已被管理员禁止登录!"),
 

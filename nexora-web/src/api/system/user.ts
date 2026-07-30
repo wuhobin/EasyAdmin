@@ -1,5 +1,20 @@
 import request from '@/utils/request'
 
+export interface SysUserForm {
+  id?: number
+  nickname?: string
+  email?: string
+  password?: string
+  oldPassword?: string
+  newPassword?: string
+  code?: string
+  mobile?: string
+  avatar?: string
+  sex?: number
+  status?: number
+  roleIds?: number[]
+}
+
 /**
  * 获取用户列表
  */
@@ -24,7 +39,7 @@ export function getUserDetailApi(id: string) {
 /**
  * 新增用户
  */
-export function createUserApi(data: any) {
+export function createUserApi(data: SysUserForm) {
   return request({
     url: '/sys/user',
     method: 'post',
@@ -35,7 +50,7 @@ export function createUserApi(data: any) {
 /**
  * 修改用户
  */
-export function updateUserApi(data: any) {
+export function updateUserApi(data: SysUserForm) {
   return request({
     url: `/sys/user`,
     method: 'put',
@@ -46,7 +61,7 @@ export function updateUserApi(data: any) {
 /**
  * 删除用户
  */
-export function deleteUserApi(ids: string[] | number) {
+export function deleteUserApi(ids: number[] | number) {
   return request({
     url: `/sys/user/delete/${ids}`,
     method: 'delete'
@@ -56,7 +71,7 @@ export function deleteUserApi(ids: string[] | number) {
 /**
  * 重置密码
  */
-export function resetPasswordApi(data: any) {
+export function resetPasswordApi(data: SysUserForm) {
   return request({
     url: '/sys/user/reset',
     method: 'put',
@@ -74,7 +89,7 @@ export function getUserProfileApi() {
 }
 
 // 修改用户个人信息
-export function updateUserProfileApi(data: any) {
+export function updateUserProfileApi(data: SysUserForm) {
   return request({
     url: '/sys/user/updProfile',
     method: 'put',
@@ -84,7 +99,7 @@ export function updateUserProfileApi(data: any) {
 
 // 用户密码重置
 export function updateUserPwdApi(oldPassword: string, newPassword: string) {
-  const data = {
+  const data: SysUserForm = {
     oldPassword,
     newPassword
   }
@@ -108,5 +123,23 @@ export function verifyPassword(password: string) {
   return request({
     url: `/sys/user/verifyPassword/${password}`,
     method: 'get'
+  })
+}
+
+export function sendChangeEmailCodeApi(email: string) {
+  const data: SysUserForm = { email }
+  return request({
+    url: '/sys/user/profile/email/sendCode',
+    method: 'post',
+    data
+  })
+}
+
+export function changeEmailApi(email: string, code: string) {
+  const data: SysUserForm = { email, code }
+  return request({
+    url: '/sys/user/profile/changeEmail',
+    method: 'put',
+    data
   })
 }

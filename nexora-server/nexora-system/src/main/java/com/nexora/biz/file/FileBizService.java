@@ -1,6 +1,6 @@
 package com.nexora.biz.file;
 
-import com.nexora.constants.Constants;
+import com.nexora.constants.CommonConstants;
 import com.nexora.domain.convert.OssFileConvert;
 import com.nexora.domain.form.query.file.OssFileQueryForm;
 import com.nexora.domain.vo.auth.LoginUserInfoVo;
@@ -146,7 +146,7 @@ public class FileBizService {
     }
 
     private void checkDeletePermission(SysOssFile file) {
-        if (SecurityUtils.hasRole(Constants.ADMIN)) {
+        if (SecurityUtils.hasRole(CommonConstants.ADMIN)) {
             return;
         }
         Integer currentUserId = SecurityUtils.getLoginIdAsInt();
@@ -157,7 +157,7 @@ public class FileBizService {
     }
 
     private static void checkAdminDeletePermission() {
-        if (!SecurityUtils.hasRole(Constants.ADMIN)) {
+        if (!SecurityUtils.hasRole(CommonConstants.ADMIN)) {
             throw new BizException("只能删除自己上传的文件");
         }
     }
@@ -226,7 +226,7 @@ public class FileBizService {
 
     private static LoginUserInfoVo currentUser() {
         try {
-            Object sessionUser = SecurityUtils.getSessionAttribute(Constants.CURRENT_USER);
+            Object sessionUser = SecurityUtils.getSessionAttribute(CommonConstants.CURRENT_USER);
             return JsonUtil.parse(JsonUtil.toJson(sessionUser), LoginUserInfoVo.class);
         } catch (Exception exception) {
             log.debug("Current upload user is unavailable", exception);

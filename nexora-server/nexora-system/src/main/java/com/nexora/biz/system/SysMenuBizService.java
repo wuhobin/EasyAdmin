@@ -1,6 +1,6 @@
 package com.nexora.biz.system;
 
-import com.nexora.constants.Constants;
+import com.nexora.constants.CommonConstants;
 import com.nexora.domain.convert.SysMenuConvert;
 import com.nexora.domain.form.system.SysMenuForm;
 import com.nexora.domain.vo.menu.SysRouterVo;
@@ -66,7 +66,7 @@ public class SysMenuBizService {
     public List<SysRouterVo> getCurrentUserMenu() {
         String buttonType = MenuTypeEnum.BUTTON.getCode();
         List<SysMenu> menus;
-        if (SecurityUtils.hasRole(Constants.ADMIN)) {
+        if (SecurityUtils.hasRole(CommonConstants.ADMIN)) {
             menus = sysMenuService.listOrderedMenus().stream()
                     .filter(menu -> !MenuTypeEnum.BUTTON.equals(menu.getType()))
                     .toList();
@@ -100,7 +100,7 @@ public class SysMenuBizService {
         String component = menu.getComponent();
         if (StringUtils.isEmpty(component) && menu.getParentId() != null && menu.getParentId() != 0
                 && MenuTypeEnum.MENU.equals(menu.getType())) {
-            component = Constants.PARENT_VIEW;
+            component = CommonConstants.PARENT_VIEW;
         }
         return SysRouterVo.builder()
                 .id(menu.getId()).path(menu.getPath()).redirect(menu.getRedirect())

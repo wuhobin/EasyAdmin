@@ -92,11 +92,12 @@
       destroy-on-close
       @closed="resetForm"
     >
+      <p class="dialog-form-intro">维护系统配置键、配置值及用途说明。</p>
       <el-form
         ref="configFormRef"
         :model="configForm"
         :rules="rules"
-        label-width="88px"
+        label-position="top"
         @submit.prevent
       >
         <el-form-item label="配置键" prop="configKey">

@@ -48,7 +48,7 @@
       hour12: false
     }).format(new Date())
     // 使用系统名称
-    const systemName = settings.title + "-" + userStore.user.username
+    const systemName = settings.title + "-" + (userStore.user.nickname || userStore.user.email)
     
     // 绘制水印文本
     ctx.fillText(systemName, 20, 100)

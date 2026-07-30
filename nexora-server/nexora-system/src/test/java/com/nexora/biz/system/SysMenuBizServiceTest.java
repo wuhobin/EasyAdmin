@@ -1,6 +1,6 @@
 package com.nexora.biz.system;
 
-import com.nexora.constants.Constants;
+import com.nexora.constants.CommonConstants;
 import com.nexora.domain.vo.menu.SysRouterVo;
 import com.nexora.entity.SysMenu;
 import com.nexora.cache.SecurityAuthorizationCache;
@@ -29,7 +29,7 @@ class SysMenuBizServiceTest {
         ));
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(Constants.ADMIN)).thenReturn(true);
+            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(true);
 
             List<SysRouterVo> routes = new SysMenuBizService(menuService,
                     mock(SecurityAuthorizationCache.class)).getCurrentUserMenu();

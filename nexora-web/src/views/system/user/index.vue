@@ -3,10 +3,18 @@
     <!-- 搜索表单 -->
     <div class="search-wrapper">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-        <el-form-item label="用户名" prop="nickname">
+        <el-form-item label="昵称" prop="nickname">
           <el-input
             v-model="queryParams.nickname"
-            placeholder="请输入用户名"
+            placeholder="请输入昵称"
+            clearable
+            @keyup.enter="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input
+            v-model="queryParams.email"
+            placeholder="请输入邮箱"
             clearable
             @keyup.enter="handleQuery"
           />
@@ -53,7 +61,7 @@
         style="width: 100%"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection"  width="55" align="center" />
+        <el-table-column type="selection" :selectable="row => row.id !== 1" width="55" align="center" />
         <el-table-column label="头像"  prop="avatar" align="center">
           <template #default="{ row }">
             <el-image
@@ -65,6 +73,11 @@
           </template>
         </el-table-column>
         <el-table-column label="昵称" align="center" prop="nickname" show-overflow-tooltip />
+        <el-table-column label="邮箱" align="center" prop="email" min-width="190" show-overflow-tooltip />
+        <el-table-column label="手机号" align="center" prop="mobile" width="130" />
+        <el-table-column label="角色" align="center" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">{{ roleNames(row.roleIds) }}</template>
+        </el-table-column>
         <el-table-column label="登录IP" align="center" prop="ip" show-overflow-tooltip />
         <el-table-column label="登录地址" align="center" prop="ipLocation" show-overflow-tooltip />
         <el-table-column label="状态" align="center" width="80">
@@ -96,6 +109,7 @@
               type="danger"
               link
               icon="Delete"
+              :disabled="scope.row.id === 1"
               @click="handleDelete(scope.row)"
             >删除</el-button>
           </template>
@@ -121,115 +135,102 @@
     <el-dialog
       :title="dialog.title"
       v-model="dialog.visible"
-      width="600px"
+      width="680px"
       append-to-body
       destroy-on-close
-      class="custom-dialog"
+      class="user-form-dialog"
     >
+      <p class="dialog-form-intro">
+        {{ dialog.type === 'add' ? '填写登录资料并分配用户角色。' : '更新用户资料和角色权限。' }}
+      </p>
       <el-form
         ref="userFormRef"
         :model="userForm"
         :rules="rules"
-        label-width="80px"
-        class="custom-form"
+        label-position="top"
+        class="user-form"
       >
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="用户名" prop="username">
-              <el-input 
-                v-model="userForm.username" 
-                placeholder="请输入用户名" 
-                :disabled="dialog.type === 'edit'"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="昵称" prop="nickname">
-              <el-input 
-                v-model="userForm.nickname" 
-                placeholder="请输入昵称"
-                clearable 
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="手机号" prop="mobile">
-              <el-input 
-                v-model="userForm.mobile" 
-                placeholder="请输入手机号"
-                clearable 
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
-              <el-input 
-                v-model="userForm.email" 
-                placeholder="请输入邮箱"
-                clearable 
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="性别" prop="sex">
-              <el-radio-group v-model="userForm.sex">
-                <el-radio :value="1">男</el-radio>
-                <el-radio :value="2">女</el-radio>
-                <el-radio :value="0">保密</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="密码" prop="password" v-if="dialog.type === 'add'">
-              <el-input 
-                v-model="userForm.password" 
-                type="password" 
-                placeholder="请输入密码"
-                show-password
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item label="角色" prop="roleIds">
-          <el-select
-            v-model="userForm.roleIds"
-            multiple
-            placeholder="请选择角色"
-            style="width: 100%"
-            :disabled="userForm.username === 'admin'"
-            clearable
-      
-          >
-            <el-option
-              v-for="role in roleOptions"
-              :key="role.id"
-              :label="role.name"
-              :value="role.id"
+        <div class="user-form-grid">
+          <el-form-item label="昵称" prop="nickname">
+            <el-input
+              v-model="userForm.nickname"
+              placeholder="请输入昵称"
+              clearable
             />
-          </el-select>
-        </el-form-item>
+          </el-form-item>
 
-        <el-form-item label="状态">
-          <el-radio-group v-model="userForm.status">
-            <el-radio :value="1">启用</el-radio>
-            <el-radio :value="0">禁用</el-radio>
-          </el-radio-group>
-        </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input
+              v-model="userForm.email"
+              type="email"
+              placeholder="请输入邮箱"
+              :disabled="dialog.type === 'edit'"
+              clearable
+            />
+          </el-form-item>
+
+          <el-form-item label="手机号" prop="mobile">
+            <el-input
+              v-model="userForm.mobile"
+              placeholder="请输入手机号"
+              clearable
+            />
+          </el-form-item>
+
+          <el-form-item v-if="dialog.type === 'add'" label="密码" prop="password">
+            <el-input
+              v-model="userForm.password"
+              type="password"
+              placeholder="请输入密码"
+              show-password
+              clearable
+            />
+          </el-form-item>
+
+          <el-form-item label="性别" prop="sex" class="choice-field">
+            <el-radio-group v-model="userForm.sex">
+              <el-radio :value="1">男</el-radio>
+              <el-radio :value="2">女</el-radio>
+              <el-radio :value="0">保密</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item
+            label="状态"
+            class="choice-field"
+            :class="{ 'is-wide': dialog.type === 'edit' }"
+          >
+            <el-radio-group v-model="userForm.status" :disabled="userForm.id === 1">
+              <el-radio :value="1">启用</el-radio>
+              <el-radio :value="0">禁用</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="角色" prop="roleIds" class="is-wide">
+            <el-select
+              v-model="userForm.roleIds"
+              multiple
+              placeholder="请选择角色"
+              :disabled="userForm.id === 1"
+              clearable
+            >
+              <el-option
+                v-for="role in roleOptions"
+                :key="role.id"
+                :label="role.name"
+                :value="role.id"
+              />
+            </el-select>
+          </el-form-item>
+        </div>
       </el-form>
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="cancel">取 消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取消</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="submitForm">
+            {{ dialog.type === 'add' ? '创建用户' : '保存修改' }}
+          </el-button>
         </div>
       </template>
     </el-dialog>
@@ -243,11 +244,12 @@
       destroy-on-close
       class="custom-dialog"
     >
+      <p class="dialog-form-intro">为该用户设置新的登录密码。</p>
       <el-form
         ref="resetPwdFormRef"
         :model="resetPwdForm"
         :rules="resetPwdRules"
-        label-width="100px"
+        label-position="top"
       >
         <el-form-item label="新密码" prop="password">
           <el-input
@@ -270,8 +272,8 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="resetPwdDialog.visible = false">取 消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="submitResetPwd">确 定</el-button>
+          <el-button @click="resetPwdDialog.visible = false">取消</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="submitResetPwd">确定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -296,6 +298,7 @@ const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
   nickname: '',
+  email: '',
   status: ''
 })
 
@@ -307,7 +310,7 @@ const userFormRef = ref<FormInstance>()
 const submitLoading = ref(false)
 
 // 选中项数组
-const selectedIds = ref<string[]>([])
+const selectedIds = ref<number[]>([])
 
 // 弹窗控制
 const dialog = reactive({
@@ -321,10 +324,9 @@ const roleOptions = ref<any[]>([])
 
 // 表单初始值（用于重置）
 const initialUserForm = {
-  id: undefined,
-  username: '',
+  id: undefined as number | undefined,
   nickname: '',
-  password: null,
+  password: '',
   mobile: '',
   email: '',
   sex: 0,
@@ -341,10 +343,6 @@ const userForm = reactive({ ...initialUserForm })
 
 // 表单校验规则
 const rules = reactive<FormRules>({
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
-  ],
   nickname: [
     { required: true, message: '请输入昵称', trigger: 'blur' }
   ],
@@ -356,6 +354,7 @@ const rules = reactive<FormRules>({
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ],
   email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
   ],
   roleIds: [
@@ -465,7 +464,7 @@ const handleUpdate = (row: any) => {
   dialog.title = '修改用户'
   dialog.visible = true
   Object.assign(userForm, row)
-  userForm.password = null
+  userForm.password = ''
 }
 
 // 提交表单
@@ -476,12 +475,26 @@ const submitForm = async () => {
     if (valid) {
       submitLoading.value = true
       try {
-        const data = {user: userForm, roleIds: userForm.roleIds}
         if (dialog.type === 'add') {
-          await createUserApi(data)
+          await createUserApi({
+            nickname: userForm.nickname,
+            email: userForm.email,
+            password: userForm.password,
+            mobile: userForm.mobile,
+            sex: userForm.sex,
+            status: userForm.status,
+            roleIds: userForm.roleIds
+          })
           ElMessage.success('新增成功')
         } else {
-          await updateUserApi(data)
+          await updateUserApi({
+            id: userForm.id!,
+            nickname: userForm.nickname,
+            mobile: userForm.mobile,
+            sex: userForm.sex,
+            status: userForm.status,
+            roleIds: userForm.roleIds
+          })
           ElMessage.success('修改成功')
         }
         dialog.visible = false
@@ -497,7 +510,7 @@ const submitForm = async () => {
 
 // 删除用户
 const handleDelete = (row: any) => {
-  ElMessageBox.confirm(`是否确认删除用户"${row.username}"?`, '警告', {
+  ElMessageBox.confirm(`是否确认删除用户“${row.nickname}”（ID: ${row.id}）?`, '警告', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
@@ -572,6 +585,13 @@ const getRoleOptions = async () => {
   }
 }
 
+const roleNames = (roleIds: number[] = []) => {
+  const names = roleOptions.value
+    .filter(role => roleIds.includes(role.id))
+    .map(role => role.name)
+  return names.join('、') || '-'
+}
+
 // 初始化
 onMounted(() => {
   getList()
@@ -597,78 +617,95 @@ onMounted(() => {
     justify-content: center;
     margin-top: 20px;
   }
+}
+</style>
 
-  // 添加自定义表单样式
-  :deep(.custom-dialog) {
+<!-- 弹窗使用 append-to-body，需要用独立的全局类命中传送后的 DOM。 -->
+<style lang="scss">
+.user-form-dialog {
+  .el-dialog__body {
+    padding: 24px;
+  }
+
+  .user-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 20px;
+  }
+
+  .user-form-grid .el-form-item {
+    min-width: 0;
+    margin-bottom: 0;
+
+    &.is-wide {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .el-form-item__label {
+    height: auto;
+    padding: 0;
+    margin-bottom: 7px;
+    color: var(--el-text-color-regular);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 20px;
+  }
+
+  .el-form-item__content {
+    min-width: 0;
+  }
+
+  .el-input__wrapper,
+  .el-select__wrapper {
+    min-height: 42px;
+    border-radius: 6px;
+  }
+
+  .el-select {
+    width: 100%;
+  }
+
+  .choice-field .el-form-item__content {
+    min-height: 42px;
+    align-items: center;
+  }
+
+  .el-radio-group {
+    min-height: 42px;
+    display: flex;
+    width: auto;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+  }
+
+  .el-radio {
+    justify-content: flex-start;
+    padding-inline: 0 !important;
+    margin-right: 0;
+  }
+
+  .el-form-item__error {
+    position: static;
+    padding-top: 6px;
+  }
+}
+
+@media (max-width: 640px) {
+  .user-form-dialog {
     .el-dialog__body {
-      padding: 20px 40px;
+      padding: 20px;
     }
 
-    .custom-form {
-      .el-form-item {
-        margin-bottom: 22px;
-        
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-
-      .el-form-item__label {
-        font-weight: 500;
-        color: var(--el-text-color-regular);
-      }
-
-      .el-input__wrapper {
-        box-shadow: 0 0 0 1px #dcdfe6 inset;
-        
-        &:hover {
-          box-shadow: 0 0 0 1px var(--el-border-color-hover) inset;
-        }
-        
-        &.is-focus {
-          box-shadow: 0 0 0 1px var(--el-color-primary) inset;
-        }
-      }
-
-      .el-select {
-        width: 100%;
-      }
-
-      .el-radio-group {
-        .el-radio {
-          margin-right: 30px;
-          
-          &:last-child {
-            margin-right: 0;
-          }
-        }
-      }
+    .user-form-grid {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 20px;
     }
-  }
 
-  .dialog-footer {
-    text-align: right;
-    padding-top: 20px;
-    
-    .el-button {
-      padding-left: 25px;
-      padding-right: 25px;
-      
-      & + .el-button {
-        margin-left: 12px;
-      }
+    .user-form-grid .el-form-item.is-wide {
+      grid-column: auto;
     }
   }
 }
-
-// 暗黑模式适配
-:root[data-theme='dark'] {
-  :deep(.custom-dialog) {
-    .custom-form {
-      .el-input__wrapper {
-        box-shadow: 0 0 0 1px var(--el-border-color) inset;
-      }
-    }
-  }
-}
-</style> 
+</style>

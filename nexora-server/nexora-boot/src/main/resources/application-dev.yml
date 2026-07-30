@@ -2,9 +2,9 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${mysql.address}:3306/nexora-admin?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=GMT%2B8
-    username: ${mysql.username}
-    password: ${mysql.password}
+    url: jdbc:mysql://${MYSQL_HOST}:3306/nexora-admin?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=GMT%2B8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
     hikari:
       minimum-idle: 5
       idle-timeout: 180000
@@ -16,10 +16,10 @@ spring:
       connection-test-query: SELECT 1
   data:
     redis:
-      host: ${redis.address}
+      host: ${REDIS_HOST}
       port: 6379
       database: 12
-      #password: ${redis.password}
+      #password: ${REDIS_PASSWORD}
       client-type: lettuce
       lettuce:
         pool:
@@ -29,6 +29,14 @@ spring:
           max-idle: 8
           # 最小空闲连接数 默认0
           min-idle: 0
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:465}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
 
 # knife4j Basic 认证（环境相关：dev/prod 账号密码不同）
 knife4j:
@@ -50,11 +58,11 @@ dromara:
     qiniu-kodo:
       - platform: qiniu-kodo-1
         enable-storage: true
-        access-key: gmU3fgKgiJYF4MsZUaKIWu47roQbYFwrXCAmGDxG
-        secret-key: QOe_P_pQg7THeRetMMTNO_ZplkusHOlukej_KIIg
-        bucket-name: codehub-wu
-        domain: https://oss.wuhobin.top/
-        base-path: base/
+        access-key: ${OSS_QINIU_ACCESS_KEY}
+        secret-key: ${OSS_QINIU_SECRET_KEY}
+        bucket-name: ${OSS_QINIU_BUCKET_NAME}
+        domain: ${OSS_QINIU_DOMAIN}
+        base-path: ${OSS_QINIU_BASE_PATH}
 
 # ============================== 日志配置 ==============================
 logging:

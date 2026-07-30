@@ -118,11 +118,12 @@
       width="500px"
       append-to-body
     >
+      <p class="dialog-form-intro">维护字典名称、类型、状态和用途说明。</p>
       <el-form
         ref="dictFormRef"
         :model="dictForm"
         :rules="rules"
-        label-width="100px"
+        label-position="top"
       >
         <el-form-item label="字典名称" prop="name">
           <el-input v-model="dictForm.name" placeholder="请输入字典名称" />
@@ -159,6 +160,7 @@
       width="800px"
       append-to-body
     >
+      <p class="dialog-form-intro">查看并维护当前字典下的全部数据项。</p>
       <dict-data
         :dict-id="currentDict?.id"
         :dict-type="currentDict?.type"

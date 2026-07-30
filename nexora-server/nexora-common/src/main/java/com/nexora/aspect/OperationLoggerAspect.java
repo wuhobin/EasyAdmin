@@ -1,7 +1,7 @@
 package com.nexora.aspect;
 
 import com.nexora.annotation.OperationLogger;
-import com.nexora.constants.Constants;
+import com.nexora.constants.CommonConstants;
 import com.nexora.domain.vo.auth.LoginUserInfoVo;
 import com.nexora.entity.SysOperateLog;
 import com.nexora.mapper.SysOperateLogMapper;
@@ -70,7 +70,7 @@ public class OperationLoggerAspect {
         MethodSignature signature = (MethodSignature) point.getSignature();
         String paramsJson = serializeParameters(signature.getParameterNames(), point.getArgs());
 
-        String userJson = JsonUtil.toJson(SecurityUtils.getSessionAttribute(Constants.CURRENT_USER));
+        String userJson = JsonUtil.toJson(SecurityUtils.getSessionAttribute(CommonConstants.CURRENT_USER));
         LoginUserInfoVo user = JsonUtil.parse(userJson, LoginUserInfoVo.class);
         String ip = ServletUtils.getClientIp(request);
 
@@ -78,7 +78,7 @@ public class OperationLoggerAspect {
                 .ip(ip)
                 .source(IpRegionUtils.resolve(ip))
                 .type(request == null ? "" : request.getMethod())
-                .username(user == null ? "" : user.getUsername())
+                .userId(user == null ? null : user.getId())
                 .paramsJson(paramsJson)
                 .requestUrl(request == null ? "" : request.getRequestURI())
                 .spendTime(System.currentTimeMillis() - startTime)

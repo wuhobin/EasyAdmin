@@ -3,10 +3,12 @@
      <!-- 搜索表单 -->
      <div class="search-wrapper">
         <el-form :model="queryParams" ref="queryFormRef" :inline="true">
-        <el-form-item label="用户名" prop="username">
+        <el-form-item label="用户ID" prop="userId">
           <el-input
-            v-model="queryParams.username"
-            placeholder="请输入用户名"
+            v-model.number="queryParams.userId"
+            type="number"
+            min="1"
+            placeholder="请输入用户ID"
             clearable
             @keyup.enter="handleQuery"
           />
@@ -66,10 +68,10 @@
         </el-table-column>
         <el-table-column align="center" type="selection" width="55" />
         <el-table-column
-          prop="username"
+          prop="userId"
           align="center"
           width="100"
-          label="操作人"
+          label="用户ID"
         />
         <el-table-column
           prop="requestUrl"
@@ -170,7 +172,7 @@ const methodStyle = ref<any[]>([
 const queryParams = reactive<any>({
   pageNum: 1,
   pageSize: 10,
-  username: '',
+  userId: undefined,
   operation: ''
 })
 
@@ -208,7 +210,7 @@ const handleQuery = () => {
 const resetQuery = () => {
   dateRange.value = undefined
   queryParams.pageNum = 1
-  queryParams.username = ''
+  queryParams.userId = undefined
   queryParams.operation = ''
   queryParams.startTime = undefined
   queryParams.endTime = undefined
@@ -245,7 +247,7 @@ const handleBatchDelete = () => {
 
 // 删除
 const handleDelete = (row: any) => {
-  ElMessageBox.confirm(`确定要删除 ${row.username} 这个用户的操作日志吗？`, '警告', {
+  ElMessageBox.confirm(`确定要删除用户 ID ${row.userId} 的这条操作日志吗？`, '警告', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'

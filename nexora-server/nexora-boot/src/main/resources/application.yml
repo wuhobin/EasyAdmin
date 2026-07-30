@@ -23,4 +23,4 @@ spring:
 
 mail:
   # 邮箱授权码加密密钥，生产环境必须通过环境变量注入，长度至少16位。
-  credential-secret: ${mail.secret:}
+  credential-secret: ${MAIL_CREDENTIAL_SECRET:}

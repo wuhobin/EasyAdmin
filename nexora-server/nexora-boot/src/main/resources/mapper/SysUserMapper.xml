@@ -4,7 +4,6 @@
 
     <resultMap type="com.nexora.domain.vo.user.SysUserPageListVo" id="SysUserPageResultVoMap">
         <id property="id" column="id" />
-        <result property="username" column="username" />
         <result property="status" column="status" />
         <result property="lastLoginTime" column="last_login_time" />
         <result property="ip" column="ip" />
@@ -27,23 +26,22 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, username, password, create_time, update_time, status,
+        id, password, create_time, update_time, status,
         ip, ip_location, os, last_login_time, browser,
-        nickname, avatar, mobile
+        nickname, avatar, mobile, email, sex, login_type
     </sql>
 
-    <!-- 根据用户名查询用户信息 -->
-    <select id="selectByUsername" resultType="com.nexora.entity.SysUser">
+    <!-- 根据邮箱查询用户信息 -->
+    <select id="selectByEmail" resultType="com.nexora.entity.SysUser">
         select
         <include refid="Base_Column_List"/>
         from sys_user
-        where username = #{username}
+        where email = #{email}
     </select>
 
     <select id="selectUserPage" resultMap="SysUserPageResultVoMap">
         select
             u.id,
-            u.username,
             u.create_time,
             u.status,
             u.last_login_time,

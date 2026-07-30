@@ -70,6 +70,72 @@ Nexora Admin 是一个基于 Spring Boot 3 + Sa-Token 的企业级后台管理�
 - **数据库**：MySQL 8.0+
 - **缓存**：Redis 6.0+
 
+## 本地开发启动（dev）
+
+### 1. 准备开发环境
+
+- JDK 21、Maven 3.9+
+- Node.js 18+、npm
+- MySQL 8.0+、Redis 6.0+
+
+创建 `nexora-admin` 数据库，并执行项目根目录下的 `nexora-admin.sql` 完成表结构和基础数据初始化：
+
+```bash
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS \`nexora-admin\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+mysql -u root -p nexora-admin < nexora-admin.sql
+```
+
+### 2. 创建本地后端配置
+
+`application.properties` 包含数据库密码、邮箱授权码和对象存储密钥，已被 Git 忽略。首次启动前，在 `nexora-server/nexora-boot/src/main/resources/` 目录创建 `application.properties`，内容如下：
+
+```properties
+MYSQL_HOST=
+MYSQL_USER=
+MYSQL_PASSWORD=
+
+REDIS_HOST=
+REDIS_PASSWORD=
+
+MAIL_CREDENTIAL_SECRET=
+MAIL_VERIFICATION_ENABLED=
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USERNAME=
+SMTP_PASSWORD=
+
+OSS_QINIU_ACCESS_KEY=
+OSS_QINIU_SECRET_KEY=
+OSS_QINIU_BUCKET_NAME=
+OSS_QINIU_DOMAIN=
+OSS_QINIU_BASE_PATH=
+```
+
+启动前至少填写 MySQL、Redis 配置和不少于 16 位的 `MAIL_CREDENTIAL_SECRET`。不启用邮件验证码时，将 `MAIL_VERIFICATION_ENABLED` 设置为 `false`；启用时还需填写 SMTP 配置，其中 `SMTP_PORT` 通常为 `465`。使用文件管理功能时还需填写自己的七牛 Kodo 配置。不要提交真实凭据。
+
+### 3. 启动后端
+
+项目默认激活 `dev` Profile。在项目根目录执行：
+
+```bash
+cd nexora-server
+mvn -pl nexora-boot -am spring-boot:run
+```
+
+也可以在 IntelliJ IDEA 中使用 JDK 21 导入 `nexora-server/pom.xml`，然后运行 `NexoraBootApplication`。后端默认地址为 `http://localhost:8800`，Knife4j 文档地址为 `http://localhost:8800/doc.html`。
+
+### 4. 启动前端
+
+另开一个终端，在项目根目录执行：
+
+```bash
+cd nexora-web
+npm ci
+npm run dev
+```
+
+前端默认地址为 `http://localhost:3000`，开发服务器会把 `/api` 请求代理到 `http://localhost:8800`。前后端都启动后即可在浏览器访问系统。
+
 ## Ubuntu 生产部署
 
 本节采用以下部署结构：后端 JAR 由 Docker Compose 管理，MySQL 和 Redis 使用已有的外部服务，前端静态文件由宿主机 Nginx 托管。Docker Compose、Nginx、MySQL 和 Redis 的安装不在本文范围内。
@@ -154,6 +220,7 @@ vi .env
 | `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PASSWORD` | MySQL 地址和账号 |
 | `REDIS_HOST` / `REDIS_PASSWORD` | Redis 地址和密码 |
 | `MAIL_CREDENTIAL_SECRET` | 邮箱授权码加密密钥，至少 16 位；保存邮箱账号后不可随意更换 |
+| `MAIL_VERIFICATION_ENABLED` / `SMTP_*` | 邮箱换绑验证码开关与 SMTP 发件配置；配置完成后再启用 |
 | `OSS_QINIU_*` | 七牛 Kodo 的 AK、SK、Bucket 和访问域名 |
 | `JAVA_TOOL_OPTIONS` | JVM 内存、编码和时区参数，按服务器内存调整 |
 | `LOG_PATH` | 容器日志目录，保持 `/app/logs` 即可 |
@@ -351,6 +418,8 @@ POST   /sys/user              # 新增用户
 PUT    /sys/user              # 修改用户
 DELETE /sys/user/delete/{ids} # 删除用户
 PUT    /sys/user/reset        # 重置密码
+POST   /sys/user/profile/email/sendCode # 发送换绑邮箱验证码
+PUT    /sys/user/profile/changeEmail    # 修改当前用户邮箱
 ```
 
 **角色权限：**

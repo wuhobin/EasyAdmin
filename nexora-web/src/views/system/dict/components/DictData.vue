@@ -67,11 +67,12 @@
       width="500px"
       append-to-body
     >
+      <p class="dialog-form-intro">配置字典项的标签、键值、排序与状态。</p>
       <el-form
         ref="dictDataFormRef"
         :model="dictDataForm"
         :rules="rules"
-        label-width="100px"
+        label-position="top"
       >
         <el-form-item label="字典类型" prop="dictType">
           <el-input v-model="dictDataForm.dictType" disabled />
