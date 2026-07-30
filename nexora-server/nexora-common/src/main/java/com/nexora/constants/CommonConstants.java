@@ -75,6 +75,12 @@ public class CommonConstants {
 
     public static final String EMAIL_CODE_PATTERN = "\\d{4,8}";
 
+    public static final String IMAGE_CAPTCHA_REQUIRED_MESSAGE = "请先完成图片验证";
+
+    public static final String IMAGE_CAPTCHA_INVALID_MESSAGE = "图片验证无效或已过期，请重新验证";
+
+    public static final String IMAGE_CAPTCHA_VERIFY_FAILED_MESSAGE = "图片验证失败，请稍后重试";
+
     public static final String REGISTER_DISABLED_MESSAGE = "系统暂未开放注册";
 
     public static final String REGISTER_CONFIG_INCOMPLETE_MESSAGE = "注册配置不完整，请联系管理员";

@@ -7,10 +7,14 @@ import com.aurora.starter.common.utils.bean.BeanUtils;
 import com.aurora.starter.security.account.AccountType;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.verification.exception.VerificationCooldownException;
+import com.aurora.starter.verification.exception.ImageVerificationException;
 import com.aurora.starter.verification.exception.VerificationException;
+import com.aurora.starter.verification.image.ImageVerificationService;
 import com.aurora.starter.verification.mail.MailVerificationService;
 import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
+import cloud.tianai.captcha.application.vo.ImageCaptchaVO;
+import cloud.tianai.captcha.validator.common.model.dto.ImageCaptchaTrack;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.config.NexoraPermissionProvider;
 import com.nexora.config.SysConfigReader;
@@ -43,6 +47,7 @@ public class AuthBizService {
     private final NexoraPermissionProvider permissionProvider;
     private final SysConfigReader sysConfigReader;
     private final ObjectProvider<MailVerificationService> mailVerificationServiceProvider;
+    private final ImageVerificationService imageVerificationService;
 
     public LoginUserInfoVo login(AuthForm form) {
         String email = StringUtils.normalizeEmail(
@@ -78,6 +83,14 @@ public class AuthBizService {
         }
     }
 
+    public ImageCaptchaVO generateImageCaptcha() {
+        return imageVerificationService.generate();
+    }
+
+    public boolean matchImageCaptcha(String captchaId, ImageCaptchaTrack track) {
+        return imageVerificationService.match(captchaId, track);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void register(AuthForm form) {
         SysRole role = requireRegistrationRole();
@@ -85,7 +98,10 @@ public class AuthBizService {
                 requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
         String password = requirePassword(form.getPassword());
         String code = requireVerificationCode(form.getCode());
+        String captchaId = requireText(
+                form.getCaptchaId(), CommonConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
         ensureEmailAvailable(email);
+        verifyImageCaptcha(captchaId);
         verifyRegisterCode(email, code);
 
         SysUser user = new SysUser();
@@ -189,6 +205,18 @@ public class AuthBizService {
         }
         if (!verified) {
             throw new BizException(CommonConstants.EMAIL_CODE_INVALID_MESSAGE);
+        }
+    }
+
+    private void verifyImageCaptcha(String captchaId) {
+        boolean verified;
+        try {
+            verified = imageVerificationService.verifyAndConsume(captchaId);
+        } catch (ImageVerificationException | IllegalArgumentException exception) {
+            throw new BizException(CommonConstants.IMAGE_CAPTCHA_VERIFY_FAILED_MESSAGE);
+        }
+        if (!verified) {
+            throw new BizException(CommonConstants.IMAGE_CAPTCHA_INVALID_MESSAGE);
         }
     }
 

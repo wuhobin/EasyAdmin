@@ -10,6 +10,7 @@ import com.nexora.service.SysUserService;
 import com.nexora.service.SysRoleService;
 import com.aurora.starter.security.account.AccountType;
 import com.aurora.starter.security.context.SecurityUtils;
+import com.aurora.starter.verification.image.ImageVerificationService;
 import cn.dev33.satoken.secure.BCrypt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -117,6 +118,8 @@ class AuthBizServiceTest {
                 "- /auth/login",
                 "- /auth/register/sendCode",
                 "- /auth/register",
+                "- /auth/image",
+                "- /auth/image/*/match",
                 "- /auth/password/reset/sendCode",
                 "- /auth/password/reset",
                 "- /sys/config/value/**");
@@ -141,6 +144,7 @@ class AuthBizServiceTest {
                 mock(SysRoleService.class),
                 permissionProvider,
                 mock(SysConfigReader.class),
-                mock(ObjectProvider.class));
+                mock(ObjectProvider.class),
+                mock(ImageVerificationService.class));
     }
 }

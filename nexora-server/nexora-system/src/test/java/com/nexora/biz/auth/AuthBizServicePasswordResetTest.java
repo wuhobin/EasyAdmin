@@ -2,6 +2,7 @@ package com.nexora.biz.auth;
 
 import cn.dev33.satoken.secure.BCrypt;
 import com.aurora.starter.security.context.SecurityUtils;
+import com.aurora.starter.verification.image.ImageVerificationService;
 import com.aurora.starter.verification.mail.MailContentType;
 import com.aurora.starter.verification.mail.MailVerificationSendRequest;
 import com.aurora.starter.verification.mail.MailVerificationService;
@@ -38,7 +39,8 @@ class AuthBizServicePasswordResetTest {
             mock(SysRoleService.class),
             mock(NexoraPermissionProvider.class),
             mock(SysConfigReader.class),
-            mailProvider(verificationService));
+            mailProvider(verificationService),
+            mock(ImageVerificationService.class));
 
     @Test
     void rejectsAnEmailThatIsNotRegistered() {

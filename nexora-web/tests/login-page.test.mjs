@@ -4,6 +4,10 @@ import test from 'node:test'
 
 const loginPagePath = new URL('../src/views/login/index.vue', import.meta.url)
 const loginPageSource = await readFile(loginPagePath, 'utf8')
+const sliderCaptchaPath = new URL('../src/components/SliderCaptcha/index.vue', import.meta.url)
+const sliderCaptchaSource = await readFile(sliderCaptchaPath, 'utf8')
+const authApiPath = new URL('../src/api/system/auth.ts', import.meta.url)
+const authApiSource = await readFile(authApiPath, 'utf8')
 const indexHtmlPath = new URL('../index.html', import.meta.url)
 const indexHtmlSource = await readFile(indexHtmlPath, 'utf8')
 const logoPath = new URL('../src/layouts/components/Sidebar/Logo.vue', import.meta.url)
@@ -55,10 +59,72 @@ test('registration uses email code and password with a sixty-second cooldown', (
   assert.match(loginPageSource, /v-model="registerForm\.password"/)
   assert.match(loginPageSource, /v-model="registerForm\.password"[^>]*placeholder="请输入密码（6～20 位字符）"/)
   assert.match(loginPageSource, /sendRegisterCodeApi\(registerForm\)/)
-  assert.match(loginPageSource, /registerApi\(registerForm\)/)
   assert.match(loginPageSource, /codeCountdown\.value = 60/)
   assert.match(loginPageSource, /loginForm\.email = registerForm\.email/)
   assert.doesNotMatch(loginPageSource, /registerForm\.confirmPassword/)
+})
+
+test('registration opens image verification before creating the account', () => {
+  const registerHandler = loginPageSource.match(
+    /const handleRegister = async \(\) => \{[\s\S]*?\n\}/
+  )?.[0] ?? ''
+  const captchaSuccessHandler = loginPageSource.match(
+    /const handleImageCaptchaSuccess = async \(captchaId: string\) => \{[\s\S]*?\n\}/
+  )?.[0] ?? ''
+
+  assert.match(loginPageSource, /import SliderCaptcha from/)
+  assert.match(loginPageSource, /<SliderCaptcha[\s\S]*v-model="captchaDialogVisible"[\s\S]*@success="handleImageCaptchaSuccess"/)
+  assert.match(registerHandler, /captchaDialogVisible\.value = true/)
+  assert.doesNotMatch(registerHandler, /registerApi\(/)
+  assert.match(captchaSuccessHandler, /captchaDialogVisible\.value = false/)
+  assert.match(captchaSuccessHandler, /registerApi\(\{[\s\S]*captchaId/)
+})
+
+test('image captcha API follows the tianai challenge and track contract', () => {
+  assert.match(authApiSource, /export interface ImageCaptchaResult/)
+  assert.match(authApiSource, /backgroundImage:\s*string/)
+  assert.match(authApiSource, /templateImage:\s*string/)
+  assert.match(authApiSource, /export interface ImageCaptchaTrack/)
+  assert.match(authApiSource, /url:\s*['"]\/auth\/image['"]/)
+  assert.match(authApiSource, /\/auth\/image\/\$\{encodeURIComponent\(captchaId\)\}\/match/)
+  assert.match(authApiSource, /export type RegisterParams[\s\S]*captchaId:\s*string/)
+})
+
+test('slider captcha renders server images and only accepts an explicit match result', () => {
+  assert.match(sliderCaptchaSource, /generateImageCaptchaApi\(\)/)
+  assert.match(sliderCaptchaSource, /:src="captcha\.backgroundImage"/)
+  assert.match(sliderCaptchaSource, /:src="captcha\.templateImage"/)
+  assert.match(sliderCaptchaSource, /matchImageCaptchaApi\(currentCaptcha\.id, track\)/)
+  assert.match(sliderCaptchaSource, /if \(matched === true\)/)
+  assert.match(sliderCaptchaSource, /emit\(['"]success['"], currentCaptcha\.id\)/)
+  assert.doesNotMatch(sliderCaptchaSource, /completeWithKeyboard|threshold\s*=|maxWidth\s*-\s*45/)
+})
+
+test('slider captcha sends bounded relative tracks with rendered image dimensions', () => {
+  assert.match(sliderCaptchaSource, /getBoundingClientRect\(\)/)
+  assert.match(sliderCaptchaSource, /bgImageWidth:\s*Math\.round\(backgroundRect\.width\)/)
+  assert.match(sliderCaptchaSource, /templateImageWidth:\s*Math\.round\(templateRect\.width\)/)
+  assert.match(sliderCaptchaSource, /x:\s*type === ['"]DOWN['"] \? 0 : sliderLeft\.value/)
+  assert.match(sliderCaptchaSource, /y:\s*event\.pageY - dragStartY/)
+  assert.match(sliderCaptchaSource, /appendTrackPoint\(event, ['"]DOWN['"]\)/)
+  assert.match(sliderCaptchaSource, /appendTrackPoint\(event, ['"]MOVE['"]\)/)
+  assert.match(sliderCaptchaSource, /appendTrackPoint\(event, ['"]UP['"]\)/)
+  assert.match(sliderCaptchaSource, /stopTime - dragStartTime < 300 \|\| trackList\.length < 10/)
+  assert.match(sliderCaptchaSource, /left:\s*Math\.round\(sliderLeft\.value\)/)
+  assert.match(sliderCaptchaSource, /top:\s*0/)
+  assert.match(sliderCaptchaSource, /data:\s*currentCaptcha\.data/)
+})
+
+test('failed image matching reloads the challenge instead of unlocking registration', () => {
+  const submitTrackSource = sliderCaptchaSource.match(
+    /const submitTrack = async \(event: PointerEvent\) => \{[\s\S]*?\n\}/
+  )?.[0] ?? ''
+
+  assert.match(submitTrackSource, /if \(matched === true\)/)
+  assert.match(submitTrackSource, /status\.value = ['"]error['"]/)
+  assert.match(submitTrackSource, /scheduleReload\(\)/)
+  assert.match(sliderCaptchaSource, /status === ['"]success['"] \|\| status === ['"]error['"]/)
+  assert.match(sliderCaptchaSource, /status\.value !== ['"]idle['"]/)
 })
 
 test('forgot password opens an email verification dialog and resets the password', () => {
@@ -146,8 +212,6 @@ test('validation errors use reserved space without changing the form height', ()
 
 test('login page does not restore removed alternative login methods', () => {
   const removedFeatureMarkers = [
-    'SliderCaptcha',
-    '<slider-captcha',
     'loginType',
     'qrcode',
     'social-login',
