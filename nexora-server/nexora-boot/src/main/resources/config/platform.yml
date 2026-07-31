@@ -17,9 +17,9 @@ platform:
     two-level-cache:
       enabled: true
       instances:
-        - name: sysConfig
+        - name: sysConfigGroup
           max-size: 1000
-          default-ttl: 5m
+          default-ttl: 3d
   # Quartz 定时任务
   quartz:
     auto-init-table: true
@@ -38,4 +38,4 @@ platform:
       - /auth/image/*/match
       - /auth/password/reset/sendCode
       - /auth/password/reset
-      - /sys/config/value/**
+      - /sys/config-group/public

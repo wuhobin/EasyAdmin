@@ -3,9 +3,10 @@ import request, { type ApiResponse } from '@/utils/request'
 export interface AuthParams {
   email: string
   password: string
-  code: string
+  code?: string
   rememberMe: boolean
   source?: string
+  captchaId?: string
 }
 
 export type RegisterParams = Pick<AuthParams, 'email' | 'password' | 'code' | 'source'> & {

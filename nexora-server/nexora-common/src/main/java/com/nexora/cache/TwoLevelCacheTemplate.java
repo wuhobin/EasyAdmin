@@ -14,8 +14,8 @@ import java.util.function.Supplier;
 /**
  * 通用二级缓存操作模板。
  * <p>
- * 读取缓存时 Redis 不可用会回退到数据加载器；缓存写入和失效采用尽力而为策略，
- * 并支持在当前事务提交后执行。
+ * 读取缓存时 Redis 不可用会回退到数据加载器。修改方法通过 Required 与
+ * BestEffort 后缀明确区分异常是否向上传递，并支持在当前事务提交后执行。
  */
 @Slf4j
 @Component
@@ -38,8 +38,8 @@ public class TwoLevelCacheTemplate {
         }
     }
 
-    public void set(String cacheName, String cacheKey, Object value,
-                    long ttl, TimeUnit timeUnit) {
+    public void setBestEffort(String cacheName, String cacheKey, Object value,
+                              long ttl, TimeUnit timeUnit) {
         try {
             cache(cacheName).set(cacheKey, value, ttl, timeUnit);
         } catch (RuntimeException exception) {
@@ -47,12 +47,12 @@ public class TwoLevelCacheTemplate {
         }
     }
 
-    public void setAfterCommit(String cacheName, String cacheKey, Object value,
-                               long ttl, TimeUnit timeUnit) {
-        runAfterCommit(() -> set(cacheName, cacheKey, value, ttl, timeUnit));
+    public void setRequired(String cacheName, String cacheKey, Object value,
+                            long ttl, TimeUnit timeUnit) {
+        cache(cacheName).set(cacheKey, value, ttl, timeUnit);
     }
 
-    public void evict(String cacheName, String cacheKey) {
+    public void evictBestEffort(String cacheName, String cacheKey) {
         try {
             cache(cacheName).evict(cacheKey);
         } catch (RuntimeException exception) {
@@ -60,8 +60,29 @@ public class TwoLevelCacheTemplate {
         }
     }
 
-    public void evictAfterCommit(String cacheName, String cacheKey) {
-        runAfterCommit(() -> evict(cacheName, cacheKey));
+    public void evictRequired(String cacheName, String cacheKey) {
+        cache(cacheName).evict(cacheKey);
+    }
+
+    public void evictAfterCommitBestEffort(String cacheName, String cacheKey) {
+        runAfterCommit(() -> evictBestEffort(cacheName, cacheKey));
+    }
+
+    public void replaceAfterCommitBestEffort(String cacheName, String cacheKey, Object value,
+                                             long ttl, TimeUnit timeUnit) {
+        runAfterCommit(() -> replaceBestEffort(cacheName, cacheKey, value, ttl, timeUnit));
+    }
+
+    private void replaceBestEffort(String cacheName, String cacheKey, Object value,
+                                   long ttl, TimeUnit timeUnit) {
+        try {
+            evictRequired(cacheName, cacheKey);
+            setRequired(cacheName, cacheKey, value, ttl, timeUnit);
+        } catch (RuntimeException exception) {
+            log.error("Failed to replace two-level cache [{}] key [{}] after database commit",
+                    cacheName, cacheKey, exception);
+            evictBestEffort(cacheName, cacheKey);
+        }
     }
 
     private TwoLevelCache cache(String cacheName) {

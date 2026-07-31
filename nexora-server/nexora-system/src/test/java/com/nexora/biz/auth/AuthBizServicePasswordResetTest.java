@@ -9,8 +9,10 @@ import com.aurora.starter.verification.mail.MailVerificationService;
 import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.aurora.starter.webmvc.exception.BizException;
+import com.nexora.cache.LoginRetryCache;
 import com.nexora.config.NexoraPermissionProvider;
-import com.nexora.config.SysConfigReader;
+import com.nexora.config.PasswordPolicyValidator;
+import com.nexora.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
 import com.nexora.domain.form.auth.AuthForm;
 import com.nexora.entity.SysUser;
@@ -34,11 +36,14 @@ class AuthBizServicePasswordResetTest {
 
     private final SysUserService userService = mock(SysUserService.class);
     private final MailVerificationService verificationService = mock(MailVerificationService.class);
+    private final PasswordPolicyValidator passwordPolicyValidator = passwordPolicyValidator();
     private final AuthBizService bizService = new AuthBizService(
             userService,
             mock(SysRoleService.class),
             mock(NexoraPermissionProvider.class),
-            mock(SysConfigReader.class),
+            mock(SysConfigGroupReader.class),
+            passwordPolicyValidator,
+            new LoginSecurityService(mock(LoginRetryCache.class)),
             mailProvider(verificationService),
             mock(ImageVerificationService.class));
 
@@ -112,6 +117,12 @@ class AuthBizServicePasswordResetTest {
         form.setCode(code);
         form.setPassword(password);
         return form;
+    }
+
+    private static PasswordPolicyValidator passwordPolicyValidator() {
+        PasswordPolicyValidator validator = mock(PasswordPolicyValidator.class);
+        when(validator.validateNewPassword(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        return validator;
     }
 
     @SuppressWarnings("unchecked")

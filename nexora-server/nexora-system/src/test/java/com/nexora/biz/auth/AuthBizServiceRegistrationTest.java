@@ -8,10 +8,14 @@ import com.aurora.starter.verification.mail.MailVerificationService;
 import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.aurora.starter.webmvc.exception.BizException;
+import com.nexora.cache.LoginRetryCache;
 import com.nexora.config.NexoraPermissionProvider;
-import com.nexora.config.SysConfigReader;
+import com.nexora.config.PasswordPolicyValidator;
+import com.nexora.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
+import com.nexora.constants.SysUserStatusEnum;
 import com.nexora.domain.form.auth.AuthForm;
+import com.nexora.domain.form.system.config.RegisterConfigForm;
 import com.nexora.entity.SysRole;
 import com.nexora.entity.SysUser;
 import com.nexora.service.SysRoleService;
@@ -37,7 +41,8 @@ class AuthBizServiceRegistrationTest {
 
     private final SysUserService userService = mock(SysUserService.class);
     private final SysRoleService roleService = mock(SysRoleService.class);
-    private final SysConfigReader configReader = mock(SysConfigReader.class);
+    private final SysConfigGroupReader configReader = mock(SysConfigGroupReader.class);
+    private final PasswordPolicyValidator passwordPolicyValidator = mock(PasswordPolicyValidator.class);
     private final MailVerificationService verificationService = mock(MailVerificationService.class);
     private final ImageVerificationService imageVerificationService = mock(ImageVerificationService.class);
     private final AuthBizService bizService = new AuthBizService(
@@ -45,13 +50,16 @@ class AuthBizServiceRegistrationTest {
             roleService,
             mock(NexoraPermissionProvider.class),
             configReader,
+            passwordPolicyValidator,
+            new LoginSecurityService(mock(LoginRetryCache.class)),
             mailProvider(verificationService),
             imageVerificationService);
 
     @Test
-    void onlyTheExactTrueValueEnablesRegistration() {
-        when(configReader.getString(CommonConstants.REGISTER_ENABLED_CONFIG_KEY, null))
-                .thenReturn("TRUE");
+    void disabledRegistrationIsRejected() {
+        RegisterConfigForm config = registerConfig();
+        config.setEnabled(false);
+        when(configReader.register()).thenReturn(config);
 
         assertThatThrownBy(() -> bizService.sendRegisterCode(form("user@example.com", null, null)))
                 .isInstanceOf(BizException.class)
@@ -138,6 +146,33 @@ class AuthBizServiceRegistrationTest {
     }
 
     @Test
+    void createsAPendingUserWhenRegistrationAuditIsEnabled() {
+        SysRole role = new SysRole();
+        role.setId(9);
+        RegisterConfigForm config = registerConfig();
+        config.setVerifyEmail(false);
+        config.setNeedAudit(true);
+        when(configReader.register()).thenReturn(config);
+        when(passwordPolicyValidator.validateNewPassword(any())).thenAnswer(
+                invocation -> invocation.getArgument(0));
+        when(roleService.getByCode("user")).thenReturn(role);
+        when(imageVerificationService.verifyAndConsume("captcha-id")).thenReturn(true);
+        doAnswer(invocation -> {
+            SysUser user = invocation.getArgument(0);
+            user.setId(42);
+            return true;
+        }).when(userService).save(any(SysUser.class));
+
+        bizService.register(registrationForm(
+                "user@example.com", null, "secret", "captcha-id"));
+
+        ArgumentCaptor<SysUser> captor = ArgumentCaptor.forClass(SysUser.class);
+        verify(userService).save(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(SysUserStatusEnum.PENDING.getCode());
+        verify(verificationService, never()).verifyAndConsume(any());
+    }
+
+    @Test
     void rejectsRegistrationWhenTheImageCaptchaIdIsMissing() {
         SysRole role = new SysRole();
         role.setId(9);
@@ -205,11 +240,19 @@ class AuthBizServiceRegistrationTest {
     }
 
     private void enableRegistration(SysRole role) {
-        when(configReader.getString(CommonConstants.REGISTER_ENABLED_CONFIG_KEY, null))
-                .thenReturn(CommonConstants.TRUE_VALUE);
-        when(configReader.getString(CommonConstants.REGISTER_ROLE_CODE_CONFIG_KEY, null))
-                .thenReturn("user");
+        when(configReader.register()).thenReturn(registerConfig());
+        when(passwordPolicyValidator.validateNewPassword(any())).thenAnswer(
+                invocation -> invocation.getArgument(0));
         when(roleService.getByCode("user")).thenReturn(role);
+    }
+
+    private static RegisterConfigForm registerConfig() {
+        RegisterConfigForm config = new RegisterConfigForm();
+        config.setEnabled(true);
+        config.setVerifyEmail(true);
+        config.setDefaultRoleCode("user");
+        config.setNeedAudit(false);
+        return config;
     }
 
     private static AuthForm form(String email, String code, String password) {

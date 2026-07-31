@@ -7,12 +7,12 @@
           <span class="brand-mark">
             <img :src="logoUrl" alt="" width="28" height="28" aria-hidden="true" />
           </span>
-          <span>{{ settingsStore.title }}</span>
+          <span>{{ systemConfig.siteName }}</span>
         </header>
 
         <div class="brand-content">
           <h1 id="brand-title">安全进入你的<br />管理工作台</h1>
-          <p class="brand-description">统一身份与权限边界，让每次访问清晰可控。</p>
+          <p class="brand-description">{{ systemConfig.siteDescription }}</p>
         </div>
 
         <footer class="brand-meta">
@@ -28,7 +28,7 @@
             <span class="brand-mark brand-mark-small">
               <img :src="logoUrl" alt="" width="24" height="24" aria-hidden="true" />
             </span>
-            <span>{{ settingsStore.title }}</span>
+            <span>{{ systemConfig.siteName }}</span>
           </div>
           <button class="theme-toggle" type="button" :aria-label="isDark ? '切换到浅色模式' : '切换到深色模式'" @click="toggleTheme">
             <el-icon><component :is="isDark ? Sunny : Moon" /></el-icon>
@@ -97,7 +97,12 @@
                   <el-input v-model="loginForm.password" name="password" type="password" placeholder="请输入密码" aria-label="密码" :prefix-icon="Lock" show-password size="large" autocomplete="current-password" />
                 </el-form-item>
                 <div class="login-options">
-                  <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
+                  <el-checkbox
+                    v-if="loginConfig.rememberMeEnabled"
+                    v-model="loginForm.rememberMe"
+                  >
+                    记住我
+                  </el-checkbox>
                   <button class="forgot-password" type="button" @click="handleForgotPassword">忘记密码？</button>
                 </div>
                 <el-button :loading="loading" type="primary" size="large" class="login-button" @click="handleLogin">
@@ -120,7 +125,7 @@
                 <el-form-item prop="email">
                   <el-input v-model="registerForm.email" name="register-email" type="email" placeholder="请输入邮箱" aria-label="邮箱" :prefix-icon="Message" size="large" autocomplete="email" :spellcheck="false" />
                 </el-form-item>
-                <el-form-item prop="code">
+                <el-form-item v-if="registerConfig.verifyEmail" prop="code">
                   <div class="verification-row">
                     <el-input v-model="registerForm.code" name="register-code" inputmode="numeric" maxlength="8" placeholder="请输入验证码" aria-label="邮箱验证码" :prefix-icon="Key" size="large" autocomplete="one-time-code" />
                     <el-button
@@ -136,7 +141,7 @@
                   </div>
                 </el-form-item>
                 <el-form-item prop="password">
-                  <el-input v-model="registerForm.password" name="register-password" type="password" placeholder="请输入密码（6～20 位字符）" aria-label="密码" :prefix-icon="Lock" show-password size="large" autocomplete="new-password" />
+                  <el-input v-model="registerForm.password" name="register-password" type="password" :placeholder="passwordDescription" aria-label="密码" :prefix-icon="Lock" show-password size="large" autocomplete="new-password" />
                 </el-form-item>
                 <el-button :loading="registering" type="primary" size="large" class="login-button" @click="handleRegister">
                   {{ registering ? '正在创建…' : '创建账号' }}
@@ -151,7 +156,7 @@
           </div>
         </section>
 
-        <p class="login-footer">© 2026 Nexora Admin · Secure Access</p>
+        <p class="login-footer">{{ systemConfig.copyright }}</p>
       </section>
     </main>
 
@@ -223,7 +228,7 @@
             v-model="resetPasswordForm.password"
             name="reset-password"
             type="password"
-            placeholder="请输入新密码（6～20 位字符）"
+            :placeholder="passwordDescription"
             aria-label="新密码"
             :prefix-icon="Lock"
             show-password
@@ -268,10 +273,11 @@ import router from '@/router'
 import type { FormInstance, FormItemRule, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { Key, Lock, Message, Moon, Sunny } from '@element-plus/icons-vue'
-import logoUrl from '@/assets/brand/nexora-logo.svg'
+import defaultLogoUrl from '@/assets/brand/nexora-logo.svg'
 import SliderCaptcha from '@/components/SliderCaptcha/index.vue'
 import { useUserStore } from '@/store/modules/user'
 import { useSettingsStore } from '@/store/modules/settings'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
 import {
   registerApi,
   resetPasswordApi,
@@ -279,16 +285,19 @@ import {
   sendResetPasswordCodeApi,
   type AuthParams
 } from '@/api/system/auth'
-import { getConfigValueApi } from '@/api/system/config'
+import {
+  passwordPolicyDescription,
+  validatePasswordByPolicy
+} from '@/utils/password-policy'
 
 type AuthMode = 'login' | 'register'
 interface ResetPasswordForm extends AuthParams {
   confirmPassword: string
 }
 
-const REGISTER_ENABLED_CONFIG_KEY = 'register.enabled'
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
+const publicConfigStore = usePublicConfigStore()
 const loginFormRef = ref<FormInstance>()
 const registerFormRef = ref<FormInstance>()
 const resetPasswordFormRef = ref<FormInstance>()
@@ -301,9 +310,8 @@ const resetDialogVisible = ref(false)
 const resetCodeSending = ref(false)
 const resetCodeCountdown = ref(0)
 const resettingPassword = ref(false)
-const registerEnabled = ref(false)
-const registerConfigLoaded = ref(false)
 const activeMode = ref<AuthMode>('login')
+const captchaPurpose = ref<'login' | 'register'>('register')
 let countdownTimer: ReturnType<typeof setInterval> | undefined
 let resetCountdownTimer: ReturnType<typeof setInterval> | undefined
 
@@ -325,22 +333,37 @@ const emailRules: FormItemRule[] = [
   { required: true, message: '请输入邮箱', trigger: 'submit' },
   { type: 'email', message: '请输入正确的邮箱地址', trigger: 'submit' }
 ]
-const passwordRules: FormItemRule[] = [
-  { required: true, message: '请输入密码', trigger: 'submit' },
-  { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'submit' }
+const systemConfig = computed(() => publicConfigStore.system)
+const registerConfig = computed(() => publicConfigStore.register)
+const loginConfig = computed(() => publicConfigStore.login)
+const registerEnabled = computed(() => registerConfig.value.enabled)
+const registerConfigLoaded = computed(() => publicConfigStore.loaded)
+const logoUrl = computed(() => systemConfig.value.siteLogo || defaultLogoUrl)
+const passwordDescription = computed(() =>
+  passwordPolicyDescription(publicConfigStore.password)
+)
+const loginPasswordRules: FormItemRule[] = [
+  { required: true, message: '请输入密码', trigger: 'submit' }
 ]
+const newPasswordRule: FormItemRule = {
+  validator: (_rule, value: string, callback) => {
+    const message = validatePasswordByPolicy(value, publicConfigStore.password)
+    message ? callback(new Error(message)) : callback()
+  },
+  trigger: 'submit'
+}
 const loginRules: FormRules<AuthParams> = {
   email: emailRules,
-  password: passwordRules
+  password: loginPasswordRules
 }
-const registerRules: FormRules<AuthParams> = {
+const registerRules = computed<FormRules<AuthParams>>(() => ({
   email: emailRules,
-  code: [
+  code: registerConfig.value.verifyEmail ? [
     { required: true, message: '请输入邮箱验证码', trigger: 'submit' },
     { pattern: /^\d{4,8}$/, message: '邮箱验证码格式不正确', trigger: 'submit' }
-  ],
-  password: passwordRules
-}
+  ] : [],
+  password: [newPasswordRule]
+}))
 const confirmPasswordRule: FormItemRule = {
   validator: (_rule, value, callback) => {
     if (!value) {
@@ -359,7 +382,7 @@ const resetPasswordRules: FormRules<ResetPasswordForm> = {
     { required: true, message: '请输入邮箱验证码', trigger: 'submit' },
     { pattern: /^\d{4,8}$/, message: '邮箱验证码格式不正确', trigger: 'submit' }
   ],
-  password: passwordRules,
+  password: [newPasswordRule],
   confirmPassword: [confirmPasswordRule]
 }
 
@@ -376,18 +399,16 @@ const switchMode = (mode: AuthMode, focusTab = false) => {
   })
 }
 
-const loadRegisterConfig = async () => {
-  try {
-    const { data } = await getConfigValueApi(REGISTER_ENABLED_CONFIG_KEY)
-    registerEnabled.value = data === 'true'
-  } catch {
-    registerEnabled.value = false
-  } finally {
-    registerConfigLoaded.value = true
+const ensurePublicConfig = async () => {
+  const ready = await publicConfigStore.load()
+  if (!ready) {
+    ElMessage.error('系统安全配置加载失败，请稍后重试')
   }
+  return ready
 }
 
-const handleForgotPassword = () => {
+const handleForgotPassword = async () => {
+  if (!(await ensurePublicConfig())) return
   resetPasswordForm.email = loginForm.email.trim()
   resetPasswordForm.code = ''
   resetPasswordForm.password = ''
@@ -397,10 +418,20 @@ const handleForgotPassword = () => {
 }
 
 const handleLogin = async () => {
+  if (!(await ensurePublicConfig())) return
   if (!loginFormRef.value || !(await loginFormRef.value.validate().catch(() => false))) return
+  if (loginConfig.value.captchaEnabled) {
+    captchaPurpose.value = 'login'
+    captchaDialogVisible.value = true
+    return
+  }
+  await performLogin()
+}
+
+const performLogin = async (captchaId?: string) => {
   loading.value = true
   try {
-    await userStore.login(loginForm)
+    await userStore.login({ ...loginForm, captchaId })
     await router.push('/')
     ElMessage.success('登录成功')
   } catch (error) {
@@ -435,6 +466,7 @@ const startResetCodeCountdown = () => {
 }
 
 const handleSendRegisterCode = async () => {
+  if (!(await ensurePublicConfig())) return
   if (!registerFormRef.value) return
   const emailValid = await registerFormRef.value.validateField('email').then(() => true).catch(() => false)
   if (!emailValid) return
@@ -452,18 +484,25 @@ const handleSendRegisterCode = async () => {
 
 const handleRegister = async () => {
   if (registering.value) return
+  if (!(await ensurePublicConfig())) return
   if (!registerFormRef.value || !(await registerFormRef.value.validate().catch(() => false))) return
+  captchaPurpose.value = 'register'
   captchaDialogVisible.value = true
 }
 
 const handleImageCaptchaSuccess = async (captchaId: string) => {
   captchaDialogVisible.value = false
+  if (!(await ensurePublicConfig())) return
+  if (captchaPurpose.value === 'login') {
+    await performLogin(captchaId)
+    return
+  }
   registering.value = true
   try {
     await registerApi({
       email: registerForm.email,
       password: registerForm.password,
-      code: registerForm.code,
+      code: registerConfig.value.verifyEmail ? registerForm.code : undefined,
       source: registerForm.source,
       captchaId
     })
@@ -472,7 +511,9 @@ const handleImageCaptchaSuccess = async (captchaId: string) => {
     registerForm.password = ''
     registerForm.code = ''
     switchMode('login')
-    ElMessage.success('注册成功，请登录')
+    ElMessage.success(registerConfig.value.needAudit
+      ? '注册申请已提交，请等待管理员审核'
+      : '注册成功，请登录')
   } catch (error) {
     console.error('Register failed:', error)
   } finally {
@@ -481,6 +522,7 @@ const handleImageCaptchaSuccess = async (captchaId: string) => {
 }
 
 const handleSendResetCode = async () => {
+  if (!(await ensurePublicConfig())) return
   if (!resetPasswordFormRef.value) return
   const emailValid = await resetPasswordFormRef.value.validateField('email').then(() => true).catch(() => false)
   if (!emailValid) return
@@ -497,6 +539,7 @@ const handleSendResetCode = async () => {
 }
 
 const handleResetPassword = async () => {
+  if (!(await ensurePublicConfig())) return
   if (!resetPasswordFormRef.value || !(await resetPasswordFormRef.value.validate().catch(() => false))) return
   resettingPassword.value = true
   try {
@@ -520,7 +563,7 @@ const handleResetDialogClosed = () => {
   resetPasswordFormRef.value?.resetFields()
 }
 
-onMounted(loadRegisterConfig)
+onMounted(() => void publicConfigStore.load())
 onBeforeUnmount(() => {
   if (countdownTimer) clearInterval(countdownTimer)
   if (resetCountdownTimer) clearInterval(resetCountdownTimer)

@@ -68,10 +68,14 @@
         />
       </div>
       <div class="setting-item">
-        <span>开启水印</span>
-        <el-switch 
-          v-model="tempSettings.watermark"
-          @change="val => handlePreview('watermark', val)"
+        <span>
+          开启水印
+          <small v-if="globalWatermarkEnabled">（全局强制）</small>
+        </span>
+        <el-switch
+          :model-value="globalWatermarkEnabled || Boolean(tempSettings.watermark)"
+          :disabled="globalWatermarkEnabled"
+          @update:model-value="val => handlePreview('watermark', val)"
         />
       </div>
       <div class="setting-item">
@@ -143,6 +147,7 @@
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useSettingsStore } from '@/store/modules/settings'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
 import type { SettingsState } from '@/store/modules/settings'
 
 const props = defineProps<{
@@ -156,6 +161,8 @@ const emit = defineEmits<{
 }>()
 
 const settingsStore = useSettingsStore()
+const publicConfigStore = usePublicConfigStore()
+const globalWatermarkEnabled = computed(() => publicConfigStore.system.watermarkEnabled)
 
 // 处理抽屉显示状态
 const drawerVisible = computed({

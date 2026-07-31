@@ -8,6 +8,8 @@ import com.aurora.starter.verification.mail.MailVerificationService;
 import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.nexora.constants.CommonConstants;
+import com.nexora.constants.SysUserStatusEnum;
+import com.nexora.config.PasswordPolicyValidator;
 import com.nexora.domain.convert.SysUserConvert;
 import com.nexora.domain.form.query.system.SysUserQueryForm;
 import com.nexora.domain.form.system.SysUserForm;
@@ -39,22 +41,26 @@ public class SysUserBizService {
     private final SecurityAuthorizationCache authorizationCache;
     private final ObjectProvider<MailVerificationService> mailVerificationServiceProvider;
     private final MailAccountService mailAccountService;
+    private final PasswordPolicyValidator passwordPolicyValidator;
 
     public IPage<SysUserPageListVo> list(SysUserQueryForm form, PageParam pageParam) {
         return sysUserService.listUsers(SysUserConvert.INSTANCE.toQuery(form), pageParam);
     }
     @Transactional(rollbackFor = Exception.class)
     public void add(SysUserForm form) {
+        int status = form.getStatus() == null
+                ? SysUserStatusEnum.NORMAL.getCode()
+                : requireSupportedStatus(form.getStatus());
         String nickname = requireNickname(form.getNickname());
         String email = requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE);
-        String password = requirePassword(form.getPassword());
+        String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
         requireRoleIds(form.getRoleIds());
 
         SysUser user = new SysUser();
         user.setNickname(nickname);
         user.setEmail(StringUtils.normalizeEmail(email));
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
-        user.setStatus(form.getStatus() == null ? CommonConstants.YES : form.getStatus());
+        user.setStatus(status);
         user.setAvatar(form.getAvatar());
         user.setMobile(form.getMobile());
         user.setSex(form.getSex());
@@ -71,6 +77,7 @@ public class SysUserBizService {
     @Transactional(rollbackFor = Exception.class)
     public void update(SysUserForm form) {
         Integer userId = requireUserId(form.getId());
+        Integer status = form.getStatus() == null ? null : requireSupportedStatus(form.getStatus());
         String nickname = requireNickname(form.getNickname());
         requireRoleIds(form.getRoleIds());
 
@@ -81,7 +88,7 @@ public class SysUserBizService {
         SysUser user = new SysUser();
         user.setId(userId);
         user.setNickname(nickname);
-        user.setStatus(form.getStatus());
+        user.setStatus(status);
         user.setAvatar(form.getAvatar());
         user.setMobile(form.getMobile());
         user.setSex(form.getSex());
@@ -104,8 +111,8 @@ public class SysUserBizService {
     }
 
     public void updatePassword(SysUserForm form) {
-        String oldPassword = requirePassword(form.getOldPassword());
-        String newPassword = requirePassword(form.getNewPassword());
+        String oldPassword = requireCurrentPassword(form.getOldPassword());
+        String newPassword = passwordPolicyValidator.validateNewPassword(form.getNewPassword());
         SysUser user = getCurrentUser();
         if (!BCrypt.checkpw(oldPassword, user.getPassword())) {
             throw new BizException(CommonConstants.OLD_PASSWORD_INCORRECT_MESSAGE);
@@ -189,7 +196,7 @@ public class SysUserBizService {
 
     public boolean resetPassword(SysUserForm form) {
         Integer userId = requireUserId(form.getId());
-        String password = requirePassword(form.getPassword());
+        String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
         if (sysUserService.getById(userId) == null) {
             throw new BizException(CommonConstants.USER_NOT_FOUND_MESSAGE);
         }
@@ -200,11 +207,37 @@ public class SysUserBizService {
         return true;
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public void audit(Integer id) {
+        Integer userId = requireUserId(id);
+        SysUser current = sysUserService.getById(userId);
+        if (current == null) {
+            throw new BizException(CommonConstants.USER_NOT_FOUND_MESSAGE);
+        }
+        if (!Integer.valueOf(SysUserStatusEnum.PENDING.getCode()).equals(current.getStatus())) {
+            throw new BizException(CommonConstants.USER_NOT_PENDING_MESSAGE);
+        }
+        SysUser update = new SysUser();
+        update.setId(userId);
+        update.setStatus(SysUserStatusEnum.NORMAL.getCode());
+        if (!sysUserService.updateById(update)) {
+            throw new BizException(CommonConstants.USER_AUDIT_FAILED_MESSAGE);
+        }
+        authorizationCache.evictUsersAfterCommit(List.of(userId));
+    }
+
     private Integer requireUserId(Integer userId) {
         if (userId == null) {
             throw new BizException(CommonConstants.USER_ID_REQUIRED_MESSAGE);
         }
         return userId;
+    }
+
+    private int requireSupportedStatus(Integer status) {
+        if (!SysUserStatusEnum.supports(status)) {
+            throw new BizException(CommonConstants.USER_STATUS_INVALID_MESSAGE);
+        }
+        return status;
     }
 
     private String requireNickname(String nickname) {
@@ -215,12 +248,11 @@ public class SysUserBizService {
         return value;
     }
 
-    private String requirePassword(String password) {
-        String value = requireText(password, CommonConstants.PASSWORD_REQUIRED_MESSAGE);
-        if (value.length() < 6 || value.length() > 20) {
-            throw new BizException(CommonConstants.PASSWORD_LENGTH_INVALID_MESSAGE);
+    private String requireCurrentPassword(String password) {
+        if (password == null || password.isBlank()) {
+            throw new BizException(CommonConstants.PASSWORD_REQUIRED_MESSAGE);
         }
-        return value;
+        return password;
     }
 
     private void requireRoleIds(List<Integer> roleIds) {
@@ -254,7 +286,8 @@ public class SysUserBizService {
         if (!Objects.equals(user.getId(), CommonConstants.ROOT_USER_ID)) {
             return;
         }
-        if (user.getStatus() != null && user.getStatus() != CommonConstants.YES) {
+        if (user.getStatus() != null
+                && user.getStatus() != SysUserStatusEnum.NORMAL.getCode()) {
             throw new BizException(CommonConstants.ROOT_USER_DISABLE_FORBIDDEN_MESSAGE);
         }
         boolean hasAdminRole = sysRoleService.listByIds(roleIds).stream()

@@ -7,12 +7,15 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useSettingsStore } from '@/store/modules/settings'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
 
 const settingsStore = useSettingsStore()
+const publicConfigStore = usePublicConfigStore()
 
 onMounted(() => {
   // 初始化主题设置
   settingsStore.initTheme()
+  void publicConfigStore.load()
 })
 </script>
 

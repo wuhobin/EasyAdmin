@@ -70,12 +70,6 @@ public class CommonConstants {
 
     public static final String FILE_DEFAULT_ORDER = "create_time desc";
 
-    public static final String REGISTER_ENABLED_CONFIG_KEY = "register.enabled";
-
-    public static final String REGISTER_ROLE_CODE_CONFIG_KEY = "register.role-code";
-
-    public static final String TRUE_VALUE = "true";
-
     public static final String PARENT_VIEW = "ParentView";
 
     public static final Object USER = "user";
@@ -136,25 +130,64 @@ public class CommonConstants {
 
     public static final String REGISTER_CONFIG_INCOMPLETE_MESSAGE = "注册配置不完整，请联系管理员";
 
+    public static final String REGISTER_ROLE_UNAVAILABLE_MESSAGE = "默认注册角色不可用";
+
+    public static final String REGISTER_EMAIL_VERIFICATION_DISABLED_MESSAGE = "系统未启用注册邮箱验证";
+
+    public static final String REGISTER_PENDING_MESSAGE = "注册申请已提交，请等待管理员审核";
+
     public static final String REGISTER_FAILED_MESSAGE = "注册失败，请稍后重试";
 
     public static final int MAX_NICKNAME_LENGTH = 30;
 
-    public static final String CONFIG_KEY_EXISTS_MESSAGE = "配置键已存在";
+    public static final String USER_NOT_PENDING_MESSAGE = "该用户不是待审核状态";
 
-    public static final String CONFIG_ADD_FAILED_MESSAGE = "新增配置失败";
+    public static final String USER_STATUS_INVALID_MESSAGE = "用户状态只能是0（禁用）、1（正常）或2（待审核）";
 
-    public static final String CONFIG_ID_REQUIRED_MESSAGE = "配置ID不能为空";
+    public static final String USER_AUDIT_FAILED_MESSAGE = "用户审核失败，请稍后重试";
 
-    public static final String CONFIG_NOT_FOUND_MESSAGE = "配置不存在";
+    public static final String ACCOUNT_PENDING_MESSAGE = "账号正在等待管理员审核";
 
-    public static final String CONFIG_KEY_IMMUTABLE_MESSAGE = "配置键创建后不允许修改";
+    public static final String LOGIN_LOCKED_MESSAGE = "登录失败次数过多，请%d分钟后重试";
 
-    public static final String CONFIG_UPDATE_FAILED_MESSAGE = "修改配置失败";
+    public static final String LOGIN_SECURITY_UNAVAILABLE_MESSAGE = "登录安全服务暂不可用，请稍后重试";
 
-    public static final String CONFIG_DELETE_FAILED_MESSAGE = "删除配置失败";
+    public static final String PASSWORD_DYNAMIC_LENGTH_INVALID_MESSAGE = "密码长度必须在%d到%d个字符之间";
 
-    public static final String CONFIG_DEFAULT_ORDER = "update_time desc";
+    public static final String PASSWORD_BCRYPT_BYTES_INVALID_MESSAGE = "密码 UTF-8 编码不能超过72字节";
+
+    public static final String PASSWORD_UPPERCASE_REQUIRED_MESSAGE = "密码必须包含大写字母";
+
+    public static final String PASSWORD_LOWERCASE_REQUIRED_MESSAGE = "密码必须包含小写字母";
+
+    public static final String PASSWORD_NUMBER_REQUIRED_MESSAGE = "密码必须包含数字";
+
+    public static final String PASSWORD_SPECIAL_REQUIRED_MESSAGE = "密码必须包含特殊字符";
+
+    public static final String CONFIG_GROUP_UNSUPPORTED_MESSAGE = "不支持的配置分组";
+
+    public static final String CONFIG_GROUP_VALUE_REQUIRED_MESSAGE = "配置值不能为空";
+
+    public static final String CONFIG_GROUP_JSON_INVALID_MESSAGE = "配置 JSON 格式或字段不正确";
+
+    public static final String CONFIG_GROUP_JSON_OBJECT_REQUIRED_MESSAGE = "配置值必须是 JSON 对象";
+
+    public static final String CONFIG_GROUP_TYPE_MISMATCH_MESSAGE = "配置类型不匹配";
+
+    public static final String CONFIG_GROUP_INVALID_MESSAGE = "配置分组 %s 无效：%s";
+
+    public static final String CONFIG_GROUP_MISSING_MESSAGE = "缺少配置分组：%s";
+
+    public static final String CONFIG_GROUP_STRUCTURE_INVALID_MESSAGE =
+            "系统配置分组结构不完整，缺失=%s，不支持=%s";
+
+    public static final String CONFIG_GROUP_NAME_MISMATCH_MESSAGE =
+            "配置分组 %s 名称不一致，数据库=%s，预期=%s";
+
+    public static final String CONFIG_GROUP_UPDATE_FAILED_MESSAGE = "修改配置分组失败";
+
+    public static final String CONFIG_GROUP_CACHE_UNAVAILABLE_MESSAGE =
+            "Redis 不可用，无法安全更新配置缓存";
 
     public static final String MAIL_PROVIDER_DICT_TYPE = "mail_provider";
 

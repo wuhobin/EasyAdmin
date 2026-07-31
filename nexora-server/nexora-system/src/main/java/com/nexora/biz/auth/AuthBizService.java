@@ -17,10 +17,15 @@ import cloud.tianai.captcha.application.vo.ImageCaptchaVO;
 import cloud.tianai.captcha.validator.common.model.dto.ImageCaptchaTrack;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.config.NexoraPermissionProvider;
-import com.nexora.config.SysConfigReader;
+import com.nexora.config.PasswordPolicyValidator;
+import com.nexora.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
+import com.nexora.constants.SysUserStatusEnum;
 import com.nexora.constants.ResultCode;
+import com.nexora.constants.SysUserStatusEnum;
 import com.nexora.domain.form.auth.AuthForm;
+import com.nexora.domain.form.system.config.LoginConfigForm;
+import com.nexora.domain.form.system.config.RegisterConfigForm;
 import com.nexora.domain.vo.auth.LoginUserInfoVo;
 import com.nexora.entity.SysRole;
 import com.nexora.entity.SysUser;
@@ -39,23 +44,34 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthBizService {
 
-    private static final long SESSION_TIMEOUT_SECONDS = 60 * 60;
-    private static final long REMEMBER_ME_TIMEOUT_SECONDS = 3 * 24 * 60 * 60;
-
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
     private final NexoraPermissionProvider permissionProvider;
-    private final SysConfigReader sysConfigReader;
+    private final SysConfigGroupReader configReader;
+    private final PasswordPolicyValidator passwordPolicyValidator;
+    private final LoginSecurityService loginSecurityService;
     private final ObjectProvider<MailVerificationService> mailVerificationServiceProvider;
     private final ImageVerificationService imageVerificationService;
 
     public LoginUserInfoVo login(AuthForm form) {
         String email = StringUtils.normalizeEmail(
                 requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
-        String password = requirePassword(form.getPassword());
+        String password = requireLoginPassword(form.getPassword());
+        LoginConfigForm loginConfig = configReader.login();
+        if (Boolean.TRUE.equals(loginConfig.getCaptchaEnabled())) {
+            verifyImageCaptcha(requireText(
+                    form.getCaptchaId(), CommonConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE));
+        }
+        loginSecurityService.assertNotLocked(email, loginConfig);
         SysUser user = sysUserService.getByEmail(email);
-        validateLogin(password, user);
-        SecurityUtils.login(user.getId(), new SaLoginParameter().setTimeout(tokenTimeout(form.isRememberMe())));
+        loginSecurityService.validateCredentials(email, password, user, loginConfig);
+        loginSecurityService.clearFailures(email);
+        loginSecurityService.validateUserStatus(user);
+        if (Boolean.TRUE.equals(loginConfig.getSingleLogin())) {
+            SecurityUtils.kickout(user.getId());
+        }
+        SecurityUtils.login(user.getId(), new SaLoginParameter()
+                .setTimeout(LoginSecurityService.tokenTimeout(loginConfig, form.isRememberMe())));
 
         LoginUserInfoVo loginUserInfo = toLoginUserInfo(user);
         loginUserInfo.setToken(SecurityUtils.getTokenValue());
@@ -64,7 +80,11 @@ public class AuthBizService {
     }
 
     public void sendRegisterCode(AuthForm form) {
-        requireRegistrationRole();
+        RegisterConfigForm registerConfig = requireRegistrationConfig();
+        requireRegistrationRole(registerConfig);
+        if (!Boolean.TRUE.equals(registerConfig.getVerifyEmail())) {
+            throw new BizException(CommonConstants.REGISTER_EMAIL_VERIFICATION_DISABLED_MESSAGE);
+        }
         String email = StringUtils.normalizeEmail(
                 requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
         ensureEmailAvailable(email);
@@ -93,22 +113,25 @@ public class AuthBizService {
 
     @Transactional(rollbackFor = Exception.class)
     public void register(AuthForm form) {
-        SysRole role = requireRegistrationRole();
+        RegisterConfigForm registerConfig = requireRegistrationConfig();
+        SysRole role = requireRegistrationRole(registerConfig);
         String email = StringUtils.normalizeEmail(
                 requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
-        String password = requirePassword(form.getPassword());
-        String code = requireVerificationCode(form.getCode());
+        String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
         String captchaId = requireText(
                 form.getCaptchaId(), CommonConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
         ensureEmailAvailable(email);
         verifyImageCaptcha(captchaId);
-        verifyRegisterCode(email, code);
+        if (Boolean.TRUE.equals(registerConfig.getVerifyEmail())) {
+            verifyRegisterCode(email, requireVerificationCode(form.getCode()));
+        }
 
         SysUser user = new SysUser();
         user.setEmail(email);
         user.setNickname(createNickname(email));
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
-        user.setStatus(CommonConstants.YES);
+        user.setStatus(Boolean.TRUE.equals(registerConfig.getNeedAudit())
+                ? SysUserStatusEnum.PENDING.getCode() : SysUserStatusEnum.NORMAL.getCode());
         try {
             if (!sysUserService.save(user)) {
                 throw new BizException(CommonConstants.REGISTER_FAILED_MESSAGE);
@@ -143,7 +166,7 @@ public class AuthBizService {
         String email = StringUtils.normalizeEmail(
                 requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
         String code = requireVerificationCode(form.getCode());
-        String password = requirePassword(form.getPassword());
+        String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
         SysUser user = requireExistingUser(email);
         verifyResetPasswordCode(email, code);
 
@@ -175,16 +198,16 @@ public class AuthBizService {
         return loginUserInfo;
     }
 
-    private SysRole requireRegistrationRole() {
-        if (!CommonConstants.TRUE_VALUE.equals(sysConfigReader.getString(
-                CommonConstants.REGISTER_ENABLED_CONFIG_KEY, null))) {
+    private RegisterConfigForm requireRegistrationConfig() {
+        RegisterConfigForm config = configReader.register();
+        if (!Boolean.TRUE.equals(config.getEnabled())) {
             throw new BizException(CommonConstants.REGISTER_DISABLED_MESSAGE);
         }
-        String roleCode = sysConfigReader.getString(CommonConstants.REGISTER_ROLE_CODE_CONFIG_KEY, null);
-        if (roleCode == null || roleCode.isBlank()) {
-            throw new BizException(CommonConstants.REGISTER_CONFIG_INCOMPLETE_MESSAGE);
-        }
-        SysRole role = sysRoleService.getByCode(roleCode.strip());
+        return config;
+    }
+
+    private SysRole requireRegistrationRole(RegisterConfigForm config) {
+        SysRole role = sysRoleService.getByCode(config.getDefaultRoleCode());
         if (role == null) {
             throw new BizException(CommonConstants.REGISTER_CONFIG_INCOMPLETE_MESSAGE);
         }
@@ -257,12 +280,11 @@ public class AuthBizService {
         return nickname.substring(0, Math.min(nickname.length(), CommonConstants.MAX_NICKNAME_LENGTH));
     }
 
-    private static String requirePassword(String password) {
-        String value = requireText(password, CommonConstants.PASSWORD_REQUIRED_MESSAGE);
-        if (value.length() < 6 || value.length() > 20) {
-            throw new BizException(CommonConstants.PASSWORD_LENGTH_INVALID_MESSAGE);
+    private static String requireLoginPassword(String password) {
+        if (password == null || password.isBlank()) {
+            throw new BizException(CommonConstants.PASSWORD_REQUIRED_MESSAGE);
         }
-        return value;
+        return password;
     }
 
     private static String requireVerificationCode(String code) {
@@ -280,23 +302,10 @@ public class AuthBizService {
         return value.trim();
     }
 
-    private static void validateLogin(String password, SysUser user) {
-        if (user == null || user.getPassword() == null
-                || !BCrypt.checkpw(password, user.getPassword())) {
-            throw new BizException(ResultCode.ERROR_PASSWORD);
-        }
-        if (user.getStatus() == null || user.getStatus() != CommonConstants.YES) {
-            throw new BizException(ResultCode.DISABLE_ACCOUNT);
-        }
-    }
-
     private static LoginUserInfoVo toLoginUserInfo(SysUser user) {
         LoginUserInfoVo loginUserInfo = new LoginUserInfoVo();
         BeanUtils.copyProperties(user, loginUserInfo);
         return loginUserInfo;
     }
 
-    static long tokenTimeout(boolean rememberMe) {
-        return rememberMe ? REMEMBER_ME_TIMEOUT_SECONDS : SESSION_TIMEOUT_SECONDS;
-    }
 }

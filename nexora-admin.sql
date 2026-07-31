@@ -95,25 +95,28 @@ CREATE TABLE `quartz_job_log`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for sys_config
+-- Table structure for sys_config_group
 -- ----------------------------
-DROP TABLE IF EXISTS `sys_config`;
-CREATE TABLE `sys_config`  (
+DROP TABLE IF EXISTS `sys_config_group`;
+CREATE TABLE `sys_config_group`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `config_key` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '配置键',
-  `config_value` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '配置值',
-  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
+  `group_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '分组编码',
+  `group_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '分组名称',
+  `config_value` json NOT NULL COMMENT 'JSON配置值',
+  `sort` int NOT NULL DEFAULT 0 COMMENT '展示顺序',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_sys_config_key`(`config_key` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统全局配置表' ROW_FORMAT = Dynamic;
+  UNIQUE INDEX `uk_sys_config_group_code`(`group_code` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统配置分组表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of sys_config
+-- Records of sys_config_group
 -- ----------------------------
-INSERT INTO `sys_config` VALUES (1, 'register.enabled', 'true', '是否开始注册，开启后前端展示注册按钮', '2026-07-27 13:53:56', '2026-07-28 16:30:56');
-INSERT INTO `sys_config` VALUES (2, 'register.role-code', 'user', '用户注册之后默认用户角色', '2026-07-28 17:17:27', '2026-07-28 17:17:27');
+INSERT INTO `sys_config_group` VALUES (1, 'system', '系统配置', '{"siteName":"NEXORA ADMIN","shortTitle":"NEXORA ADMIN 后台管理","siteDescription":"一个现代化的后台管理系统","siteLogo":"","copyright":"Copyright © 2026 Nexora Admin","icp":"","watermarkEnabled":false,"watermarkType":"username_time","watermarkCustomText":"","watermarkOpacity":0.15}', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `sys_config_group` VALUES (2, 'register', '注册配置', '{"enabled":true,"verifyEmail":true,"defaultRoleCode":"user","needAudit":false}', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `sys_config_group` VALUES (3, 'login', '登录配置', '{"captchaEnabled":false,"maxRetryCount":5,"lockTimeMinutes":30,"rememberMeEnabled":true,"sessionTimeoutSeconds":3600,"rememberMeTimeoutSeconds":259200,"singleLogin":false}', 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `sys_config_group` VALUES (4, 'password', '密码配置', '{"minLength":6,"maxLength":20,"requireUppercase":false,"requireLowercase":false,"requireNumber":false,"requireSpecial":false}', 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- ----------------------------
 -- Table structure for sys_dict
@@ -253,9 +256,7 @@ INSERT INTO `sys_menu` VALUES (125, '118', '', '', '查看邮件', 7, '', 'BUTTO
 INSERT INTO `sys_menu` VALUES (126, '118', '', '', '下载附件', 8, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:inbox:download', 0);
 INSERT INTO `sys_menu` VALUES (127, '117', 'account', '/mail/account/index', '邮箱列表', 2, 'Tickets', 'MENU', '2026-07-19 00:00:00', NULL, '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (130, '1', 'config', '/system/config/index', '配置管理', 4, 'Tools', 'MENU', '2026-07-27 13:37:19', NULL, '', 'config', 0, '', 0);
-INSERT INTO `sys_menu` VALUES (131, '130', '', '', '新增', 1, '', 'BUTTON', '2026-07-27 13:37:19', NULL, '', '', 1, 'sys:config:add', 0);
 INSERT INTO `sys_menu` VALUES (132, '130', '', '', '修改', 2, '', 'BUTTON', '2026-07-27 13:37:19', NULL, '', '', 1, 'sys:config:update', 0);
-INSERT INTO `sys_menu` VALUES (133, '130', '', '', '删除', 3, '', 'BUTTON', '2026-07-27 13:37:19', NULL, '', '', 1, 'sys:config:delete', 0);
 INSERT INTO `sys_menu` VALUES (134, '130', '', '', '查看', 4, '', 'BUTTON', '2026-07-27 13:37:19', NULL, '', '', 1, 'sys:config:list', 0);
 
 -- ----------------------------
@@ -417,9 +418,7 @@ INSERT INTO `sys_role_menu` VALUES (519, 1, 114);
 INSERT INTO `sys_role_menu` VALUES (520, 1, 115);
 INSERT INTO `sys_role_menu` VALUES (517, 1, 116);
 INSERT INTO `sys_role_menu` VALUES (527, 1, 130);
-INSERT INTO `sys_role_menu` VALUES (528, 1, 131);
 INSERT INTO `sys_role_menu` VALUES (529, 1, 132);
-INSERT INTO `sys_role_menu` VALUES (530, 1, 133);
 INSERT INTO `sys_role_menu` VALUES (531, 1, 134);
 INSERT INTO `sys_role_menu` VALUES (370, 14, 1);
 INSERT INTO `sys_role_menu` VALUES (373, 14, 2);
@@ -489,7 +488,7 @@ CREATE TABLE `sys_user`  (
   `password` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '登录密码',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
-  `status` int NULL DEFAULT 1 COMMENT '状态 0:禁用 1:正常',
+  `status` int NULL DEFAULT 1 COMMENT '状态 0:禁用 1:正常 2:待审核',
   `ip` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'ip地址',
   `ip_location` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'ip来源',
   `os` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '登录系统',

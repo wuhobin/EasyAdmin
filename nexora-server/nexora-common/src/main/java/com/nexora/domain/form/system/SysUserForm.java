@@ -3,6 +3,8 @@ package com.nexora.domain.form.system;
 import com.aurora.starter.common.utils.StringUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -24,15 +26,12 @@ public class SysUserForm {
     @Schema(description = "邮箱")
     private String email;
 
-    @Size(min = 6, max = 20, message = "密码长度必须在6到20个字符之间")
     @Schema(description = "密码或重置后的新密码")
     private String password;
 
-    @Size(min = 6, max = 20, message = "旧密码长度必须在6到20个字符之间")
     @Schema(description = "旧密码")
     private String oldPassword;
 
-    @Size(min = 6, max = 20, message = "新密码长度必须在6到20个字符之间")
     @Schema(description = "新密码")
     private String newPassword;
 
@@ -40,7 +39,9 @@ public class SysUserForm {
     @Schema(description = "邮箱验证码")
     private String code;
 
-    @Schema(description = "用户状态")
+    @Min(value = 0, message = "用户状态不能小于0")
+    @Max(value = 2, message = "用户状态不能大于2")
+    @Schema(description = "用户状态：0禁用，1正常，2待审核")
     private Integer status;
 
     @Schema(description = "头像地址")

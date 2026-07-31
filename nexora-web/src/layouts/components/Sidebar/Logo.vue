@@ -10,7 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import logoUrl from '@/assets/brand/nexora-logo.svg'
+import defaultLogoUrl from '@/assets/brand/nexora-logo.svg'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
 
 defineProps({
   size: {
@@ -18,6 +19,9 @@ defineProps({
     default: 32
   }
 })
+
+const publicConfigStore = usePublicConfigStore()
+const logoUrl = computed(() => publicConfigStore.system.siteLogo || defaultLogoUrl)
 </script>
 
 <style scoped>

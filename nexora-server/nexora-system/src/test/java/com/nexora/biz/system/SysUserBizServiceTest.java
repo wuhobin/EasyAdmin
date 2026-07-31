@@ -5,6 +5,8 @@ import com.aurora.starter.verification.mail.MailVerificationSendRequest;
 import com.aurora.starter.verification.mail.MailVerificationService;
 import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
 import com.nexora.constants.CommonConstants;
+import com.nexora.constants.SysUserStatusEnum;
+import com.nexora.config.PasswordPolicyValidator;
 import com.nexora.domain.form.system.SysUserForm;
 import com.nexora.entity.SysUser;
 import com.nexora.cache.SecurityAuthorizationCache;
@@ -24,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,7 +37,7 @@ class SysUserBizServiceTest {
         SysUserService userService = mock(SysUserService.class);
         SysUserBizService service = new SysUserBizService(userService, mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class), mailProvider(null),
-                mock(MailAccountService.class));
+                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setNickname("new-name");
 
@@ -60,7 +63,8 @@ class SysUserBizServiceTest {
         SecurityAuthorizationCache authorizationCache = mock(SecurityAuthorizationCache.class);
         MailAccountService mailAccountService = mock(MailAccountService.class);
         SysUserBizService service = new SysUserBizService(
-                userService, roleService, authorizationCache, mailProvider(null), mailAccountService);
+                userService, roleService, authorizationCache, mailProvider(null), mailAccountService,
+                mock(PasswordPolicyValidator.class));
 
         service.delete(List.of(7, 8));
 
@@ -89,7 +93,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(verificationService),
-                mock(MailAccountService.class));
+                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setEmail(" New@Example.com ");
         form.setCode("123456");
@@ -113,7 +117,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class));
+                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
 
         assertThatThrownBy(() -> service.delete(List.of(1, 7)))
                 .isInstanceOf(BizException.class)
@@ -129,7 +133,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class));
+                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setId(1);
         form.setNickname("Root");
@@ -153,7 +157,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class));
+                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setEmail(" Used@Example.com ");
 
@@ -177,7 +181,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(verificationService),
-                mock(MailAccountService.class));
+                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setEmail("new@example.com");
 
@@ -207,7 +211,7 @@ class SysUserBizServiceTest {
                 roleService,
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class));
+                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setId(7);
         form.setNickname("new-name");
@@ -223,6 +227,89 @@ class SysUserBizServiceTest {
         assertThat(captor.getValue().getNickname()).isEqualTo("new-name");
         assertThat(captor.getValue().getEmail()).isNull();
         assertThat(captor.getValue().getPassword()).isNull();
+    }
+
+    @Test
+    void refusesToAddAUserWithAnUnsupportedStatus() {
+        SysUserService userService = mock(SysUserService.class);
+        SysUserBizService service = new SysUserBizService(
+                userService,
+                mock(SysRoleService.class),
+                mock(SecurityAuthorizationCache.class),
+                mailProvider(null),
+                mock(MailAccountService.class),
+                mock(PasswordPolicyValidator.class));
+        SysUserForm form = new SysUserForm();
+        form.setStatus(3);
+
+        assertThatThrownBy(() -> service.add(form))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining(CommonConstants.USER_STATUS_INVALID_MESSAGE);
+        verify(userService, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void refusesToUpdateAUserWithAnUnsupportedStatus() {
+        SysUserService userService = mock(SysUserService.class);
+        SysUserBizService service = new SysUserBizService(
+                userService,
+                mock(SysRoleService.class),
+                mock(SecurityAuthorizationCache.class),
+                mailProvider(null),
+                mock(MailAccountService.class),
+                mock(PasswordPolicyValidator.class));
+        SysUserForm form = new SysUserForm();
+        form.setId(7);
+        form.setStatus(-1);
+
+        assertThatThrownBy(() -> service.update(form))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining(CommonConstants.USER_STATUS_INVALID_MESSAGE);
+        verify(userService, never()).updateById(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void auditsAPendingUserAndEvictsItsAuthorization() {
+        SysUserService userService = mock(SysUserService.class);
+        SecurityAuthorizationCache authorizationCache = mock(SecurityAuthorizationCache.class);
+        when(userService.getById(7)).thenReturn(SysUser.builder()
+                .id(7).status(SysUserStatusEnum.PENDING.getCode()).build());
+        when(userService.updateById(org.mockito.ArgumentMatchers.any())).thenReturn(true);
+        SysUserBizService service = new SysUserBizService(
+                userService,
+                mock(SysRoleService.class),
+                authorizationCache,
+                mailProvider(null),
+                mock(MailAccountService.class),
+                mock(PasswordPolicyValidator.class));
+
+        service.audit(7);
+
+        ArgumentCaptor<SysUser> captor = ArgumentCaptor.forClass(SysUser.class);
+        verify(userService).updateById(captor.capture());
+        assertThat(captor.getValue().getId()).isEqualTo(7);
+        assertThat(captor.getValue().getStatus()).isEqualTo(SysUserStatusEnum.NORMAL.getCode());
+        verify(authorizationCache).evictUsersAfterCommit(List.of(7));
+    }
+
+    @Test
+    void refusesToAuditAUserThatIsNotPending() {
+        SysUserService userService = mock(SysUserService.class);
+        when(userService.getById(7)).thenReturn(SysUser.builder()
+                .id(7).status(SysUserStatusEnum.NORMAL.getCode()).build());
+        SysUserBizService service = new SysUserBizService(
+                userService,
+                mock(SysRoleService.class),
+                mock(SecurityAuthorizationCache.class),
+                mailProvider(null),
+                mock(MailAccountService.class),
+                mock(PasswordPolicyValidator.class));
+
+        assertThatThrownBy(() -> service.audit(7))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining(CommonConstants.USER_NOT_PENDING_MESSAGE);
+
+        verify(userService, never()).updateById(org.mockito.ArgumentMatchers.any());
     }
 
     @SuppressWarnings("unchecked")

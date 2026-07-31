@@ -2,9 +2,12 @@ package com.nexora.biz.auth;
 
 import com.nexora.domain.form.auth.AuthForm;
 import com.nexora.config.NexoraPermissionProvider;
-import com.nexora.config.SysConfigReader;
+import com.nexora.config.PasswordPolicyValidator;
+import com.nexora.config.SysConfigGroupReader;
+import com.nexora.cache.LoginRetryCache;
 import com.nexora.cache.SecurityAuthorizationCache;
 import com.nexora.constants.CommonConstants;
+import com.nexora.domain.form.system.config.LoginConfigForm;
 import com.nexora.entity.SysUser;
 import com.nexora.service.SysUserService;
 import com.nexora.service.SysRoleService;
@@ -31,12 +34,12 @@ class AuthBizServiceTest {
 
     @Test
     void selectsOneHourTimeoutWhenRememberMeIsFalse() {
-        assertThat(AuthBizService.tokenTimeout(false)).isEqualTo(3_600L);
+        assertThat(LoginSecurityService.tokenTimeout(loginConfig(), false)).isEqualTo(3_600L);
     }
 
     @Test
     void selectsThreeDayTimeoutWhenRememberMeIsTrue() {
-        assertThat(AuthBizService.tokenTimeout(true)).isEqualTo(259_200L);
+        assertThat(LoginSecurityService.tokenTimeout(loginConfig(), true)).isEqualTo(259_200L);
     }
 
     @Test
@@ -122,7 +125,7 @@ class AuthBizServiceTest {
                 "- /auth/image/*/match",
                 "- /auth/password/reset/sendCode",
                 "- /auth/password/reset",
-                "- /sys/config/value/**");
+                "- /sys/config-group/public");
         assertThat(config).doesNotContain("- /auth/info", "- /auth/logout", "- /auth/verify");
     }
 
@@ -139,12 +142,28 @@ class AuthBizServiceTest {
     @SuppressWarnings("unchecked")
     private static AuthBizService createService(
             SysUserService userService, NexoraPermissionProvider permissionProvider) {
+        SysConfigGroupReader configReader = mock(SysConfigGroupReader.class);
+        when(configReader.login()).thenReturn(loginConfig());
         return new AuthBizService(
                 userService,
                 mock(SysRoleService.class),
                 permissionProvider,
-                mock(SysConfigReader.class),
+                configReader,
+                mock(PasswordPolicyValidator.class),
+                new LoginSecurityService(mock(LoginRetryCache.class)),
                 mock(ObjectProvider.class),
                 mock(ImageVerificationService.class));
+    }
+
+    private static LoginConfigForm loginConfig() {
+        LoginConfigForm config = new LoginConfigForm();
+        config.setCaptchaEnabled(false);
+        config.setMaxRetryCount(5);
+        config.setLockTimeMinutes(30);
+        config.setRememberMeEnabled(true);
+        config.setSessionTimeoutSeconds(3_600L);
+        config.setRememberMeTimeoutSeconds(259_200L);
+        config.setSingleLogin(false);
+        return config;
     }
 }

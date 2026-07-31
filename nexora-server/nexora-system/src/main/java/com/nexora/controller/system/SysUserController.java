@@ -103,4 +103,13 @@ public class SysUserController {
     public Result<Boolean> resetPassword(@Valid @RequestBody SysUserForm form) {
         return Result.data(sysUserBizService.resetPassword(form));
     }
+
+    @PutMapping("/audit/{id}")
+    @Operation(summary = "审核通过待审核用户")
+    @OperationLogger("审核通过用户")
+    @SaCheckPermission("sys:user:update")
+    public Result<Void> audit(@PathVariable Integer id) {
+        sysUserBizService.audit(id);
+        return Result.success();
+    }
 }

@@ -2,7 +2,7 @@
   <div class="sidebar-container">
     <div v-if="settingsStore.showLogo" class="logo-container">
       <Logo :size="32" class="logo-icon" :color="settingsStore.themeColor" />
-      <span v-show="!isCollapse" class="logo-text">{{ settings.title }}</span>
+      <span v-show="!isCollapse" class="logo-text">{{ publicConfigStore.system.siteName }}</span>
     </div>
 
     <el-scrollbar class="menu-scrollbar">
@@ -56,10 +56,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { usePermissionStore } from '@/store/modules/permission'
 import { useSettingsStore } from '@/store/modules/settings'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
 import Logo from './Logo.vue'
 import MenuItem from './MenuItem.vue'
 import UserPanel from './UserPanel.vue'
-import settings from '@/config/settings'
 import { isExternal } from '@/utils/validate'
 
 defineProps({
@@ -74,6 +74,7 @@ const route = useRoute()
 const router = useRouter()
 const permissionStore = usePermissionStore()
 const settingsStore = useSettingsStore()
+const publicConfigStore = usePublicConfigStore()
 const COLLAPSED_GROUPS_KEY = 'nexora-sidebar-collapsed-groups'
 const collapsedGroups = ref(new Set<string>())
 

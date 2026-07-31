@@ -1,6 +1,7 @@
 import router from '@/router'
 import { usePermissionStore } from '@/store/modules/permission'
 import { useUserStore, useSettingsStore } from '@/store'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import { getToken } from '@/utils/auth'
@@ -51,8 +52,11 @@ function initializePermission(token: string) {
 export function setupPermission() {
   router.beforeEach(async (to, from, next) => {
     const dynamicTitle = useSettingsStore().dynamicTitle
+    const publicConfigStore = usePublicConfigStore()
     if (dynamicTitle && to.meta.title) {
-      document.title = to.meta.title as string
+      document.title = `${String(to.meta.title)} - ${publicConfigStore.system.siteName}`
+    } else {
+      publicConfigStore.applyDocumentTitle()
     }
     NProgress.start();
     const hasToken = getToken();
@@ -103,4 +107,3 @@ export function setupPermission() {
     NProgress.done();
   });
 }
-
