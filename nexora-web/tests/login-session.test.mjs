@@ -130,6 +130,10 @@ test('profile redesign preserves account editing and avatar upload behavior', ()
   assert.match(profileSource, /v-model="userForm\.nickname"/)
   assert.match(profileSource, /v-model="pwdForm\.oldPassword"/)
   assert.match(profileSource, /:http-request="handleAvatarUpload"/)
+  assert.match(
+    profileSource,
+    /const handleAvatarUpload[\s\S]*?await updateUserProfileApi\([\s\S]*?await userStore\.getUserInfo\(\)/
+  )
   assert.match(profileSource, /@click="submitUserForm"/)
   assert.match(profileSource, /@click="submitPwdForm"/)
   assert.match(profileSource, /@click="openEmailDialog"/)

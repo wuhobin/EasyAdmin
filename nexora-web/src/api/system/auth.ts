@@ -8,7 +8,45 @@ export interface AuthParams {
   source?: string
 }
 
+export type RegisterParams = Pick<AuthParams, 'email' | 'password' | 'code' | 'source'> & {
+  captchaId: string
+}
+
 export type ResetPasswordParams = Pick<AuthParams, 'email' | 'password' | 'code'>
+
+export interface ImageCaptchaResult {
+  id: string
+  type: string
+  backgroundImage: string
+  templateImage: string
+  backgroundImageTag?: string
+  templateImageTag?: string
+  backgroundImageWidth: number
+  backgroundImageHeight: number
+  templateImageWidth: number
+  templateImageHeight: number
+  data?: unknown
+}
+
+export interface ImageCaptchaTrackPoint {
+  x: number
+  y: number
+  t: number
+  type: 'DOWN' | 'MOVE' | 'UP'
+}
+
+export interface ImageCaptchaTrack {
+  bgImageWidth: number
+  bgImageHeight: number
+  templateImageWidth: number
+  templateImageHeight: number
+  startTime: number
+  stopTime: number
+  left: number
+  top: number
+  trackList: ImageCaptchaTrackPoint[]
+  data?: unknown
+}
 
 export interface CurrentUserResult {
   id: number
@@ -40,7 +78,25 @@ export function sendRegisterCodeApi(data: AuthParams): Promise<ApiResponse<void>
   })
 }
 
-export function registerApi(data: AuthParams): Promise<ApiResponse<void>> {
+export function generateImageCaptchaApi(): Promise<ApiResponse<ImageCaptchaResult>> {
+  return request<ImageCaptchaResult>({
+    url: '/auth/image',
+    method: 'post'
+  })
+}
+
+export function matchImageCaptchaApi(
+  captchaId: string,
+  track: ImageCaptchaTrack
+): Promise<ApiResponse<boolean>> {
+  return request<boolean>({
+    url: `/auth/image/${encodeURIComponent(captchaId)}/match`,
+    method: 'post',
+    data: track
+  })
+}
+
+export function registerApi(data: RegisterParams): Promise<ApiResponse<void>> {
   return request<void>({
     url: '/auth/register',
     method: 'post',

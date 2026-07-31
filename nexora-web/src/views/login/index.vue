@@ -255,6 +255,11 @@
         </div>
       </template>
     </el-dialog>
+
+    <SliderCaptcha
+      v-model="captchaDialogVisible"
+      @success="handleImageCaptchaSuccess"
+    />
   </div>
 </template>
 
@@ -264,6 +269,7 @@ import type { FormInstance, FormItemRule, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { Key, Lock, Message, Moon, Sunny } from '@element-plus/icons-vue'
 import logoUrl from '@/assets/brand/nexora-logo.svg'
+import SliderCaptcha from '@/components/SliderCaptcha/index.vue'
 import { useUserStore } from '@/store/modules/user'
 import { useSettingsStore } from '@/store/modules/settings'
 import {
@@ -290,6 +296,7 @@ const loading = ref(false)
 const registering = ref(false)
 const codeSending = ref(false)
 const codeCountdown = ref(0)
+const captchaDialogVisible = ref(false)
 const resetDialogVisible = ref(false)
 const resetCodeSending = ref(false)
 const resetCodeCountdown = ref(0)
@@ -444,10 +451,22 @@ const handleSendRegisterCode = async () => {
 }
 
 const handleRegister = async () => {
+  if (registering.value) return
   if (!registerFormRef.value || !(await registerFormRef.value.validate().catch(() => false))) return
+  captchaDialogVisible.value = true
+}
+
+const handleImageCaptchaSuccess = async (captchaId: string) => {
+  captchaDialogVisible.value = false
   registering.value = true
   try {
-    await registerApi(registerForm)
+    await registerApi({
+      email: registerForm.email,
+      password: registerForm.password,
+      code: registerForm.code,
+      source: registerForm.source,
+      captchaId
+    })
     loginForm.email = registerForm.email
     loginForm.password = ''
     registerForm.password = ''

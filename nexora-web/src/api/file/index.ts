@@ -1,3 +1,4 @@
+import type { AxiosProgressEvent } from 'axios'
 import request from '@/utils/request'
 
 export interface OssFileRecord {
@@ -11,7 +12,6 @@ export interface OssFileRecord {
   platform?: string
   thumbnailUrl?: string
   uploaderId?: number
-  uploaderName?: string
   createTime?: string
 }
 
@@ -31,12 +31,18 @@ export interface PageResult<T> {
 }
 
 // 上传文件
-export function uploadApi(data: any) {
-  return request({
+export function uploadApi(
+  data: FormData,
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
+) {
+  return request<string>({
     url: '/file/upload',
     method: 'post',
-    headers: { "Content-Type": "multipart/articles-data" },
-    data
+    // 覆盖请求实例的 JSON 默认值，由浏览器为 FormData 生成 multipart boundary。
+    headers: { 'Content-Type': undefined },
+    data,
+    timeout: 0,
+    onUploadProgress
   })
 }
 
@@ -63,4 +69,3 @@ export function deleteFileApi(id: number) {
     method: 'delete'
   })
 }
-

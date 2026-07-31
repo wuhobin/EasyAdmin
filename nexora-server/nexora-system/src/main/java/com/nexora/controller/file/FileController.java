@@ -59,10 +59,4 @@ public class FileController {
         return Result.success();
     }
 
-    @Operation(summary = "按 URL 删除文件")
-    @GetMapping("/delete")
-    @SaCheckPermission("sys:file:delete")
-    public Result<Boolean> delete(@RequestParam("url") String url) {
-        return Result.data(fileBizService.deleteByUrl(url));
-    }
 }

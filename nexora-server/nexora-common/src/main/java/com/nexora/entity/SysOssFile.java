@@ -42,6 +42,4 @@ public class SysOssFile extends BaseEntity implements Serializable {
     private String thumbnailUrl;
 
     private Long uploaderId;
-
-    private String uploaderName;
 }

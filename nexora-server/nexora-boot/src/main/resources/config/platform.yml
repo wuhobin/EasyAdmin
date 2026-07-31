@@ -10,6 +10,9 @@ platform:
       code-length: 6
       expire-time: 5m
       cooldown: 60s
+    image:
+      enabled: true
+      type: SLIDER
   redis:
     two-level-cache:
       enabled: true
@@ -31,6 +34,8 @@ platform:
       - /auth/login
       - /auth/register/sendCode
       - /auth/register
+      - /auth/image
+      - /auth/image/*/match
       - /auth/password/reset/sendCode
       - /auth/password/reset
       - /sys/config/value/**

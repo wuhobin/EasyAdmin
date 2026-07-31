@@ -19,6 +19,7 @@ public interface SysUserService extends IService<SysUser> {
     SysUser getByEmail(String email);
 
     /**
-     * 更新用户
+     * 判断头像地址是否正在被用户使用
      */
+    boolean existsByAvatar(String avatar);
 }

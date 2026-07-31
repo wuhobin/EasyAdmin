@@ -19,6 +19,9 @@ public class AuthForm {
     @Schema(description = "邮箱验证码")
     private String code;
 
+    @Schema(description = "图片验证成功后的一次性凭证 ID")
+    private String captchaId;
+
     @Schema(description = "是否记住登录状态")
     private boolean rememberMe;
 

@@ -4,11 +4,14 @@ import com.nexora.biz.auth.AuthBizService;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.nexora.domain.form.auth.AuthForm;
 import com.nexora.domain.vo.auth.LoginUserInfoVo;
+import cloud.tianai.captcha.application.vo.ImageCaptchaVO;
+import cloud.tianai.captcha.validator.common.model.dto.ImageCaptchaTrack;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +34,20 @@ public class AuthController {
     public Result<Void> sendRegisterCode(@Valid @RequestBody AuthForm form) {
         authBizService.sendRegisterCode(form);
         return Result.success();
+    }
+
+    @Operation(summary = "生成注册图片验证码")
+    @PostMapping("/auth/image")
+    public Result<ImageCaptchaVO> generateImageCaptcha() {
+        return Result.data(authBizService.generateImageCaptcha());
+    }
+
+    @Operation(summary = "匹配注册图片验证码轨迹")
+    @PostMapping("/auth/image/{captchaId}/match")
+    public Result<Boolean> matchImageCaptcha(
+            @PathVariable String captchaId,
+            @RequestBody ImageCaptchaTrack track) {
+        return Result.data(authBizService.matchImageCaptcha(captchaId, track));
     }
 
     @Operation(summary = "用户注册")
