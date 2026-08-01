@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-export type ConfigGroupCode = 'system' | 'register' | 'login' | 'password'
+export type ConfigGroupCode = 'system' | 'register' | 'login' | 'password' | 'email'
 
 export interface SystemConfig {
   siteName: string
@@ -41,11 +41,22 @@ export interface PasswordConfig {
   requireSpecial: boolean
 }
 
+export interface EmailConfig {
+  enabled: boolean
+  host: string
+  port: number
+  username: string
+  password: string
+  fromName: string
+  ssl: boolean
+}
+
 export interface ConfigValueByGroup {
   system: SystemConfig
   register: RegisterConfig
   login: LoginConfig
   password: PasswordConfig
+  email: EmailConfig
 }
 
 export interface SysConfigGroupSummary {
@@ -120,5 +131,13 @@ export function refreshConfigGroupCacheApi() {
   return request<void>({
     url: '/sys/config-group/refresh',
     method: 'post'
+  })
+}
+
+export function testConfigEmailApi(to: string) {
+  return request<void>({
+    url: '/sys/config-group/test-email',
+    method: 'post',
+    params: { to }
   })
 }

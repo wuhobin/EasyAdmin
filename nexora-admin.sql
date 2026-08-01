@@ -117,6 +117,7 @@ INSERT INTO `sys_config_group` VALUES (1, 'system', '系统配置', '{"siteName"
 INSERT INTO `sys_config_group` VALUES (2, 'register', '注册配置', '{"enabled":true,"verifyEmail":true,"defaultRoleCode":"user","needAudit":false}', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO `sys_config_group` VALUES (3, 'login', '登录配置', '{"captchaEnabled":false,"maxRetryCount":5,"lockTimeMinutes":30,"rememberMeEnabled":true,"sessionTimeoutSeconds":3600,"rememberMeTimeoutSeconds":259200,"singleLogin":false}', 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO `sys_config_group` VALUES (4, 'password', '密码配置', '{"minLength":6,"maxLength":20,"requireUppercase":false,"requireLowercase":false,"requireNumber":false,"requireSpecial":false}', 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `sys_config_group` VALUES (5, 'email', '邮箱配置', '{"enabled":false,"host":"","port":465,"username":"","password":"","fromName":"Nexora Admin","ssl":true}', 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- ----------------------------
 -- Table structure for sys_dict

@@ -1,5 +1,6 @@
 package com.nexora.constants;
 
+import com.nexora.domain.form.system.config.EmailConfigForm;
 import com.nexora.domain.form.system.config.LoginConfigForm;
 import com.nexora.domain.form.system.config.PasswordConfigForm;
 import com.nexora.domain.form.system.config.RegisterConfigForm;
@@ -15,7 +16,8 @@ public enum SysConfigGroupEnum {
     SYSTEM("system", "系统配置", SystemConfigForm.class),
     REGISTER("register", "注册配置", RegisterConfigForm.class),
     LOGIN("login", "登录配置", LoginConfigForm.class),
-    PASSWORD("password", "密码配置", PasswordConfigForm.class);
+    PASSWORD("password", "密码配置", PasswordConfigForm.class),
+    EMAIL("email", "邮箱配置", EmailConfigForm.class);
 
     private static final Set<String> CODES = Arrays.stream(values())
             .map(SysConfigGroupEnum::getCode)

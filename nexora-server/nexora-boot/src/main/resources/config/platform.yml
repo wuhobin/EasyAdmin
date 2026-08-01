@@ -4,9 +4,8 @@ platform:
   verification:
     key-prefix: nexora:verification
     mail:
-      enabled: ${MAIL_VERIFICATION_ENABLED:false}
-      from: ${SMTP_FROM:${SMTP_USERNAME:}}
-      from-name: ${SMTP_FROM_NAME:Nexora Admin}
+      # 验证码基础设施固定启用，实际发送由数据库 email.enabled 控制
+      enabled: true
       code-length: 6
       expire-time: 5m
       cooldown: 60s

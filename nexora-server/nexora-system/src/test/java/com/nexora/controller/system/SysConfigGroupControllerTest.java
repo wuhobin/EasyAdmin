@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.nexora.annotation.OperationLogger;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,5 +44,19 @@ class SysConfigGroupControllerTest {
         assertThat(mapping.value()).containsExactly("/{groupCode}");
         assertThat(permission.value()).containsExactly("sys:config:update");
         assertThat(method.getAnnotation(OperationLogger.class)).isNull();
+    }
+
+    @Test
+    void testEmailRequiresConfigurationUpdatePermission() throws Exception {
+        var method = SysConfigGroupController.class.getDeclaredMethod(
+                "testEmail", String.class);
+        PostMapping mapping = method.getAnnotation(PostMapping.class);
+        SaCheckPermission permission = method.getAnnotation(SaCheckPermission.class);
+        var parameter = method.getParameters()[0];
+
+        assertThat(mapping.value()).containsExactly("/test-email");
+        assertThat(permission.value()).containsExactly("sys:config:update");
+        assertThat(parameter.isAnnotationPresent(RequestParam.class)).isTrue();
+        assertThat(parameter.isAnnotationPresent(RequestBody.class)).isFalse();
     }
 }

@@ -1,5 +1,6 @@
 package com.nexora.constants;
 
+import com.nexora.domain.form.system.config.EmailConfigForm;
 import com.nexora.domain.form.system.config.LoginConfigForm;
 import com.nexora.domain.form.system.config.PasswordConfigForm;
 import com.nexora.domain.form.system.config.RegisterConfigForm;
@@ -28,6 +29,10 @@ class SysConfigGroupEnumTest {
                 .extracting(SysConfigGroupEnum::getCode, SysConfigGroupEnum::getDescription,
                         SysConfigGroupEnum::getConfigType)
                 .containsExactly("password", "密码配置", PasswordConfigForm.class);
+        assertThat(SysConfigGroupEnum.EMAIL)
+                .extracting(SysConfigGroupEnum::getCode, SysConfigGroupEnum::getDescription,
+                        SysConfigGroupEnum::getConfigType)
+                .containsExactly("email", "邮箱配置", EmailConfigForm.class);
     }
 
     @Test
@@ -35,6 +40,6 @@ class SysConfigGroupEnumTest {
         assertThat(SysConfigGroupEnum.getByCode("register")).isEqualTo(SysConfigGroupEnum.REGISTER);
         assertThat(SysConfigGroupEnum.getByCode("unknown")).isNull();
         assertThat(SysConfigGroupEnum.codes())
-                .containsExactlyInAnyOrder("system", "register", "login", "password");
+                .containsExactlyInAnyOrder("system", "register", "login", "password", "email");
     }
 }

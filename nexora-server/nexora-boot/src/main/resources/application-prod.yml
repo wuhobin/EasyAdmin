@@ -29,15 +29,6 @@ spring:
           max-active: 32
           max-idle: 16
           min-idle: 8
-  mail:
-    host: ${SMTP_HOST:}
-    port: ${SMTP_PORT:465}
-    username: ${SMTP_USERNAME:}
-    password: ${SMTP_PASSWORD:}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.ssl.enable: true
-
 knife4j:
   enable: ${knife4j.enable:false}
   basic:

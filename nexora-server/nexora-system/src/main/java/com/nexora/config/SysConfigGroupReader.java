@@ -4,6 +4,7 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.cache.SysConfigGroupCache;
 import com.nexora.constants.CommonConstants;
 import com.nexora.constants.SysConfigGroupEnum;
+import com.nexora.domain.form.system.config.EmailConfigForm;
 import com.nexora.domain.form.system.config.LoginConfigForm;
 import com.nexora.domain.form.system.config.PasswordConfigForm;
 import com.nexora.domain.form.system.config.RegisterConfigForm;
@@ -34,6 +35,10 @@ public class SysConfigGroupReader {
 
     public PasswordConfigForm password() {
         return read(SysConfigGroupEnum.PASSWORD.getCode(), PasswordConfigForm.class);
+    }
+
+    public EmailConfigForm email() {
+        return read(SysConfigGroupEnum.EMAIL.getCode(), EmailConfigForm.class);
     }
 
     public <T> T read(String groupCode, Class<T> valueType) {

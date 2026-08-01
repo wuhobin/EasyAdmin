@@ -57,8 +57,12 @@
           v-model="forms.login"
         />
         <PasswordConfigForm
-          v-else
+          v-else-if="activeGroup === 'password'"
           v-model="forms.password"
+        />
+        <EmailConfigForm
+          v-else-if="activeGroup === 'email'"
+          v-model="forms.email"
         />
       </el-form>
     </el-card>
@@ -78,6 +82,7 @@ import {
   type SysConfigGroupSummary
 } from '@/api/system/config'
 import { usePublicConfigStore } from '@/store/modules/publicConfig'
+import EmailConfigForm from './components/EmailConfigForm.vue'
 import LoginConfigForm from './components/LoginConfigForm.vue'
 import PasswordConfigForm from './components/PasswordConfigForm.vue'
 import RegisterConfigForm from './components/RegisterConfigForm.vue'
@@ -118,6 +123,15 @@ const forms = reactive<ConfigValueByGroup>({
     requireLowercase: false,
     requireNumber: false,
     requireSpecial: false
+  },
+  email: {
+    enabled: false,
+    host: '',
+    port: 465,
+    username: '',
+    password: '',
+    fromName: 'Nexora Admin',
+    ssl: true
   }
 })
 
@@ -126,7 +140,8 @@ const labelWidths: Record<ConfigGroupCode, string> = {
   system: '120px',
   register: '120px',
   login: '180px',
-  password: '150px'
+  password: '150px',
+  email: '120px'
 }
 const summaries = ref<SysConfigGroupSummary[]>([])
 const loading = ref(false)
@@ -190,6 +205,39 @@ const rulesByGroup: Record<ConfigGroupCode, FormRules> = {
       },
       trigger: 'change'
     }]
+  },
+  email: {
+    host: [{
+      validator: (_rule, value: string, callback) => {
+        if (forms.email.enabled && !value.trim()) {
+          callback(new Error('请输入 SMTP 服务器'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }],
+    username: [{
+      validator: (_rule, value: string, callback) => {
+        if (forms.email.enabled && !value.trim()) {
+          callback(new Error('请输入 SMTP 用户名'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }],
+    password: [{
+      validator: (_rule, value: string, callback) => {
+        if (forms.email.enabled && !value.trim()) {
+          callback(new Error('请输入 SMTP 密码或授权码'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }],
+    fromName: [{ max: 100, message: '发件人名称不能超过 100 个字符', trigger: 'blur' }]
   }
 }
 
@@ -207,14 +255,16 @@ const groupLoaders: Record<ConfigGroupCode, () => Promise<void>> = {
   system: () => loadTypedGroup('system', forms.system),
   register: () => loadTypedGroup('register', forms.register),
   login: () => loadTypedGroup('login', forms.login),
-  password: () => loadTypedGroup('password', forms.password)
+  password: () => loadTypedGroup('password', forms.password),
+  email: () => loadTypedGroup('email', forms.email)
 }
 
 const groupSavers: Record<ConfigGroupCode, () => Promise<unknown>> = {
   system: () => updateConfigGroupApi('system', forms.system),
   register: () => updateConfigGroupApi('register', forms.register),
   login: () => updateConfigGroupApi('login', forms.login),
-  password: () => updateConfigGroupApi('password', forms.password)
+  password: () => updateConfigGroupApi('password', forms.password),
+  email: () => updateConfigGroupApi('email', forms.email)
 }
 
 async function loadGroup(groupCode: ConfigGroupCode) {

@@ -3,6 +3,7 @@ package com.nexora.config;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.cache.SysConfigGroupCache;
 import com.nexora.constants.SysConfigGroupEnum;
+import com.nexora.domain.form.system.config.EmailConfigForm;
 import com.nexora.domain.form.system.config.RegisterConfigForm;
 import com.nexora.service.SysConfigGroupService;
 import org.junit.jupiter.api.Test;
@@ -46,5 +47,18 @@ class SysConfigGroupReaderTest {
         assertThatThrownBy(() -> reader.read("register", RegisterConfigForm.class))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining("register");
+    }
+
+    @Test
+    void readsTheEmailConfigurationGroup() {
+        String json = "{\"enabled\":false}";
+        EmailConfigForm expected = new EmailConfigForm();
+        expected.setEnabled(false);
+        when(registry.normalizeCode("email")).thenReturn("email");
+        when(configCache.get(eq("email"), any())).thenReturn(json);
+        when(registry.parse("email", json, EmailConfigForm.class)).thenReturn(expected);
+
+        assertThat(reader.email()).isSameAs(expected);
+        verify(configCache).get(eq(SysConfigGroupEnum.EMAIL.getCode()), any());
     }
 }

@@ -29,15 +29,6 @@ spring:
           max-idle: 8
           # 最小空闲连接数 默认0
           min-idle: 0
-  mail:
-    host: ${SMTP_HOST:}
-    port: ${SMTP_PORT:465}
-    username: ${SMTP_USERNAME:}
-    password: ${SMTP_PASSWORD:}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.ssl.enable: true
-
 # knife4j Basic 认证（环境相关：dev/prod 账号密码不同）
 knife4j:
   basic:

@@ -18,9 +18,9 @@ class SysConfigGroupRegistryTest {
     private final SysConfigGroupRegistry registry = new SysConfigGroupRegistry(objectMapper, validator);
 
     @Test
-    void exposesOnlyTheFourFixedGroups() {
+    void exposesOnlyTheFiveFixedGroups() {
         assertThat(registry.supportedCodes())
-                .containsExactlyInAnyOrder("system", "register", "login", "password");
+                .containsExactlyInAnyOrder("system", "register", "login", "password", "email");
     }
 
     @Test
@@ -59,6 +59,26 @@ class SysConfigGroupRegistryTest {
         assertThatThrownBy(() -> registry.normalize("password", input))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining("密码最大长度不能小于最小长度");
+    }
+
+    @Test
+    void requiresSmtpConnectionFieldsOnlyWhenEmailIsEnabled() {
+        ObjectNode input = objectMapper.createObjectNode()
+                .put("enabled", true)
+                .put("host", "")
+                .put("port", 465)
+                .put("username", "")
+                .put("password", "")
+                .put("fromName", "Nexora Admin")
+                .put("ssl", true);
+
+        assertThatThrownBy(() -> registry.normalize("email", input))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("启用邮件时必须填写SMTP服务器、用户名和密码");
+
+        input.put("enabled", false);
+        assertThat(registry.normalize("email", input).json())
+                .doesNotContain("connectionCompleteWhenEnabled");
     }
 
     @Test

@@ -189,6 +189,10 @@ public class CommonConstants {
     public static final String CONFIG_GROUP_CACHE_UNAVAILABLE_MESSAGE =
             "Redis 不可用，无法安全更新配置缓存";
 
+    public static final String SYSTEM_MAIL_DISABLED_MESSAGE = "邮件服务未启用";
+
+    public static final String TEST_EMAIL_SEND_FAILED_MESSAGE = "测试邮件发送失败：%s";
+
     public static final String MAIL_PROVIDER_DICT_TYPE = "mail_provider";
 
     public static final String MAIL_ACCOUNT_AUTH_CODE_REQUIRED_MESSAGE = "新增邮箱时授权码不能为空";
