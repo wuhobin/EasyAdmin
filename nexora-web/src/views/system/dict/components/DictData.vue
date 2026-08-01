@@ -1,5 +1,6 @@
 <template>
-  <div class="dict-data">
+  <div class="dict-data data-list-subpanel">
+    <div class="data-list-toolbar">
     <ButtonGroup>
       <el-button
         v-permission="['sys:dict:add']"
@@ -12,20 +13,24 @@
       <el-button
         v-permission="['sys:dict:delete']"
         type="danger"
+        plain
         icon="Delete"
         :disabled="selectedIds.length === 0"
         @click="handleBatchDelete"
       >批量删除</el-button>
     </ButtonGroup>
+    </div>
 
     <el-table
+      class="data-list-table"
       :data="dictDataList"
-      style="width: 100%; margin-top: 20px;"
+      style="width: 100%;"
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="字典标签" prop="label" />
-      <el-table-column label="字典键值" prop="value" />
+      <el-table-column label="ID" prop="id" width="90" align="center" />
+      <el-table-column label="字典标签" prop="label" min-width="140" show-overflow-tooltip />
+      <el-table-column label="字典键值" prop="value" min-width="140" show-overflow-tooltip />
       <el-table-column label="排序" prop="sort" width="80" align="center" />
       <el-table-column label="状态" align="center" width="100">
         <template #default="{ row }">
@@ -47,7 +52,7 @@
     </el-table>
 
     <!-- 添加分页组件 -->
-    <div class="pagination-container">
+    <div class="pagination-container data-list-pagination">
       <el-pagination
         background
         v-model:current-page="queryParams.pageNum"
@@ -316,9 +321,4 @@ if (props.dictId) {
   gap: 12px;
 }
 
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-</style> 
+</style>

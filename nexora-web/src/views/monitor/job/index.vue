@@ -1,6 +1,7 @@
 <template>
-  <div class="app-container">
-    <div class="search-wrapper">
+  <div class="app-container data-list-page">
+    <el-card class="data-list-card" shadow="never">
+    <div class="search-wrapper data-list-filters">
       <!-- 搜索工具栏 -->
       <el-form :model="queryParams" ref="queryFormRef" :inline="true">
         <el-form-item label="任务名称" prop="jobName">
@@ -32,15 +33,13 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleQuery">搜索</el-button>
-          <el-button @click="resetQuery">重置</el-button>
+          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
-    <el-card>
       <!-- 操作工具栏 -->
-      <template #header>
-        <div class="card-header">
+        <div class="card-header data-list-toolbar">
           <el-button
             v-permission="['sys:job:add']"
             type="primary"
@@ -50,35 +49,35 @@
           <el-button
             v-permission="['sys:job:deleteBatch']"
             type="danger"
+            plain
             icon="Delete"
             :disabled="!selectedIds.length"
             @click="handleBatcheDelete"
           >批量删除</el-button>
           <el-button
-            type="info"
             icon="Document"
             @click="handleLog"
           >日志</el-button>
         </div>
-      </template>
 
       <!-- 数据表格 -->
       <el-table
+        class="data-list-table"
         v-loading="loading"
         :data="jobList"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="任务编号" align="center" prop="jobId" />
-        <el-table-column label="任务名称" align="center" prop="jobName" :show-overflow-tooltip="true" />
+        <el-table-column label="ID" prop="jobId" width="90" align="center" />
+        <el-table-column label="任务名称" prop="jobName" min-width="150" :show-overflow-tooltip="true" />
         <el-table-column label="任务组名" align="center" prop="jobGroup">
           <template #default="{ row }">
             {{ jobGroupFormat(row) }}
           </template>
         </el-table-column>
-        <el-table-column label="调用目标字符串" align="center" prop="invokeTarget" :show-overflow-tooltip="true" />
-        <el-table-column label="cron执行表达式" align="center" prop="cronExpression" :show-overflow-tooltip="true" />
-        <el-table-column label="状态" align="center" v-permission="['sys:job:update']">
+        <el-table-column label="调用目标字符串" prop="invokeTarget" min-width="220" :show-overflow-tooltip="true" />
+        <el-table-column label="Cron 表达式" prop="cronExpression" min-width="180" :show-overflow-tooltip="true" />
+        <el-table-column label="状态" align="center" width="88" v-permission="['sys:job:update']">
           <template #default="{ row }">
             <el-switch
               v-model="row.status"
@@ -88,10 +87,10 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" width="250">
+        <el-table-column label="操作" align="center" width="230" fixed="right">
           <template #default="{ row }">
             <el-button
-              type="info"
+              type="primary"
               link
               icon="VideoPlay"
               @click="handleRun(row)"
@@ -115,7 +114,7 @@
       </el-table>
 
       <!-- 分页 -->
-      <div class="pagination-container">
+      <div class="pagination-container data-list-pagination">
         <el-pagination
           background
           v-model:current-page="queryParams.pageNum"

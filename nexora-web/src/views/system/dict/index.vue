@@ -1,7 +1,8 @@
 <template>
-  <div class="dict-container">
+  <div class="dict-container data-list-page">
+    <el-card class="box-card data-list-card" shadow="never">
     <!-- 搜索表单 -->
-    <div class="search-wrapper">
+    <div class="search-wrapper data-list-filters">
       <!-- 搜索区域 -->
       <el-form :inline="true" :model="queryParams" class="search-form">
         <el-form-item label="字典名称">
@@ -29,9 +30,7 @@
       </el-form>
     </div>
 
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
+      <div class="card-header data-list-toolbar">
           <ButtonGroup>
             <el-button
               v-permission="['sys:dict:add']"
@@ -42,36 +41,38 @@
             <el-button
               v-permission="['sys:dict:delete']"
               type="danger"
+              plain
               icon="Delete"
               :disabled="selectedIds.length === 0"
               @click="handleBatchDelete"
             >批量删除</el-button>
           </ButtonGroup>
         </div>
-      </template>
 
       <!-- 表格区域 -->
       <el-table
+        class="data-list-table"
         v-loading="loading"
         :data="dictList"
         @selection-change="handleSelectionChange"
         style="width: 100%"
       >
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="字典名称" prop="name" align="center"/>
-        <el-table-column label="字典类型" prop="type" align="center"/>
-        <el-table-column label="状态" align="center">
+        <el-table-column label="ID" prop="id" width="90" align="center" />
+        <el-table-column label="字典名称" prop="name" min-width="160" show-overflow-tooltip />
+        <el-table-column label="字典类型" prop="type" min-width="180" show-overflow-tooltip />
+        <el-table-column label="状态" align="center" width="88">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'">
               {{ row.status === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="备注" align="center" prop="remark" show-overflow-tooltip />
-        <el-table-column label="创建时间" align="center" prop="createTime" width="200" />
-        <el-table-column label="操作" width="250" align="center">
+        <el-table-column label="备注" prop="remark" min-width="180" show-overflow-tooltip />
+        <el-table-column label="创建时间" align="center" prop="createTime" width="180" />
+        <el-table-column label="操作" width="220" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button icon="List" type="success" link @click="handleData(row)">
+            <el-button icon="List" type="primary" link @click="handleData(row)">
               字典数据
             </el-button>
             <el-button
@@ -97,7 +98,7 @@
       </el-table>
 
       <!-- 分页区域 -->
-      <div class="pagination-container">
+      <div class="pagination-container data-list-pagination">
         <el-pagination
           background
           v-model:current-page="queryParams.pageNum"
@@ -376,16 +377,9 @@ getList()
 </script>
 
 <style scoped>
-
-.search-form {
-  margin-bottom: 20px;
-}
-
-
-
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
-</style> 
+</style>

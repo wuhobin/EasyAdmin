@@ -1,51 +1,37 @@
 <template>
   <main class="config-page">
-    <header class="page-header">
-      <div>
-        <p class="eyebrow">SYSTEM CONFIGURATION</p>
-        <h1>系统配置</h1>
-        <p class="page-description">按业务分组维护运行参数。每次保存会整组覆盖，并立即刷新对应缓存。</p>
-      </div>
-      <div class="header-actions">
-        <el-button
-          v-permission="['sys:config:update']"
-          icon="Refresh"
-          :loading="refreshing"
-          @click="refreshCache"
-        >
-          刷新缓存
-        </el-button>
-        <el-button
-          v-permission="['sys:config:update']"
-          type="primary"
-          icon="Check"
-          :loading="saving"
-          @click="saveCurrentGroup"
-        >
-          保存当前分组
-        </el-button>
-      </div>
-    </header>
-
     <el-card class="config-card" shadow="never">
-      <el-tabs v-model="activeGroup" class="config-tabs" @tab-change="changeGroup">
-        <el-tab-pane
-          v-for="tab in tabs"
-          :key="tab.groupCode"
-          :name="tab.groupCode"
-          :label="tab.groupName"
-        />
-      </el-tabs>
-
-      <div class="group-heading">
-        <div class="group-mark">{{ activeTab.short }}</div>
-        <div>
-          <h2>{{ activeSummary?.groupName }}</h2>
-          <p>{{ activeTab.description }}</p>
-        </div>
+      <div class="config-toolbar">
+        <el-tabs v-model="activeGroup" class="config-tabs" @tab-change="changeGroup">
+          <el-tab-pane
+            v-for="tab in summaries"
+            :key="tab.groupCode"
+            :name="tab.groupCode"
+            :label="tab.groupName"
+          />
+        </el-tabs>
         <span v-if="activeSummary?.updateTime" class="update-time">
           最近更新 {{ activeSummary.updateTime }}
         </span>
+        <div class="header-actions">
+          <el-button
+            v-permission="['sys:config:update']"
+            icon="Refresh"
+            :loading="refreshing"
+            @click="refreshCache"
+          >
+            刷新缓存
+          </el-button>
+          <el-button
+            v-permission="['sys:config:update']"
+            type="primary"
+            icon="Check"
+            :loading="saving"
+            @click="saveCurrentGroup"
+          >
+            保存当前分组
+          </el-button>
+        </div>
       </div>
 
       <el-form
@@ -53,7 +39,8 @@
         v-loading="loading"
         :model="activeForm"
         :rules="activeRules"
-        label-position="top"
+        label-position="right"
+        :label-width="labelWidths[activeGroup]"
         class="config-form"
         @submit.prevent
       >
@@ -96,18 +83,6 @@ import PasswordConfigForm from './components/PasswordConfigForm.vue'
 import RegisterConfigForm from './components/RegisterConfigForm.vue'
 import SystemConfigForm from './components/SystemConfigForm.vue'
 
-interface TabMetadata {
-  short: string
-  description: string
-}
-
-const tabMetadata: Record<ConfigGroupCode, TabMetadata> = {
-  system: { short: '01', description: '站点品牌、合规信息与全局水印' },
-  register: { short: '02', description: '注册入口、邮箱验证、默认角色与审核流程' },
-  login: { short: '03', description: '滑块验证、失败锁定、会话时长与单点登录' },
-  password: { short: '04', description: '统一的新密码长度和复杂度要求' }
-}
-
 const forms = reactive<ConfigValueByGroup>({
   system: {
     siteName: '',
@@ -147,6 +122,12 @@ const forms = reactive<ConfigValueByGroup>({
 })
 
 const activeGroup = ref<ConfigGroupCode>('system')
+const labelWidths: Record<ConfigGroupCode, string> = {
+  system: '120px',
+  register: '120px',
+  login: '180px',
+  password: '150px'
+}
 const summaries = ref<SysConfigGroupSummary[]>([])
 const loading = ref(false)
 const saving = ref(false)
@@ -154,14 +135,9 @@ const refreshing = ref(false)
 const formRef = ref<FormInstance>()
 const publicConfigStore = usePublicConfigStore()
 
-const tabs = computed(() => summaries.value.map(summary => ({
-  ...summary,
-  ...tabMetadata[summary.groupCode]
-})))
 const activeSummary = computed(() =>
   summaries.value.find(group => group.groupCode === activeGroup.value)
 )
-const activeTab = computed(() => tabMetadata[activeGroup.value])
 const activeForm = computed(() => forms[activeGroup.value])
 
 const requiredText = (message: string, max: number) => [
@@ -303,122 +279,120 @@ onMounted(() => void loadPage())
 
 <style scoped lang="scss">
 .config-page {
+  --config-surface: var(--el-bg-color, #fff);
+  --config-ink: var(--el-text-color-primary, #18212f);
+  --config-muted: var(--el-text-color-secondary, #697586);
+  --config-border: color-mix(in srgb, var(--el-border-color-light, #e5eaf2) 88%, var(--el-color-primary) 12%);
+  --config-soft: color-mix(in srgb, var(--el-color-primary) 4%, var(--config-surface));
+
+  width: 100%;
   min-width: 0;
 }
 
-.page-header {
+.config-card {
+  overflow: hidden;
+  min-height: calc(100vh - 140px);
+  background: var(--config-surface);
+  border: 1px solid var(--config-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%), 0 12px 32px -28px rgb(15 23 42 / 36%);
+}
+
+.config-card :deep(.el-card__body) {
+  min-width: 0;
+  padding: 0;
+}
+
+.config-toolbar {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 20px;
+  align-items: center;
+  gap: 16px;
+  min-height: 56px;
+  padding: 0 20px;
+  background: var(--config-surface);
+  border-bottom: 1px solid var(--config-border);
+}
 
-  h1 {
-    margin: 4px 0 6px;
-    color: var(--el-text-color-primary);
-    font-size: 26px;
-    letter-spacing: -0.02em;
+.config-tabs {
+  flex: 1;
+  min-width: 0;
+
+  :deep(.el-tabs__header) {
+    margin-bottom: 0;
   }
-}
 
-.eyebrow {
-  margin: 0;
-  color: var(--el-color-primary);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-}
+  :deep(.el-tabs__nav-wrap::after) {
+    display: none;
+  }
 
-.page-description,
-.group-heading p {
-  margin: 0;
-  color: var(--el-text-color-secondary);
-  line-height: 1.6;
+  :deep(.el-tabs__item) {
+    height: 56px;
+    padding: 0 16px;
+    color: var(--config-muted);
+    font-weight: 600;
+  }
+
+  :deep(.el-tabs__item.is-active) {
+    color: var(--el-color-primary);
+  }
+
+  :deep(.el-tabs__active-bar) {
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+  }
+
+  :deep(.el-tabs__content) {
+    display: none;
+  }
 }
 
 .header-actions {
   display: flex;
   flex-shrink: 0;
+  align-items: center;
   gap: 10px;
 }
 
-.config-card {
-  border-color: var(--el-border-color-lighter);
-}
-
-.config-tabs {
-  :deep(.el-tabs__header) {
-    margin-bottom: 0;
-  }
-}
-
-.group-heading {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 24px 0 20px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-
-  h2 {
-    margin: 0 0 4px;
-    font-size: 18px;
-  }
-}
-
-.group-mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  color: var(--el-color-primary);
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--el-color-primary-light-9);
-  border: 1px solid var(--el-color-primary-light-7);
-  border-radius: 10px;
+.header-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 
 .update-time {
-  margin-left: auto;
-  color: var(--el-text-color-secondary);
+  flex-shrink: 0;
+  color: var(--config-muted);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .config-form {
-  max-width: 980px;
+  width: 100%;
+  max-width: 660px;
+  padding: 20px 24px 16px;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 :deep(.form-section) {
-  padding: 26px 0;
-  border-bottom: 1px solid var(--el-border-color-lighter);
+  padding: 24px 0;
+  border-bottom: 1px solid var(--config-border);
 
   &:last-child {
     border-bottom: 0;
   }
 }
 
-:deep(.section-title) {
-  margin-bottom: 20px;
-
-  h3 {
-    margin: 0 0 5px;
-    font-size: 15px;
-  }
-
-  p {
-    margin: 0;
-    color: var(--el-text-color-secondary);
-    line-height: 1.6;
-  }
+:deep(.section-content) {
+  min-width: 0;
 }
 
 :deep(.form-grid) {
   display: grid;
-  gap: 0 24px;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 :deep(.two-columns) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 :deep(.full-width) {
@@ -428,21 +402,27 @@ onMounted(() => void loadPage())
 :deep(.logo-field) {
   display: flex;
   width: 100%;
+  max-width: 400px;
   gap: 12px;
+}
+
+:deep(.logo-field .el-input) {
+  min-width: 0;
+  flex: 1;
 }
 
 :deep(.logo-preview) {
   display: grid;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
   place-items: center;
   overflow: hidden;
-  color: var(--el-text-color-secondary);
+  color: var(--config-muted);
   font-size: 11px;
-  background: var(--el-fill-color-light);
-  border: 1px solid var(--el-border-color);
-  border-radius: 8px;
+  background: var(--config-soft);
+  border: 1px solid var(--config-border);
+  border-radius: 7px;
 
   img {
     width: 100%;
@@ -451,77 +431,133 @@ onMounted(() => void loadPage())
   }
 }
 
-:deep(.switch-list) {
-  margin-bottom: 22px;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 10px;
+:deep(.form-hint) {
+  margin-left: 12px;
+  color: var(--config-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-:deep(.switch-row) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  min-height: 66px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-
-  &:last-child {
-    border-bottom: 0;
-  }
-
-  strong,
-  span {
-    display: block;
-  }
-
-  strong {
-    margin-bottom: 4px;
-    color: var(--el-text-color-primary);
-    font-size: 14px;
-  }
-
-  span {
-    color: var(--el-text-color-secondary);
-    font-size: 12px;
-    line-height: 1.5;
-  }
+:deep(.el-form-item__label) {
+  color: var(--el-text-color-regular);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-:deep(.compact-field) {
-  max-width: 460px;
+:deep(.el-input),
+:deep(.el-textarea),
+:deep(.el-select),
+:deep(.el-input-number),
+:deep(.el-slider),
+:deep(.el-alert) {
+  width: 100%;
+  max-width: 400px;
 }
 
-:deep(.field-tip) {
-  margin-top: 6px;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
+:deep(.el-input__wrapper),
+:deep(.el-select__wrapper) {
+  min-height: 36px;
 }
 
 :deep(.el-input-number) {
-  width: 100%;
+  width: 240px;
+  max-width: 100%;
+}
+
+:deep(.el-input-number .el-input__wrapper) {
+  min-height: 38px;
+  padding-right: 56px;
+  padding-left: 14px;
+}
+
+:deep(.el-input-number .el-input__inner) {
+  text-align: left;
+}
+
+:deep(.el-input-number__decrease),
+:deep(.el-input-number__increase) {
+  top: 1px;
+  bottom: 1px;
+  left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: auto;
+  color: var(--config-muted);
+  line-height: normal;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+:deep(.el-input-number__decrease) {
+  right: 28px;
+}
+
+:deep(.el-input-number__increase) {
+  right: 8px;
+}
+
+:deep(.el-input-number__decrease:not(.is-disabled):hover),
+:deep(.el-input-number__increase:not(.is-disabled):hover) {
+  color: var(--el-color-primary);
 }
 
 @media (max-width: 760px) {
-  .page-header {
+  .config-toolbar {
     align-items: stretch;
     flex-direction: column;
+    gap: 0;
+    padding: 0 18px 16px;
   }
 
   .header-actions {
     justify-content: flex-end;
   }
 
-  .group-heading {
-    align-items: flex-start;
-  }
-
   .update-time {
     display: none;
   }
 
+  .config-form {
+    padding: 18px 18px 12px;
+  }
+
+  .config-tabs :deep(.el-tabs__item) {
+    height: 56px;
+    padding: 0 12px;
+  }
+
+  :deep(.el-form-item) {
+    display: block;
+  }
+
+  :deep(.el-form-item__label) {
+    width: auto !important;
+    height: auto;
+    justify-content: flex-start;
+    padding: 0 0 8px;
+    line-height: 1.5;
+  }
+
+  :deep(.el-form-item__content) {
+    margin-left: 0 !important;
+  }
+
   :deep(.two-columns) {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-actions :deep(.el-button) {
+    flex: 1;
+    margin-left: 0;
+  }
+
+  :deep(.form-section) {
+    padding: 22px 0;
   }
 }
 </style>

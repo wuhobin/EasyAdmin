@@ -1,10 +1,6 @@
 <template>
   <section class="form-section">
-    <div class="section-title">
-      <h3>站点信息</h3>
-      <p>用于浏览器标题、侧边栏品牌和公共页面展示。</p>
-    </div>
-    <div class="form-grid two-columns">
+    <div class="section-content form-grid two-columns">
       <el-form-item label="站点名称" prop="siteName">
         <el-input v-model.trim="model.siteName" maxlength="100" />
       </el-form-item>
@@ -37,11 +33,7 @@
   </section>
 
   <section class="form-section">
-    <div class="section-title">
-      <h3>合规信息</h3>
-      <p>页脚会直接展示版权信息和 ICP 备案号。</p>
-    </div>
-    <div class="form-grid two-columns">
+    <div class="section-content form-grid two-columns">
       <el-form-item label="版权信息" prop="copyright">
         <el-input v-model.trim="model.copyright" maxlength="255" />
       </el-form-item>
@@ -52,11 +44,7 @@
   </section>
 
   <section class="form-section">
-    <div class="section-title">
-      <h3>全局水印</h3>
-      <p>开启后对包括管理员在内的所有登录用户强制显示。</p>
-    </div>
-    <div class="form-grid two-columns">
+    <div class="section-content form-grid two-columns">
       <el-form-item label="强制开启水印" prop="watermarkEnabled">
         <el-switch v-model="model.watermarkEnabled" />
       </el-form-item>
@@ -64,14 +52,14 @@
         <el-slider
           v-model="model.watermarkOpacity"
           :min="0.01"
-          :max="0.5"
+          :max="0.3"
           :step="0.01"
-          show-input
-          :show-input-controls="false"
+          style="width: 200px"
         />
+        <span class="form-hint">{{ (model.watermarkOpacity * 100).toFixed(0) }}%</span>
       </el-form-item>
       <el-form-item label="水印内容" prop="watermarkType">
-        <el-select v-model="model.watermarkType">
+        <el-select v-model="model.watermarkType" style="width: 200px">
           <el-option label="用户名" value="username" />
           <el-option label="用户名 + 时间" value="username_time" />
           <el-option label="站点名称" value="sitename" />
@@ -84,6 +72,7 @@
           :disabled="model.watermarkType !== 'custom'"
           maxlength="100"
           placeholder="选择自定义文本时使用"
+          style="width: 300px"
         />
       </el-form-item>
     </div>

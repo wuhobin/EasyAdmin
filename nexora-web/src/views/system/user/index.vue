@@ -1,7 +1,8 @@
 <template>
-  <div class="app-container">
+  <div class="app-container data-list-page">
+    <el-card class="box-card data-list-card" shadow="never">
     <!-- 搜索表单 -->
-    <div class="search-wrapper">
+    <div class="search-wrapper data-list-filters">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="昵称" prop="nickname">
           <el-input
@@ -33,10 +34,8 @@
       </el-form>
     </div>
 
-    <!-- 操作按钮区域 -->
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
+      <!-- 操作按钮区域 -->
+        <div class="card-header data-list-toolbar">
           <ButtonGroup>
             <el-button
               v-permission="['sys:user:add']"
@@ -45,25 +44,27 @@
               @click="handleAdd"
             >新增</el-button>
             <el-button
-             v-permission="['sys:user:delete']"
+              v-permission="['sys:user:delete']"
               type="danger"
+              plain
               icon="Delete"
               :disabled="selectedIds.length === 0"
               @click="handleBatchDelete"
             >批量删除</el-button>
           </ButtonGroup>
         </div>
-      </template>
 
       <!-- 数据表格 -->
       <el-table
+        class="data-list-table"
         v-loading="loading"
         :data="userList"
         style="width: 100%"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" :selectable="row => row.id !== 1" width="55" align="center" />
-        <el-table-column label="头像"  prop="avatar" align="center">
+        <el-table-column label="ID" prop="id" width="90" align="center" />
+        <el-table-column label="头像" prop="avatar" align="center" width="72">
           <template #default="{ row }">
             <el-image
               :src="row.avatar"
@@ -73,15 +74,15 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="昵称" align="center" prop="nickname" show-overflow-tooltip />
-        <el-table-column label="邮箱" align="center" prop="email" min-width="190" show-overflow-tooltip />
-        <el-table-column label="手机号" align="center" prop="mobile" width="130" />
-        <el-table-column label="角色" align="center" min-width="140" show-overflow-tooltip>
+        <el-table-column label="昵称" prop="nickname" min-width="120" show-overflow-tooltip />
+        <el-table-column label="邮箱" prop="email" min-width="190" show-overflow-tooltip />
+        <el-table-column label="手机号" prop="mobile" min-width="150" show-overflow-tooltip />
+        <el-table-column label="角色" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">{{ roleNames(row.roleIds) }}</template>
         </el-table-column>
-        <el-table-column label="登录IP" align="center" prop="ip" show-overflow-tooltip />
-        <el-table-column label="登录地址" align="center" prop="ipLocation" show-overflow-tooltip />
-        <el-table-column label="状态" align="center" width="80">
+        <el-table-column label="登录IP" prop="ip" min-width="130" show-overflow-tooltip />
+        <el-table-column label="登录地址" prop="ipLocation" min-width="140" show-overflow-tooltip />
+        <el-table-column label="状态" align="center" width="88">
           <template #default="{ row }">
             <el-tag :type="statusMeta(row.status).type">
               {{ statusMeta(row.status).label }}
@@ -89,7 +90,7 @@
           </template>
         </el-table-column>
         <el-table-column label="创建时间" align="center" prop="createTime" width="180" />
-        <el-table-column label="操作" align="center" width="360" fixed="right">
+        <el-table-column label="操作" align="center" width="320" fixed="right">
           <template #default="scope">
             <el-button
               v-if="scope.row.status === 2"
@@ -126,7 +127,7 @@
       </el-table>
 
       <!-- 分页组件 -->
-      <div class="pagination-container">
+      <div class="pagination-container data-list-pagination">
         <el-pagination
           v-model:current-page="queryParams.pageNum"
           v-model:page-size="queryParams.pageSize"
@@ -653,11 +654,6 @@ onMounted(() => {
     background: var(--el-fill-color-light);
   }
 
-  .pagination-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
 }
 </style>
 

@@ -1,31 +1,26 @@
 <template>
   <section class="form-section">
-    <div class="section-title">
-      <h3>注册流程</h3>
-      <p>控制匿名注册入口、邮箱验证与新账号审核。</p>
-    </div>
-    <div class="switch-list">
-      <div class="switch-row">
-        <div><strong>开放用户注册</strong><span>关闭后隐藏注册入口并拒绝注册请求。</span></div>
+    <div class="section-content form-grid two-columns">
+      <el-form-item label="开放用户注册" prop="enabled">
         <el-switch v-model="model.enabled" />
-      </div>
-      <div class="switch-row">
-        <div><strong>验证邮箱</strong><span>关闭后注册页不再要求邮箱验证码。</span></div>
+        <span class="form-hint">关闭后隐藏注册入口并拒绝注册请求。</span>
+      </el-form-item>
+      <el-form-item label="验证邮箱" prop="verifyEmail">
         <el-switch v-model="model.verifyEmail" />
-      </div>
-      <div class="switch-row">
-        <div><strong>注册后审核</strong><span>开启后新用户状态为“待审核”，需管理员审核通过。</span></div>
+        <span class="form-hint">关闭后注册页不再要求邮箱验证码。</span>
+      </el-form-item>
+      <el-form-item label="默认角色编码" prop="defaultRoleCode">
+        <el-input
+          v-model.trim="model.defaultRoleCode"
+          maxlength="50"
+          placeholder="例如 user"
+        />
+      </el-form-item>
+      <el-form-item label="注册后审核" prop="needAudit">
         <el-switch v-model="model.needAudit" />
-      </div>
+        <span class="form-hint">开启后新用户需管理员审核通过。</span>
+      </el-form-item>
     </div>
-    <el-form-item label="默认角色编码" prop="defaultRoleCode" class="compact-field">
-      <el-input
-        v-model.trim="model.defaultRoleCode"
-        maxlength="50"
-        placeholder="例如 user"
-      />
-      <div class="field-tip">保存时会校验角色是否存在。</div>
-    </el-form-item>
   </section>
 </template>
 

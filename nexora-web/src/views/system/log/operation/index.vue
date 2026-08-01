@@ -1,7 +1,8 @@
 <template>
-  <div class="app-container">
+  <div class="app-container data-list-page">
+    <el-card class="box-card data-list-card" shadow="never">
      <!-- 搜索表单 -->
-     <div class="search-wrapper">
+     <div class="search-wrapper data-list-filters">
         <el-form :model="queryParams" ref="queryFormRef" :inline="true">
         <el-form-item label="用户ID" prop="userId">
           <el-input
@@ -24,24 +25,23 @@
       </el-form>
      </div>
 
-    <el-card class="box-card">
       <!-- 操作按钮区域 -->
-      <template #header>
-        <div class="card-header">
+        <div class="card-header data-list-toolbar">
           <ButtonGroup>
             <el-button
               v-permission="['sys:operateLog:delete']"
               type="danger"
+              plain
               icon="Delete"
               :disabled="selectedIds.length === 0"
               @click="handleBatchDelete"
             >批量删除</el-button>
           </ButtonGroup>
         </div>
-      </template>
 
       <!-- 表格区域 -->
       <el-table
+        class="data-list-table"
         v-loading="loading"
         :data="logList"
         @selection-change="handleSelectionChange"
@@ -67,6 +67,7 @@
           </template>
         </el-table-column>
         <el-table-column align="center" type="selection" width="55" />
+        <el-table-column prop="id" align="center" width="90" label="ID" />
         <el-table-column
           prop="userId"
           align="center"
@@ -75,9 +76,9 @@
         />
         <el-table-column
           prop="requestUrl"
-          align="center"
-          width="250"
+          min-width="250"
           label="请求接口"
+          show-overflow-tooltip
         />
         <el-table-column
           prop="type"
@@ -93,9 +94,9 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="operationName" align="center" label="接口名" />
-        <el-table-column prop="ip" width="100" align="center" label="IP" />
-        <el-table-column prop="source" align="center" label="IP来源"  width="200"/>
+        <el-table-column prop="operationName" label="接口名" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="ip" min-width="130" label="IP" />
+        <el-table-column prop="source" label="IP来源" min-width="180" show-overflow-tooltip />
         <el-table-column align="center" label="请求耗时" width="150">
           <template #default="scope">
             <span
@@ -119,7 +120,7 @@
       </el-table>
 
       <!-- 分页区域 -->
-      <div class="pagination-container">
+      <div class="pagination-container data-list-pagination">
         <el-pagination
           background
           v-model:current-page="queryParams.pageNum"

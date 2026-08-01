@@ -1,33 +1,29 @@
 <template>
   <section class="form-section">
-    <div class="section-title">
-      <h3>登录保护</h3>
-      <p>登录失败次数使用规范化邮箱计数；安全缓存异常时拒绝登录。</p>
-    </div>
-    <div class="switch-list">
-      <div class="switch-row">
-        <div><strong>登录滑块验证</strong><span>密码校验前先完成滑块，滑块失败不累计密码错误。</span></div>
+    <div class="section-content form-grid two-columns">
+      <el-form-item label="登录滑块验证" prop="captchaEnabled">
         <el-switch v-model="model.captchaEnabled" />
-      </div>
-      <div class="switch-row">
-        <div><strong>允许记住我</strong><span>关闭后即使前端提交记住我，也使用普通会话时长。</span></div>
+        <span class="form-hint">滑块失败不累计密码错误。</span>
+      </el-form-item>
+      <el-form-item label="允许记住我" prop="rememberMeEnabled">
         <el-switch v-model="model.rememberMeEnabled" />
-      </div>
-      <div class="switch-row">
-        <div><strong>单点登录</strong><span>新会话建立前踢出该用户的其他会话。</span></div>
+        <span class="form-hint">关闭后使用普通会话时长。</span>
+      </el-form-item>
+      <el-form-item label="单点登录" prop="singleLogin">
         <el-switch v-model="model.singleLogin" />
-      </div>
+        <span class="form-hint">新会话建立前踢出其他会话。</span>
+      </el-form-item>
     </div>
   </section>
 
   <section class="form-section">
-    <div class="section-title">
-      <h3>重试与会话</h3>
-      <p>时间单位明确区分分钟和秒，避免生产环境误配。</p>
-    </div>
-    <div class="form-grid two-columns">
+    <div class="section-content form-grid two-columns">
       <el-form-item label="最大密码重试次数" prop="maxRetryCount">
-        <el-input-number v-model="model.maxRetryCount" :min="1" :max="20" />
+        <el-input-number
+          v-model="model.maxRetryCount"
+          :min="1"
+          :max="20"
+        />
       </el-form-item>
       <el-form-item label="锁定时间（分钟）" prop="lockTimeMinutes">
         <el-input-number v-model="model.lockTimeMinutes" :min="1" :max="1440" />
