@@ -1,4 +1,4 @@
-package com.nexora.domain.vo.file;
+package com.nexora.file.domain.vo;
 
 import com.aurora.starter.common.utils.DateUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;

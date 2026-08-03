@@ -1,6 +1,6 @@
-package com.nexora.mapper;
+package com.nexora.file.mapper;
 
-import com.nexora.entity.SysOssFile;
+import com.nexora.file.entity.SysOssFile;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 

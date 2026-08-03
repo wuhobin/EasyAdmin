@@ -1,9 +1,9 @@
-package com.nexora.service.impl;
+package com.nexora.file.service.impl;
 
-import com.nexora.domain.query.OssFileQuery;
-import com.nexora.entity.SysOssFile;
-import com.nexora.mapper.SysOssFileMapper;
-import com.nexora.service.SysOssFileService;
+import com.nexora.file.domain.query.OssFileQuery;
+import com.nexora.file.entity.SysOssFile;
+import com.nexora.file.mapper.SysOssFileMapper;
+import com.nexora.file.service.SysOssFileService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;

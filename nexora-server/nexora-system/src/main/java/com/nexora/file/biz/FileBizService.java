@@ -1,12 +1,12 @@
-package com.nexora.biz.file;
+package com.nexora.file.biz;
 
 import com.nexora.constants.CommonConstants;
-import com.nexora.domain.convert.OssFileConvert;
-import com.nexora.domain.form.query.file.OssFileQueryForm;
-import com.nexora.domain.query.OssFileQuery;
-import com.nexora.domain.vo.file.SysOssFileVo;
-import com.nexora.entity.SysOssFile;
-import com.nexora.service.SysOssFileService;
+import com.nexora.file.domain.convert.OssFileConvert;
+import com.nexora.file.domain.form.query.OssFileQueryForm;
+import com.nexora.file.domain.query.OssFileQuery;
+import com.nexora.file.domain.vo.SysOssFileVo;
+import com.nexora.file.entity.SysOssFile;
+import com.nexora.file.service.SysOssFileService;
 import com.nexora.identity.service.SysUserService;
 import com.aurora.starter.common.utils.DateUtils;
 import com.aurora.starter.mybatisplus.model.PageParam;
@@ -14,7 +14,7 @@ import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.task.OssFileRecordRetryTask;
+import com.nexora.file.task.OssFileRecordRetryTask;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import jakarta.servlet.http.HttpServletResponse;

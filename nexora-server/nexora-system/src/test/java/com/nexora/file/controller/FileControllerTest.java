@@ -1,8 +1,8 @@
-package com.nexora.controller.file;
+package com.nexora.file.controller;
 
-import com.nexora.biz.file.FileBizService;
-import com.nexora.domain.form.query.file.OssFileQueryForm;
-import com.nexora.domain.vo.file.SysOssFileVo;
+import com.nexora.file.biz.FileBizService;
+import com.nexora.file.domain.form.query.OssFileQueryForm;
+import com.nexora.file.domain.vo.SysOssFileVo;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.nexora.entity;
+package com.nexora.file.entity;
 
 import com.aurora.starter.mybatisplus.model.BaseEntity;
 import com.baomidou.mybatisplus.annotation.IdType;

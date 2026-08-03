@@ -1,4 +1,4 @@
-package com.nexora.domain.query;
+package com.nexora.file.domain.query;
 
 import com.aurora.starter.mybatisplus.annotation.Operator;
 import com.aurora.starter.mybatisplus.annotation.QueryField;

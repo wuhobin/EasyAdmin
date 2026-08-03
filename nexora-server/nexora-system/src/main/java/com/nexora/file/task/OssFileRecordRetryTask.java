@@ -1,7 +1,7 @@
-package com.nexora.task;
+package com.nexora.file.task;
 
-import com.nexora.entity.SysOssFile;
-import com.nexora.service.SysOssFileService;
+import com.nexora.file.entity.SysOssFile;
+import com.nexora.file.service.SysOssFileService;
 import com.aurora.starter.redis.core.task.DelayedRetryTask;
 import com.aurora.starter.redis.model.DelayRetry;
 import lombok.extern.slf4j.Slf4j;

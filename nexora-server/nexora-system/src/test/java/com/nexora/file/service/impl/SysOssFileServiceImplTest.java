@@ -1,8 +1,8 @@
-package com.nexora.service.impl;
+package com.nexora.file.service.impl;
 
-import com.nexora.domain.query.OssFileQuery;
-import com.nexora.entity.SysOssFile;
-import com.nexora.mapper.SysOssFileMapper;
+import com.nexora.file.domain.query.OssFileQuery;
+import com.nexora.file.entity.SysOssFile;
+import com.nexora.file.mapper.SysOssFileMapper;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

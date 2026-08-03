@@ -1,11 +1,11 @@
-package com.nexora.controller.file;
+package com.nexora.file.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.nexora.biz.file.FileBizService;
-import com.nexora.domain.form.query.file.OssFileQueryForm;
+import com.nexora.file.biz.FileBizService;
+import com.nexora.file.domain.form.query.OssFileQueryForm;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.webmvc.domain.response.Result;
-import com.nexora.domain.vo.file.SysOssFileVo;
+import com.nexora.file.domain.vo.SysOssFileVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

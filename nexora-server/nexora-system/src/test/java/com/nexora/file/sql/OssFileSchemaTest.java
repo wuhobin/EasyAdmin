@@ -1,4 +1,4 @@
-package com.nexora.sql;
+package com.nexora.file.sql;
 
 import org.junit.jupiter.api.Test;
 
