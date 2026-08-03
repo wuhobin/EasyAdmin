@@ -11,10 +11,13 @@ import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
 import com.aurora.starter.security.context.SecurityUtils;
+import com.nexora.file.infrastructure.FileUploadValidator;
 import com.nexora.file.task.OssFileRecordRetryTask;
+import com.aurora.starter.webmvc.exception.BizException;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -23,6 +26,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +41,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mockStatic;
@@ -43,7 +49,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class FileBizServiceTest {
+
+    @Mock
+    private FileUploadValidator fileUploadValidator;
 
     @Mock
     private OssTemplate ossTemplate;
@@ -57,17 +67,23 @@ class FileBizServiceTest {
     @Mock
     private OssFileRecordRetryTask retryTask;
 
+    @BeforeEach
+    void setUp() {
+        lenient().when(fileUploadValidator.validate(any(MultipartFile.class))).thenReturn("image/png");
+    }
+
     @ParameterizedTest(name = "{0}")
     @MethodSource("allowedUploads")
     void acceptsAllowedExtensionsWhenTheDetectedContentTypeMatches(String filename,
                                                                     String expectedContentType,
                                                                     byte[] content) {
+        lenient().when(fileUploadValidator.validate(any(MultipartFile.class))).thenReturn(expectedContentType);
         MockMultipartFile file = new MockMultipartFile(
                 "file", filename, "application/octet-stream", content);
         when(ossTemplate.upload(any(MultipartFile.class), anyString()))
                 .thenReturn(uploadResult("file-123"));
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
@@ -92,7 +108,7 @@ class FileBizServiceTest {
         uploadResult.setContentType("text/html");
         when(ossTemplate.upload(any(MultipartFile.class), anyString())).thenReturn(uploadResult);
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
@@ -111,8 +127,10 @@ class FileBizServiceTest {
 
     @Test
     void rejectsAnUnsupportedExtensionBeforeCallingOss() {
+        lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
+                .thenThrow(new BizException(FileConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE));
         MockMultipartFile file = multipartFile("avatar.bmp", pngBytes());
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
                 .hasMessage(FileConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE);
@@ -122,8 +140,10 @@ class FileBizServiceTest {
 
     @Test
     void rejectsContentDisguisedWithAnAllowedExtensionBeforeCallingOss() {
+        lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
+                .thenThrow(new BizException(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE));
         MockMultipartFile file = multipartFile("document.png", pdfBytes());
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
                 .hasMessage(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE);
@@ -134,8 +154,10 @@ class FileBizServiceTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("nonMp4FtypBrands")
     void rejectsOtherIsoBaseMediaFormatsRenamedAsMp4(String majorBrand) {
+        lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
+                .thenThrow(new BizException(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE));
         MockMultipartFile file = multipartFile("video.mp4", ftypBytes(majorBrand));
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
                 .hasMessage(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE);
@@ -145,9 +167,11 @@ class FileBizServiceTest {
 
     @Test
     void rejectsAFileLargerThanFiftyMegabytesBeforeCallingOss() {
+        lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
+                .thenThrow(new BizException(FileConstants.FILE_TOO_LARGE_MESSAGE));
         MultipartFile file = mock(MultipartFile.class);
         when(file.getSize()).thenReturn(FileConstants.FILE_UPLOAD_MAX_SIZE + 1);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
                 .hasMessage(FileConstants.FILE_TOO_LARGE_MESSAGE);
@@ -163,7 +187,7 @@ class FileBizServiceTest {
         when(file.getInputStream()).thenReturn(new ByteArrayInputStream(pngBytes()));
         when(ossTemplate.upload(any(MultipartFile.class), anyString())).thenReturn(uploadResult("file-123"));
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
@@ -176,8 +200,10 @@ class FileBizServiceTest {
 
     @Test
     void rejectsABlankOriginalFilenameBeforeCallingOss() {
+        lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
+                .thenThrow(new BizException(FileConstants.FILE_NAME_REQUIRED_MESSAGE));
         MockMultipartFile file = multipartFile(" ", pngBytes());
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
                 .hasMessage(FileConstants.FILE_NAME_REQUIRED_MESSAGE);
@@ -191,7 +217,7 @@ class FileBizServiceTest {
         MockMultipartFile file = multipartFile(filename, pngBytes());
         when(ossTemplate.upload(any(MultipartFile.class), anyString())).thenReturn(uploadResult("file-123"));
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
@@ -205,9 +231,11 @@ class FileBizServiceTest {
 
     @Test
     void rejectsAnOriginalFilenameLongerThanTwoHundredFiftyFiveCharacters() {
+        lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
+                .thenThrow(new BizException(FileConstants.FILE_NAME_TOO_LONG_MESSAGE));
         String filename = "a".repeat(252) + ".png";
         MockMultipartFile file = multipartFile(filename, pngBytes());
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
                 .hasMessage(FileConstants.FILE_NAME_TOO_LONG_MESSAGE);
@@ -222,7 +250,7 @@ class FileBizServiceTest {
         OssUploadResult uploadResult = uploadResult("native-id");
         when(ossTemplate.upload(any(MultipartFile.class), anyString())).thenReturn(uploadResult);
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         String url;
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
@@ -244,7 +272,7 @@ class FileBizServiceTest {
         OssUploadResult uploadResult = uploadResult(null);
         when(ossTemplate.upload(any(MultipartFile.class), anyString())).thenReturn(uploadResult);
         when(ossFileService.saveIfAbsent(any())).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
@@ -258,7 +286,7 @@ class FileBizServiceTest {
 
     @Test
     void rejectsUploadBeforeCallingOssWhenTheCurrentUserIsMissing() {
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(0);
@@ -276,7 +304,7 @@ class FileBizServiceTest {
         MockMultipartFile file = file();
         when(ossTemplate.upload(any(MultipartFile.class), anyString())).thenReturn(uploadResult("file-123"));
         when(ossFileService.saveIfAbsent(any())).thenThrow(new IllegalStateException("database unavailable"));
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         String url;
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
@@ -295,7 +323,7 @@ class FileBizServiceTest {
         when(ossFileService.saveIfAbsent(any())).thenReturn(false);
         doThrow(new IllegalStateException("redis unavailable"))
                 .when(retryTask).submit(any(SysOssFile.class));
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
@@ -314,7 +342,7 @@ class FileBizServiceTest {
         form.setUploaderId(99L);
         Page<SysOssFile> page = new Page<>(1, 10);
         when(ossFileService.listFiles(any(), any())).thenReturn(page);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
@@ -333,7 +361,7 @@ class FileBizServiceTest {
         form.setUploaderId(99L);
         Page<SysOssFile> page = new Page<>(1, 10);
         when(ossFileService.listFiles(any(), any())).thenReturn(page);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(true);
@@ -351,7 +379,7 @@ class FileBizServiceTest {
         when(ossFileService.getById(1L)).thenReturn(file);
         when(ossTemplate.delete(any(FileInfo.class))).thenReturn(true);
         when(ossFileService.removeById(1L)).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
@@ -370,7 +398,7 @@ class FileBizServiceTest {
         SysOssFile file = storedFile(1L, 20L);
         when(ossFileService.getById(1L)).thenReturn(file);
         when(sysUserService.isInUse(file.getFileUrl())).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(true);
@@ -387,7 +415,7 @@ class FileBizServiceTest {
     @Test
     void rejectsDeletingAnotherUsersFile() {
         when(ossFileService.getById(1L)).thenReturn(storedFile(1L, 20L));
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
@@ -405,7 +433,7 @@ class FileBizServiceTest {
     @Test
     void reportsTheSameMessageWhenDeletingAMissingFile() {
         when(ossFileService.getById(1L)).thenReturn(null);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.deleteById(1L))
                 .hasMessage(FileConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
@@ -419,7 +447,7 @@ class FileBizServiceTest {
         when(ossFileService.getById(1L)).thenReturn(storedFile(1L, 20L));
         when(ossTemplate.delete(any(FileInfo.class))).thenReturn(true);
         when(ossFileService.removeById(1L)).thenReturn(true);
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(true);
@@ -434,7 +462,7 @@ class FileBizServiceTest {
     @Test
     void rejectsDownloadingAnotherUsersFileWithTheUnifiedMessage() {
         when(ossFileService.getById(1L)).thenReturn(storedFile(1L, 20L));
-        FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
+        FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);

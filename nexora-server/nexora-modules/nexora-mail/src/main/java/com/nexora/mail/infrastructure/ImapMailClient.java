@@ -1,6 +1,5 @@
 package com.nexora.mail.infrastructure;
 
-import com.nexora.mail.domain.vo.MailAttachmentVo;
 import com.nexora.mail.domain.vo.MailMessageDetailVo;
 import com.nexora.mail.domain.vo.MailMessageSummaryVo;
 import com.nexora.mail.entity.MailAccount;
@@ -11,7 +10,6 @@ import jakarta.mail.FetchProfile;
 import jakarta.mail.Flags;
 import jakarta.mail.Folder;
 import jakarta.mail.Message;
-import jakarta.mail.Multipart;
 import jakarta.mail.Part;
 import jakarta.mail.Session;
 import jakarta.mail.Store;
@@ -19,11 +17,8 @@ import jakarta.mail.UIDFolder;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeUtility;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.angus.mail.imap.IMAPStore;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -35,21 +30,18 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
 @Component
+@RequiredArgsConstructor
 public class ImapMailClient {
+    private final MailPartParser mailPartParser;
     private static final int CONNECT_TIMEOUT = 10_000;
     private static final int READ_TIMEOUT = 15_000;
-    private static final int MAX_INLINE_IMAGE_BYTES = 5 * 1024 * 1024;
-    private static final int MAX_INLINE_IMAGE_TOTAL_BYTES = 10 * 1024 * 1024;
     private static final Map<String, String> NETEASE_CLIENT_ID = Map.of(
             "name", "Nexora Admin",
             "version", "1.0",
@@ -118,7 +110,7 @@ public class ImapMailClient {
                         .subject(defaultSubject(message.getSubject()))
                         .receivedTime(toLocalDateTime(message.getReceivedDate()))
                         .read(message.isSet(Flags.Flag.SEEN))
-                        .hasAttachment(hasAttachmentHint(message))
+                        .hasAttachment(MailPartParser.hasAttachmentHint(message))
                         .build());
             }
             result.sort(Comparator.comparing(MailMessageSummaryVo::getReceivedTime,
@@ -135,10 +127,9 @@ public class ImapMailClient {
             if (message == null) {
                 throw new BizException("邮件不存在或已被邮箱服务器删除");
             }
-            ParsedBody parsed = new ParsedBody();
-            parsePart(message, "", parsed);
+            MailPartParser.ParsedBody parsed = mailPartParser.parse(message);
             Sender sender = sender(message.getFrom());
-            String html = parsed.html == null ? null : sanitizeHtml(parsed.html, parsed.inlineImages);
+            String html = parsed.html == null ? null : HtmlSanitizer.sanitizeHtml(parsed.html, parsed.inlineImages);
             return MailMessageDetailVo.builder()
                     .accountId(account.getId())
                     .uid(uid)
@@ -164,7 +155,7 @@ public class ImapMailClient {
             if (message == null) {
                 throw new BizException("邮件不存在或已被邮箱服务器删除");
             }
-            Part part = findPart(message, partId);
+            Part part = mailPartParser.findPart(message, partId);
             String filename = decodedFilename(part.getFileName());
             if (filename == null || filename.isBlank()) {
                 filename = "attachment";
@@ -218,151 +209,6 @@ public class ImapMailClient {
             throw new BizException("当前IMAP客户端不支持网易邮箱要求的ID命令");
         }
         imapStore.id(NETEASE_CLIENT_ID);
-    }
-
-    private static void parsePart(Part part, String path, ParsedBody parsed) throws Exception {
-        if (part.isMimeType("multipart/*")) {
-            Multipart multipart = (Multipart) part.getContent();
-            for (int index = 0; index < multipart.getCount(); index++) {
-                String childPath = path.isEmpty() ? String.valueOf(index + 1) : path + "." + (index + 1);
-                parsePart(multipart.getBodyPart(index), childPath, parsed);
-            }
-            return;
-        }
-
-        String disposition = part.getDisposition();
-        String fileName = decodedFilename(part.getFileName());
-        String contentId = firstHeader(part, "Content-ID");
-        boolean inline = Part.INLINE.equalsIgnoreCase(disposition) || contentId != null;
-        if (inline && part.isMimeType("image/*") && contentId != null) {
-            int remaining = MAX_INLINE_IMAGE_TOTAL_BYTES - parsed.inlineImageBytes;
-            byte[] bytes = remaining <= 0 ? null
-                    : readLimited(part.getInputStream(), Math.min(MAX_INLINE_IMAGE_BYTES, remaining));
-            if (bytes != null) {
-                parsed.inlineImageBytes += bytes.length;
-                String normalizedCid = contentId.replace("<", "").replace(">", "").trim();
-                parsed.inlineImages.put(normalizedCid, "data:" + baseContentType(part.getContentType())
-                        + ";base64," + Base64.getEncoder().encodeToString(bytes));
-            }
-            return;
-        }
-
-        if (Part.ATTACHMENT.equalsIgnoreCase(disposition) || fileName != null) {
-            parsed.attachments.add(MailAttachmentVo.builder()
-                    .partId(path)
-                    .fileName(fileName == null ? "attachment" : fileName)
-                    .contentType(baseContentType(part.getContentType()))
-                    .size(Math.max(part.getSize(), 0))
-                    .build());
-            return;
-        }
-
-        if (part.isMimeType("text/html") && parsed.html == null) {
-            parsed.html = String.valueOf(part.getContent());
-        } else if (part.isMimeType("text/plain")) {
-            String value = String.valueOf(part.getContent());
-            parsed.text = parsed.text == null ? value : parsed.text + "\n" + value;
-        }
-    }
-
-    private static Part findPart(Part root, String partId) throws Exception {
-        if (partId == null || !partId.matches("[1-9]\\d*(\\.[1-9]\\d*)*")) {
-            throw new BizException("附件标识不正确");
-        }
-        Part current = root;
-        for (String segment : partId.split("\\.")) {
-            Object content = current.getContent();
-            if (!(content instanceof Multipart multipart)) {
-                throw new BizException("附件不存在");
-            }
-            int index = Integer.parseInt(segment) - 1;
-            if (index < 0 || index >= multipart.getCount()) {
-                throw new BizException("附件不存在");
-            }
-            current = multipart.getBodyPart(index);
-        }
-        if (current.isMimeType("multipart/*")) {
-            throw new BizException("附件不存在");
-        }
-        return current;
-    }
-
-    static String sanitizeHtml(String html, Map<String, String> inlineImages) {
-        Document source = Jsoup.parse(html);
-        List<Element> headAssets = new ArrayList<>(source.head().select("style,link[rel=stylesheet]"));
-        for (int index = headAssets.size() - 1; index >= 0; index--) {
-            Element asset = headAssets.get(index);
-            asset.remove();
-            source.body().prependChild(asset);
-        }
-
-        source.select("script,iframe,object,embed,input,button,textarea,select,meta,base").remove();
-        source.select("form").unwrap();
-        source.select("link:not([rel=stylesheet])").remove();
-        for (Element element : source.getAllElements()) {
-            List<Attribute> attributes = new ArrayList<>(element.attributes().asList());
-            for (Attribute attribute : attributes) {
-                String key = attribute.getKey().toLowerCase(Locale.ROOT);
-                String value = attribute.getValue().trim();
-                if (key.startsWith("on") || isDangerousAttribute(key, value)) {
-                    element.removeAttr(attribute.getKey());
-                }
-            }
-        }
-        for (Element style : source.select("style")) {
-            String css = style.data().toLowerCase(Locale.ROOT);
-            if (css.contains("expression(") || css.contains("javascript:")) {
-                style.remove();
-            }
-        }
-        for (Element link : source.select("a[href]")) {
-            link.attr("target", "_blank");
-            link.attr("rel", "noopener noreferrer");
-        }
-        for (Element image : source.select("img[src]")) {
-            String src = image.attr("src").trim();
-            String normalizedSrc = src.toLowerCase(Locale.ROOT);
-            if (normalizedSrc.startsWith("cid:")) {
-                String data = inlineImages.get(src.substring(4));
-                if (data == null) {
-                    image.removeAttr("src");
-                } else {
-                    image.attr("src", data);
-                }
-            } else if (src.startsWith("//")) {
-                image.attr("src", "https:" + src);
-                image.attr("referrerpolicy", "no-referrer");
-            } else if (normalizedSrc.startsWith("http://") || normalizedSrc.startsWith("https://")) {
-                image.attr("referrerpolicy", "no-referrer");
-            }
-        }
-        source.outputSettings().prettyPrint(false);
-        return source.body().html();
-    }
-
-    private static boolean isDangerousAttribute(String key, String value) {
-        String normalized = value.replaceAll("[\\x00-\\x20]+", "").toLowerCase(Locale.ROOT);
-        if ("style".equals(key)) {
-            return normalized.contains("expression(") || normalized.contains("javascript:");
-        }
-        if (!List.of("href", "src", "background", "action", "formaction", "xlink:href").contains(key)) {
-            return false;
-        }
-        return normalized.startsWith("javascript:")
-                || normalized.startsWith("vbscript:")
-                || normalized.startsWith("data:text/html");
-    }
-
-    private static byte[] readLimited(InputStream input, int maxBytes) throws IOException {
-        try (input) {
-            byte[] value = input.readNBytes(maxBytes + 1);
-            return value.length > maxBytes ? null : value;
-        }
-    }
-
-    private static boolean hasAttachmentHint(Message message) throws Exception {
-        String contentType = message.getContentType();
-        return contentType != null && contentType.toLowerCase(Locale.ROOT).startsWith("multipart/mixed");
     }
 
     private static Sender sender(Address[] addresses) {
@@ -453,13 +299,5 @@ public class ImapMailClient {
     }
 
     private record Sender(String name, String address) {
-    }
-
-    private static final class ParsedBody {
-        private String html;
-        private String text;
-        private final List<MailAttachmentVo> attachments = new ArrayList<>();
-        private final Map<String, String> inlineImages = new HashMap<>();
-        private int inlineImageBytes;
     }
 }

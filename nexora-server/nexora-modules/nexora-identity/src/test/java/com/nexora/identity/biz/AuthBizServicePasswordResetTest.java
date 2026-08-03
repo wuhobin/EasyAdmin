@@ -3,10 +3,6 @@ package com.nexora.identity.biz;
 import cn.dev33.satoken.secure.BCrypt;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.verification.image.ImageVerificationService;
-import com.aurora.starter.verification.mail.MailContentType;
-import com.aurora.starter.verification.mail.MailVerificationSendRequest;
-import com.aurora.starter.verification.mail.MailVerificationService;
-import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.cache.LoginRetryCache;
@@ -21,11 +17,12 @@ import com.nexora.identity.service.SysUserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
-import org.springframework.beans.factory.ObjectProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -35,17 +32,16 @@ import static org.mockito.Mockito.when;
 class AuthBizServicePasswordResetTest {
 
     private final SysUserService userService = mock(SysUserService.class);
-    private final MailVerificationService verificationService = mock(MailVerificationService.class);
+    private final MailVerificationOrchestrator mailVerificationOrchestrator = mock(MailVerificationOrchestrator.class);
     private final PasswordPolicyValidator passwordPolicyValidator = passwordPolicyValidator();
     private final AuthBizService bizService = new AuthBizService(
             userService,
-            mock(SysRoleService.class),
             mock(NexoraPermissionProvider.class),
             mock(SystemConfigReader.class),
-            passwordPolicyValidator,
             new LoginSecurityService(mock(LoginRetryCache.class)),
-            mailProvider(verificationService),
-            mock(ImageVerificationService.class));
+            mock(ImageVerificationService.class),
+            mock(RegistrationService.class), new PasswordResetService(userService, passwordPolicyValidator, mailVerificationOrchestrator),
+            mailVerificationOrchestrator);
 
     @Test
     void rejectsAnEmailThatIsNotRegistered() {
@@ -54,7 +50,7 @@ class AuthBizServicePasswordResetTest {
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining(IdentityConstants.EMAIL_NOT_REGISTERED_MESSAGE);
 
-        verify(verificationService, never()).send(any());
+        verify(mailVerificationOrchestrator, never()).sendCode(anyString(), any());
     }
 
     @Test
@@ -64,22 +60,19 @@ class AuthBizServicePasswordResetTest {
 
         bizService.sendResetPasswordCode(form(" User@Example.com ", null, null));
 
-        ArgumentCaptor<MailVerificationSendRequest> captor =
-                ArgumentCaptor.forClass(MailVerificationSendRequest.class);
-        verify(verificationService).send(captor.capture());
-        MailVerificationSendRequest request = captor.getValue();
-        assertThat(request.email()).isEqualTo("user@example.com");
-        assertThat(request.scene()).isEqualTo(CommonVerificationScene.RESET_PASSWORD);
-        assertThat(request.subject()).isEqualTo(IdentityConstants.RESET_PASSWORD_EMAIL_SUBJECT);
-        assertThat(request.contentType()).isEqualTo(MailContentType.HTML);
-        assertThat(request.content()).contains("忘记密码验证", "忘记密码", "{code}");
+        ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<CommonVerificationScene> sceneCaptor = ArgumentCaptor.forClass(CommonVerificationScene.class);
+        verify(mailVerificationOrchestrator).sendCode(emailCaptor.capture(), sceneCaptor.capture());
+        assertThat(emailCaptor.getValue()).isEqualTo("user@example.com");
+        assertThat(sceneCaptor.getValue()).isEqualTo(CommonVerificationScene.RESET_PASSWORD);
     }
 
     @Test
     void doesNotChangeThePasswordWhenTheCodeIsInvalid() {
         SysUser user = SysUser.builder().id(7).email("user@example.com").build();
         when(userService.getByEmail("user@example.com")).thenReturn(user);
-        when(verificationService.verifyAndConsume(any())).thenReturn(false);
+        when(mailVerificationOrchestrator.verifyCode(anyString(), any(), anyString()))
+                .thenThrow(new BizException(IdentityConstants.EMAIL_CODE_INVALID_MESSAGE));
 
         assertThatThrownBy(() -> bizService.resetPassword(
                 form("user@example.com", "123456", "new-secret")))
@@ -93,9 +86,8 @@ class AuthBizServicePasswordResetTest {
     void resetsThePasswordAndInvalidatesExistingSessions() {
         SysUser user = SysUser.builder().id(7).email("user@example.com").build();
         when(userService.getByEmail("user@example.com")).thenReturn(user);
-        when(verificationService.verifyAndConsume(new MailVerificationVerifyRequest(
-                "user@example.com", CommonVerificationScene.RESET_PASSWORD, "123456")))
-                .thenReturn(true);
+        when(mailVerificationOrchestrator.verifyCode("user@example.com",
+                CommonVerificationScene.RESET_PASSWORD, "123456")).thenReturn(true);
         when(userService.updateById(any())).thenReturn(true);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
@@ -125,11 +117,4 @@ class AuthBizServicePasswordResetTest {
         return validator;
     }
 
-    @SuppressWarnings("unchecked")
-    private static ObjectProvider<MailVerificationService> mailProvider(
-            MailVerificationService verificationService) {
-        ObjectProvider<MailVerificationService> provider = mock(ObjectProvider.class);
-        when(provider.getIfAvailable()).thenReturn(verificationService);
-        return provider;
-    }
 }

@@ -1,7 +1,7 @@
 package com.nexora.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.nexora.contract.OperationLogger;
+import com.nexora.annotation.OperationLogger;
 import com.nexora.system.biz.SysDictDataBizService;
 import com.nexora.system.domain.form.SysDictDataForm;
 import com.nexora.system.domain.form.SysDictDataQueryForm;

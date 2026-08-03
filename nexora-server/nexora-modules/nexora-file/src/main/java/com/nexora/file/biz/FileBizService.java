@@ -8,6 +8,8 @@ import com.nexora.file.domain.form.OssFileQueryForm;
 import com.nexora.file.domain.query.OssFileQuery;
 import com.nexora.file.domain.vo.SysOssFileVo;
 import com.nexora.file.entity.SysOssFile;
+import com.nexora.file.infrastructure.FileUploadValidator;
+import com.nexora.file.infrastructure.ValidatedMultipartFile;
 import com.nexora.file.service.SysOssFileService;
 import com.aurora.starter.common.utils.DateUtils;
 import com.aurora.starter.mybatisplus.model.PageParam;
@@ -21,7 +23,6 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tika.Tika;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -30,28 +31,23 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.Locale;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FileBizService {
 
-    private static final Tika TIKA = new Tika();
-
+    private final FileUploadValidator fileUploadValidator;
     private final OssTemplate ossTemplate;
     private final SysOssFileService ossFileService;
     private final StoredFileUsageChecker storedFileUsageChecker;
     private final OssFileRecordRetryTask retryTask;
 
     public String upload(MultipartFile file) {
-        String detectedContentType = validateUpload(file);
+        String detectedContentType = fileUploadValidator.validate(file);
         MultipartFile validatedFile = new ValidatedMultipartFile(file, detectedContentType);
         Long uploaderId = currentUploaderId();
         String datePath = DateUtils.parseDateToStr(DateUtils.YYYYMMDD, DateUtils.getNowDate());
@@ -64,48 +60,6 @@ public class FileBizService {
         }
         recordUpload(validatedFile, result, uploaderId, detectedContentType);
         return result.getUrl();
-    }
-
-    private static String validateUpload(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BizException(FileConstants.FILE_EMPTY_MESSAGE);
-        }
-        if (file.getSize() > FileConstants.FILE_UPLOAD_MAX_SIZE) {
-            throw new BizException(FileConstants.FILE_TOO_LARGE_MESSAGE);
-        }
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isBlank()) {
-            throw new BizException(FileConstants.FILE_NAME_REQUIRED_MESSAGE);
-        }
-        if (originalFilename.codePointCount(0, originalFilename.length())
-                > FileConstants.FILE_ORIGINAL_FILENAME_MAX_LENGTH) {
-            throw new BizException(FileConstants.FILE_NAME_TOO_LONG_MESSAGE);
-        }
-        String expectedContentType = expectedContentType(originalFilename);
-        String detectedContentType;
-        try (InputStream inputStream = file.getInputStream()) {
-            detectedContentType = TIKA.detect(inputStream);
-        } catch (IOException exception) {
-            throw new BizException(FileConstants.FILE_CONTENT_DETECTION_FAILED_MESSAGE);
-        }
-        if (!expectedContentType.equals(detectedContentType)) {
-            throw new BizException(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE);
-        }
-        return detectedContentType;
-    }
-
-    private static String expectedContentType(String originalFilename) {
-        int lastSeparator = Math.max(originalFilename.lastIndexOf('/'), originalFilename.lastIndexOf('\\'));
-        int extensionSeparator = originalFilename.lastIndexOf('.');
-        if (extensionSeparator <= lastSeparator || extensionSeparator == originalFilename.length() - 1) {
-            throw new BizException(FileConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE);
-        }
-        String extension = originalFilename.substring(extensionSeparator + 1).toLowerCase(Locale.ROOT);
-        String contentType = FileConstants.FILE_ALLOWED_CONTENT_TYPE_BY_EXTENSION.get(extension);
-        if (contentType == null) {
-            throw new BizException(FileConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE);
-        }
-        return contentType;
     }
 
     public IPage<SysOssFileVo> list(OssFileQueryForm form, PageParam pageParam) {
@@ -261,62 +215,6 @@ public class FileBizService {
                 .thumbnailUrl(result.getThUrl())
                 .uploaderId(uploaderId)
                 .build();
-    }
-
-    private static final class ValidatedMultipartFile implements MultipartFile {
-
-        private final MultipartFile delegate;
-        private final String contentType;
-
-        private ValidatedMultipartFile(MultipartFile delegate, String contentType) {
-            this.delegate = delegate;
-            this.contentType = contentType;
-        }
-
-        @Override
-        public String getName() {
-            return delegate.getName();
-        }
-
-        @Override
-        public String getOriginalFilename() {
-            return delegate.getOriginalFilename();
-        }
-
-        @Override
-        public String getContentType() {
-            return contentType;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return delegate.isEmpty();
-        }
-
-        @Override
-        public long getSize() {
-            return delegate.getSize();
-        }
-
-        @Override
-        public byte[] getBytes() throws IOException {
-            return delegate.getBytes();
-        }
-
-        @Override
-        public InputStream getInputStream() throws IOException {
-            return delegate.getInputStream();
-        }
-
-        @Override
-        public void transferTo(File dest) throws IOException, IllegalStateException {
-            delegate.transferTo(dest);
-        }
-
-        @Override
-        public void transferTo(Path dest) throws IOException, IllegalStateException {
-            delegate.transferTo(dest);
-        }
     }
 
     private static MediaType resolveMediaType(String contentType) {

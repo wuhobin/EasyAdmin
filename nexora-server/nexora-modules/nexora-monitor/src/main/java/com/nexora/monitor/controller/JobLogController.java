@@ -1,7 +1,7 @@
 package com.nexora.monitor.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.nexora.contract.OperationLogger;
+import com.nexora.annotation.OperationLogger;
 import com.nexora.monitor.biz.JobLogBizService;
 import com.nexora.monitor.domain.form.QuartzJobLogQueryForm;
 import com.nexora.monitor.domain.vo.QuartzJobLogVo;

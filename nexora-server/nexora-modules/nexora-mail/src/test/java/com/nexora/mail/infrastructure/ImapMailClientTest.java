@@ -53,7 +53,7 @@ class ImapMailClientTest {
                 </body></html>
                 """;
 
-        String sanitized = ImapMailClient.sanitizeHtml(html,
+        String sanitized = HtmlSanitizer.sanitizeHtml(html,
                 Map.of("logo", "data:image/png;base64,AAAA"));
 
         assertThat(sanitized).doesNotContain("script", "onclick", "javascript:");

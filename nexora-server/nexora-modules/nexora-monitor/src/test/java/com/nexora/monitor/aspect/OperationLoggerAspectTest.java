@@ -1,6 +1,6 @@
 package com.nexora.monitor.aspect;
 
-import com.nexora.contract.OperationLogger;
+import com.nexora.annotation.OperationLogger;
 import com.nexora.monitor.mapper.SysOperateLogMapper;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.utils.ServletUtils;

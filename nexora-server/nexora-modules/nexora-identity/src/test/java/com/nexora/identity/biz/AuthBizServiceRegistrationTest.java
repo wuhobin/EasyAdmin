@@ -2,10 +2,6 @@ package com.nexora.identity.biz;
 
 import com.aurora.starter.verification.exception.ImageVerificationException;
 import com.aurora.starter.verification.image.ImageVerificationService;
-import com.aurora.starter.verification.mail.MailContentType;
-import com.aurora.starter.verification.mail.MailVerificationSendRequest;
-import com.aurora.starter.verification.mail.MailVerificationService;
-import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.cache.LoginRetryCache;
@@ -23,13 +19,14 @@ import com.nexora.identity.service.SysUserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
-import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -43,17 +40,18 @@ class AuthBizServiceRegistrationTest {
     private final SysRoleService roleService = mock(SysRoleService.class);
     private final SystemConfigReader configReader = mock(SystemConfigReader.class);
     private final PasswordPolicyValidator passwordPolicyValidator = mock(PasswordPolicyValidator.class);
-    private final MailVerificationService verificationService = mock(MailVerificationService.class);
+    private final MailVerificationOrchestrator mailVerificationOrchestrator = mock(MailVerificationOrchestrator.class);
     private final ImageVerificationService imageVerificationService = mock(ImageVerificationService.class);
+    private final RegistrationService registrationService = new RegistrationService(
+            userService, roleService, configReader, passwordPolicyValidator, mailVerificationOrchestrator);
     private final AuthBizService bizService = new AuthBizService(
             userService,
-            roleService,
             mock(NexoraPermissionProvider.class),
             configReader,
-            passwordPolicyValidator,
             new LoginSecurityService(mock(LoginRetryCache.class)),
-            mailProvider(verificationService),
-            imageVerificationService);
+            imageVerificationService,
+            registrationService, mock(PasswordResetService.class),
+            mailVerificationOrchestrator);
 
     @Test
     void disabledRegistrationIsRejected() {
@@ -64,7 +62,7 @@ class AuthBizServiceRegistrationTest {
         assertThatThrownBy(() -> bizService.sendRegisterCode(form("user@example.com", null, null)))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining(IdentityConstants.REGISTER_DISABLED_MESSAGE);
-        verify(verificationService, never()).send(any());
+        verify(mailVerificationOrchestrator, never()).sendCode(anyString(), any());
     }
 
     @Test
@@ -74,7 +72,7 @@ class AuthBizServiceRegistrationTest {
         assertThatThrownBy(() -> bizService.sendRegisterCode(form("user@example.com", null, null)))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining(IdentityConstants.REGISTER_CONFIG_INCOMPLETE_MESSAGE);
-        verify(verificationService, never()).send(any());
+        verify(mailVerificationOrchestrator, never()).sendCode(anyString(), any());
     }
 
     @Test
@@ -86,7 +84,7 @@ class AuthBizServiceRegistrationTest {
         assertThatThrownBy(() -> bizService.sendRegisterCode(form(" Used@Example.com ", null, null)))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining(IdentityConstants.EMAIL_IN_USE_MESSAGE);
-        verify(verificationService, never()).send(any());
+        verify(mailVerificationOrchestrator, never()).sendCode(anyString(), any());
     }
 
     @Test
@@ -95,15 +93,11 @@ class AuthBizServiceRegistrationTest {
 
         bizService.sendRegisterCode(form(" User@Example.com ", null, null));
 
-        ArgumentCaptor<MailVerificationSendRequest> captor =
-                ArgumentCaptor.forClass(MailVerificationSendRequest.class);
-        verify(verificationService).send(captor.capture());
-        MailVerificationSendRequest request = captor.getValue();
-        assertThat(request.email()).isEqualTo("user@example.com");
-        assertThat(request.scene()).isEqualTo(CommonVerificationScene.REGISTER);
-        assertThat(request.subject()).isEqualTo(IdentityConstants.REGISTER_EMAIL_SUBJECT);
-        assertThat(request.contentType()).isEqualTo(MailContentType.HTML);
-        assertThat(request.content()).contains("注册验证", "账号注册", "{code}");
+        ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<CommonVerificationScene> sceneCaptor = ArgumentCaptor.forClass(CommonVerificationScene.class);
+        verify(mailVerificationOrchestrator).sendCode(emailCaptor.capture(), sceneCaptor.capture());
+        assertThat(emailCaptor.getValue()).isEqualTo("user@example.com");
+        assertThat(sceneCaptor.getValue()).isEqualTo(CommonVerificationScene.REGISTER);
     }
 
     @Test
@@ -112,10 +106,10 @@ class AuthBizServiceRegistrationTest {
         role.setId(9);
         role.setCode("user");
         enableRegistration(role);
-        when(verificationService.verifyAndConsume(new MailVerificationVerifyRequest(
+        when(mailVerificationOrchestrator.verifyCode(
                 "abcdefghijklmnopqrstuvwxyz123456@example.com",
                 CommonVerificationScene.REGISTER,
-                "123456"))).thenReturn(true);
+                "123456")).thenReturn(true);
         when(imageVerificationService.verifyAndConsume("captcha-id")).thenReturn(true);
         doAnswer(invocation -> {
             SysUser user = invocation.getArgument(0);
@@ -136,12 +130,12 @@ class AuthBizServiceRegistrationTest {
         assertThat(user.getNickname()).isEqualTo("abcdefghijklmnopqrstuvwxyz1234");
         assertThat(user.getStatus()).isEqualTo(SysUserStatusEnum.NORMAL.getCode());
         assertThat(user.getPassword()).isNotEqualTo("secret");
-        InOrder verificationOrder = inOrder(imageVerificationService, verificationService);
+        InOrder verificationOrder = inOrder(imageVerificationService, mailVerificationOrchestrator);
         verificationOrder.verify(imageVerificationService).verifyAndConsume("captcha-id");
-        verificationOrder.verify(verificationService).verifyAndConsume(new MailVerificationVerifyRequest(
+        verificationOrder.verify(mailVerificationOrchestrator).verifyCode(
                 "abcdefghijklmnopqrstuvwxyz123456@example.com",
                 CommonVerificationScene.REGISTER,
-                "123456"));
+                "123456");
         verify(roleService).addUserRoles(42, List.of(9));
     }
 
@@ -169,7 +163,7 @@ class AuthBizServiceRegistrationTest {
         ArgumentCaptor<SysUser> captor = ArgumentCaptor.forClass(SysUser.class);
         verify(userService).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(SysUserStatusEnum.PENDING.getCode());
-        verify(verificationService, never()).verifyAndConsume(any());
+        verify(mailVerificationOrchestrator, never()).verifyCode(anyString(), any(), anyString());
     }
 
     @Test
@@ -184,7 +178,7 @@ class AuthBizServiceRegistrationTest {
                 .hasMessageContaining(IdentityConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
 
         verify(imageVerificationService, never()).verifyAndConsume(any());
-        verify(verificationService, never()).verifyAndConsume(any());
+        verify(mailVerificationOrchestrator, never()).verifyCode(anyString(), any(), anyString());
         verify(userService, never()).save(any());
     }
 
@@ -200,7 +194,7 @@ class AuthBizServiceRegistrationTest {
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining(IdentityConstants.IMAGE_CAPTCHA_INVALID_MESSAGE);
 
-        verify(verificationService, never()).verifyAndConsume(any());
+        verify(mailVerificationOrchestrator, never()).verifyCode(anyString(), any(), anyString());
         verify(userService, never()).save(any());
         verify(roleService, never()).addUserRoles(any(), any());
     }
@@ -218,7 +212,7 @@ class AuthBizServiceRegistrationTest {
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining(IdentityConstants.IMAGE_CAPTCHA_VERIFY_FAILED_MESSAGE);
 
-        verify(verificationService, never()).verifyAndConsume(any());
+        verify(mailVerificationOrchestrator, never()).verifyCode(anyString(), any(), anyString());
         verify(userService, never()).save(any());
         verify(roleService, never()).addUserRoles(any(), any());
     }
@@ -229,7 +223,8 @@ class AuthBizServiceRegistrationTest {
         role.setId(9);
         enableRegistration(role);
         when(imageVerificationService.verifyAndConsume("captcha-id")).thenReturn(true);
-        when(verificationService.verifyAndConsume(any())).thenReturn(false);
+        when(mailVerificationOrchestrator.verifyCode(anyString(), any(), anyString())).thenThrow(
+                new BizException(IdentityConstants.EMAIL_CODE_INVALID_MESSAGE));
 
         assertThatThrownBy(() -> bizService.register(
                 registrationForm("user@example.com", "123456", "secret", "captcha-id")))
@@ -268,13 +263,5 @@ class AuthBizServiceRegistrationTest {
         AuthForm form = form(email, code, password);
         form.setCaptchaId(captchaId);
         return form;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ObjectProvider<MailVerificationService> mailProvider(
-            MailVerificationService verificationService) {
-        ObjectProvider<MailVerificationService> provider = mock(ObjectProvider.class);
-        when(provider.getIfAvailable()).thenReturn(verificationService);
-        return provider;
     }
 }

@@ -16,7 +16,6 @@ import com.nexora.identity.service.SysRoleService;
 import com.nexora.identity.service.SysUserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.springframework.beans.factory.ObjectProvider;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -123,13 +122,12 @@ class AuthBizServiceLoginSecurityTest {
     private AuthBizService createService() {
         return new AuthBizService(
                 userService,
-                mock(SysRoleService.class),
                 mock(NexoraPermissionProvider.class),
                 configReader,
-                mock(PasswordPolicyValidator.class),
                 new LoginSecurityService(loginRetryCache),
-                mock(ObjectProvider.class),
-                imageVerificationService);
+                imageVerificationService,
+                mock(RegistrationService.class), mock(PasswordResetService.class),
+                mock(MailVerificationOrchestrator.class));
     }
 
     private static LoginSettings loginConfig() {

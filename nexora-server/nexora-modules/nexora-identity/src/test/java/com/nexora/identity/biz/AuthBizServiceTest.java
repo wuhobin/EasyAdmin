@@ -18,7 +18,6 @@ import cn.dev33.satoken.secure.BCrypt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.springframework.beans.factory.ObjectProvider;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -146,13 +145,12 @@ class AuthBizServiceTest {
         when(configReader.login()).thenReturn(loginConfig());
         return new AuthBizService(
                 userService,
-                mock(SysRoleService.class),
                 permissionProvider,
                 configReader,
-                mock(PasswordPolicyValidator.class),
                 new LoginSecurityService(mock(LoginRetryCache.class)),
-                mock(ObjectProvider.class),
-                mock(ImageVerificationService.class));
+                mock(ImageVerificationService.class),
+                mock(RegistrationService.class), mock(PasswordResetService.class),
+                mock(MailVerificationOrchestrator.class));
     }
 
     private static LoginSettings loginConfig() {
