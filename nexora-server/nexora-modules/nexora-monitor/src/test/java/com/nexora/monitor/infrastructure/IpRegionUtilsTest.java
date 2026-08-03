@@ -9,13 +9,13 @@ class IpRegionUtilsTest {
 
     @Test
     void resolvesAddressFromClasspathDatabase() {
-        assertThat(IpRegionUtils.resolve("58.20.50.137"))
+        assertThat(com.nexora.utils.IpRegionUtils.resolve("58.20.50.137"))
                 .isNotBlank()
                 .isNotEqualTo(MonitorConstants.UNKNOWN_REGION);
     }
 
     @Test
     void returnsUnknownForInvalidIp() {
-        assertThat(IpRegionUtils.resolve("not-an-ip")).isEqualTo(MonitorConstants.UNKNOWN_REGION);
+        assertThat(com.nexora.utils.IpRegionUtils.resolve("not-an-ip")).isEqualTo(MonitorConstants.UNKNOWN_REGION);
     }
 }
