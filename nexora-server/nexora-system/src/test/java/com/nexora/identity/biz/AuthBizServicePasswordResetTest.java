@@ -12,7 +12,7 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
-import com.nexora.config.SysConfigGroupReader;
+import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.identity.entity.SysUser;

@@ -12,7 +12,7 @@ springdoc:
       packages-to-scan: com.nexora.controller.auth
     - group: '系统管理'
       paths-to-match: '/**'
-      packages-to-scan: com.nexora.controller.system
+      packages-to-scan: com.nexora.system.controller
     - group: '监控管理'
       paths-to-match: '/**'
       packages-to-scan: com.nexora.monitor.controller

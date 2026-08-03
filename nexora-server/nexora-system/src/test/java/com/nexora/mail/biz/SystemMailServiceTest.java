@@ -1,9 +1,9 @@
 package com.nexora.mail.biz;
 
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.config.SysConfigGroupReader;
-import com.nexora.domain.form.system.config.EmailConfigForm;
-import com.nexora.domain.form.system.config.SystemConfigForm;
+import com.nexora.system.config.SysConfigGroupReader;
+import com.nexora.system.domain.form.EmailConfigForm;
+import com.nexora.system.domain.form.SystemConfigForm;
 import com.nexora.mail.infrastructure.SmtpMailSenderFactory;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;

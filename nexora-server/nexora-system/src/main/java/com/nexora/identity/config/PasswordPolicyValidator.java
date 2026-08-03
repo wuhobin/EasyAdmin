@@ -1,9 +1,9 @@
 package com.nexora.identity.config;
 
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.config.SysConfigGroupReader;
+import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
-import com.nexora.domain.form.system.config.PasswordConfigForm;
+import com.nexora.system.domain.form.PasswordConfigForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

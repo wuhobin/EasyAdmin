@@ -1,6 +1,6 @@
 package com.nexora.mail.infrastructure;
 
-import com.nexora.domain.form.system.config.EmailConfigForm;
+import com.nexora.system.domain.form.EmailConfigForm;
 import jakarta.mail.internet.InternetAddress;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Component;

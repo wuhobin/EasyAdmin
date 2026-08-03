@@ -6,7 +6,7 @@ import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.constants.CommonConstants;
 import com.nexora.constants.ResultCode;
 import com.nexora.identity.constants.SysUserStatusEnum;
-import com.nexora.domain.form.system.config.LoginConfigForm;
+import com.nexora.system.domain.form.LoginConfigForm;
 import com.nexora.identity.entity.SysUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

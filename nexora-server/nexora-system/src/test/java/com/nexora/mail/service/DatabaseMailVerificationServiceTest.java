@@ -3,8 +3,8 @@ package com.nexora.mail.service;
 import com.aurora.starter.verification.config.VerificationProperties;
 import com.aurora.starter.verification.redis.RedisMailVerificationRepository;
 import com.aurora.starter.verification.support.VerificationCodeGenerator;
-import com.nexora.config.SysConfigGroupReader;
-import com.nexora.domain.form.system.config.EmailConfigForm;
+import com.nexora.system.config.SysConfigGroupReader;
+import com.nexora.system.domain.form.EmailConfigForm;
 import com.nexora.mail.infrastructure.SmtpMailSenderFactory;
 import org.junit.jupiter.api.Test;
 
