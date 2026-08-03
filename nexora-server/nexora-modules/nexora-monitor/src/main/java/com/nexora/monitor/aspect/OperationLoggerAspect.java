@@ -1,7 +1,6 @@
 package com.nexora.monitor.aspect;
 
 import com.nexora.contract.OperationLogger;
-import com.nexora.constants.CommonConstants;
 import com.nexora.monitor.entity.SysOperateLog;
 import com.nexora.monitor.mapper.SysOperateLogMapper;
 import com.aurora.starter.common.utils.JsonUtil;

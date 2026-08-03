@@ -1,6 +1,6 @@
 package com.nexora.mail.biz;
 
-import com.nexora.constants.CommonConstants;
+import com.nexora.mail.constants.MailConstants;
 import com.nexora.mail.constants.MailProviderEnum;
 import com.nexora.mail.domain.convert.MailAccountConvert;
 import com.nexora.mail.domain.form.MailAccountForm;
@@ -38,22 +38,22 @@ public class MailAccountBizService {
 
     public List<MailProviderVo> listProviders() {
         List<DictionaryEntry> entries = dictionaryReader
-                .findEnabledEntries(CommonConstants.MAIL_PROVIDER_DICT_TYPE)
-                .orElseThrow(() -> new BizException(CommonConstants.MAIL_PROVIDER_NOT_CONFIGURED_MESSAGE));
+                .findEnabledEntries(MailConstants.MAIL_PROVIDER_DICT_TYPE)
+                .orElseThrow(() -> new BizException(MailConstants.MAIL_PROVIDER_NOT_CONFIGURED_MESSAGE));
         List<MailProviderVo> providers = entries
                 .stream()
                 .map(this::toProviderVo)
                 .filter(java.util.Objects::nonNull)
                 .toList();
         if (providers.isEmpty()) {
-            throw new BizException(CommonConstants.MAIL_PROVIDER_EMPTY_MESSAGE);
+            throw new BizException(MailConstants.MAIL_PROVIDER_EMPTY_MESSAGE);
         }
         return providers;
     }
 
     public MailAccountVo add(MailAccountForm form) {
         if (form.getAuthCode() == null || form.getAuthCode().isBlank()) {
-            throw new BizException(CommonConstants.MAIL_ACCOUNT_AUTH_CODE_REQUIRED_MESSAGE);
+            throw new BizException(MailConstants.MAIL_ACCOUNT_AUTH_CODE_REQUIRED_MESSAGE);
         }
         validateAndNormalizeEmail(form);
         Integer ownerId = currentOwnerId();
@@ -65,14 +65,14 @@ public class MailAccountBizService {
         try {
             mailAccountService.save(account);
         } catch (DuplicateKeyException exception) {
-            throw new BizException(CommonConstants.MAIL_ACCOUNT_EXISTS_MESSAGE);
+            throw new BizException(MailConstants.MAIL_ACCOUNT_EXISTS_MESSAGE);
         }
         return MailAccountConvert.INSTANCE.toVo(account);
     }
 
     public void update(MailAccountForm form) {
         if (form.getId() == null) {
-            throw new BizException(CommonConstants.MAIL_ACCOUNT_ID_REQUIRED_MESSAGE);
+            throw new BizException(MailConstants.MAIL_ACCOUNT_ID_REQUIRED_MESSAGE);
         }
         MailAccount current = getRequired(form.getId());
         validateAndNormalizeEmail(form);
@@ -87,13 +87,13 @@ public class MailAccountBizService {
         try {
             mailAccountService.updateById(account);
         } catch (DuplicateKeyException exception) {
-            throw new BizException(CommonConstants.MAIL_ACCOUNT_EXISTS_MESSAGE);
+            throw new BizException(MailConstants.MAIL_ACCOUNT_EXISTS_MESSAGE);
         }
     }
 
     public void delete(Long id) {
         if (!mailAccountService.removeByIdAndOwnerId(id, currentOwnerId())) {
-            throw new BizException(CommonConstants.MAIL_ACCOUNT_UNAVAILABLE_MESSAGE);
+            throw new BizException(MailConstants.MAIL_ACCOUNT_UNAVAILABLE_MESSAGE);
         }
     }
 
@@ -111,21 +111,21 @@ public class MailAccountBizService {
     private MailAccount getRequired(Long id) {
         MailAccount account = mailAccountService.getByIdAndOwnerId(id, currentOwnerId());
         if (account == null) {
-            throw new BizException(CommonConstants.MAIL_ACCOUNT_UNAVAILABLE_MESSAGE);
+            throw new BizException(MailConstants.MAIL_ACCOUNT_UNAVAILABLE_MESSAGE);
         }
         return account;
     }
 
     private void checkEmailUnique(Integer ownerId, String email, Long excludedId) {
         if (mailAccountService.existsByOwnerIdAndEmail(ownerId, email, excludedId)) {
-            throw new BizException(CommonConstants.MAIL_ACCOUNT_EXISTS_MESSAGE);
+            throw new BizException(MailConstants.MAIL_ACCOUNT_EXISTS_MESSAGE);
         }
     }
 
     private static void validateAndNormalizeEmail(MailAccountForm form) {
         String email = form.getEmail().trim().toLowerCase();
         if (!form.getProvider().matchesEmail(email)) {
-            throw new BizException(CommonConstants.MAIL_ADDRESS_DOMAIN_REQUIRED_MESSAGE.formatted(
+            throw new BizException(MailConstants.MAIL_ADDRESS_DOMAIN_REQUIRED_MESSAGE.formatted(
                     form.getProvider().getDescription(), form.getProvider().getEmailDomain()));
         }
         form.setEmail(email);

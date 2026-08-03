@@ -1,6 +1,7 @@
 package com.nexora.file.biz;
 
-import com.nexora.constants.CommonConstants;
+import com.nexora.constants.SecurityConstants;
+import com.nexora.file.constants.FileConstants;
 import com.nexora.contract.StoredFileUsageChecker;
 import com.nexora.file.domain.convert.OssFileConvert;
 import com.nexora.file.domain.form.OssFileQueryForm;
@@ -56,7 +57,7 @@ public class FileBizService {
         String datePath = DateUtils.parseDateToStr(DateUtils.YYYYMMDD, DateUtils.getNowDate());
         OssUploadResult result = ossTemplate.upload(validatedFile, datePath + "/");
         if (result == null || result.getUrl() == null) {
-            throw new BizException(CommonConstants.FILE_UPLOAD_FAILED_MESSAGE);
+            throw new BizException(FileConstants.FILE_UPLOAD_FAILED_MESSAGE);
         }
         if (result.getId() == null || result.getId().isBlank()) {
             result.setId(IdWorker.getIdStr());
@@ -67,28 +68,28 @@ public class FileBizService {
 
     private static String validateUpload(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new BizException(CommonConstants.FILE_EMPTY_MESSAGE);
+            throw new BizException(FileConstants.FILE_EMPTY_MESSAGE);
         }
-        if (file.getSize() > CommonConstants.FILE_UPLOAD_MAX_SIZE) {
-            throw new BizException(CommonConstants.FILE_TOO_LARGE_MESSAGE);
+        if (file.getSize() > FileConstants.FILE_UPLOAD_MAX_SIZE) {
+            throw new BizException(FileConstants.FILE_TOO_LARGE_MESSAGE);
         }
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || originalFilename.isBlank()) {
-            throw new BizException(CommonConstants.FILE_NAME_REQUIRED_MESSAGE);
+            throw new BizException(FileConstants.FILE_NAME_REQUIRED_MESSAGE);
         }
         if (originalFilename.codePointCount(0, originalFilename.length())
-                > CommonConstants.FILE_ORIGINAL_FILENAME_MAX_LENGTH) {
-            throw new BizException(CommonConstants.FILE_NAME_TOO_LONG_MESSAGE);
+                > FileConstants.FILE_ORIGINAL_FILENAME_MAX_LENGTH) {
+            throw new BizException(FileConstants.FILE_NAME_TOO_LONG_MESSAGE);
         }
         String expectedContentType = expectedContentType(originalFilename);
         String detectedContentType;
         try (InputStream inputStream = file.getInputStream()) {
             detectedContentType = TIKA.detect(inputStream);
         } catch (IOException exception) {
-            throw new BizException(CommonConstants.FILE_CONTENT_DETECTION_FAILED_MESSAGE);
+            throw new BizException(FileConstants.FILE_CONTENT_DETECTION_FAILED_MESSAGE);
         }
         if (!expectedContentType.equals(detectedContentType)) {
-            throw new BizException(CommonConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE);
+            throw new BizException(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE);
         }
         return detectedContentType;
     }
@@ -97,25 +98,25 @@ public class FileBizService {
         int lastSeparator = Math.max(originalFilename.lastIndexOf('/'), originalFilename.lastIndexOf('\\'));
         int extensionSeparator = originalFilename.lastIndexOf('.');
         if (extensionSeparator <= lastSeparator || extensionSeparator == originalFilename.length() - 1) {
-            throw new BizException(CommonConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE);
+            throw new BizException(FileConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE);
         }
         String extension = originalFilename.substring(extensionSeparator + 1).toLowerCase(Locale.ROOT);
-        String contentType = CommonConstants.FILE_ALLOWED_CONTENT_TYPE_BY_EXTENSION.get(extension);
+        String contentType = FileConstants.FILE_ALLOWED_CONTENT_TYPE_BY_EXTENSION.get(extension);
         if (contentType == null) {
-            throw new BizException(CommonConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE);
+            throw new BizException(FileConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE);
         }
         return contentType;
     }
 
     public IPage<SysOssFileVo> list(OssFileQueryForm form, PageParam pageParam) {
         if (pageParam != null && (pageParam.getOrderBy() == null || pageParam.getOrderBy().isBlank())) {
-            pageParam.setOrderBy(CommonConstants.FILE_DEFAULT_ORDER);
+            pageParam.setOrderBy(FileConstants.FILE_DEFAULT_ORDER);
         }
         OssFileQuery query = OssFileConvert.INSTANCE.toQuery(form);
         if (query == null) {
             query = new OssFileQuery();
         }
-        if (!SecurityUtils.hasRole(CommonConstants.ADMIN)) {
+        if (!SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)) {
             query.setUploaderId(currentUploaderId());
         }
         IPage<SysOssFile> page = ossFileService.listFiles(query, pageParam);
@@ -144,15 +145,15 @@ public class FileBizService {
     public void deleteById(Long id) {
         SysOssFile file = getAccessibleFile(id);
         if (storedFileUsageChecker.isInUse(file.getFileUrl())) {
-            throw new BizException(CommonConstants.FILE_AVATAR_IN_USE_MESSAGE);
+            throw new BizException(FileConstants.FILE_AVATAR_IN_USE_MESSAGE);
         }
         if (!deleteOssFile(file)) {
-            throw new BizException(CommonConstants.FILE_OSS_DELETE_FAILED_MESSAGE);
+            throw new BizException(FileConstants.FILE_OSS_DELETE_FAILED_MESSAGE);
         }
         if (!ossFileService.removeById(id)) {
             log.error("OSS file deleted but database record deletion failed, id={}, fileId={}, url={}",
                     file.getId(), file.getFileId(), file.getFileUrl());
-            throw new BizException(CommonConstants.FILE_RECORD_DELETE_FAILED_MESSAGE.formatted(
+            throw new BizException(FileConstants.FILE_RECORD_DELETE_FAILED_MESSAGE.formatted(
                     file.getId(), file.getFileId()));
         }
     }
@@ -175,11 +176,11 @@ public class FileBizService {
 
     private SysOssFile getAccessibleFile(Long id) {
         if (id == null) {
-            throw new BizException(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
+            throw new BizException(FileConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
         }
         SysOssFile file = ossFileService.getById(id);
         if (file == null || !canAccess(file)) {
-            throw new BizException(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
+            throw new BizException(FileConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
         }
         return file;
     }
@@ -189,7 +190,7 @@ public class FileBizService {
     }
 
     private static boolean canAccess(SysOssFile file) {
-        if (SecurityUtils.hasRole(CommonConstants.ADMIN)) {
+        if (SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)) {
             return true;
         }
         int currentUserId = SecurityUtils.getLoginIdAsInt();
@@ -200,7 +201,7 @@ public class FileBizService {
     private static Long currentUploaderId() {
         int currentUserId = SecurityUtils.getLoginIdAsInt();
         if (currentUserId <= 0) {
-            throw new BizException(CommonConstants.FILE_CURRENT_USER_REQUIRED_MESSAGE);
+            throw new BizException(FileConstants.FILE_CURRENT_USER_REQUIRED_MESSAGE);
         }
         return (long) currentUserId;
     }
@@ -215,7 +216,7 @@ public class FileBizService {
             objectKey = file.getFileName();
         }
         if (objectKey == null || objectKey.isBlank()) {
-            throw new BizException(CommonConstants.FILE_OBJECT_KEY_UNAVAILABLE_MESSAGE);
+            throw new BizException(FileConstants.FILE_OBJECT_KEY_UNAVAILABLE_MESSAGE);
         }
         return new FileInfo()
                 .setUrl(file.getFileUrl())

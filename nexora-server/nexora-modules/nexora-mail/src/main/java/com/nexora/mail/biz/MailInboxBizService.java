@@ -1,6 +1,6 @@
 package com.nexora.mail.biz;
 
-import com.nexora.constants.CommonConstants;
+import com.nexora.mail.constants.MailConstants;
 import com.nexora.mail.domain.vo.MailMessageDetailVo;
 import com.nexora.mail.domain.vo.MailMessagePageVo;
 import com.nexora.mail.domain.vo.MailMessageSummaryVo;
@@ -132,7 +132,7 @@ public class MailInboxBizService {
     private MailAccount getEnabledAccount(Long id) {
         MailAccount account = mailAccountService.getByIdAndOwnerId(id, currentOwnerId());
         if (account == null || !Integer.valueOf(1).equals(account.getEnabled())) {
-            throw new BizException(CommonConstants.MAIL_ACCOUNT_UNAVAILABLE_MESSAGE);
+            throw new BizException(MailConstants.MAIL_ACCOUNT_UNAVAILABLE_MESSAGE);
         }
         return account;
     }
@@ -161,7 +161,7 @@ public class MailInboxBizService {
             return new CursorState(Map.of());
         }
         if (cursor.length() > 8_192) {
-            throw new BizException(CommonConstants.MAIL_CURSOR_INVALID_MESSAGE);
+            throw new BizException(MailConstants.MAIL_CURSOR_INVALID_MESSAGE);
         }
         try {
             byte[] json = Base64.getUrlDecoder().decode(cursor);
@@ -173,7 +173,7 @@ public class MailInboxBizService {
             }
             return state;
         } catch (Exception exception) {
-            throw new BizException(CommonConstants.MAIL_CURSOR_INVALID_MESSAGE);
+            throw new BizException(MailConstants.MAIL_CURSOR_INVALID_MESSAGE);
         }
     }
 
@@ -182,7 +182,7 @@ public class MailInboxBizService {
             byte[] json = objectMapper.writeValueAsBytes(state);
             return Base64.getUrlEncoder().withoutPadding().encodeToString(json);
         } catch (Exception exception) {
-            throw new BizException(CommonConstants.MAIL_CURSOR_CREATE_FAILED_MESSAGE);
+            throw new BizException(MailConstants.MAIL_CURSOR_CREATE_FAILED_MESSAGE);
         }
     }
 

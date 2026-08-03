@@ -2,7 +2,7 @@ package com.nexora.mail.biz;
 
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.constants.CommonConstants;
+import com.nexora.mail.constants.MailConstants;
 import com.nexora.mail.constants.MailProviderEnum;
 import com.nexora.mail.domain.form.MailAccountForm;
 import com.nexora.mail.entity.MailAccount;
@@ -87,7 +87,7 @@ class MailAccountBizServiceTest {
     @Test
     void listsConfiguredProvidersThroughTheSystemApi() {
         SystemDictionaryReader dictionaryReader = mock(SystemDictionaryReader.class);
-        when(dictionaryReader.findEnabledEntries(CommonConstants.MAIL_PROVIDER_DICT_TYPE))
+        when(dictionaryReader.findEnabledEntries(MailConstants.MAIL_PROVIDER_DICT_TYPE))
                 .thenReturn(Optional.of(List.of(
                         new DictionaryEntry("QQ邮箱", "QQ", true),
                         new DictionaryEntry("未知邮箱", "UNKNOWN", false))));

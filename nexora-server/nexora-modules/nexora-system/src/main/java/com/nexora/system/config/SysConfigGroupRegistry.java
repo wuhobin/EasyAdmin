@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nexora.constants.CommonConstants;
+import com.nexora.system.constants.SystemConfigConstants;
 import com.nexora.system.constants.SysConfigGroupEnum;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -38,7 +38,7 @@ public class SysConfigGroupRegistry {
         String normalized = groupCode == null ? null : groupCode.strip();
         SysConfigGroupEnum groupType = SysConfigGroupEnum.getByCode(normalized);
         if (groupType == null) {
-            throw new BizException(CommonConstants.CONFIG_GROUP_UNSUPPORTED_MESSAGE);
+            throw new BizException(SystemConfigConstants.CONFIG_GROUP_UNSUPPORTED_MESSAGE);
         }
         return groupType;
     }
@@ -47,21 +47,21 @@ public class SysConfigGroupRegistry {
         SysConfigGroupEnum groupType = normalizeType(groupCode);
         String normalizedCode = groupType.getCode();
         if (configValue == null || configValue.isBlank()) {
-            throw invalid(normalizedCode, CommonConstants.CONFIG_GROUP_VALUE_REQUIRED_MESSAGE);
+            throw invalid(normalizedCode, SystemConfigConstants.CONFIG_GROUP_VALUE_REQUIRED_MESSAGE);
         }
         try {
             Object config = objectMapper.readValue(configValue, groupType.getConfigType());
             validate(normalizedCode, config);
             return config;
         } catch (JsonProcessingException exception) {
-            throw invalid(normalizedCode, CommonConstants.CONFIG_GROUP_JSON_INVALID_MESSAGE);
+            throw invalid(normalizedCode, SystemConfigConstants.CONFIG_GROUP_JSON_INVALID_MESSAGE);
         }
     }
 
     public <T> T parse(String groupCode, String configValue, Class<T> valueType) {
         Object config = parse(groupCode, configValue);
         if (!valueType.isInstance(config)) {
-            throw invalid(groupCode, CommonConstants.CONFIG_GROUP_TYPE_MISMATCH_MESSAGE);
+            throw invalid(groupCode, SystemConfigConstants.CONFIG_GROUP_TYPE_MISMATCH_MESSAGE);
         }
         return valueType.cast(config);
     }
@@ -70,14 +70,14 @@ public class SysConfigGroupRegistry {
         SysConfigGroupEnum groupType = normalizeType(groupCode);
         String normalizedCode = groupType.getCode();
         if (configValue == null || !configValue.isObject()) {
-            throw invalid(normalizedCode, CommonConstants.CONFIG_GROUP_JSON_OBJECT_REQUIRED_MESSAGE);
+            throw invalid(normalizedCode, SystemConfigConstants.CONFIG_GROUP_JSON_OBJECT_REQUIRED_MESSAGE);
         }
         try {
             Object config = objectMapper.treeToValue(configValue, groupType.getConfigType());
             validate(normalizedCode, config);
             return new NormalizedConfig(config, objectMapper.writeValueAsString(config));
         } catch (JsonProcessingException exception) {
-            throw invalid(normalizedCode, CommonConstants.CONFIG_GROUP_JSON_INVALID_MESSAGE);
+            throw invalid(normalizedCode, SystemConfigConstants.CONFIG_GROUP_JSON_INVALID_MESSAGE);
         }
     }
 
@@ -92,7 +92,7 @@ public class SysConfigGroupRegistry {
     }
 
     private static BizException invalid(String groupCode, String reason) {
-        return new BizException(CommonConstants.CONFIG_GROUP_INVALID_MESSAGE.formatted(groupCode, reason));
+        return new BizException(SystemConfigConstants.CONFIG_GROUP_INVALID_MESSAGE.formatted(groupCode, reason));
     }
 
     public record NormalizedConfig(Object value, String json) {

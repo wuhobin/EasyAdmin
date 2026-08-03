@@ -4,7 +4,7 @@ import com.aurora.starter.verification.mail.MailContentType;
 import com.aurora.starter.verification.mail.MailVerificationSendRequest;
 import com.aurora.starter.verification.mail.MailVerificationService;
 import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.identity.config.PasswordPolicyValidator;
 import com.nexora.identity.domain.form.SysUserForm;
@@ -195,7 +195,7 @@ class SysUserBizServiceTest {
         verify(verificationService).send(captor.capture());
         MailVerificationSendRequest request = captor.getValue();
         assertThat(request.email()).isEqualTo("new@example.com");
-        assertThat(request.subject()).isEqualTo(CommonConstants.CHANGE_EMAIL_SUBJECT);
+        assertThat(request.subject()).isEqualTo(IdentityConstants.CHANGE_EMAIL_SUBJECT);
         assertThat(request.contentType()).isEqualTo(MailContentType.HTML);
         assertThat(request.content())
                 .contains("<!doctype html>", "{code}", "{expireMinutes}", "邮箱换绑验证", "安全提示");
@@ -244,7 +244,7 @@ class SysUserBizServiceTest {
 
         assertThatThrownBy(() -> service.add(form))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.USER_STATUS_INVALID_MESSAGE);
+                .hasMessageContaining(IdentityConstants.USER_STATUS_INVALID_MESSAGE);
         verify(userService, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -264,7 +264,7 @@ class SysUserBizServiceTest {
 
         assertThatThrownBy(() -> service.update(form))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.USER_STATUS_INVALID_MESSAGE);
+                .hasMessageContaining(IdentityConstants.USER_STATUS_INVALID_MESSAGE);
         verify(userService, never()).updateById(org.mockito.ArgumentMatchers.any());
     }
 
@@ -307,7 +307,7 @@ class SysUserBizServiceTest {
 
         assertThatThrownBy(() -> service.audit(7))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.USER_NOT_PENDING_MESSAGE);
+                .hasMessageContaining(IdentityConstants.USER_NOT_PENDING_MESSAGE);
 
         verify(userService, never()).updateById(org.mockito.ArgumentMatchers.any());
     }

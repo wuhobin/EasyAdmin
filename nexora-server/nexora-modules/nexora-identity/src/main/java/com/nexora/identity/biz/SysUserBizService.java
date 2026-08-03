@@ -7,7 +7,8 @@ import com.aurora.starter.verification.exception.VerificationException;
 import com.aurora.starter.verification.mail.MailVerificationService;
 import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
+import com.nexora.constants.SecurityConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.identity.config.PasswordPolicyValidator;
 import com.nexora.identity.domain.convert.SysUserConvert;
@@ -51,7 +52,7 @@ public class SysUserBizService {
                 ? SysUserStatusEnum.NORMAL.getCode()
                 : requireSupportedStatus(form.getStatus());
         String nickname = requireNickname(form.getNickname());
-        String email = requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE);
+        String email = requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE);
         String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
         requireRoleIds(form.getRoleIds());
 
@@ -67,7 +68,7 @@ public class SysUserBizService {
         try {
             sysUserService.save(user);
         } catch (DuplicateKeyException exception) {
-            throw new BizException(CommonConstants.EMAIL_IN_USE_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_IN_USE_MESSAGE);
         }
         sysRoleService.addUserRoles(user.getId(), form.getRoleIds());
         authorizationCache.evictUsersAfterCommit(List.of(user.getId()));
@@ -82,7 +83,7 @@ public class SysUserBizService {
 
         SysUser existing = sysUserService.getById(userId);
         if (existing == null) {
-            throw new BizException(CommonConstants.USER_NOT_FOUND_MESSAGE);
+            throw new BizException(IdentityConstants.USER_NOT_FOUND_MESSAGE);
         }
         SysUser user = new SysUser();
         user.setId(userId);
@@ -100,8 +101,8 @@ public class SysUserBizService {
 
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Integer> ids) {
-        if (ids.contains(CommonConstants.ROOT_USER_ID)) {
-            throw new BizException(CommonConstants.ROOT_USER_DELETE_FORBIDDEN_MESSAGE);
+        if (ids.contains(IdentityConstants.ROOT_USER_ID)) {
+            throw new BizException(IdentityConstants.ROOT_USER_DELETE_FORBIDDEN_MESSAGE);
         }
         userDeletionCleanups.forEach(cleanup -> cleanup.cleanup(ids));
         sysUserService.removeBatchByIds(ids);
@@ -114,7 +115,7 @@ public class SysUserBizService {
         String newPassword = passwordPolicyValidator.validateNewPassword(form.getNewPassword());
         SysUser user = getCurrentUser();
         if (!BCrypt.checkpw(oldPassword, user.getPassword())) {
-            throw new BizException(CommonConstants.OLD_PASSWORD_INCORRECT_MESSAGE);
+            throw new BizException(IdentityConstants.OLD_PASSWORD_INCORRECT_MESSAGE);
         }
         user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         sysUserService.updateById(user);
@@ -139,33 +140,33 @@ public class SysUserBizService {
 
     public void sendEmailCode(SysUserForm form) {
         SysUser currentUser = getCurrentUser();
-        String email = StringUtils.normalizeEmail(requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
+        String email = StringUtils.normalizeEmail(requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
         validateNewEmail(currentUser, email);
 
         MailVerificationService verificationService = mailVerificationServiceProvider.getIfAvailable();
         if (verificationService == null) {
-            throw new BizException(CommonConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
         }
         try {
             verificationService.send(VerificationMailRequestFactory.createRequest(
                     email, CommonVerificationScene.CHANGE_EMAIL));
         } catch (VerificationCooldownException exception) {
-            throw new BizException(CommonConstants.EMAIL_CODE_SEND_TOO_FREQUENT_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_TOO_FREQUENT_MESSAGE);
         } catch (VerificationException | IllegalArgumentException exception) {
-            throw new BizException(CommonConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
         }
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void changeEmail(SysUserForm form) {
         SysUser currentUser = getCurrentUser();
-        String email = StringUtils.normalizeEmail(requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
-        String code = requireText(form.getCode(), CommonConstants.EMAIL_CODE_REQUIRED_MESSAGE);
+        String email = StringUtils.normalizeEmail(requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
+        String code = requireText(form.getCode(), IdentityConstants.EMAIL_CODE_REQUIRED_MESSAGE);
         validateNewEmail(currentUser, email);
 
         MailVerificationService verificationService = mailVerificationServiceProvider.getIfAvailable();
         if (verificationService == null) {
-            throw new BizException(CommonConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
         }
 
         boolean verified;
@@ -173,10 +174,10 @@ public class SysUserBizService {
             verified = verificationService.verifyAndConsume(new MailVerificationVerifyRequest(
                     email, CommonVerificationScene.CHANGE_EMAIL, code));
         } catch (VerificationException | IllegalArgumentException exception) {
-            throw new BizException(CommonConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
         }
         if (!verified) {
-            throw new BizException(CommonConstants.EMAIL_CODE_INVALID_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_INVALID_MESSAGE);
         }
 
         SysUser update = new SysUser();
@@ -185,7 +186,7 @@ public class SysUserBizService {
         try {
             sysUserService.updateById(update);
         } catch (DuplicateKeyException exception) {
-            throw new BizException(CommonConstants.EMAIL_IN_USE_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_IN_USE_MESSAGE);
         }
     }
 
@@ -197,7 +198,7 @@ public class SysUserBizService {
         Integer userId = requireUserId(form.getId());
         String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
         if (sysUserService.getById(userId) == null) {
-            throw new BizException(CommonConstants.USER_NOT_FOUND_MESSAGE);
+            throw new BizException(IdentityConstants.USER_NOT_FOUND_MESSAGE);
         }
         SysUser user = new SysUser();
         user.setId(userId);
@@ -211,52 +212,52 @@ public class SysUserBizService {
         Integer userId = requireUserId(id);
         SysUser current = sysUserService.getById(userId);
         if (current == null) {
-            throw new BizException(CommonConstants.USER_NOT_FOUND_MESSAGE);
+            throw new BizException(IdentityConstants.USER_NOT_FOUND_MESSAGE);
         }
         if (!Integer.valueOf(SysUserStatusEnum.PENDING.getCode()).equals(current.getStatus())) {
-            throw new BizException(CommonConstants.USER_NOT_PENDING_MESSAGE);
+            throw new BizException(IdentityConstants.USER_NOT_PENDING_MESSAGE);
         }
         SysUser update = new SysUser();
         update.setId(userId);
         update.setStatus(SysUserStatusEnum.NORMAL.getCode());
         if (!sysUserService.updateById(update)) {
-            throw new BizException(CommonConstants.USER_AUDIT_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.USER_AUDIT_FAILED_MESSAGE);
         }
         authorizationCache.evictUsersAfterCommit(List.of(userId));
     }
 
     private Integer requireUserId(Integer userId) {
         if (userId == null) {
-            throw new BizException(CommonConstants.USER_ID_REQUIRED_MESSAGE);
+            throw new BizException(IdentityConstants.USER_ID_REQUIRED_MESSAGE);
         }
         return userId;
     }
 
     private int requireSupportedStatus(Integer status) {
         if (!SysUserStatusEnum.supports(status)) {
-            throw new BizException(CommonConstants.USER_STATUS_INVALID_MESSAGE);
+            throw new BizException(IdentityConstants.USER_STATUS_INVALID_MESSAGE);
         }
         return status;
     }
 
     private String requireNickname(String nickname) {
-        String value = requireText(nickname, CommonConstants.NICKNAME_REQUIRED_MESSAGE);
+        String value = requireText(nickname, IdentityConstants.NICKNAME_REQUIRED_MESSAGE);
         if (value.length() > 30) {
-            throw new BizException(CommonConstants.NICKNAME_TOO_LONG_MESSAGE);
+            throw new BizException(IdentityConstants.NICKNAME_TOO_LONG_MESSAGE);
         }
         return value;
     }
 
     private String requireCurrentPassword(String password) {
         if (password == null || password.isBlank()) {
-            throw new BizException(CommonConstants.PASSWORD_REQUIRED_MESSAGE);
+            throw new BizException(IdentityConstants.PASSWORD_REQUIRED_MESSAGE);
         }
         return password;
     }
 
     private void requireRoleIds(List<Integer> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) {
-            throw new BizException(CommonConstants.ROLE_REQUIRED_MESSAGE);
+            throw new BizException(IdentityConstants.ROLE_REQUIRED_MESSAGE);
         }
     }
 
@@ -269,7 +270,7 @@ public class SysUserBizService {
 
     private void validateNewEmail(SysUser currentUser, String email) {
         if (Objects.equals(StringUtils.normalizeEmail(currentUser.getEmail()), email)) {
-            throw new BizException(CommonConstants.EMAIL_UNCHANGED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_UNCHANGED_MESSAGE);
         }
         ensureEmailAvailable(email, currentUser.getId());
     }
@@ -277,29 +278,29 @@ public class SysUserBizService {
     private void ensureEmailAvailable(String email, Integer currentUserId) {
         SysUser existing = sysUserService.getByEmail(email);
         if (existing != null && !Objects.equals(existing.getId(), currentUserId)) {
-            throw new BizException(CommonConstants.EMAIL_IN_USE_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_IN_USE_MESSAGE);
         }
     }
 
     private void protectRootUser(SysUser user, List<Integer> roleIds) {
-        if (!Objects.equals(user.getId(), CommonConstants.ROOT_USER_ID)) {
+        if (!Objects.equals(user.getId(), IdentityConstants.ROOT_USER_ID)) {
             return;
         }
         if (user.getStatus() != null
                 && user.getStatus() != SysUserStatusEnum.NORMAL.getCode()) {
-            throw new BizException(CommonConstants.ROOT_USER_DISABLE_FORBIDDEN_MESSAGE);
+            throw new BizException(IdentityConstants.ROOT_USER_DISABLE_FORBIDDEN_MESSAGE);
         }
         boolean hasAdminRole = sysRoleService.listByIds(roleIds).stream()
-                .anyMatch(role -> CommonConstants.ADMIN.equals(role.getCode()));
+                .anyMatch(role -> SecurityConstants.ADMIN_ROLE_CODE.equals(role.getCode()));
         if (!hasAdminRole) {
-            throw new BizException(CommonConstants.ROOT_USER_ADMIN_ROLE_REQUIRED_MESSAGE);
+            throw new BizException(IdentityConstants.ROOT_USER_ADMIN_ROLE_REQUIRED_MESSAGE);
         }
     }
 
     private SysUser getCurrentUser() {
         SysUser user = sysUserService.getById(SecurityUtils.getLoginIdAsInt());
         if (user == null) {
-            throw new BizException(CommonConstants.USER_NOT_FOUND_MESSAGE);
+            throw new BizException(IdentityConstants.USER_NOT_FOUND_MESSAGE);
         }
         return user;
     }

@@ -2,7 +2,7 @@ package com.nexora.system.config;
 
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.system.cache.SysConfigGroupCache;
-import com.nexora.constants.CommonConstants;
+import com.nexora.system.constants.SystemConfigConstants;
 import com.nexora.system.constants.SysConfigGroupEnum;
 import com.nexora.system.api.EmailSettings;
 import com.nexora.system.api.LoginSettings;
@@ -52,7 +52,7 @@ public class SysConfigGroupReader implements SystemConfigReader {
         String configValue = configGroupCache.get(normalizedCode,
                 () -> configGroupService.getValueByGroupCode(normalizedCode));
         if (configValue == null) {
-            throw new BizException(CommonConstants.CONFIG_GROUP_MISSING_MESSAGE.formatted(normalizedCode));
+            throw new BizException(SystemConfigConstants.CONFIG_GROUP_MISSING_MESSAGE.formatted(normalizedCode));
         }
         return registry.parse(normalizedCode, configValue, valueType);
     }

@@ -12,7 +12,7 @@ import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
 import com.nexora.system.api.SystemConfigReader;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.system.api.RegistrationSettings;
@@ -63,7 +63,7 @@ class AuthBizServiceRegistrationTest {
 
         assertThatThrownBy(() -> bizService.sendRegisterCode(form("user@example.com", null, null)))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.REGISTER_DISABLED_MESSAGE);
+                .hasMessageContaining(IdentityConstants.REGISTER_DISABLED_MESSAGE);
         verify(verificationService, never()).send(any());
     }
 
@@ -73,7 +73,7 @@ class AuthBizServiceRegistrationTest {
 
         assertThatThrownBy(() -> bizService.sendRegisterCode(form("user@example.com", null, null)))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.REGISTER_CONFIG_INCOMPLETE_MESSAGE);
+                .hasMessageContaining(IdentityConstants.REGISTER_CONFIG_INCOMPLETE_MESSAGE);
         verify(verificationService, never()).send(any());
     }
 
@@ -85,7 +85,7 @@ class AuthBizServiceRegistrationTest {
 
         assertThatThrownBy(() -> bizService.sendRegisterCode(form(" Used@Example.com ", null, null)))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.EMAIL_IN_USE_MESSAGE);
+                .hasMessageContaining(IdentityConstants.EMAIL_IN_USE_MESSAGE);
         verify(verificationService, never()).send(any());
     }
 
@@ -101,7 +101,7 @@ class AuthBizServiceRegistrationTest {
         MailVerificationSendRequest request = captor.getValue();
         assertThat(request.email()).isEqualTo("user@example.com");
         assertThat(request.scene()).isEqualTo(CommonVerificationScene.REGISTER);
-        assertThat(request.subject()).isEqualTo(CommonConstants.REGISTER_EMAIL_SUBJECT);
+        assertThat(request.subject()).isEqualTo(IdentityConstants.REGISTER_EMAIL_SUBJECT);
         assertThat(request.contentType()).isEqualTo(MailContentType.HTML);
         assertThat(request.content()).contains("注册验证", "账号注册", "{code}");
     }
@@ -134,7 +134,7 @@ class AuthBizServiceRegistrationTest {
         SysUser user = captor.getValue();
         assertThat(user.getEmail()).isEqualTo("abcdefghijklmnopqrstuvwxyz123456@example.com");
         assertThat(user.getNickname()).isEqualTo("abcdefghijklmnopqrstuvwxyz1234");
-        assertThat(user.getStatus()).isEqualTo(CommonConstants.YES);
+        assertThat(user.getStatus()).isEqualTo(SysUserStatusEnum.NORMAL.getCode());
         assertThat(user.getPassword()).isNotEqualTo("secret");
         InOrder verificationOrder = inOrder(imageVerificationService, verificationService);
         verificationOrder.verify(imageVerificationService).verifyAndConsume("captcha-id");
@@ -181,7 +181,7 @@ class AuthBizServiceRegistrationTest {
         assertThatThrownBy(() -> bizService.register(
                 form("user@example.com", "123456", "secret")))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
+                .hasMessageContaining(IdentityConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
 
         verify(imageVerificationService, never()).verifyAndConsume(any());
         verify(verificationService, never()).verifyAndConsume(any());
@@ -198,7 +198,7 @@ class AuthBizServiceRegistrationTest {
         assertThatThrownBy(() -> bizService.register(registrationForm(
                 "user@example.com", "123456", "secret", "captcha-id")))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.IMAGE_CAPTCHA_INVALID_MESSAGE);
+                .hasMessageContaining(IdentityConstants.IMAGE_CAPTCHA_INVALID_MESSAGE);
 
         verify(verificationService, never()).verifyAndConsume(any());
         verify(userService, never()).save(any());
@@ -216,7 +216,7 @@ class AuthBizServiceRegistrationTest {
         assertThatThrownBy(() -> bizService.register(registrationForm(
                 "user@example.com", "123456", "secret", "captcha-id")))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.IMAGE_CAPTCHA_VERIFY_FAILED_MESSAGE);
+                .hasMessageContaining(IdentityConstants.IMAGE_CAPTCHA_VERIFY_FAILED_MESSAGE);
 
         verify(verificationService, never()).verifyAndConsume(any());
         verify(userService, never()).save(any());
@@ -234,7 +234,7 @@ class AuthBizServiceRegistrationTest {
         assertThatThrownBy(() -> bizService.register(
                 registrationForm("user@example.com", "123456", "secret", "captcha-id")))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.EMAIL_CODE_INVALID_MESSAGE);
+                .hasMessageContaining(IdentityConstants.EMAIL_CODE_INVALID_MESSAGE);
         verify(userService, never()).save(any());
         verify(roleService, never()).addUserRoles(any(), any());
     }

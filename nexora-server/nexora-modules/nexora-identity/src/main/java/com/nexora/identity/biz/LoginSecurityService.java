@@ -3,7 +3,7 @@ package com.nexora.identity.biz;
 import cn.dev33.satoken.secure.BCrypt;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.cache.LoginRetryCache;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.constants.ResultCode;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.system.api.LoginSettings;
@@ -52,7 +52,7 @@ public class LoginSecurityService {
 
     public void validateUserStatus(SysUser user) {
         if (Integer.valueOf(SysUserStatusEnum.PENDING.getCode()).equals(user.getStatus())) {
-            throw new BizException(CommonConstants.ACCOUNT_PENDING_MESSAGE);
+            throw new BizException(IdentityConstants.ACCOUNT_PENDING_MESSAGE);
         }
         if (!Integer.valueOf(SysUserStatusEnum.NORMAL.getCode()).equals(user.getStatus())) {
             throw new BizException(ResultCode.DISABLE_ACCOUNT);
@@ -74,7 +74,7 @@ public class LoginSecurityService {
 
     private BizException locked(String email) {
         try {
-            return new BizException(CommonConstants.LOGIN_LOCKED_MESSAGE.formatted(
+            return new BizException(IdentityConstants.LOGIN_LOCKED_MESSAGE.formatted(
                     loginRetryCache.getRemainingMinutes(email)));
         } catch (RuntimeException exception) {
             return securityUnavailable();
@@ -82,6 +82,6 @@ public class LoginSecurityService {
     }
 
     private static BizException securityUnavailable() {
-        return new BizException(CommonConstants.LOGIN_SECURITY_UNAVAILABLE_MESSAGE);
+        return new BizException(IdentityConstants.LOGIN_SECURITY_UNAVAILABLE_MESSAGE);
     }
 }

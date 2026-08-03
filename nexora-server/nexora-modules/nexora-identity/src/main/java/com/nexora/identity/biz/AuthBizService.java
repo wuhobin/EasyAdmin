@@ -18,7 +18,7 @@ import cloud.tianai.captcha.validator.common.model.dto.ImageCaptchaTrack;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.constants.ResultCode;
 import com.nexora.identity.domain.form.AuthForm;
@@ -53,12 +53,12 @@ public class AuthBizService {
 
     public LoginUserInfoVo login(AuthForm form) {
         String email = StringUtils.normalizeEmail(
-                requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
+                requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
         String password = requireLoginPassword(form.getPassword());
         LoginSettings loginConfig = configReader.login();
         if (Boolean.TRUE.equals(loginConfig.getCaptchaEnabled())) {
             verifyImageCaptcha(requireText(
-                    form.getCaptchaId(), CommonConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE));
+                    form.getCaptchaId(), IdentityConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE));
         }
         loginSecurityService.assertNotLocked(email, loginConfig);
         SysUser user = sysUserService.getByEmail(email);
@@ -73,7 +73,7 @@ public class AuthBizService {
 
         LoginUserInfoVo loginUserInfo = toLoginUserInfo(user);
         loginUserInfo.setToken(SecurityUtils.getTokenValue());
-        SecurityUtils.setSessionAttribute(CommonConstants.CURRENT_USER, loginUserInfo);
+        SecurityUtils.setSessionAttribute(IdentityConstants.CURRENT_USER, loginUserInfo);
         return loginUserInfo;
     }
 
@@ -81,23 +81,23 @@ public class AuthBizService {
         RegistrationSettings registerConfig = requireRegistrationConfig();
         requireRegistrationRole(registerConfig);
         if (!Boolean.TRUE.equals(registerConfig.getVerifyEmail())) {
-            throw new BizException(CommonConstants.REGISTER_EMAIL_VERIFICATION_DISABLED_MESSAGE);
+            throw new BizException(IdentityConstants.REGISTER_EMAIL_VERIFICATION_DISABLED_MESSAGE);
         }
         String email = StringUtils.normalizeEmail(
-                requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
+                requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
         ensureEmailAvailable(email);
 
         MailVerificationService verificationService = mailVerificationServiceProvider.getIfAvailable();
         if (verificationService == null) {
-            throw new BizException(CommonConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
         }
         try {
             verificationService.send(VerificationMailRequestFactory.createRequest(
                     email, CommonVerificationScene.REGISTER));
         } catch (VerificationCooldownException exception) {
-            throw new BizException(CommonConstants.EMAIL_CODE_SEND_TOO_FREQUENT_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_TOO_FREQUENT_MESSAGE);
         } catch (VerificationException | IllegalArgumentException exception) {
-            throw new BizException(CommonConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
         }
     }
 
@@ -114,10 +114,10 @@ public class AuthBizService {
         RegistrationSettings registerConfig = requireRegistrationConfig();
         SysRole role = requireRegistrationRole(registerConfig);
         String email = StringUtils.normalizeEmail(
-                requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
+                requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
         String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
         String captchaId = requireText(
-                form.getCaptchaId(), CommonConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
+                form.getCaptchaId(), IdentityConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
         ensureEmailAvailable(email);
         verifyImageCaptcha(captchaId);
         if (Boolean.TRUE.equals(registerConfig.getVerifyEmail())) {
@@ -132,37 +132,37 @@ public class AuthBizService {
                 ? SysUserStatusEnum.PENDING.getCode() : SysUserStatusEnum.NORMAL.getCode());
         try {
             if (!sysUserService.save(user)) {
-                throw new BizException(CommonConstants.REGISTER_FAILED_MESSAGE);
+                throw new BizException(IdentityConstants.REGISTER_FAILED_MESSAGE);
             }
         } catch (DuplicateKeyException exception) {
-            throw new BizException(CommonConstants.EMAIL_IN_USE_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_IN_USE_MESSAGE);
         }
         sysRoleService.addUserRoles(user.getId(), List.of(role.getId()));
     }
 
     public void sendResetPasswordCode(AuthForm form) {
         String email = StringUtils.normalizeEmail(
-                requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
+                requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
         requireExistingUser(email);
 
         MailVerificationService verificationService = mailVerificationServiceProvider.getIfAvailable();
         if (verificationService == null) {
-            throw new BizException(CommonConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
         }
         try {
             verificationService.send(VerificationMailRequestFactory.createRequest(
                     email, CommonVerificationScene.RESET_PASSWORD));
         } catch (VerificationCooldownException exception) {
-            throw new BizException(CommonConstants.EMAIL_CODE_SEND_TOO_FREQUENT_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_TOO_FREQUENT_MESSAGE);
         } catch (VerificationException | IllegalArgumentException exception) {
-            throw new BizException(CommonConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
         }
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void resetPassword(AuthForm form) {
         String email = StringUtils.normalizeEmail(
-                requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
+                requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
         String code = requireVerificationCode(form.getCode());
         String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
         SysUser user = requireExistingUser(email);
@@ -172,7 +172,7 @@ public class AuthBizService {
         update.setId(user.getId());
         update.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
         if (!sysUserService.updateById(update)) {
-            throw new BizException(CommonConstants.PASSWORD_RESET_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.PASSWORD_RESET_FAILED_MESSAGE);
         }
         SecurityUtils.kickout(user.getId());
     }
@@ -199,7 +199,7 @@ public class AuthBizService {
     private RegistrationSettings requireRegistrationConfig() {
         RegistrationSettings config = configReader.register();
         if (!Boolean.TRUE.equals(config.getEnabled())) {
-            throw new BizException(CommonConstants.REGISTER_DISABLED_MESSAGE);
+            throw new BizException(IdentityConstants.REGISTER_DISABLED_MESSAGE);
         }
         return config;
     }
@@ -207,7 +207,7 @@ public class AuthBizService {
     private SysRole requireRegistrationRole(RegistrationSettings config) {
         SysRole role = sysRoleService.getByCode(config.getDefaultRoleCode());
         if (role == null) {
-            throw new BizException(CommonConstants.REGISTER_CONFIG_INCOMPLETE_MESSAGE);
+            throw new BizException(IdentityConstants.REGISTER_CONFIG_INCOMPLETE_MESSAGE);
         }
         return role;
     }
@@ -215,17 +215,17 @@ public class AuthBizService {
     private void verifyRegisterCode(String email, String code) {
         MailVerificationService verificationService = mailVerificationServiceProvider.getIfAvailable();
         if (verificationService == null) {
-            throw new BizException(CommonConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
         }
         boolean verified;
         try {
             verified = verificationService.verifyAndConsume(new MailVerificationVerifyRequest(
                     email, CommonVerificationScene.REGISTER, code));
         } catch (VerificationException | IllegalArgumentException exception) {
-            throw new BizException(CommonConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
         }
         if (!verified) {
-            throw new BizException(CommonConstants.EMAIL_CODE_INVALID_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_INVALID_MESSAGE);
         }
     }
 
@@ -234,61 +234,61 @@ public class AuthBizService {
         try {
             verified = imageVerificationService.verifyAndConsume(captchaId);
         } catch (ImageVerificationException | IllegalArgumentException exception) {
-            throw new BizException(CommonConstants.IMAGE_CAPTCHA_VERIFY_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.IMAGE_CAPTCHA_VERIFY_FAILED_MESSAGE);
         }
         if (!verified) {
-            throw new BizException(CommonConstants.IMAGE_CAPTCHA_INVALID_MESSAGE);
+            throw new BizException(IdentityConstants.IMAGE_CAPTCHA_INVALID_MESSAGE);
         }
     }
 
     private void verifyResetPasswordCode(String email, String code) {
         MailVerificationService verificationService = mailVerificationServiceProvider.getIfAvailable();
         if (verificationService == null) {
-            throw new BizException(CommonConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
         }
         boolean verified;
         try {
             verified = verificationService.verifyAndConsume(new MailVerificationVerifyRequest(
                     email, CommonVerificationScene.RESET_PASSWORD, code));
         } catch (VerificationException | IllegalArgumentException exception) {
-            throw new BizException(CommonConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_VERIFY_FAILED_MESSAGE);
         }
         if (!verified) {
-            throw new BizException(CommonConstants.EMAIL_CODE_INVALID_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_CODE_INVALID_MESSAGE);
         }
     }
 
     private SysUser requireExistingUser(String email) {
         SysUser user = sysUserService.getByEmail(email);
         if (user == null) {
-            throw new BizException(CommonConstants.EMAIL_NOT_REGISTERED_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_NOT_REGISTERED_MESSAGE);
         }
         return user;
     }
 
     private void ensureEmailAvailable(String email) {
         if (sysUserService.getByEmail(email) != null) {
-            throw new BizException(CommonConstants.EMAIL_IN_USE_MESSAGE);
+            throw new BizException(IdentityConstants.EMAIL_IN_USE_MESSAGE);
         }
     }
 
     private static String createNickname(String email) {
         int separatorIndex = email.indexOf('@');
         String nickname = separatorIndex > 0 ? email.substring(0, separatorIndex) : email;
-        return nickname.substring(0, Math.min(nickname.length(), CommonConstants.MAX_NICKNAME_LENGTH));
+        return nickname.substring(0, Math.min(nickname.length(), IdentityConstants.MAX_NICKNAME_LENGTH));
     }
 
     private static String requireLoginPassword(String password) {
         if (password == null || password.isBlank()) {
-            throw new BizException(CommonConstants.PASSWORD_REQUIRED_MESSAGE);
+            throw new BizException(IdentityConstants.PASSWORD_REQUIRED_MESSAGE);
         }
         return password;
     }
 
     private static String requireVerificationCode(String code) {
-        String value = requireText(code, CommonConstants.EMAIL_CODE_REQUIRED_MESSAGE);
-        if (!value.matches(CommonConstants.EMAIL_CODE_PATTERN)) {
-            throw new BizException(CommonConstants.EMAIL_CODE_FORMAT_INVALID_MESSAGE);
+        String value = requireText(code, IdentityConstants.EMAIL_CODE_REQUIRED_MESSAGE);
+        if (!value.matches(IdentityConstants.EMAIL_CODE_PATTERN)) {
+            throw new BizException(IdentityConstants.EMAIL_CODE_FORMAT_INVALID_MESSAGE);
         }
         return value;
     }

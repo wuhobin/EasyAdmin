@@ -1,6 +1,6 @@
 package com.nexora.monitor.infrastructure;
 
-import com.nexora.constants.CommonConstants;
+import com.nexora.monitor.constants.MonitorConstants;
 import com.aurora.starter.common.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.lionsoul.ip2region.xdb.Searcher;
@@ -22,17 +22,17 @@ public final class IpRegionUtils {
 
     public static String resolve(String ip) {
         if (StringUtils.isBlank(ip) || SEARCHER == null) {
-            return CommonConstants.UNKNOWN;
+            return MonitorConstants.UNKNOWN_REGION;
         }
         try {
             String region = SEARCHER.search(ip);
             if (StringUtils.isBlank(region)) {
-                return CommonConstants.UNKNOWN;
+                return MonitorConstants.UNKNOWN_REGION;
             }
             return region.replace("|0", "").replace("0|", "");
         } catch (Exception e) {
             log.debug("Unable to resolve IP region: {}", ip, e);
-            return CommonConstants.UNKNOWN;
+            return MonitorConstants.UNKNOWN_REGION;
         }
     }
 

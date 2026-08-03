@@ -13,7 +13,7 @@ import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
 import com.nexora.system.api.SystemConfigReader;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.service.SysRoleService;
@@ -52,7 +52,7 @@ class AuthBizServicePasswordResetTest {
         assertThatThrownBy(() -> bizService.sendResetPasswordCode(
                 form("missing@example.com", null, null)))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.EMAIL_NOT_REGISTERED_MESSAGE);
+                .hasMessageContaining(IdentityConstants.EMAIL_NOT_REGISTERED_MESSAGE);
 
         verify(verificationService, never()).send(any());
     }
@@ -70,7 +70,7 @@ class AuthBizServicePasswordResetTest {
         MailVerificationSendRequest request = captor.getValue();
         assertThat(request.email()).isEqualTo("user@example.com");
         assertThat(request.scene()).isEqualTo(CommonVerificationScene.RESET_PASSWORD);
-        assertThat(request.subject()).isEqualTo(CommonConstants.RESET_PASSWORD_EMAIL_SUBJECT);
+        assertThat(request.subject()).isEqualTo(IdentityConstants.RESET_PASSWORD_EMAIL_SUBJECT);
         assertThat(request.contentType()).isEqualTo(MailContentType.HTML);
         assertThat(request.content()).contains("忘记密码验证", "忘记密码", "{code}");
     }
@@ -84,7 +84,7 @@ class AuthBizServicePasswordResetTest {
         assertThatThrownBy(() -> bizService.resetPassword(
                 form("user@example.com", "123456", "new-secret")))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.EMAIL_CODE_INVALID_MESSAGE);
+                .hasMessageContaining(IdentityConstants.EMAIL_CODE_INVALID_MESSAGE);
 
         verify(userService, never()).updateById(any());
     }

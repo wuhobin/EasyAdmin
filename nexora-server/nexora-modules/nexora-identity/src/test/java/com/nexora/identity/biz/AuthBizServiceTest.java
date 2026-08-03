@@ -6,7 +6,7 @@ import com.nexora.identity.config.PasswordPolicyValidator;
 import com.nexora.system.api.SystemConfigReader;
 import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.cache.SecurityAuthorizationCache;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.system.api.LoginSettings;
 import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.service.SysUserService;
@@ -85,7 +85,7 @@ class AuthBizServiceTest {
             var loginUserInfo = service.login(form);
 
             securityUtils.verify(() -> SecurityUtils.setSessionAttribute(
-                    CommonConstants.CURRENT_USER, loginUserInfo));
+                    IdentityConstants.CURRENT_USER, loginUserInfo));
         }
     }
 

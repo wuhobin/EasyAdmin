@@ -1,7 +1,7 @@
 package com.nexora.identity.config;
 
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.service.SysRoleService;
 import com.nexora.system.api.RegistrationSettings;
 import com.nexora.system.api.SystemSettingsValidator;
@@ -26,7 +26,7 @@ public class RegisterConfigRoleValidator implements SystemSettingsValidator {
     public void validate(Object config) {
         RegistrationSettings registerConfig = (RegistrationSettings) config;
         if (roleService.getByCode(registerConfig.getDefaultRoleCode()) == null) {
-            throw new BizException(CommonConstants.REGISTER_ROLE_UNAVAILABLE_MESSAGE);
+            throw new BizException(IdentityConstants.REGISTER_ROLE_UNAVAILABLE_MESSAGE);
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.nexora.mail.biz;
 
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.constants.CommonConstants;
+import com.nexora.mail.constants.MailConstants;
 import com.nexora.system.api.EmailSettings;
 import com.nexora.system.api.SystemConfigReader;
 import com.nexora.system.api.SystemMailSender;
@@ -32,7 +32,7 @@ public class SystemMailBizService implements SystemMailSender {
     public void sendTestMail(String to) {
         EmailSettings config = configReader.email();
         if (!Boolean.TRUE.equals(config.getEnabled())) {
-            throw new BizException(CommonConstants.SYSTEM_MAIL_DISABLED_MESSAGE);
+            throw new BizException(MailConstants.SYSTEM_MAIL_DISABLED_MESSAGE);
         }
 
         try {
@@ -45,7 +45,7 @@ public class SystemMailBizService implements SystemMailSender {
             helper.setText(testContent(config), false);
             mailSender.send(message);
         } catch (MessagingException | MailException | IllegalArgumentException exception) {
-            throw new BizException(CommonConstants.TEST_EMAIL_SEND_FAILED_MESSAGE.formatted(exception.getMessage()));
+            throw new BizException(MailConstants.TEST_EMAIL_SEND_FAILED_MESSAGE.formatted(exception.getMessage()));
         }
     }
 

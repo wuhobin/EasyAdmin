@@ -1,78 +1,12 @@
-package com.nexora.constants;
+package com.nexora.identity.constants;
 
-import java.util.Map;
+public final class IdentityConstants {
 
-public class CommonConstants {
     public static final int ROOT_USER_ID = 1;
-
-    public static final String UTF8 = "UTF-8";
-
-    public static final String DEFAULT_PASSWORD = "123456";
-
-    public static final String ADMIN = "admin";
-
-    public static final String TEST = "test";
-
-    public static final String UNKNOWN = "未知";
-
-    public static final int YES = 1;
-
-    public static final int NO = 0;
 
     public static final String CURRENT_USER = "current_user";
 
-    public static final String FILE_EMPTY_MESSAGE = "上传文件不能为空";
-
-    public static final long FILE_UPLOAD_MAX_SIZE = 50L * 1024 * 1024;
-
-    public static final int FILE_ORIGINAL_FILENAME_MAX_LENGTH = 255;
-
-    public static final String FILE_TOO_LARGE_MESSAGE = "上传文件大小不能超过 50MB";
-
-    public static final String FILE_NAME_REQUIRED_MESSAGE = "上传文件名不能为空";
-
-    public static final String FILE_NAME_TOO_LONG_MESSAGE = "上传文件名长度不能超过 255 个字符";
-
-    public static final String FILE_EXTENSION_NOT_ALLOWED_MESSAGE =
-            "仅支持 JPG、JPEG、PNG、GIF、WEBP、MP4、PDF、ZIP、TXT 格式";
-
-    public static final String FILE_CONTENT_TYPE_MISMATCH_MESSAGE = "文件扩展名与实际内容类型不匹配";
-
-    public static final String FILE_CONTENT_DETECTION_FAILED_MESSAGE = "无法读取上传文件内容";
-
-    public static final String FILE_MP4_CONTENT_TYPE = "video/mp4";
-
-    public static final Map<String, String> FILE_ALLOWED_CONTENT_TYPE_BY_EXTENSION = Map.ofEntries(
-            Map.entry("jpg", "image/jpeg"),
-            Map.entry("jpeg", "image/jpeg"),
-            Map.entry("png", "image/png"),
-            Map.entry("gif", "image/gif"),
-            Map.entry("webp", "image/webp"),
-            Map.entry("mp4", FILE_MP4_CONTENT_TYPE),
-            Map.entry("pdf", "application/pdf"),
-            Map.entry("zip", "application/zip"),
-            Map.entry("txt", "text/plain")
-    );
-
-    public static final String FILE_UPLOAD_FAILED_MESSAGE = "上传文件失败";
-
-    public static final String FILE_CURRENT_USER_REQUIRED_MESSAGE = "无法获取当前登录用户";
-
-    public static final String FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE = "文件不存在或无权访问";
-
-    public static final String FILE_OSS_DELETE_FAILED_MESSAGE = "OSS 文件删除失败";
-
-    public static final String FILE_AVATAR_IN_USE_MESSAGE = "该文件正在作为用户头像使用，请先更换头像后再删除";
-
-    public static final String FILE_RECORD_DELETE_FAILED_MESSAGE = "文件记录删除失败, id=%s, fileId=%s";
-
-    public static final String FILE_OBJECT_KEY_UNAVAILABLE_MESSAGE = "无法解析 OSS 文件对象名称";
-
-    public static final String FILE_DEFAULT_ORDER = "create_time desc";
-
     public static final String PARENT_VIEW = "ParentView";
-
-    public static final Object USER = "user";
 
     public static final String EMAIL_REQUIRED_MESSAGE = "邮箱不能为空";
 
@@ -91,8 +25,6 @@ public class CommonConstants {
     public static final String NICKNAME_TOO_LONG_MESSAGE = "用户昵称长度不能超过30个字符";
 
     public static final String PASSWORD_REQUIRED_MESSAGE = "密码不能为空";
-
-    public static final String PASSWORD_LENGTH_INVALID_MESSAGE = "密码长度必须在6到20个字符之间";
 
     public static final String PASSWORD_RESET_FAILED_MESSAGE = "密码重置失败，请稍后重试";
 
@@ -134,8 +66,6 @@ public class CommonConstants {
 
     public static final String REGISTER_EMAIL_VERIFICATION_DISABLED_MESSAGE = "系统未启用注册邮箱验证";
 
-    public static final String REGISTER_PENDING_MESSAGE = "注册申请已提交，请等待管理员审核";
-
     public static final String REGISTER_FAILED_MESSAGE = "注册失败，请稍后重试";
 
     public static final int MAX_NICKNAME_LENGTH = 30;
@@ -163,55 +93,6 @@ public class CommonConstants {
     public static final String PASSWORD_NUMBER_REQUIRED_MESSAGE = "密码必须包含数字";
 
     public static final String PASSWORD_SPECIAL_REQUIRED_MESSAGE = "密码必须包含特殊字符";
-
-    public static final String CONFIG_GROUP_UNSUPPORTED_MESSAGE = "不支持的配置分组";
-
-    public static final String CONFIG_GROUP_VALUE_REQUIRED_MESSAGE = "配置值不能为空";
-
-    public static final String CONFIG_GROUP_JSON_INVALID_MESSAGE = "配置 JSON 格式或字段不正确";
-
-    public static final String CONFIG_GROUP_JSON_OBJECT_REQUIRED_MESSAGE = "配置值必须是 JSON 对象";
-
-    public static final String CONFIG_GROUP_TYPE_MISMATCH_MESSAGE = "配置类型不匹配";
-
-    public static final String CONFIG_GROUP_INVALID_MESSAGE = "配置分组 %s 无效：%s";
-
-    public static final String CONFIG_GROUP_MISSING_MESSAGE = "缺少配置分组：%s";
-
-    public static final String CONFIG_GROUP_STRUCTURE_INVALID_MESSAGE =
-            "系统配置分组结构不完整，缺失=%s，不支持=%s";
-
-    public static final String CONFIG_GROUP_NAME_MISMATCH_MESSAGE =
-            "配置分组 %s 名称不一致，数据库=%s，预期=%s";
-
-    public static final String CONFIG_GROUP_UPDATE_FAILED_MESSAGE = "修改配置分组失败";
-
-    public static final String CONFIG_GROUP_CACHE_UNAVAILABLE_MESSAGE =
-            "Redis 不可用，无法安全更新配置缓存";
-
-    public static final String SYSTEM_MAIL_DISABLED_MESSAGE = "邮件服务未启用";
-
-    public static final String TEST_EMAIL_SEND_FAILED_MESSAGE = "测试邮件发送失败：%s";
-
-    public static final String MAIL_PROVIDER_DICT_TYPE = "mail_provider";
-
-    public static final String MAIL_ACCOUNT_AUTH_CODE_REQUIRED_MESSAGE = "新增邮箱时授权码不能为空";
-
-    public static final String MAIL_ACCOUNT_ID_REQUIRED_MESSAGE = "邮箱账户ID不能为空";
-
-    public static final String MAIL_ACCOUNT_EXISTS_MESSAGE = "该邮箱已经添加";
-
-    public static final String MAIL_ACCOUNT_UNAVAILABLE_MESSAGE = "邮箱账户不存在或不可用";
-
-    public static final String MAIL_PROVIDER_NOT_CONFIGURED_MESSAGE = "未配置邮箱类型字典 mail_provider";
-
-    public static final String MAIL_PROVIDER_EMPTY_MESSAGE = "邮箱类型字典没有可用数据";
-
-    public static final String MAIL_ADDRESS_DOMAIN_REQUIRED_MESSAGE = "%s地址必须以 @%s 结尾";
-
-    public static final String MAIL_CURSOR_INVALID_MESSAGE = "邮件分页游标无效，请刷新后重试";
-
-    public static final String MAIL_CURSOR_CREATE_FAILED_MESSAGE = "邮件分页游标生成失败";
 
     public static final String VERIFICATION_TITLE_PLACEHOLDER = "{verificationTitle}";
 
@@ -356,4 +237,7 @@ public class CommonConstants {
             </body>
             </html>
             """;
+
+    private IdentityConstants() {
+    }
 }

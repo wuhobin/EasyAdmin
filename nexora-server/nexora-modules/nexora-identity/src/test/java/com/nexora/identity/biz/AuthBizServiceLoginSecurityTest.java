@@ -8,7 +8,7 @@ import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
 import com.nexora.system.api.SystemConfigReader;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.system.api.LoginSettings;
 import com.nexora.identity.entity.SysUser;
@@ -43,7 +43,7 @@ class AuthBizServiceLoginSecurityTest {
 
         assertThatThrownBy(() -> bizService.login(loginForm("secret", "captcha-id")))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.IMAGE_CAPTCHA_INVALID_MESSAGE);
+                .hasMessageContaining(IdentityConstants.IMAGE_CAPTCHA_INVALID_MESSAGE);
 
         verify(userService, never()).getByEmail(any());
         verify(loginRetryCache, never()).getFailureCount(any());
@@ -84,7 +84,7 @@ class AuthBizServiceLoginSecurityTest {
 
         assertThatThrownBy(() -> bizService.login(loginForm("secret", null)))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.LOGIN_SECURITY_UNAVAILABLE_MESSAGE);
+                .hasMessageContaining(IdentityConstants.LOGIN_SECURITY_UNAVAILABLE_MESSAGE);
 
         verify(userService, never()).getByEmail(any());
     }
@@ -97,7 +97,7 @@ class AuthBizServiceLoginSecurityTest {
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
             assertThatThrownBy(() -> bizService.login(loginForm("secret", null)))
                     .isInstanceOf(BizException.class)
-                    .hasMessageContaining(CommonConstants.ACCOUNT_PENDING_MESSAGE);
+                    .hasMessageContaining(IdentityConstants.ACCOUNT_PENDING_MESSAGE);
 
             securityUtils.verifyNoInteractions();
         }

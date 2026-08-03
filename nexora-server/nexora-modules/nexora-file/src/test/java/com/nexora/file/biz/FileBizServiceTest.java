@@ -1,6 +1,7 @@
 package com.nexora.file.biz;
 
-import com.nexora.constants.CommonConstants;
+import com.nexora.constants.SecurityConstants;
+import com.nexora.file.constants.FileConstants;
 import com.nexora.contract.StoredFileUsageChecker;
 import com.nexora.file.domain.form.OssFileQueryForm;
 import com.nexora.file.domain.query.OssFileQuery;
@@ -114,7 +115,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
-                .hasMessage(CommonConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE);
+                .hasMessage(FileConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE);
 
         verify(ossTemplate, never()).upload(any(MultipartFile.class), anyString());
     }
@@ -125,7 +126,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
-                .hasMessage(CommonConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE);
+                .hasMessage(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE);
 
         verify(ossTemplate, never()).upload(any(MultipartFile.class), anyString());
     }
@@ -137,7 +138,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
-                .hasMessage(CommonConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE);
+                .hasMessage(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE);
 
         verify(ossTemplate, never()).upload(any(MultipartFile.class), anyString());
     }
@@ -145,11 +146,11 @@ class FileBizServiceTest {
     @Test
     void rejectsAFileLargerThanFiftyMegabytesBeforeCallingOss() {
         MultipartFile file = mock(MultipartFile.class);
-        when(file.getSize()).thenReturn(CommonConstants.FILE_UPLOAD_MAX_SIZE + 1);
+        when(file.getSize()).thenReturn(FileConstants.FILE_UPLOAD_MAX_SIZE + 1);
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
-                .hasMessage(CommonConstants.FILE_TOO_LARGE_MESSAGE);
+                .hasMessage(FileConstants.FILE_TOO_LARGE_MESSAGE);
 
         verify(ossTemplate, never()).upload(any(MultipartFile.class), anyString());
     }
@@ -157,7 +158,7 @@ class FileBizServiceTest {
     @Test
     void allowsAFileExactlyAtTheSizeLimit() throws Exception {
         MultipartFile file = mock(MultipartFile.class);
-        when(file.getSize()).thenReturn(CommonConstants.FILE_UPLOAD_MAX_SIZE);
+        when(file.getSize()).thenReturn(FileConstants.FILE_UPLOAD_MAX_SIZE);
         when(file.getOriginalFilename()).thenReturn("avatar.png");
         when(file.getInputStream()).thenReturn(new ByteArrayInputStream(pngBytes()));
         when(ossTemplate.upload(any(MultipartFile.class), anyString())).thenReturn(uploadResult("file-123"));
@@ -179,7 +180,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
-                .hasMessage(CommonConstants.FILE_NAME_REQUIRED_MESSAGE);
+                .hasMessage(FileConstants.FILE_NAME_REQUIRED_MESSAGE);
 
         verify(ossTemplate, never()).upload(any(MultipartFile.class), anyString());
     }
@@ -198,7 +199,7 @@ class FileBizServiceTest {
             service.upload(file);
         }
 
-        assertThat(filename).hasSize(CommonConstants.FILE_ORIGINAL_FILENAME_MAX_LENGTH);
+        assertThat(filename).hasSize(FileConstants.FILE_ORIGINAL_FILENAME_MAX_LENGTH);
         verify(ossTemplate).upload(any(MultipartFile.class), anyString());
     }
 
@@ -209,9 +210,9 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
-                .hasMessage(CommonConstants.FILE_NAME_TOO_LONG_MESSAGE);
+                .hasMessage(FileConstants.FILE_NAME_TOO_LONG_MESSAGE);
 
-        assertThat(filename).hasSize(CommonConstants.FILE_ORIGINAL_FILENAME_MAX_LENGTH + 1);
+        assertThat(filename).hasSize(FileConstants.FILE_ORIGINAL_FILENAME_MAX_LENGTH + 1);
         verify(ossTemplate, never()).upload(any(MultipartFile.class), anyString());
     }
 
@@ -263,7 +264,7 @@ class FileBizServiceTest {
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(0);
 
             assertThatThrownBy(() -> service.upload(file()))
-                    .hasMessage(CommonConstants.FILE_CURRENT_USER_REQUIRED_MESSAGE);
+                    .hasMessage(FileConstants.FILE_CURRENT_USER_REQUIRED_MESSAGE);
         }
 
         verify(ossTemplate, never()).upload(any(MockMultipartFile.class), anyString());
@@ -316,7 +317,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
             service.list(form, new PageParam(1, 10));
         }
@@ -335,7 +336,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(true);
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(true);
             service.list(form, new PageParam(1, 10));
         }
 
@@ -353,7 +354,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
 
             service.deleteById(1L);
@@ -372,10 +373,10 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(true);
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(true);
 
             assertThatThrownBy(() -> service.deleteById(1L))
-                    .hasMessage(CommonConstants.FILE_AVATAR_IN_USE_MESSAGE);
+                    .hasMessage(FileConstants.FILE_AVATAR_IN_USE_MESSAGE);
         }
 
         verify(sysUserService).isInUse(file.getFileUrl());
@@ -389,11 +390,11 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
 
             assertThatThrownBy(() -> service.deleteById(1L))
-                    .hasMessage(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
+                    .hasMessage(FileConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
         }
 
         verify(sysUserService, never()).isInUse(anyString());
@@ -407,7 +408,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.deleteById(1L))
-                .hasMessage(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
+                .hasMessage(FileConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
 
         verify(sysUserService, never()).isInUse(anyString());
         verify(ossTemplate, never()).delete(any(FileInfo.class));
@@ -421,7 +422,7 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(true);
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(true);
 
             service.deleteById(1L);
         }
@@ -436,11 +437,11 @@ class FileBizServiceTest {
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
-            securityUtils.when(() -> SecurityUtils.hasRole(CommonConstants.ADMIN)).thenReturn(false);
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
             securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
 
             assertThatThrownBy(() -> service.download(1L, new MockHttpServletResponse()))
-                    .hasMessage(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
+                    .hasMessage(FileConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
         }
 
         verify(ossTemplate, never()).getFileStorageService();

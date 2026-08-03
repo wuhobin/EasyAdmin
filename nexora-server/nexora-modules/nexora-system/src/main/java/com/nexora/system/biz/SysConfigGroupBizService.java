@@ -6,7 +6,7 @@ import com.nexora.system.cache.SysConfigGroupCache;
 import com.nexora.system.api.SystemSettingsValidator;
 import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.system.config.SysConfigGroupRegistry;
-import com.nexora.constants.CommonConstants;
+import com.nexora.system.constants.SystemConfigConstants;
 import com.nexora.system.constants.SysConfigGroupEnum;
 import com.nexora.system.api.LoginSettings;
 import com.nexora.system.api.PasswordSettings;
@@ -69,7 +69,7 @@ public class SysConfigGroupBizService {
         prepareCacheUpdate(normalizedCode);
         group.setConfigValue(normalized.json());
         if (!configGroupService.updateById(group)) {
-            throw new BizException(CommonConstants.CONFIG_GROUP_UPDATE_FAILED_MESSAGE);
+            throw new BizException(SystemConfigConstants.CONFIG_GROUP_UPDATE_FAILED_MESSAGE);
         }
         configGroupCache.refreshAfterCommit(normalizedCode, normalized.json());
     }
@@ -81,7 +81,7 @@ public class SysConfigGroupBizService {
                 configGroupCache.setRequired(group.getGroupCode(), group.getConfigValue());
             }
         } catch (RuntimeException exception) {
-            throw new BizException(CommonConstants.CONFIG_GROUP_CACHE_UNAVAILABLE_MESSAGE);
+            throw new BizException(SystemConfigConstants.CONFIG_GROUP_CACHE_UNAVAILABLE_MESSAGE);
         }
     }
 
@@ -124,7 +124,7 @@ public class SysConfigGroupBizService {
             missing.removeAll(actualCodes);
             Set<String> unsupported = new HashSet<>(actualCodes);
             unsupported.removeAll(registry.supportedCodes());
-            throw new BizException(CommonConstants.CONFIG_GROUP_STRUCTURE_INVALID_MESSAGE.formatted(
+            throw new BizException(SystemConfigConstants.CONFIG_GROUP_STRUCTURE_INVALID_MESSAGE.formatted(
                     missing, unsupported));
         }
         return groups;
@@ -133,7 +133,7 @@ public class SysConfigGroupBizService {
     private void validateGroupName(SysConfigGroup group) {
         SysConfigGroupEnum definition = SysConfigGroupEnum.getByCode(group.getGroupCode());
         if (definition != null && !definition.getDescription().equals(group.getGroupName())) {
-            throw new BizException(CommonConstants.CONFIG_GROUP_NAME_MISMATCH_MESSAGE.formatted(
+            throw new BizException(SystemConfigConstants.CONFIG_GROUP_NAME_MISMATCH_MESSAGE.formatted(
                     group.getGroupCode(), group.getGroupName(), definition.getDescription()));
         }
     }
@@ -147,7 +147,7 @@ public class SysConfigGroupBizService {
     private SysConfigGroup requireGroup(String groupCode) {
         SysConfigGroup group = configGroupService.getByGroupCode(groupCode);
         if (group == null) {
-            throw new BizException(CommonConstants.CONFIG_GROUP_MISSING_MESSAGE.formatted(groupCode));
+            throw new BizException(SystemConfigConstants.CONFIG_GROUP_MISSING_MESSAGE.formatted(groupCode));
         }
         return group;
     }
@@ -156,7 +156,7 @@ public class SysConfigGroupBizService {
         try {
             configGroupCache.prepareUpdate(groupCode);
         } catch (RuntimeException exception) {
-            throw new BizException(CommonConstants.CONFIG_GROUP_CACHE_UNAVAILABLE_MESSAGE);
+            throw new BizException(SystemConfigConstants.CONFIG_GROUP_CACHE_UNAVAILABLE_MESSAGE);
         }
     }
 }

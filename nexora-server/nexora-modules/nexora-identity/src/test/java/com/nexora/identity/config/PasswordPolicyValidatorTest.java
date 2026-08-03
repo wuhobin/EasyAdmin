@@ -2,7 +2,7 @@ package com.nexora.identity.config;
 
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.system.api.SystemConfigReader;
-import com.nexora.constants.CommonConstants;
+import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.system.api.PasswordSettings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,10 +34,10 @@ class PasswordPolicyValidatorTest {
 
     @Test
     void enforcesAllConfiguredCharacterClasses() {
-        assertInvalid("abcdef1!", CommonConstants.PASSWORD_UPPERCASE_REQUIRED_MESSAGE);
-        assertInvalid("ABCDEF1!", CommonConstants.PASSWORD_LOWERCASE_REQUIRED_MESSAGE);
-        assertInvalid("Abcdefg!", CommonConstants.PASSWORD_NUMBER_REQUIRED_MESSAGE);
-        assertInvalid("Abcdef12", CommonConstants.PASSWORD_SPECIAL_REQUIRED_MESSAGE);
+        assertInvalid("abcdef1!", IdentityConstants.PASSWORD_UPPERCASE_REQUIRED_MESSAGE);
+        assertInvalid("ABCDEF1!", IdentityConstants.PASSWORD_LOWERCASE_REQUIRED_MESSAGE);
+        assertInvalid("Abcdefg!", IdentityConstants.PASSWORD_NUMBER_REQUIRED_MESSAGE);
+        assertInvalid("Abcdef12", IdentityConstants.PASSWORD_SPECIAL_REQUIRED_MESSAGE);
     }
 
     @Test
@@ -49,14 +49,14 @@ class PasswordPolicyValidatorTest {
     void rejectsPasswordsLongerThanTheBcryptUtf8Limit() {
         String password = "Aa1!" + "密".repeat(23);
 
-        assertInvalid(password, CommonConstants.PASSWORD_BCRYPT_BYTES_INVALID_MESSAGE);
+        assertInvalid(password, IdentityConstants.PASSWORD_BCRYPT_BYTES_INVALID_MESSAGE);
     }
 
     @Test
     void rejectsBlankPasswordsBeforeReadingThePolicy() {
         assertThatThrownBy(() -> passwordValidator.validateNewPassword("  "))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining(CommonConstants.PASSWORD_REQUIRED_MESSAGE);
+                .hasMessageContaining(IdentityConstants.PASSWORD_REQUIRED_MESSAGE);
     }
 
     private void assertInvalid(String password, String message) {
