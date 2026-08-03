@@ -1,13 +1,13 @@
 package com.nexora.file.biz;
 
 import com.nexora.constants.CommonConstants;
+import com.nexora.contract.StoredFileUsageChecker;
 import com.nexora.file.domain.convert.OssFileConvert;
 import com.nexora.file.domain.form.OssFileQueryForm;
 import com.nexora.file.domain.query.OssFileQuery;
 import com.nexora.file.domain.vo.SysOssFileVo;
 import com.nexora.file.entity.SysOssFile;
 import com.nexora.file.service.SysOssFileService;
-import com.nexora.identity.service.SysUserService;
 import com.aurora.starter.common.utils.DateUtils;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.model.OssUploadResult;
@@ -46,7 +46,7 @@ public class FileBizService {
 
     private final OssTemplate ossTemplate;
     private final SysOssFileService ossFileService;
-    private final SysUserService sysUserService;
+    private final StoredFileUsageChecker storedFileUsageChecker;
     private final OssFileRecordRetryTask retryTask;
 
     public String upload(MultipartFile file) {
@@ -143,7 +143,7 @@ public class FileBizService {
 
     public void deleteById(Long id) {
         SysOssFile file = getAccessibleFile(id);
-        if (sysUserService.existsByAvatar(file.getFileUrl())) {
+        if (storedFileUsageChecker.isInUse(file.getFileUrl())) {
             throw new BizException(CommonConstants.FILE_AVATAR_IN_USE_MESSAGE);
         }
         if (!deleteOssFile(file)) {

@@ -1,4 +1,4 @@
-package com.nexora.identity.service;
+package com.nexora.contract;
 
 import java.util.List;
 

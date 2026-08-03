@@ -1,6 +1,6 @@
 package com.nexora.mail.service;
 
-import com.nexora.identity.service.UserDeletionCleanup;
+import com.nexora.contract.UserDeletionCleanup;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

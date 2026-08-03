@@ -1,11 +1,11 @@
 package com.nexora.file.biz;
 
 import com.nexora.constants.CommonConstants;
+import com.nexora.contract.StoredFileUsageChecker;
 import com.nexora.file.domain.form.OssFileQueryForm;
 import com.nexora.file.domain.query.OssFileQuery;
 import com.nexora.file.entity.SysOssFile;
 import com.nexora.file.service.SysOssFileService;
-import com.nexora.identity.service.SysUserService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
@@ -51,7 +51,7 @@ class FileBizServiceTest {
     private SysOssFileService ossFileService;
 
     @Mock
-    private SysUserService sysUserService;
+    private StoredFileUsageChecker sysUserService;
 
     @Mock
     private OssFileRecordRetryTask retryTask;
@@ -359,7 +359,7 @@ class FileBizServiceTest {
             service.deleteById(1L);
         }
 
-        verify(sysUserService).existsByAvatar(file.getFileUrl());
+        verify(sysUserService).isInUse(file.getFileUrl());
         verify(ossTemplate).delete(any(FileInfo.class));
         verify(ossFileService).removeById(1L);
     }
@@ -368,7 +368,7 @@ class FileBizServiceTest {
     void rejectsDeletingAFileUsedAsAnAvatarEvenForAdmin() {
         SysOssFile file = storedFile(1L, 20L);
         when(ossFileService.getById(1L)).thenReturn(file);
-        when(sysUserService.existsByAvatar(file.getFileUrl())).thenReturn(true);
+        when(sysUserService.isInUse(file.getFileUrl())).thenReturn(true);
         FileBizService service = new FileBizService(ossTemplate, ossFileService, sysUserService, retryTask);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
@@ -378,7 +378,7 @@ class FileBizServiceTest {
                     .hasMessage(CommonConstants.FILE_AVATAR_IN_USE_MESSAGE);
         }
 
-        verify(sysUserService).existsByAvatar(file.getFileUrl());
+        verify(sysUserService).isInUse(file.getFileUrl());
         verify(ossTemplate, never()).delete(any(FileInfo.class));
         verify(ossFileService, never()).removeById(any());
     }
@@ -396,7 +396,7 @@ class FileBizServiceTest {
                     .hasMessage(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
         }
 
-        verify(sysUserService, never()).existsByAvatar(anyString());
+        verify(sysUserService, never()).isInUse(anyString());
         verify(ossTemplate, never()).delete(any(FileInfo.class));
         verify(ossFileService, never()).removeById(any());
     }
@@ -409,7 +409,7 @@ class FileBizServiceTest {
         assertThatThrownBy(() -> service.deleteById(1L))
                 .hasMessage(CommonConstants.FILE_NOT_FOUND_OR_FORBIDDEN_MESSAGE);
 
-        verify(sysUserService, never()).existsByAvatar(anyString());
+        verify(sysUserService, never()).isInUse(anyString());
         verify(ossTemplate, never()).delete(any(FileInfo.class));
     }
 

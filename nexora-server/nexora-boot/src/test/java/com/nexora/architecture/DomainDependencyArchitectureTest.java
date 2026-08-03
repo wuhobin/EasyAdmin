@@ -20,32 +20,47 @@ class DomainDependencyArchitectureTest {
                     "com.nexora.mail..");
 
     @ArchTest
-    static final ArchRule systemMustNotDependOnUpstreamBusinessDomains = noClasses()
+    static final ArchRule systemMustNotDependOnOtherBusinessDomains = noClasses()
             .that().resideInAnyPackage("com.nexora.system..")
             .should().dependOnClassesThat().resideInAnyPackage(
+                    "com.nexora.monitor..",
                     "com.nexora.identity..",
                     "com.nexora.file..",
                     "com.nexora.mail..");
 
     @ArchTest
-    static final ArchRule identityMustNotDependOnFileOrMail = noClasses()
+    static final ArchRule identityMustOnlyUseSystemAsABusinessDomain = noClasses()
             .that().resideInAnyPackage("com.nexora.identity..")
             .should().dependOnClassesThat().resideInAnyPackage(
+                    "com.nexora.monitor..",
                     "com.nexora.file..",
                     "com.nexora.mail..");
 
     @ArchTest
-    static final ArchRule fileMustOnlyUseIdentityAsABusinessDomain = noClasses()
+    static final ArchRule fileMustNotDependOnOtherBusinessDomains = noClasses()
             .that().resideInAnyPackage("com.nexora.file..")
             .should().dependOnClassesThat().resideInAnyPackage(
                     "com.nexora.monitor..",
                     "com.nexora.system..",
+                    "com.nexora.identity..",
                     "com.nexora.mail..");
 
     @ArchTest
-    static final ArchRule mailMustNotDependOnFileOrMonitor = noClasses()
+    static final ArchRule mailMustOnlyUseSystemAsABusinessDomain = noClasses()
             .that().resideInAnyPackage("com.nexora.mail..")
             .should().dependOnClassesThat().resideInAnyPackage(
                     "com.nexora.monitor..",
+                    "com.nexora.identity..",
                     "com.nexora.file..");
+
+    @ArchTest
+    static final ArchRule commonMustNotDependOnBusinessDomains = noClasses()
+            .that().resideInAnyPackage("com.nexora.cache..", "com.nexora.config..",
+                    "com.nexora.constants..", "com.nexora.contract..", "com.nexora.utils..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                    "com.nexora.monitor..",
+                    "com.nexora.system..",
+                    "com.nexora.identity..",
+                    "com.nexora.file..",
+                    "com.nexora.mail..");
 }
