@@ -19,7 +19,7 @@ import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.cache.SecurityAuthorizationCache;
 import com.nexora.identity.service.SysRoleService;
 import com.nexora.identity.service.SysUserService;
-import com.nexora.service.MailAccountService;
+import com.nexora.mail.service.MailAccountService;
 import com.nexora.identity.utils.VerificationMailTemplateUtils;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.security.context.SecurityUtils;

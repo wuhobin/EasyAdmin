@@ -4,7 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nexora.biz.system.SysConfigGroupBizService;
-import com.nexora.biz.system.SystemMailService;
+import com.nexora.mail.biz.SystemMailService;
 import com.nexora.domain.vo.system.SysConfigGroupDetailVo;
 import com.nexora.domain.vo.system.SysConfigGroupSummaryVo;
 import com.nexora.domain.vo.system.SysConfigPublicVo;

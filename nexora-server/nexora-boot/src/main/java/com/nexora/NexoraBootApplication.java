@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @EnableFileStorage
-@MapperScan({"com.nexora.mapper", "com.nexora.identity.mapper", "com.nexora.file.mapper"})
+@MapperScan({"com.nexora.mapper", "com.nexora.identity.mapper", "com.nexora.file.mapper", "com.nexora.mail.mapper"})
 public class NexoraBootApplication {
     public static void main(String[] args) {
         SpringApplication.run(NexoraBootApplication.class, args);

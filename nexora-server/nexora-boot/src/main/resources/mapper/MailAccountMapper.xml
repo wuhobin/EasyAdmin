@@ -2,8 +2,8 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.nexora.mapper.MailAccountMapper">
-    <select id="selectEnabledForActiveOwners" resultType="com.nexora.entity.MailAccount">
+<mapper namespace="com.nexora.mail.mapper.MailAccountMapper">
+    <select id="selectEnabledForActiveOwners" resultType="com.nexora.mail.entity.MailAccount">
         SELECT ma.*
         FROM mail_account ma
         INNER JOIN sys_user su ON su.id = ma.owner_id

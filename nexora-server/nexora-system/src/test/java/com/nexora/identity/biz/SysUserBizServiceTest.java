@@ -12,7 +12,7 @@ import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.cache.SecurityAuthorizationCache;
 import com.nexora.identity.service.SysRoleService;
 import com.nexora.identity.service.SysUserService;
-import com.nexora.service.MailAccountService;
+import com.nexora.mail.service.MailAccountService;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import org.junit.jupiter.api.Test;
