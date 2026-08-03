@@ -16,7 +16,7 @@ import com.nexora.domain.vo.system.SysConfigGroupSummaryVo;
 import com.nexora.domain.vo.system.SysConfigPublicVo;
 import com.nexora.entity.SysConfigGroup;
 import com.nexora.service.SysConfigGroupService;
-import com.nexora.service.SysRoleService;
+import com.nexora.identity.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

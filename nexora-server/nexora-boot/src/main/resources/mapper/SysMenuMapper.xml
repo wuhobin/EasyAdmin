@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.nexora.mapper.SysMenuMapper">
+<mapper namespace="com.nexora.identity.mapper.SysMenuMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.nexora.entity.SysMenu">
+    <resultMap id="BaseResultMap" type="com.nexora.identity.entity.SysMenu">
         <id column="id" property="id"/>
         <result column="parent_id" property="parentId"/>
         <result column="path" property="path"/>
@@ -50,10 +50,10 @@
         select perm from sys_menu where type = #{type}
     </select>
 
-    <select id="getMenusByUserId" resultType="com.nexora.entity.SysMenu">
+    <select id="getMenusByUserId" resultType="com.nexora.identity.entity.SysMenu">
         select m.* from sys_menu m
             left join sys_role_menu rm on m.id = rm.menu_id
             left join sys_user_role ur on rm.role_id = ur.role_id
                    where ur.user_id = #{userId} and m.type != #{type}
     </select>
-</mapper> 
+</mapper>

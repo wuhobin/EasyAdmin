@@ -5,7 +5,7 @@ import com.nexora.domain.form.query.file.OssFileQueryForm;
 import com.nexora.domain.query.OssFileQuery;
 import com.nexora.entity.SysOssFile;
 import com.nexora.service.SysOssFileService;
-import com.nexora.service.SysUserService;
+import com.nexora.identity.service.SysUserService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;

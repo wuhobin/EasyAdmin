@@ -10,7 +10,7 @@ import com.nexora.constants.SysConfigGroupEnum;
 import com.nexora.domain.form.system.config.RegisterConfigForm;
 import com.nexora.entity.SysConfigGroup;
 import com.nexora.service.SysConfigGroupService;
-import com.nexora.service.SysRoleService;
+import com.nexora.identity.service.SysRoleService;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -42,7 +42,7 @@ class SysConfigGroupBizServiceTest {
         when(registry.normalizeCode("register")).thenReturn("register");
         when(registry.normalize("register", input))
                 .thenReturn(new SysConfigGroupRegistry.NormalizedConfig(value, json));
-        when(roleService.getByCode("user")).thenReturn(new com.nexora.entity.SysRole());
+        when(roleService.getByCode("user")).thenReturn(new com.nexora.identity.entity.SysRole());
         when(configService.getByGroupCode("register")).thenReturn(group);
         when(configService.updateById(group)).thenReturn(true);
 
