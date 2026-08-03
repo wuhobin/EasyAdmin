@@ -19,11 +19,6 @@
             <artifactId>nexora-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.nexora</groupId>
-            <artifactId>nexora-monitor</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${mapstruct.version}</version>

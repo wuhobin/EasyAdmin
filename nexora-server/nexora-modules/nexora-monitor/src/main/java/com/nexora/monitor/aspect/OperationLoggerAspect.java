@@ -1,6 +1,6 @@
 package com.nexora.monitor.aspect;
 
-import com.nexora.monitor.annotation.OperationLogger;
+import com.nexora.contract.OperationLogger;
 import com.nexora.constants.CommonConstants;
 import com.nexora.monitor.entity.SysOperateLog;
 import com.nexora.monitor.mapper.SysOperateLogMapper;

@@ -1,5 +1,4 @@
-package com.nexora.monitor.annotation;
-
+package com.nexora.contract;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

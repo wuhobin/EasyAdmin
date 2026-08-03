@@ -1,7 +1,7 @@
 package com.nexora.identity.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.nexora.monitor.annotation.OperationLogger;
+import com.nexora.contract.OperationLogger;
 import com.nexora.identity.biz.SysRoleBizService;
 import com.nexora.identity.domain.form.SysRoleQueryForm;
 import com.nexora.identity.domain.form.SysRoleForm;
