@@ -4,10 +4,10 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nexora.system.biz.SysConfigGroupBizService;
-import com.nexora.mail.biz.SystemMailService;
 import com.nexora.system.domain.vo.SysConfigGroupDetailVo;
 import com.nexora.system.domain.vo.SysConfigGroupSummaryVo;
 import com.nexora.system.domain.vo.SysConfigPublicVo;
+import com.nexora.system.service.SystemMailSender;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Email;
@@ -32,7 +32,7 @@ import java.util.List;
 public class SysConfigGroupController {
 
     private final SysConfigGroupBizService configGroupBizService;
-    private final SystemMailService systemMailService;
+    private final SystemMailSender systemMailSender;
 
     @GetMapping("/list")
     @SaCheckPermission("sys:config:list")
@@ -74,7 +74,7 @@ public class SysConfigGroupController {
     @SaCheckPermission("sys:config:update")
     @Operation(summary = "发送测试邮件")
     public Result<Void> testEmail(@RequestParam @NotBlank(message = "测试收件人邮箱不能为空") @Email(message = "测试收件人邮箱格式不正确") @Size(max = 254, message = "测试收件人邮箱不能超过254个字符") String to) {
-        systemMailService.sendTestMail(to);
+        systemMailSender.sendTestMail(to);
         return Result.success();
     }
 }

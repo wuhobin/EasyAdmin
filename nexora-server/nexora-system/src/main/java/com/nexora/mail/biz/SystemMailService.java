@@ -4,6 +4,7 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
 import com.nexora.system.domain.form.EmailConfigForm;
+import com.nexora.system.service.SystemMailSender;
 import com.nexora.mail.infrastructure.SmtpMailSenderFactory;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -19,7 +20,7 @@ import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
-public class SystemMailService {
+public class SystemMailService implements SystemMailSender {
 
     private static final DateTimeFormatter SEND_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -27,6 +28,7 @@ public class SystemMailService {
     private final SysConfigGroupReader configReader;
     private final SmtpMailSenderFactory mailSenderFactory;
 
+    @Override
     public void sendTestMail(String to) {
         EmailConfigForm config = configReader.email();
         if (!Boolean.TRUE.equals(config.getEnabled())) {
