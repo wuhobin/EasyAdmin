@@ -2,7 +2,6 @@ package com.nexora.monitor.aspect;
 
 import com.nexora.monitor.annotation.OperationLogger;
 import com.nexora.constants.CommonConstants;
-import com.nexora.identity.domain.vo.LoginUserInfoVo;
 import com.nexora.monitor.entity.SysOperateLog;
 import com.nexora.monitor.mapper.SysOperateLogMapper;
 import com.aurora.starter.common.utils.JsonUtil;
@@ -70,15 +69,14 @@ public class OperationLoggerAspect {
         MethodSignature signature = (MethodSignature) point.getSignature();
         String paramsJson = serializeParameters(signature.getParameterNames(), point.getArgs());
 
-        String userJson = JsonUtil.toJson(SecurityUtils.getSessionAttribute(CommonConstants.CURRENT_USER));
-        LoginUserInfoVo user = JsonUtil.parse(userJson, LoginUserInfoVo.class);
+        int currentUserId = SecurityUtils.getLoginIdAsInt();
         String ip = ServletUtils.getClientIp(request);
 
         SysOperateLog operateLog = SysOperateLog.builder()
                 .ip(ip)
                 .source(IpRegionUtils.resolve(ip))
                 .type(request == null ? "" : request.getMethod())
-                .userId(user == null ? null : user.getId())
+                .userId(currentUserId > 0 ? currentUserId : null)
                 .paramsJson(paramsJson)
                 .requestUrl(request == null ? "" : request.getRequestURI())
                 .spendTime(System.currentTimeMillis() - startTime)
