@@ -1,4 +1,4 @@
-package com.nexora.utils;
+package com.nexora.monitor.infrastructure;
 
 import com.nexora.constants.CommonConstants;
 import com.aurora.starter.common.utils.StringUtils;

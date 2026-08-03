@@ -18,6 +18,11 @@
             <groupId>com.nexora</groupId>
             <artifactId>nexora-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.lionsoul</groupId>
+            <artifactId>ip2region</artifactId>
+            <version>${ip2region.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.mapstruct</groupId>

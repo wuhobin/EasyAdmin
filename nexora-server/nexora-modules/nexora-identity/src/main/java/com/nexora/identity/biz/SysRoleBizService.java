@@ -8,7 +8,7 @@ import com.nexora.identity.entity.SysRole;
 import com.nexora.identity.cache.SecurityAuthorizationCache;
 import com.nexora.identity.service.SysRoleService;
 import com.aurora.starter.mybatisplus.model.PageParam;
-import com.nexora.utils.FastExcelUtils;
+import com.nexora.identity.infrastructure.FastExcelUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

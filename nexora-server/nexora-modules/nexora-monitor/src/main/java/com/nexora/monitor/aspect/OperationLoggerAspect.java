@@ -7,7 +7,7 @@ import com.nexora.monitor.mapper.SysOperateLogMapper;
 import com.aurora.starter.common.utils.JsonUtil;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.utils.ServletUtils;
-import com.nexora.utils.IpRegionUtils;
+import com.nexora.monitor.infrastructure.IpRegionUtils;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
