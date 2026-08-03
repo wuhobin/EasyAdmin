@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nexora.identity.domain.query.SysUserQuery;
-import com.nexora.identity.domain.vo.user.SysUserPageListVo;
+import com.nexora.identity.domain.vo.SysUserPageListVo;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;

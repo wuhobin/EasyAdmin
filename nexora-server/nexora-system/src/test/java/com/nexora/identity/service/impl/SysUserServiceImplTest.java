@@ -1,7 +1,7 @@
 package com.nexora.identity.service.impl;
 
 import com.nexora.identity.domain.query.SysUserQuery;
-import com.nexora.identity.domain.vo.user.SysUserPageListVo;
+import com.nexora.identity.domain.vo.SysUserPageListVo;
 import com.nexora.identity.mapper.SysUserMapper;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

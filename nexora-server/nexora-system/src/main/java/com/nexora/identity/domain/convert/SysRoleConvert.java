@@ -1,9 +1,9 @@
 package com.nexora.identity.domain.convert;
 
-import com.nexora.identity.domain.form.query.role.SysRoleQueryForm;
-import com.nexora.identity.domain.form.role.SysRoleForm;
+import com.nexora.identity.domain.form.query.SysRoleQueryForm;
+import com.nexora.identity.domain.form.SysRoleForm;
 import com.nexora.identity.domain.query.SysRoleQuery;
-import com.nexora.identity.domain.vo.role.SysRoleVo;
+import com.nexora.identity.domain.vo.SysRoleVo;
 import com.nexora.identity.entity.SysRole;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;

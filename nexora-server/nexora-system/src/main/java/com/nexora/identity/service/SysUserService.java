@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.nexora.identity.entity.SysUser;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.nexora.identity.domain.query.SysUserQuery;
-import com.nexora.identity.domain.vo.user.SysUserPageListVo;
+import com.nexora.identity.domain.vo.SysUserPageListVo;
 
 public interface SysUserService extends IService<SysUser> {
     /**

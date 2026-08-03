@@ -1,9 +1,9 @@
 package com.nexora.identity.domain.convert;
 
-import com.nexora.identity.domain.form.query.user.SysUserQueryForm;
+import com.nexora.identity.domain.form.query.SysUserQueryForm;
 import com.nexora.identity.domain.query.SysUserQuery;
 import com.nexora.identity.entity.SysUser;
-import com.nexora.identity.domain.vo.user.SysUserVo;
+import com.nexora.identity.domain.vo.SysUserVo;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

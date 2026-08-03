@@ -1,7 +1,7 @@
 package com.nexora.identity.domain.convert;
 
-import com.nexora.identity.domain.form.menu.SysMenuForm;
-import com.nexora.identity.domain.vo.menu.SysMenuVo;
+import com.nexora.identity.domain.form.SysMenuForm;
+import com.nexora.identity.domain.vo.SysMenuVo;
 import com.nexora.identity.entity.SysMenu;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
