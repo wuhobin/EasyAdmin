@@ -1,6 +1,6 @@
 package com.nexora.file.domain.convert;
 
-import com.nexora.file.domain.form.query.OssFileQueryForm;
+import com.nexora.file.domain.form.OssFileQueryForm;
 import com.nexora.file.domain.query.OssFileQuery;
 import com.nexora.file.domain.vo.SysOssFileVo;
 import com.nexora.file.entity.SysOssFile;

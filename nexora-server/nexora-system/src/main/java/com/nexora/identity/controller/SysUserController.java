@@ -3,7 +3,7 @@ package com.nexora.identity.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.nexora.monitor.annotation.OperationLogger;
 import com.nexora.identity.biz.SysUserBizService;
-import com.nexora.identity.domain.form.query.SysUserQueryForm;
+import com.nexora.identity.domain.form.SysUserQueryForm;
 import com.nexora.identity.domain.form.SysUserForm;
 import com.nexora.identity.domain.vo.SysUserPageListVo;
 import com.nexora.identity.domain.vo.SysUserProfileVo;

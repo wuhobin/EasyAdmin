@@ -11,7 +11,7 @@ import com.nexora.constants.CommonConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.identity.config.PasswordPolicyValidator;
 import com.nexora.identity.domain.convert.SysUserConvert;
-import com.nexora.identity.domain.form.query.SysUserQueryForm;
+import com.nexora.identity.domain.form.SysUserQueryForm;
 import com.nexora.identity.domain.form.SysUserForm;
 import com.nexora.identity.domain.vo.SysUserPageListVo;
 import com.nexora.identity.domain.vo.SysUserProfileVo;

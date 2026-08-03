@@ -1,4 +1,4 @@
-package com.nexora.file.domain.form.query;
+package com.nexora.file.domain.form;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

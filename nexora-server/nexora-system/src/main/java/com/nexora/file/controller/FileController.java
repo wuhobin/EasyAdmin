@@ -2,7 +2,7 @@ package com.nexora.file.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.nexora.file.biz.FileBizService;
-import com.nexora.file.domain.form.query.OssFileQueryForm;
+import com.nexora.file.domain.form.OssFileQueryForm;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.nexora.file.domain.vo.SysOssFileVo;

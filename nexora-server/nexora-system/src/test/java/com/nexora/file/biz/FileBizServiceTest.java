@@ -1,7 +1,7 @@
 package com.nexora.file.biz;
 
 import com.nexora.constants.CommonConstants;
-import com.nexora.file.domain.form.query.OssFileQueryForm;
+import com.nexora.file.domain.form.OssFileQueryForm;
 import com.nexora.file.domain.query.OssFileQuery;
 import com.nexora.file.entity.SysOssFile;
 import com.nexora.file.service.SysOssFileService;

@@ -1,6 +1,6 @@
 package com.nexora.identity.domain.convert;
 
-import com.nexora.identity.domain.form.query.SysUserQueryForm;
+import com.nexora.identity.domain.form.SysUserQueryForm;
 import com.nexora.identity.domain.query.SysUserQuery;
 import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.domain.vo.SysUserVo;
