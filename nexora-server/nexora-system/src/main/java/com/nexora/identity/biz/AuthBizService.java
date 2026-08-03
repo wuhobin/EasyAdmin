@@ -25,7 +25,7 @@ import com.nexora.constants.ResultCode;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.domain.form.system.config.LoginConfigForm;
 import com.nexora.domain.form.system.config.RegisterConfigForm;
-import com.nexora.domain.vo.auth.LoginUserInfoVo;
+import com.nexora.identity.domain.vo.LoginUserInfoVo;
 import com.nexora.identity.entity.SysRole;
 import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.service.SysRoleService;

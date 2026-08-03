@@ -2,7 +2,7 @@ package com.nexora.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.nexora.annotation.OperationLogger;
+import com.nexora.monitor.annotation.OperationLogger;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

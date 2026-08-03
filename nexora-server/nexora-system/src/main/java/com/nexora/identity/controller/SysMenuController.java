@@ -1,7 +1,7 @@
 package com.nexora.identity.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import com.nexora.annotation.OperationLogger;
+import com.nexora.monitor.annotation.OperationLogger;
 import com.nexora.identity.biz.SysMenuBizService;
 import com.nexora.identity.domain.form.SysMenuForm;
 import com.nexora.identity.domain.vo.SysRouterVo;

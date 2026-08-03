@@ -15,7 +15,7 @@ springdoc:
       packages-to-scan: com.nexora.controller.system
     - group: '监控管理'
       paths-to-match: '/**'
-      packages-to-scan: com.nexora.controller.monitor
+      packages-to-scan: com.nexora.monitor.controller
     - group: '文件上传'
       paths-to-match: '/**'
       packages-to-scan: com.nexora.controller.file

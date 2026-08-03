@@ -3,7 +3,7 @@ package com.nexora.identity.controller;
 import com.nexora.identity.biz.AuthBizService;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.nexora.identity.domain.form.AuthForm;
-import com.nexora.domain.vo.auth.LoginUserInfoVo;
+import com.nexora.identity.domain.vo.LoginUserInfoVo;
 import cloud.tianai.captcha.application.vo.ImageCaptchaVO;
 import cloud.tianai.captcha.validator.common.model.dto.ImageCaptchaTrack;
 import io.swagger.v3.oas.annotations.Operation;
