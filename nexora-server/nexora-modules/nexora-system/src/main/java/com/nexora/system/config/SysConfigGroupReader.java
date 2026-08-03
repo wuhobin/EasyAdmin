@@ -4,41 +4,47 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.system.cache.SysConfigGroupCache;
 import com.nexora.constants.CommonConstants;
 import com.nexora.system.constants.SysConfigGroupEnum;
-import com.nexora.system.domain.form.EmailConfigForm;
-import com.nexora.system.domain.form.LoginConfigForm;
-import com.nexora.system.domain.form.PasswordConfigForm;
-import com.nexora.system.domain.form.RegisterConfigForm;
-import com.nexora.system.domain.form.SystemConfigForm;
+import com.nexora.system.api.EmailSettings;
+import com.nexora.system.api.LoginSettings;
+import com.nexora.system.api.PasswordSettings;
+import com.nexora.system.api.RegistrationSettings;
+import com.nexora.system.api.SystemConfigReader;
+import com.nexora.system.api.SystemSettings;
 import com.nexora.system.service.SysConfigGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class SysConfigGroupReader {
+public class SysConfigGroupReader implements SystemConfigReader {
 
     private final SysConfigGroupService configGroupService;
     private final SysConfigGroupCache configGroupCache;
     private final SysConfigGroupRegistry registry;
 
-    public SystemConfigForm system() {
-        return read(SysConfigGroupEnum.SYSTEM.getCode(), SystemConfigForm.class);
+    @Override
+    public SystemSettings system() {
+        return read(SysConfigGroupEnum.SYSTEM.getCode(), SystemSettings.class);
     }
 
-    public RegisterConfigForm register() {
-        return read(SysConfigGroupEnum.REGISTER.getCode(), RegisterConfigForm.class);
+    @Override
+    public RegistrationSettings register() {
+        return read(SysConfigGroupEnum.REGISTER.getCode(), RegistrationSettings.class);
     }
 
-    public LoginConfigForm login() {
-        return read(SysConfigGroupEnum.LOGIN.getCode(), LoginConfigForm.class);
+    @Override
+    public LoginSettings login() {
+        return read(SysConfigGroupEnum.LOGIN.getCode(), LoginSettings.class);
     }
 
-    public PasswordConfigForm password() {
-        return read(SysConfigGroupEnum.PASSWORD.getCode(), PasswordConfigForm.class);
+    @Override
+    public PasswordSettings password() {
+        return read(SysConfigGroupEnum.PASSWORD.getCode(), PasswordSettings.class);
     }
 
-    public EmailConfigForm email() {
-        return read(SysConfigGroupEnum.EMAIL.getCode(), EmailConfigForm.class);
+    @Override
+    public EmailSettings email() {
+        return read(SysConfigGroupEnum.EMAIL.getCode(), EmailSettings.class);
     }
 
     public <T> T read(String groupCode, Class<T> valueType) {

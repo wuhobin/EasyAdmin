@@ -7,10 +7,10 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
-import com.nexora.system.config.SysConfigGroupReader;
+import com.nexora.system.api.SystemConfigReader;
 import com.nexora.constants.CommonConstants;
 import com.nexora.identity.domain.form.AuthForm;
-import com.nexora.system.domain.form.LoginConfigForm;
+import com.nexora.system.api.LoginSettings;
 import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.service.SysRoleService;
 import com.nexora.identity.service.SysUserService;
@@ -29,14 +29,14 @@ import static org.mockito.Mockito.when;
 class AuthBizServiceLoginSecurityTest {
 
     private final SysUserService userService = mock(SysUserService.class);
-    private final SysConfigGroupReader configReader = mock(SysConfigGroupReader.class);
+    private final SystemConfigReader configReader = mock(SystemConfigReader.class);
     private final LoginRetryCache loginRetryCache = mock(LoginRetryCache.class);
     private final ImageVerificationService imageVerificationService = mock(ImageVerificationService.class);
     private final AuthBizService bizService = createService();
 
     @Test
     void verifiesTheSliderBeforeLookingUpTheAccount() {
-        LoginConfigForm config = loginConfig();
+        LoginSettings config = loginConfig();
         config.setCaptchaEnabled(true);
         when(configReader.login()).thenReturn(config);
         when(imageVerificationService.verifyAndConsume("captcha-id")).thenReturn(false);
@@ -105,7 +105,7 @@ class AuthBizServiceLoginSecurityTest {
 
     @Test
     void kicksOutExistingSessionsWhenSingleLoginIsEnabled() {
-        LoginConfigForm config = loginConfig();
+        LoginSettings config = loginConfig();
         config.setSingleLogin(true);
         when(configReader.login()).thenReturn(config);
         when(userService.getByEmail("user@example.com")).thenReturn(user(1));
@@ -132,8 +132,8 @@ class AuthBizServiceLoginSecurityTest {
                 imageVerificationService);
     }
 
-    private static LoginConfigForm loginConfig() {
-        LoginConfigForm config = new LoginConfigForm();
+    private static LoginSettings loginConfig() {
+        LoginSettings config = new LoginSettings();
         config.setCaptchaEnabled(false);
         config.setMaxRetryCount(5);
         config.setLockTimeMinutes(30);

@@ -18,13 +18,13 @@ import cloud.tianai.captcha.validator.common.model.dto.ImageCaptchaTrack;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
-import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.constants.ResultCode;
 import com.nexora.identity.domain.form.AuthForm;
-import com.nexora.system.domain.form.LoginConfigForm;
-import com.nexora.system.domain.form.RegisterConfigForm;
+import com.nexora.system.api.LoginSettings;
+import com.nexora.system.api.RegistrationSettings;
+import com.nexora.system.api.SystemConfigReader;
 import com.nexora.identity.domain.vo.LoginUserInfoVo;
 import com.nexora.identity.entity.SysRole;
 import com.nexora.identity.entity.SysUser;
@@ -45,7 +45,7 @@ public class AuthBizService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
     private final NexoraPermissionProvider permissionProvider;
-    private final SysConfigGroupReader configReader;
+    private final SystemConfigReader configReader;
     private final PasswordPolicyValidator passwordPolicyValidator;
     private final LoginSecurityService loginSecurityService;
     private final ObjectProvider<MailVerificationService> mailVerificationServiceProvider;
@@ -55,7 +55,7 @@ public class AuthBizService {
         String email = StringUtils.normalizeEmail(
                 requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
         String password = requireLoginPassword(form.getPassword());
-        LoginConfigForm loginConfig = configReader.login();
+        LoginSettings loginConfig = configReader.login();
         if (Boolean.TRUE.equals(loginConfig.getCaptchaEnabled())) {
             verifyImageCaptcha(requireText(
                     form.getCaptchaId(), CommonConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE));
@@ -78,7 +78,7 @@ public class AuthBizService {
     }
 
     public void sendRegisterCode(AuthForm form) {
-        RegisterConfigForm registerConfig = requireRegistrationConfig();
+        RegistrationSettings registerConfig = requireRegistrationConfig();
         requireRegistrationRole(registerConfig);
         if (!Boolean.TRUE.equals(registerConfig.getVerifyEmail())) {
             throw new BizException(CommonConstants.REGISTER_EMAIL_VERIFICATION_DISABLED_MESSAGE);
@@ -111,7 +111,7 @@ public class AuthBizService {
 
     @Transactional(rollbackFor = Exception.class)
     public void register(AuthForm form) {
-        RegisterConfigForm registerConfig = requireRegistrationConfig();
+        RegistrationSettings registerConfig = requireRegistrationConfig();
         SysRole role = requireRegistrationRole(registerConfig);
         String email = StringUtils.normalizeEmail(
                 requireText(form.getEmail(), CommonConstants.EMAIL_REQUIRED_MESSAGE));
@@ -196,15 +196,15 @@ public class AuthBizService {
         return loginUserInfo;
     }
 
-    private RegisterConfigForm requireRegistrationConfig() {
-        RegisterConfigForm config = configReader.register();
+    private RegistrationSettings requireRegistrationConfig() {
+        RegistrationSettings config = configReader.register();
         if (!Boolean.TRUE.equals(config.getEnabled())) {
             throw new BizException(CommonConstants.REGISTER_DISABLED_MESSAGE);
         }
         return config;
     }
 
-    private SysRole requireRegistrationRole(RegisterConfigForm config) {
+    private SysRole requireRegistrationRole(RegistrationSettings config) {
         SysRole role = sysRoleService.getByCode(config.getDefaultRoleCode());
         if (role == null) {
             throw new BizException(CommonConstants.REGISTER_CONFIG_INCOMPLETE_MESSAGE);

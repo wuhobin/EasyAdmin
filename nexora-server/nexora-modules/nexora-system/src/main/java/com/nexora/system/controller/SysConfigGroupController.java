@@ -7,7 +7,7 @@ import com.nexora.system.biz.SysConfigGroupBizService;
 import com.nexora.system.domain.vo.SysConfigGroupDetailVo;
 import com.nexora.system.domain.vo.SysConfigGroupSummaryVo;
 import com.nexora.system.domain.vo.SysConfigPublicVo;
-import com.nexora.system.service.SystemMailSender;
+import com.nexora.system.api.SystemMailSender;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Email;

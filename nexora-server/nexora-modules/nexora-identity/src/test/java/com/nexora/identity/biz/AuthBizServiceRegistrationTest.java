@@ -11,11 +11,11 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
-import com.nexora.system.config.SysConfigGroupReader;
+import com.nexora.system.api.SystemConfigReader;
 import com.nexora.constants.CommonConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.identity.domain.form.AuthForm;
-import com.nexora.system.domain.form.RegisterConfigForm;
+import com.nexora.system.api.RegistrationSettings;
 import com.nexora.identity.entity.SysRole;
 import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.service.SysRoleService;
@@ -41,7 +41,7 @@ class AuthBizServiceRegistrationTest {
 
     private final SysUserService userService = mock(SysUserService.class);
     private final SysRoleService roleService = mock(SysRoleService.class);
-    private final SysConfigGroupReader configReader = mock(SysConfigGroupReader.class);
+    private final SystemConfigReader configReader = mock(SystemConfigReader.class);
     private final PasswordPolicyValidator passwordPolicyValidator = mock(PasswordPolicyValidator.class);
     private final MailVerificationService verificationService = mock(MailVerificationService.class);
     private final ImageVerificationService imageVerificationService = mock(ImageVerificationService.class);
@@ -57,7 +57,7 @@ class AuthBizServiceRegistrationTest {
 
     @Test
     void disabledRegistrationIsRejected() {
-        RegisterConfigForm config = registerConfig();
+        RegistrationSettings config = registerConfig();
         config.setEnabled(false);
         when(configReader.register()).thenReturn(config);
 
@@ -149,7 +149,7 @@ class AuthBizServiceRegistrationTest {
     void createsAPendingUserWhenRegistrationAuditIsEnabled() {
         SysRole role = new SysRole();
         role.setId(9);
-        RegisterConfigForm config = registerConfig();
+        RegistrationSettings config = registerConfig();
         config.setVerifyEmail(false);
         config.setNeedAudit(true);
         when(configReader.register()).thenReturn(config);
@@ -246,8 +246,8 @@ class AuthBizServiceRegistrationTest {
         when(roleService.getByCode("user")).thenReturn(role);
     }
 
-    private static RegisterConfigForm registerConfig() {
-        RegisterConfigForm config = new RegisterConfigForm();
+    private static RegistrationSettings registerConfig() {
+        RegistrationSettings config = new RegistrationSettings();
         config.setEnabled(true);
         config.setVerifyEmail(true);
         config.setDefaultRoleCode("user");

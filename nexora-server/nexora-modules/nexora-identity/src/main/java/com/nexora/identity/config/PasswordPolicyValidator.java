@@ -1,9 +1,9 @@
 package com.nexora.identity.config;
 
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
-import com.nexora.system.domain.form.PasswordConfigForm;
+import com.nexora.system.api.PasswordSettings;
+import com.nexora.system.api.SystemConfigReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,13 +15,13 @@ public class PasswordPolicyValidator {
 
     private static final int BCRYPT_MAX_BYTES = 72;
 
-    private final SysConfigGroupReader configReader;
+    private final SystemConfigReader configReader;
 
     public String validateNewPassword(String password) {
         if (password == null || password.isBlank()) {
             throw new BizException(CommonConstants.PASSWORD_REQUIRED_MESSAGE);
         }
-        PasswordConfigForm policy = configReader.password();
+        PasswordSettings policy = configReader.password();
         int length = password.codePointCount(0, password.length());
         if (length < policy.getMinLength() || length > policy.getMaxLength()) {
             throw new BizException(CommonConstants.PASSWORD_DYNAMIC_LENGTH_INVALID_MESSAGE.formatted(

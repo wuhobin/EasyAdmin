@@ -4,11 +4,11 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexora.system.cache.SysConfigGroupCache;
-import com.nexora.system.config.SysConfigGroupBusinessValidator;
+import com.nexora.system.api.SystemSettingsValidator;
 import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.system.config.SysConfigGroupRegistry;
 import com.nexora.system.constants.SysConfigGroupEnum;
-import com.nexora.system.domain.form.RegisterConfigForm;
+import com.nexora.system.api.RegistrationSettings;
 import com.nexora.system.entity.SysConfigGroup;
 import com.nexora.system.service.SysConfigGroupService;
 import org.junit.jupiter.api.Test;
@@ -28,14 +28,14 @@ class SysConfigGroupBizServiceTest {
     private final SysConfigGroupCache configCache = mock(SysConfigGroupCache.class);
     private final SysConfigGroupRegistry registry = mock(SysConfigGroupRegistry.class);
     private final SysConfigGroupReader reader = mock(SysConfigGroupReader.class);
-    private final SysConfigGroupBusinessValidator registerValidator = mock(SysConfigGroupBusinessValidator.class);
+    private final SystemSettingsValidator registerValidator = mock(SystemSettingsValidator.class);
     private final SysConfigGroupBizService bizService = new SysConfigGroupBizService(
             configService, configCache, registry, reader, List.of(registerValidator));
 
     @Test
     void replacesTheWholeGroupAndRefreshesItsCacheAfterCommit() {
         JsonNode input = new ObjectMapper().createObjectNode().put("enabled", true);
-        RegisterConfigForm value = registerConfig();
+        RegistrationSettings value = registerConfig();
         String json = "{\"enabled\":true,\"verifyEmail\":true,"
                 + "\"defaultRoleCode\":\"user\",\"needAudit\":false}";
         SysConfigGroup group = group("register", "{}");
@@ -57,7 +57,7 @@ class SysConfigGroupBizServiceTest {
     @Test
     void refusesAnUnavailableDefaultRegistrationRole() {
         JsonNode input = new ObjectMapper().createObjectNode().put("enabled", true);
-        RegisterConfigForm value = registerConfig();
+        RegistrationSettings value = registerConfig();
         when(registry.normalizeCode("register")).thenReturn("register");
         when(registry.normalize("register", input))
                 .thenReturn(new SysConfigGroupRegistry.NormalizedConfig(value, "{}"));
@@ -89,7 +89,7 @@ class SysConfigGroupBizServiceTest {
 
     @Test
     void startupValidationRejectsAnUnavailableRegistrationRole() {
-        RegisterConfigForm value = registerConfig();
+        RegistrationSettings value = registerConfig();
         SysConfigGroup group = group("register", "注册配置", "{\"defaultRoleCode\":\"user\"}");
         when(configService.listOrdered()).thenReturn(List.of(group));
         when(registry.supportedCodes()).thenReturn(Set.of("register"));
@@ -117,8 +117,8 @@ class SysConfigGroupBizServiceTest {
                 org.mockito.ArgumentMatchers.anyString());
     }
 
-    private static RegisterConfigForm registerConfig() {
-        RegisterConfigForm value = new RegisterConfigForm();
+    private static RegistrationSettings registerConfig() {
+        RegistrationSettings value = new RegistrationSettings();
         value.setEnabled(true);
         value.setVerifyEmail(true);
         value.setDefaultRoleCode("user");

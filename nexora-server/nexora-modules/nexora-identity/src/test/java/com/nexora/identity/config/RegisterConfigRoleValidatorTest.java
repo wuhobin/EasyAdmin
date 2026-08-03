@@ -3,8 +3,8 @@ package com.nexora.identity.config;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.entity.SysRole;
 import com.nexora.identity.service.SysRoleService;
-import com.nexora.system.constants.SysConfigGroupEnum;
-import com.nexora.system.domain.form.RegisterConfigForm;
+import com.nexora.system.api.RegistrationSettings;
+import com.nexora.system.api.RegistrationSettings;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,13 +18,13 @@ class RegisterConfigRoleValidatorTest {
     void validatesTheConfiguredDefaultRole() {
         SysRoleService roleService = mock(SysRoleService.class);
         RegisterConfigRoleValidator validator = new RegisterConfigRoleValidator(roleService);
-        RegisterConfigForm config = registerConfig();
+        RegistrationSettings config = registerConfig();
         when(roleService.getByCode("user")).thenReturn(new SysRole());
 
         validator.validate(config);
 
-        assertThat(validator.supports(SysConfigGroupEnum.REGISTER.getCode())).isTrue();
-        assertThat(validator.supports(SysConfigGroupEnum.SYSTEM.getCode())).isFalse();
+        assertThat(validator.supports(RegistrationSettings.GROUP_CODE)).isTrue();
+        assertThat(validator.supports("system")).isFalse();
     }
 
     @Test
@@ -37,8 +37,8 @@ class RegisterConfigRoleValidatorTest {
                 .hasMessageContaining("默认注册角色不可用");
     }
 
-    private static RegisterConfigForm registerConfig() {
-        RegisterConfigForm config = new RegisterConfigForm();
+    private static RegistrationSettings registerConfig() {
+        RegistrationSettings config = new RegistrationSettings();
         config.setDefaultRoleCode("user");
         return config;
     }

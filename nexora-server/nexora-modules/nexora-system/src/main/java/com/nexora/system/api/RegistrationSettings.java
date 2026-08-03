@@ -1,4 +1,4 @@
-package com.nexora.system.domain.form;
+package com.nexora.system.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -8,7 +8,9 @@ import lombok.Data;
 
 @Data
 @Schema(description = "用户注册配置")
-public class RegisterConfigForm {
+public class RegistrationSettings {
+
+    public static final String GROUP_CODE = "register";
 
     @NotNull(message = "注册开关不能为空")
     private Boolean enabled;

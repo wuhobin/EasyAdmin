@@ -1,9 +1,9 @@
 package com.nexora.identity.config;
 
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.system.config.SysConfigGroupReader;
+import com.nexora.system.api.SystemConfigReader;
 import com.nexora.constants.CommonConstants;
-import com.nexora.system.domain.form.PasswordConfigForm;
+import com.nexora.system.api.PasswordSettings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,9 +14,9 @@ import static org.mockito.Mockito.when;
 
 class PasswordPolicyValidatorTest {
 
-    private final SysConfigGroupReader configReader = mock(SysConfigGroupReader.class);
+    private final SystemConfigReader configReader = mock(SystemConfigReader.class);
     private final PasswordPolicyValidator passwordValidator = new PasswordPolicyValidator(configReader);
-    private PasswordConfigForm policy;
+    private PasswordSettings policy;
 
     @BeforeEach
     void setUp() {
@@ -65,10 +65,10 @@ class PasswordPolicyValidatorTest {
                 .hasMessageContaining(message);
     }
 
-    private static PasswordConfigForm policy(
+    private static PasswordSettings policy(
             int minLength, int maxLength, boolean uppercase, boolean lowercase,
             boolean number, boolean special) {
-        PasswordConfigForm policy = new PasswordConfigForm();
+        PasswordSettings policy = new PasswordSettings();
         policy.setMinLength(minLength);
         policy.setMaxLength(maxLength);
         policy.setRequireUppercase(uppercase);

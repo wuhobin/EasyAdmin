@@ -3,7 +3,7 @@ package com.nexora.system.config;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.nexora.system.domain.form.SystemConfigForm;
+import com.nexora.system.api.SystemSettings;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.Test;
@@ -30,8 +30,8 @@ class SysConfigGroupRegistryTest {
 
         SysConfigGroupRegistry.NormalizedConfig normalized = registry.normalize(" system ", input);
 
-        assertThat(normalized.value()).isInstanceOf(SystemConfigForm.class);
-        assertThat(((SystemConfigForm) normalized.value()).getSiteName()).isEqualTo("Nexora Admin");
+        assertThat(normalized.value()).isInstanceOf(SystemSettings.class);
+        assertThat(((SystemSettings) normalized.value()).getSiteName()).isEqualTo("Nexora Admin");
         assertThat(objectMapper.readTree(normalized.json()).get("siteName").asText())
                 .isEqualTo("Nexora Admin");
     }

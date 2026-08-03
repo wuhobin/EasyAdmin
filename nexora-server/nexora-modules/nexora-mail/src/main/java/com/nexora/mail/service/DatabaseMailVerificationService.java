@@ -7,9 +7,9 @@ import com.aurora.starter.verification.mail.MailVerificationService;
 import com.aurora.starter.verification.mail.MailVerificationVerifyRequest;
 import com.aurora.starter.verification.redis.RedisMailVerificationRepository;
 import com.aurora.starter.verification.support.VerificationCodeGenerator;
-import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
-import com.nexora.system.domain.form.EmailConfigForm;
+import com.nexora.system.api.EmailSettings;
+import com.nexora.system.api.SystemConfigReader;
 import com.nexora.mail.infrastructure.SmtpMailSenderFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -22,7 +22,7 @@ public class DatabaseMailVerificationService implements MailVerificationService 
 
     private static final String UNUSED_FROM_ADDRESS = "unused@example.invalid";
 
-    private final SysConfigGroupReader configReader;
+    private final SystemConfigReader configReader;
     private final SmtpMailSenderFactory mailSenderFactory;
     private final RedisMailVerificationRepository repository;
     private final VerificationCodeGenerator codeGenerator;
@@ -30,7 +30,7 @@ public class DatabaseMailVerificationService implements MailVerificationService 
 
     @Override
     public void send(MailVerificationSendRequest request) {
-        EmailConfigForm config = configReader.email();
+        EmailSettings config = configReader.email();
         if (!Boolean.TRUE.equals(config.getEnabled())) {
             throw new IllegalArgumentException(CommonConstants.SYSTEM_MAIL_DISABLED_MESSAGE);
         }

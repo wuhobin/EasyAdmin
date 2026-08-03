@@ -3,8 +3,8 @@ package com.nexora.system.config;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.system.cache.SysConfigGroupCache;
 import com.nexora.system.constants.SysConfigGroupEnum;
-import com.nexora.system.domain.form.EmailConfigForm;
-import com.nexora.system.domain.form.RegisterConfigForm;
+import com.nexora.system.api.EmailSettings;
+import com.nexora.system.api.RegistrationSettings;
 import com.nexora.system.service.SysConfigGroupService;
 import org.junit.jupiter.api.Test;
 
@@ -27,13 +27,13 @@ class SysConfigGroupReaderTest {
     @Test
     void readsAndParsesAWholeConfigurationGroup() {
         String json = "{\"enabled\":true}";
-        RegisterConfigForm expected = new RegisterConfigForm();
+        RegistrationSettings expected = new RegistrationSettings();
         expected.setEnabled(true);
         when(registry.normalizeCode("register")).thenReturn("register");
         when(configCache.get(eq("register"), any())).thenReturn(json);
-        when(registry.parse("register", json, RegisterConfigForm.class)).thenReturn(expected);
+        when(registry.parse("register", json, RegistrationSettings.class)).thenReturn(expected);
 
-        RegisterConfigForm result = reader.register();
+        RegistrationSettings result = reader.register();
 
         assertThat(result).isSameAs(expected);
         verify(configCache).get(eq(SysConfigGroupEnum.REGISTER.getCode()), any());
@@ -44,7 +44,7 @@ class SysConfigGroupReaderTest {
         when(registry.normalizeCode("register")).thenReturn("register");
         when(configCache.get(eq("register"), any())).thenReturn(null);
 
-        assertThatThrownBy(() -> reader.read("register", RegisterConfigForm.class))
+        assertThatThrownBy(() -> reader.read("register", RegistrationSettings.class))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining("register");
     }
@@ -52,11 +52,11 @@ class SysConfigGroupReaderTest {
     @Test
     void readsTheEmailConfigurationGroup() {
         String json = "{\"enabled\":false}";
-        EmailConfigForm expected = new EmailConfigForm();
+        EmailSettings expected = new EmailSettings();
         expected.setEnabled(false);
         when(registry.normalizeCode("email")).thenReturn("email");
         when(configCache.get(eq("email"), any())).thenReturn(json);
-        when(registry.parse("email", json, EmailConfigForm.class)).thenReturn(expected);
+        when(registry.parse("email", json, EmailSettings.class)).thenReturn(expected);
 
         assertThat(reader.email()).isSameAs(expected);
         verify(configCache).get(eq(SysConfigGroupEnum.EMAIL.getCode()), any());

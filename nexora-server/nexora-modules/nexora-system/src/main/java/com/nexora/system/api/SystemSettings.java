@@ -1,4 +1,4 @@
-package com.nexora.system.domain.form;
+package com.nexora.system.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Data
 @Schema(description = "系统基础配置")
-public class SystemConfigForm {
+public class SystemSettings {
 
     @NotBlank(message = "站点名称不能为空")
     @Size(max = 100, message = "站点名称不能超过100个字符")

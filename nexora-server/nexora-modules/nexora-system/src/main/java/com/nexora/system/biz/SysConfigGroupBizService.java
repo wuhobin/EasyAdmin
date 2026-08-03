@@ -3,15 +3,15 @@ package com.nexora.system.biz;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nexora.system.cache.SysConfigGroupCache;
-import com.nexora.system.config.SysConfigGroupBusinessValidator;
+import com.nexora.system.api.SystemSettingsValidator;
 import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.system.config.SysConfigGroupRegistry;
 import com.nexora.constants.CommonConstants;
 import com.nexora.system.constants.SysConfigGroupEnum;
-import com.nexora.system.domain.form.LoginConfigForm;
-import com.nexora.system.domain.form.PasswordConfigForm;
-import com.nexora.system.domain.form.RegisterConfigForm;
-import com.nexora.system.domain.form.SystemConfigForm;
+import com.nexora.system.api.LoginSettings;
+import com.nexora.system.api.PasswordSettings;
+import com.nexora.system.api.RegistrationSettings;
+import com.nexora.system.api.SystemSettings;
 import com.nexora.system.domain.vo.SysConfigGroupDetailVo;
 import com.nexora.system.domain.vo.SysConfigGroupSummaryVo;
 import com.nexora.system.domain.vo.SysConfigPublicVo;
@@ -33,7 +33,7 @@ public class SysConfigGroupBizService {
     private final SysConfigGroupCache configGroupCache;
     private final SysConfigGroupRegistry registry;
     private final SysConfigGroupReader configReader;
-    private final List<SysConfigGroupBusinessValidator> businessValidators;
+    private final List<SystemSettingsValidator> businessValidators;
 
     public List<SysConfigGroupSummaryVo> list() {
         return configGroupService.listOrdered().stream().map(group -> SysConfigGroupSummaryVo.builder()
@@ -86,10 +86,10 @@ public class SysConfigGroupBizService {
     }
 
     public SysConfigPublicVo getPublicConfig() {
-        SystemConfigForm system = configReader.system();
-        RegisterConfigForm register = configReader.register();
-        LoginConfigForm login = configReader.login();
-        PasswordConfigForm password = configReader.password();
+        SystemSettings system = configReader.system();
+        RegistrationSettings register = configReader.register();
+        LoginSettings login = configReader.login();
+        PasswordSettings password = configReader.password();
         return new SysConfigPublicVo(
                 new SysConfigPublicVo.SystemConfig(
                         system.getSiteName(), system.getShortTitle(), system.getSiteDescription(),

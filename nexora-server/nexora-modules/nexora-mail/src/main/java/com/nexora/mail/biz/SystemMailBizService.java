@@ -1,10 +1,10 @@
 package com.nexora.mail.biz;
 
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.constants.CommonConstants;
-import com.nexora.system.domain.form.EmailConfigForm;
-import com.nexora.system.service.SystemMailSender;
+import com.nexora.system.api.EmailSettings;
+import com.nexora.system.api.SystemConfigReader;
+import com.nexora.system.api.SystemMailSender;
 import com.nexora.mail.infrastructure.SmtpMailSenderFactory;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -25,12 +25,12 @@ public class SystemMailBizService implements SystemMailSender {
     private static final DateTimeFormatter SEND_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final SysConfigGroupReader configReader;
+    private final SystemConfigReader configReader;
     private final SmtpMailSenderFactory mailSenderFactory;
 
     @Override
     public void sendTestMail(String to) {
-        EmailConfigForm config = configReader.email();
+        EmailSettings config = configReader.email();
         if (!Boolean.TRUE.equals(config.getEnabled())) {
             throw new BizException(CommonConstants.SYSTEM_MAIL_DISABLED_MESSAGE);
         }
@@ -49,7 +49,7 @@ public class SystemMailBizService implements SystemMailSender {
         }
     }
 
-    private static String testContent(EmailConfigForm config) {
+    private static String testContent(EmailSettings config) {
         return "这是一封测试邮件，如果您收到此邮件，说明系统邮箱配置正确。\n\n"
                 + "发送时间：" + LocalDateTime.now().format(SEND_TIME_FORMAT) + "\n"
                 + "SMTP服务器：" + config.getHost() + "\n"

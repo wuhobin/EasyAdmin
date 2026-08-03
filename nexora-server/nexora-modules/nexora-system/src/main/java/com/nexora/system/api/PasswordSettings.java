@@ -1,4 +1,4 @@
-package com.nexora.system.domain.form;
+package com.nexora.system.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 @Schema(description = "密码策略配置")
-public class PasswordConfigForm {
+public class PasswordSettings {
 
     @NotNull(message = "密码最小长度不能为空")
     @Min(value = 6, message = "密码最小长度不能小于6")

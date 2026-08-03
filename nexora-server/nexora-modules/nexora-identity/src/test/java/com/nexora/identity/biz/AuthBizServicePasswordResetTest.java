@@ -12,7 +12,7 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
-import com.nexora.system.config.SysConfigGroupReader;
+import com.nexora.system.api.SystemConfigReader;
 import com.nexora.constants.CommonConstants;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.identity.entity.SysUser;
@@ -41,7 +41,7 @@ class AuthBizServicePasswordResetTest {
             userService,
             mock(SysRoleService.class),
             mock(NexoraPermissionProvider.class),
-            mock(SysConfigGroupReader.class),
+            mock(SystemConfigReader.class),
             passwordPolicyValidator,
             new LoginSecurityService(mock(LoginRetryCache.class)),
             mailProvider(verificationService),

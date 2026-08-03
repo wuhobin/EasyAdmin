@@ -3,11 +3,11 @@ package com.nexora.identity.biz;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.config.PasswordPolicyValidator;
-import com.nexora.system.config.SysConfigGroupReader;
+import com.nexora.system.api.SystemConfigReader;
 import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.cache.SecurityAuthorizationCache;
 import com.nexora.constants.CommonConstants;
-import com.nexora.system.domain.form.LoginConfigForm;
+import com.nexora.system.api.LoginSettings;
 import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.service.SysUserService;
 import com.nexora.identity.service.SysRoleService;
@@ -142,7 +142,7 @@ class AuthBizServiceTest {
     @SuppressWarnings("unchecked")
     private static AuthBizService createService(
             SysUserService userService, NexoraPermissionProvider permissionProvider) {
-        SysConfigGroupReader configReader = mock(SysConfigGroupReader.class);
+        SystemConfigReader configReader = mock(SystemConfigReader.class);
         when(configReader.login()).thenReturn(loginConfig());
         return new AuthBizService(
                 userService,
@@ -155,8 +155,8 @@ class AuthBizServiceTest {
                 mock(ImageVerificationService.class));
     }
 
-    private static LoginConfigForm loginConfig() {
-        LoginConfigForm config = new LoginConfigForm();
+    private static LoginSettings loginConfig() {
+        LoginSettings config = new LoginSettings();
         config.setCaptchaEnabled(false);
         config.setMaxRetryCount(5);
         config.setLockTimeMinutes(30);

@@ -3,8 +3,8 @@ package com.nexora.mail.service;
 import com.aurora.starter.verification.config.VerificationProperties;
 import com.aurora.starter.verification.redis.RedisMailVerificationRepository;
 import com.aurora.starter.verification.support.VerificationCodeGenerator;
-import com.nexora.system.config.SysConfigGroupReader;
-import com.nexora.system.domain.form.EmailConfigForm;
+import com.nexora.system.api.SystemConfigReader;
+import com.nexora.system.api.EmailSettings;
 import com.nexora.mail.infrastructure.SmtpMailSenderFactory;
 import org.junit.jupiter.api.Test;
 
@@ -17,9 +17,9 @@ class DatabaseMailVerificationServiceTest {
 
     @Test
     void refusesToSendWhenDatabaseEmailConfigurationIsDisabled() {
-        SysConfigGroupReader configReader = mock(SysConfigGroupReader.class);
+        SystemConfigReader configReader = mock(SystemConfigReader.class);
         SmtpMailSenderFactory mailSenderFactory = mock(SmtpMailSenderFactory.class);
-        EmailConfigForm config = new EmailConfigForm();
+        EmailSettings config = new EmailSettings();
         config.setEnabled(false);
         when(configReader.email()).thenReturn(config);
         DatabaseMailVerificationService service = new DatabaseMailVerificationService(

@@ -1,4 +1,4 @@
-package com.nexora.system.service;
+package com.nexora.system.api;
 
 /**
  * 系统配置领域使用的邮件发送契约。

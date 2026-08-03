@@ -7,16 +7,13 @@ import com.nexora.mail.domain.form.MailAccountForm;
 import com.nexora.mail.domain.vo.MailAccountVo;
 import com.nexora.mail.domain.vo.MailProviderVo;
 import com.nexora.mail.entity.MailAccount;
-import com.nexora.system.entity.SysDict;
-import com.nexora.system.entity.SysDictData;
 import com.nexora.mail.infrastructure.ImapMailClient;
 import com.nexora.mail.infrastructure.MailCredentialCipher;
 import com.nexora.mail.service.MailAccountService;
-import com.nexora.system.service.SysDictDataService;
-import com.nexora.system.service.SysDictService;
+import com.nexora.system.api.DictionaryEntry;
+import com.nexora.system.api.SystemDictionaryReader;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -30,8 +27,7 @@ import java.util.List;
 @Slf4j
 public class MailAccountBizService {
     private final MailAccountService mailAccountService;
-    private final SysDictService sysDictService;
-    private final SysDictDataService sysDictDataService;
+    private final SystemDictionaryReader dictionaryReader;
     private final MailCredentialCipher credentialCipher;
     private final ImapMailClient imapMailClient;
 
@@ -41,17 +37,10 @@ public class MailAccountBizService {
     }
 
     public List<MailProviderVo> listProviders() {
-        SysDict dict = sysDictService.getOne(new LambdaQueryWrapper<SysDict>()
-                .eq(SysDict::getType, CommonConstants.MAIL_PROVIDER_DICT_TYPE)
-                .eq(SysDict::getStatus, 1), false);
-        if (dict == null) {
-            throw new BizException(CommonConstants.MAIL_PROVIDER_NOT_CONFIGURED_MESSAGE);
-        }
-        List<MailProviderVo> providers = sysDictDataService.list(new LambdaQueryWrapper<SysDictData>()
-                        .eq(SysDictData::getDictId, dict.getId())
-                        .eq(SysDictData::getStatus, 1)
-                        .orderByAsc(SysDictData::getSort)
-                        .orderByAsc(SysDictData::getId))
+        List<DictionaryEntry> entries = dictionaryReader
+                .findEnabledEntries(CommonConstants.MAIL_PROVIDER_DICT_TYPE)
+                .orElseThrow(() -> new BizException(CommonConstants.MAIL_PROVIDER_NOT_CONFIGURED_MESSAGE));
+        List<MailProviderVo> providers = entries
                 .stream()
                 .map(this::toProviderVo)
                 .filter(java.util.Objects::nonNull)
@@ -153,20 +142,20 @@ public class MailAccountBizService {
         }
     }
 
-    private MailProviderVo toProviderVo(SysDictData item) {
+    private MailProviderVo toProviderVo(DictionaryEntry item) {
         try {
             MailProviderEnum provider =
-                    MailProviderEnum.valueOf(item.getValue());
+                    MailProviderEnum.valueOf(item.value());
             return MailProviderVo.builder()
-                    .label(item.getLabel())
+                    .label(item.label())
                     .value(provider.name())
                     .domain(provider.getEmailDomain())
                     .imapHost(provider.getHost())
                     .imapPort(provider.getPort())
-                    .defaultProvider("1".equals(item.getIsDefault()))
+                    .defaultProvider(item.defaultEntry())
                     .build();
         } catch (IllegalArgumentException exception) {
-            log.warn("Ignore unsupported mail provider dictionary value: {}", item.getValue());
+            log.warn("Ignore unsupported mail provider dictionary value: {}", item.value());
             return null;
         }
     }

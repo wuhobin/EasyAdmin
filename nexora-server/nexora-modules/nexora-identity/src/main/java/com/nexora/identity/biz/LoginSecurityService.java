@@ -6,7 +6,7 @@ import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.constants.CommonConstants;
 import com.nexora.constants.ResultCode;
 import com.nexora.identity.constants.SysUserStatusEnum;
-import com.nexora.system.domain.form.LoginConfigForm;
+import com.nexora.system.api.LoginSettings;
 import com.nexora.identity.entity.SysUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class LoginSecurityService {
 
     private final LoginRetryCache loginRetryCache;
 
-    public void assertNotLocked(String email, LoginConfigForm config) {
+    public void assertNotLocked(String email, LoginSettings config) {
         try {
             if (loginRetryCache.getFailureCount(email) >= config.getMaxRetryCount()) {
                 throw locked(email);
@@ -30,7 +30,7 @@ public class LoginSecurityService {
     }
 
     public void validateCredentials(String email, String password, SysUser user,
-                                    LoginConfigForm config) {
+                                    LoginSettings config) {
         if (user != null && user.getPassword() != null
                 && BCrypt.checkpw(password, user.getPassword())) {
             return;
@@ -59,7 +59,7 @@ public class LoginSecurityService {
         }
     }
 
-    public static long tokenTimeout(LoginConfigForm config, boolean rememberMe) {
+    public static long tokenTimeout(LoginSettings config, boolean rememberMe) {
         return Boolean.TRUE.equals(config.getRememberMeEnabled()) && rememberMe
                 ? config.getRememberMeTimeoutSeconds() : config.getSessionTimeoutSeconds();
     }

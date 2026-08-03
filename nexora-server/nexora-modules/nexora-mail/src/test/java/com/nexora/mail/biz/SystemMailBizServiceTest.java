@@ -1,9 +1,9 @@
 package com.nexora.mail.biz;
 
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.system.config.SysConfigGroupReader;
-import com.nexora.system.domain.form.EmailConfigForm;
-import com.nexora.system.domain.form.SystemConfigForm;
+import com.nexora.system.api.SystemConfigReader;
+import com.nexora.system.api.EmailSettings;
+import com.nexora.system.api.SystemSettings;
 import com.nexora.mail.infrastructure.SmtpMailSenderFactory;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
@@ -20,14 +20,14 @@ import static org.mockito.Mockito.when;
 
 class SystemMailBizServiceTest {
 
-    private final SysConfigGroupReader configReader = mock(SysConfigGroupReader.class);
+    private final SystemConfigReader configReader = mock(SystemConfigReader.class);
     private final SmtpMailSenderFactory mailSenderFactory = mock(SmtpMailSenderFactory.class);
     private final SystemMailBizService service = new SystemMailBizService(configReader, mailSenderFactory);
 
     @Test
     void sendsATestMessageWithTheSavedDatabaseConfiguration() {
-        EmailConfigForm email = emailConfig(true);
-        SystemConfigForm system = new SystemConfigForm();
+        EmailSettings email = emailConfig(true);
+        SystemSettings system = new SystemSettings();
         system.setSiteName("Nexora Admin");
         MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
         when(configReader.email()).thenReturn(email);
@@ -53,8 +53,8 @@ class SystemMailBizServiceTest {
         verifyNoInteractions(mailSenderFactory);
     }
 
-    private static EmailConfigForm emailConfig(boolean enabled) {
-        EmailConfigForm config = new EmailConfigForm();
+    private static EmailSettings emailConfig(boolean enabled) {
+        EmailSettings config = new EmailSettings();
         config.setEnabled(enabled);
         config.setHost("smtp.example.com");
         config.setPort(465);

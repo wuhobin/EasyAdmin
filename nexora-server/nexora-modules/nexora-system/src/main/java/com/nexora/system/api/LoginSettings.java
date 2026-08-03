@@ -1,4 +1,4 @@
-package com.nexora.system.domain.form;
+package com.nexora.system.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 @Schema(description = "用户登录配置")
-public class LoginConfigForm {
+public class LoginSettings {
 
     @NotNull(message = "登录验证码开关不能为空")
     private Boolean captchaEnabled;

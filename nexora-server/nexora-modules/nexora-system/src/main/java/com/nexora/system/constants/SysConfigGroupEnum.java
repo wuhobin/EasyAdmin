@@ -1,10 +1,10 @@
 package com.nexora.system.constants;
 
-import com.nexora.system.domain.form.EmailConfigForm;
-import com.nexora.system.domain.form.LoginConfigForm;
-import com.nexora.system.domain.form.PasswordConfigForm;
-import com.nexora.system.domain.form.RegisterConfigForm;
-import com.nexora.system.domain.form.SystemConfigForm;
+import com.nexora.system.api.EmailSettings;
+import com.nexora.system.api.LoginSettings;
+import com.nexora.system.api.PasswordSettings;
+import com.nexora.system.api.RegistrationSettings;
+import com.nexora.system.api.SystemSettings;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -13,11 +13,11 @@ import java.util.stream.Collectors;
 
 @Getter
 public enum SysConfigGroupEnum {
-    SYSTEM("system", "系统配置", SystemConfigForm.class),
-    REGISTER("register", "注册配置", RegisterConfigForm.class),
-    LOGIN("login", "登录配置", LoginConfigForm.class),
-    PASSWORD("password", "密码配置", PasswordConfigForm.class),
-    EMAIL("email", "邮箱配置", EmailConfigForm.class);
+    SYSTEM("system", "系统配置", SystemSettings.class),
+    REGISTER("register", "注册配置", RegistrationSettings.class),
+    LOGIN("login", "登录配置", LoginSettings.class),
+    PASSWORD("password", "密码配置", PasswordSettings.class),
+    EMAIL("email", "邮箱配置", EmailSettings.class);
 
     private static final Set<String> CODES = Arrays.stream(values())
             .map(SysConfigGroupEnum::getCode)

@@ -1,6 +1,6 @@
 package com.nexora.mail.infrastructure;
 
-import com.nexora.system.domain.form.EmailConfigForm;
+import com.nexora.system.api.EmailSettings;
 import org.junit.jupiter.api.Test;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
@@ -12,7 +12,7 @@ class SmtpMailSenderFactoryTest {
 
     @Test
     void createsAnImplicitSslSenderFromTheDatabaseConfiguration() {
-        EmailConfigForm config = config(true);
+        EmailSettings config = config(true);
 
         JavaMailSenderImpl sender = factory.create(config);
 
@@ -39,8 +39,8 @@ class SmtpMailSenderFactoryTest {
                 .doesNotContainKey("mail.smtp.ssl.enable");
     }
 
-    private static EmailConfigForm config(boolean ssl) {
-        EmailConfigForm config = new EmailConfigForm();
+    private static EmailSettings config(boolean ssl) {
+        EmailSettings config = new EmailSettings();
         config.setEnabled(true);
         config.setHost("smtp.example.com");
         config.setPort(465);

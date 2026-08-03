@@ -1,6 +1,6 @@
 package com.nexora.mail.infrastructure;
 
-import com.nexora.system.domain.form.EmailConfigForm;
+import com.nexora.system.api.EmailSettings;
 import jakarta.mail.internet.InternetAddress;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,7 @@ import java.util.Properties;
 @Component
 public class SmtpMailSenderFactory {
 
-    public JavaMailSenderImpl create(EmailConfigForm config) {
+    public JavaMailSenderImpl create(EmailSettings config) {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(config.getHost());
         mailSender.setPort(config.getPort());
@@ -38,7 +38,7 @@ public class SmtpMailSenderFactory {
         return mailSender;
     }
 
-    public String fromAddress(EmailConfigForm config) {
+    public String fromAddress(EmailSettings config) {
         if (config.getFromName() == null || config.getFromName().isBlank()) {
             return config.getUsername();
         }

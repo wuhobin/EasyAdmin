@@ -5,6 +5,8 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 @AnalyzeClasses(packages = "com.nexora", importOptions = ImportOption.DoNotIncludeTests.class)
@@ -63,4 +65,11 @@ class DomainDependencyArchitectureTest {
                     "com.nexora.identity..",
                     "com.nexora.file..",
                     "com.nexora.mail..");
+
+    @ArchTest
+    static final ArchRule otherDomainsMustOnlyUseTheSystemApi = noClasses()
+            .that().resideOutsideOfPackage("com.nexora.system..")
+            .should().dependOnClassesThat(
+                    resideInAnyPackage("com.nexora.system..")
+                            .and(not(resideInAnyPackage("com.nexora.system.api.."))));
 }

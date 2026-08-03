@@ -1,9 +1,9 @@
-package com.nexora.system.config;
+package com.nexora.system.api;
 
 /**
  * 配置分组的领域业务校验扩展点。
  */
-public interface SysConfigGroupBusinessValidator {
+public interface SystemSettingsValidator {
 
     /**
      * 当前校验器是否处理指定配置分组。

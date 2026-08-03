@@ -2,19 +2,21 @@ package com.nexora.mail.biz;
 
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
+import com.nexora.constants.CommonConstants;
 import com.nexora.mail.constants.MailProviderEnum;
 import com.nexora.mail.domain.form.MailAccountForm;
 import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.infrastructure.ImapMailClient;
 import com.nexora.mail.infrastructure.MailCredentialCipher;
 import com.nexora.mail.service.MailAccountService;
-import com.nexora.system.service.SysDictDataService;
-import com.nexora.system.service.SysDictService;
+import com.nexora.system.api.DictionaryEntry;
+import com.nexora.system.api.SystemDictionaryReader;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -82,16 +84,42 @@ class MailAccountBizServiceTest {
         }
     }
 
+    @Test
+    void listsConfiguredProvidersThroughTheSystemApi() {
+        SystemDictionaryReader dictionaryReader = mock(SystemDictionaryReader.class);
+        when(dictionaryReader.findEnabledEntries(CommonConstants.MAIL_PROVIDER_DICT_TYPE))
+                .thenReturn(Optional.of(List.of(
+                        new DictionaryEntry("QQ邮箱", "QQ", true),
+                        new DictionaryEntry("未知邮箱", "UNKNOWN", false))));
+        MailAccountBizService service = service(
+                mock(MailAccountService.class),
+                mock(MailCredentialCipher.class),
+                dictionaryReader);
+
+        assertThat(service.listProviders())
+                .singleElement()
+                .satisfies(provider -> {
+                    assertThat(provider.getLabel()).isEqualTo("QQ邮箱");
+                    assertThat(provider.getValue()).isEqualTo("QQ");
+                    assertThat(provider.isDefaultProvider()).isTrue();
+                });
+    }
+
     private static MailAccountBizService service(MailAccountService accountService) {
         return service(accountService, mock(MailCredentialCipher.class));
     }
 
     private static MailAccountBizService service(MailAccountService accountService,
                                                  MailCredentialCipher credentialCipher) {
+        return service(accountService, credentialCipher, mock(SystemDictionaryReader.class));
+    }
+
+    private static MailAccountBizService service(MailAccountService accountService,
+                                                 MailCredentialCipher credentialCipher,
+                                                 SystemDictionaryReader dictionaryReader) {
         return new MailAccountBizService(
                 accountService,
-                mock(SysDictService.class),
-                mock(SysDictDataService.class),
+                dictionaryReader,
                 credentialCipher,
                 mock(ImapMailClient.class));
     }

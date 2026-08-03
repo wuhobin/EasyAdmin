@@ -1,4 +1,4 @@
-package com.nexora.system.domain.form;
+package com.nexora.system.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Data
 @Schema(description = "系统邮箱配置")
-public class EmailConfigForm {
+public class EmailSettings {
 
     @NotNull(message = "邮件开关不能为空")
     private Boolean enabled;
