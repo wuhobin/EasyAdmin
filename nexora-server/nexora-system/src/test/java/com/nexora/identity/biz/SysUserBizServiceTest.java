@@ -12,7 +12,7 @@ import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.cache.SecurityAuthorizationCache;
 import com.nexora.identity.service.SysRoleService;
 import com.nexora.identity.service.SysUserService;
-import com.nexora.mail.service.MailAccountService;
+import com.nexora.identity.service.UserDeletionCleanup;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class SysUserBizServiceTest {
         SysUserService userService = mock(SysUserService.class);
         SysUserBizService service = new SysUserBizService(userService, mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class), mailProvider(null),
-                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
+                List.of(), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setNickname("new-name");
 
@@ -61,14 +61,14 @@ class SysUserBizServiceTest {
         SysUserService userService = mock(SysUserService.class);
         SysRoleService roleService = mock(SysRoleService.class);
         SecurityAuthorizationCache authorizationCache = mock(SecurityAuthorizationCache.class);
-        MailAccountService mailAccountService = mock(MailAccountService.class);
+        UserDeletionCleanup cleanup = mock(UserDeletionCleanup.class);
         SysUserBizService service = new SysUserBizService(
-                userService, roleService, authorizationCache, mailProvider(null), mailAccountService,
+                userService, roleService, authorizationCache, mailProvider(null), List.of(cleanup),
                 mock(PasswordPolicyValidator.class));
 
         service.delete(List.of(7, 8));
 
-        verify(mailAccountService).removeByOwnerIds(List.of(7, 8));
+        verify(cleanup).cleanup(List.of(7, 8));
         verify(authorizationCache).evictUsersAfterCommit(List.of(7, 8));
     }
 
@@ -93,7 +93,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(verificationService),
-                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
+                List.of(), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setEmail(" New@Example.com ");
         form.setCode("123456");
@@ -117,7 +117,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
+                List.of(), mock(PasswordPolicyValidator.class));
 
         assertThatThrownBy(() -> service.delete(List.of(1, 7)))
                 .isInstanceOf(BizException.class)
@@ -133,7 +133,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
+                List.of(), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setId(1);
         form.setNickname("Root");
@@ -157,7 +157,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
+                List.of(), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setEmail(" Used@Example.com ");
 
@@ -181,7 +181,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(verificationService),
-                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
+                List.of(), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setEmail("new@example.com");
 
@@ -211,7 +211,7 @@ class SysUserBizServiceTest {
                 roleService,
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class), mock(PasswordPolicyValidator.class));
+                List.of(), mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setId(7);
         form.setNickname("new-name");
@@ -237,7 +237,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class),
+                List.of(),
                 mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setStatus(3);
@@ -256,7 +256,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class),
+                List.of(),
                 mock(PasswordPolicyValidator.class));
         SysUserForm form = new SysUserForm();
         form.setId(7);
@@ -280,7 +280,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 authorizationCache,
                 mailProvider(null),
-                mock(MailAccountService.class),
+                List.of(),
                 mock(PasswordPolicyValidator.class));
 
         service.audit(7);
@@ -302,7 +302,7 @@ class SysUserBizServiceTest {
                 mock(SysRoleService.class),
                 mock(SecurityAuthorizationCache.class),
                 mailProvider(null),
-                mock(MailAccountService.class),
+                List.of(),
                 mock(PasswordPolicyValidator.class));
 
         assertThatThrownBy(() -> service.audit(7))
