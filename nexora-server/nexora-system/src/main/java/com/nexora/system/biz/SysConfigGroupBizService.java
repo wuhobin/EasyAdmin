@@ -3,6 +3,7 @@ package com.nexora.system.biz;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nexora.system.cache.SysConfigGroupCache;
+import com.nexora.system.config.SysConfigGroupBusinessValidator;
 import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.system.config.SysConfigGroupRegistry;
 import com.nexora.constants.CommonConstants;
@@ -16,7 +17,6 @@ import com.nexora.system.domain.vo.SysConfigGroupSummaryVo;
 import com.nexora.system.domain.vo.SysConfigPublicVo;
 import com.nexora.system.entity.SysConfigGroup;
 import com.nexora.system.service.SysConfigGroupService;
-import com.nexora.identity.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,10 +30,10 @@ import java.util.Set;
 public class SysConfigGroupBizService {
 
     private final SysConfigGroupService configGroupService;
-    private final SysRoleService roleService;
     private final SysConfigGroupCache configGroupCache;
     private final SysConfigGroupRegistry registry;
     private final SysConfigGroupReader configReader;
+    private final List<SysConfigGroupBusinessValidator> businessValidators;
 
     public List<SysConfigGroupSummaryVo> list() {
         return configGroupService.listOrdered().stream().map(group -> SysConfigGroupSummaryVo.builder()
@@ -139,13 +139,9 @@ public class SysConfigGroupBizService {
     }
 
     private void validateBusinessRules(String groupCode, Object config) {
-        if (!SysConfigGroupEnum.REGISTER.getCode().equals(groupCode)) {
-            return;
-        }
-        RegisterConfigForm register = (RegisterConfigForm) config;
-        if (roleService.getByCode(register.getDefaultRoleCode()) == null) {
-            throw new BizException(CommonConstants.REGISTER_ROLE_UNAVAILABLE_MESSAGE);
-        }
+        businessValidators.stream()
+                .filter(validator -> validator.supports(groupCode))
+                .forEach(validator -> validator.validate(config));
     }
 
     private SysConfigGroup requireGroup(String groupCode) {

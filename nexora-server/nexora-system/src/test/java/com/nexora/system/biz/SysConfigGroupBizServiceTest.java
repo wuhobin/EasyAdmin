@@ -4,13 +4,13 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexora.system.cache.SysConfigGroupCache;
+import com.nexora.system.config.SysConfigGroupBusinessValidator;
 import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.system.config.SysConfigGroupRegistry;
 import com.nexora.system.constants.SysConfigGroupEnum;
 import com.nexora.system.domain.form.RegisterConfigForm;
 import com.nexora.system.entity.SysConfigGroup;
 import com.nexora.system.service.SysConfigGroupService;
-import com.nexora.identity.service.SysRoleService;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -25,12 +25,12 @@ import static org.mockito.Mockito.when;
 class SysConfigGroupBizServiceTest {
 
     private final SysConfigGroupService configService = mock(SysConfigGroupService.class);
-    private final SysRoleService roleService = mock(SysRoleService.class);
     private final SysConfigGroupCache configCache = mock(SysConfigGroupCache.class);
     private final SysConfigGroupRegistry registry = mock(SysConfigGroupRegistry.class);
     private final SysConfigGroupReader reader = mock(SysConfigGroupReader.class);
+    private final SysConfigGroupBusinessValidator registerValidator = mock(SysConfigGroupBusinessValidator.class);
     private final SysConfigGroupBizService bizService = new SysConfigGroupBizService(
-            configService, roleService, configCache, registry, reader);
+            configService, configCache, registry, reader, List.of(registerValidator));
 
     @Test
     void replacesTheWholeGroupAndRefreshesItsCacheAfterCommit() {
@@ -42,13 +42,14 @@ class SysConfigGroupBizServiceTest {
         when(registry.normalizeCode("register")).thenReturn("register");
         when(registry.normalize("register", input))
                 .thenReturn(new SysConfigGroupRegistry.NormalizedConfig(value, json));
-        when(roleService.getByCode("user")).thenReturn(new com.nexora.identity.entity.SysRole());
+        when(registerValidator.supports("register")).thenReturn(true);
         when(configService.getByGroupCode("register")).thenReturn(group);
         when(configService.updateById(group)).thenReturn(true);
 
         bizService.update("register", input);
 
         verify(configCache).prepareUpdate("register");
+        verify(registerValidator).validate(value);
         verify(configService).updateById(group);
         verify(configCache).refreshAfterCommit("register", json);
     }
@@ -60,6 +61,9 @@ class SysConfigGroupBizServiceTest {
         when(registry.normalizeCode("register")).thenReturn("register");
         when(registry.normalize("register", input))
                 .thenReturn(new SysConfigGroupRegistry.NormalizedConfig(value, "{}"));
+        when(registerValidator.supports("register")).thenReturn(true);
+        org.mockito.Mockito.doThrow(new BizException("默认注册角色不可用"))
+                .when(registerValidator).validate(value);
 
         assertThatThrownBy(() -> bizService.update("register", input))
                 .isInstanceOf(BizException.class);
@@ -90,6 +94,9 @@ class SysConfigGroupBizServiceTest {
         when(configService.listOrdered()).thenReturn(List.of(group));
         when(registry.supportedCodes()).thenReturn(Set.of("register"));
         when(registry.parse("register", group.getConfigValue())).thenReturn(value);
+        when(registerValidator.supports("register")).thenReturn(true);
+        org.mockito.Mockito.doThrow(new BizException("默认注册角色不可用"))
+                .when(registerValidator).validate(value);
 
         assertThatThrownBy(bizService::validateDatabase)
                 .isInstanceOf(BizException.class)
