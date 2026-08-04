@@ -2,7 +2,6 @@ package com.nexora.identity.biz;
 
 import cn.dev33.satoken.secure.BCrypt;
 import com.aurora.starter.common.utils.StringUtils;
-import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.config.PasswordPolicyValidator;
@@ -22,6 +21,7 @@ public class PasswordResetService {
     private final SysUserService sysUserService;
     private final PasswordPolicyValidator passwordPolicyValidator;
     private final MailVerificationOrchestrator mailVerificationOrchestrator;
+    private final OnlineSessionLifecycleService onlineSessionLifecycleService;
 
     public void sendResetPasswordCode(AuthForm form) {
         String email = StringUtils.normalizeEmail(
@@ -48,7 +48,7 @@ public class PasswordResetService {
         if (!sysUserService.updateById(update)) {
             throw new BizException(IdentityConstants.PASSWORD_RESET_FAILED_MESSAGE);
         }
-        SecurityUtils.kickout(user.getId());
+        onlineSessionLifecycleService.invalidateUserSessions(user.getId());
     }
 
     public SysUser requireExistingUser(String email) {
