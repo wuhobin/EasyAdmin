@@ -3,6 +3,7 @@ package com.nexora.monitor.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.nexora.annotation.OperationLogger;
 import com.nexora.monitor.biz.OnlineSessionBizService;
 import com.nexora.monitor.constants.OnlineSessionConstants;
 import com.nexora.monitor.domain.form.OnlineSessionQueryForm;
@@ -39,6 +40,7 @@ public class OnlineSessionController {
     @DeleteMapping("/{sessionId}")
     @Operation(summary = "强退指定在线会话")
     @SaCheckPermission("sys:online:forceLogout")
+    @OperationLogger("强退在线会话 {1}")
     public Result<ForceLogoutResultVo> forceLogout(
             @PathVariable
             @Pattern(

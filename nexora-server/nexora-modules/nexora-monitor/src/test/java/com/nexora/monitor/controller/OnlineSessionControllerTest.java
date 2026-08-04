@@ -2,6 +2,7 @@ package com.nexora.monitor.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nexora.annotation.OperationLogger;
 import com.nexora.monitor.biz.OnlineSessionBizService;
 import com.nexora.monitor.domain.form.OnlineSessionQueryForm;
 import com.nexora.monitor.domain.vo.ForceLogoutResultVo;
@@ -60,6 +61,8 @@ class OnlineSessionControllerTest {
                 .containsExactly("/{sessionId}");
         assertThat(method.getAnnotation(SaCheckPermission.class).value())
                 .containsExactly("sys:online:forceLogout");
+        assertThat(method.getAnnotation(OperationLogger.class).value())
+                .isEqualTo("强退在线会话 {1}");
     }
 
     @Test

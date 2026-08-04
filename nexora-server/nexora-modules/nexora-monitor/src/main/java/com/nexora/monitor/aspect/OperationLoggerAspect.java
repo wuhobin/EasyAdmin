@@ -7,6 +7,7 @@ import com.aurora.starter.common.utils.JsonUtil;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.utils.ServletUtils;
 import com.nexora.monitor.infrastructure.IpRegionUtils;
+import com.nexora.monitor.infrastructure.OperationLogContext;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,38 +48,48 @@ public class OperationLoggerAspect {
 
     @Around(value = "pointcut(operationLogger)")
     public Object doAround(ProceedingJoinPoint joinPoint, OperationLogger operationLogger) throws Throwable {
-        HttpServletRequest request = ServletUtils.getRequest();
-        SecurityUtils.checkLogin();
-
-        long startTime = System.currentTimeMillis();
-        Object result = joinPoint.proceed();
         try {
-            if (operationLogger.save()) {
-                saveOperationLog(joinPoint, operationLogger, request, startTime);
+            HttpServletRequest request = ServletUtils.getRequest();
+            SecurityUtils.checkLogin();
+            int currentUserId = SecurityUtils.getLoginIdAsInt();
+            RequestAuditSnapshot requestSnapshot = new RequestAuditSnapshot(
+                    currentUserId > 0 ? currentUserId : null,
+                    request == null ? "" : ServletUtils.getClientIp(request),
+                    request == null ? "" : request.getRequestURI(),
+                    request == null ? "" : request.getMethod(),
+                    System.currentTimeMillis());
+
+            Object result = joinPoint.proceed();
+            try {
+                if (operationLogger.save()) {
+                    saveOperationLog(joinPoint, operationLogger, requestSnapshot);
+                }
+            } catch (Exception e) {
+                logger.error("操作日志记录失败", e);
             }
-        } catch (Exception e) {
-            logger.error("操作日志记录失败", e);
+            return result;
+        } finally {
+            OperationLogContext.clear();
         }
-        return result;
     }
 
     private void saveOperationLog(ProceedingJoinPoint point, OperationLogger annotation,
-                                  HttpServletRequest request, long startTime) {
+                                  RequestAuditSnapshot requestSnapshot) {
         String operationName = formatOperationName(annotation.value(), point.getArgs());
         MethodSignature signature = (MethodSignature) point.getSignature();
-        String paramsJson = serializeParameters(signature.getParameterNames(), point.getArgs());
-
-        int currentUserId = SecurityUtils.getLoginIdAsInt();
-        String ip = ServletUtils.getClientIp(request);
+        Map<String, Object> parameters = collectParameters(
+                signature.getParameterNames(), point.getArgs());
+        parameters.putAll(OperationLogContext.parameters());
+        String paramsJson = JsonUtil.toJson(parameters);
 
         SysOperateLog operateLog = SysOperateLog.builder()
-                .ip(ip)
-                .source(IpRegionUtils.resolve(ip))
-                .type(request == null ? "" : request.getMethod())
-                .userId(currentUserId > 0 ? currentUserId : null)
+                .ip(requestSnapshot.ip())
+                .source(IpRegionUtils.resolve(requestSnapshot.ip()))
+                .type(requestSnapshot.method())
+                .userId(requestSnapshot.operatorUserId())
                 .paramsJson(paramsJson)
-                .requestUrl(request == null ? "" : request.getRequestURI())
-                .spendTime(System.currentTimeMillis() - startTime)
+                .requestUrl(requestSnapshot.requestUrl())
+                .spendTime(System.currentTimeMillis() - requestSnapshot.startTime())
                 .methodName(point.getSignature().getName())
                 .classPath(point.getTarget().getClass().getName())
                 .operationName(operationName)
@@ -106,9 +117,15 @@ public class OperationLoggerAspect {
     }
 
     static String serializeParameters(String[] parameterNames, Object[] args) {
+        return JsonUtil.toJson(collectParameters(parameterNames, args));
+    }
+
+    private static Map<String, Object> collectParameters(
+            String[] parameterNames,
+            Object[] args) {
         Map<String, Object> parameters = new LinkedHashMap<>();
         if (parameterNames == null || args == null) {
-            return JsonUtil.toJson(parameters);
+            return parameters;
         }
         int length = Math.min(parameterNames.length, args.length);
         for (int i = 0; i < length; i++) {
@@ -116,7 +133,7 @@ public class OperationLoggerAspect {
                 parameters.put(parameterNames[i], args[i]);
             }
         }
-        return JsonUtil.toJson(parameters);
+        return parameters;
     }
 
     private static boolean isUnloggableArgument(Object argument) {
@@ -125,5 +142,13 @@ public class OperationLoggerAspect {
                 || argument instanceof MultipartFile
                 || argument instanceof InputStream
                 || argument instanceof OutputStream;
+    }
+
+    private record RequestAuditSnapshot(
+            Integer operatorUserId,
+            String ip,
+            String requestUrl,
+            String method,
+            long startTime) {
     }
 }
