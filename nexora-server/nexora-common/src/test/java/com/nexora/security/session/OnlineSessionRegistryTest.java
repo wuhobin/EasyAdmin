@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -108,6 +109,34 @@ class OnlineSessionRegistryTest {
                 .thenReturn(false);
 
         assertThat(registry.touch(SESSION_ID, 1234L, 300)).isFalse();
+    }
+
+    @Test
+    void allowsTouchAgainAfterTheThrottleWindowExpires() {
+        when(redisCache.exists(DATA_KEY)).thenReturn(true);
+        when(redisCache.setIfAbsent(TOUCH_KEY, "1", 60, TimeUnit.SECONDS))
+                .thenReturn(true, false, true);
+
+        assertThat(registry.touch(SESSION_ID, 1000L, 300)).isTrue();
+        assertThat(registry.touch(SESSION_ID, 2000L, 300)).isFalse();
+        assertThat(registry.touch(SESSION_ID, 3000L, 300)).isTrue();
+
+        verify(redisCache).setCacheObject(LAST_ACCESS_KEY, 1000L, 300, TimeUnit.SECONDS);
+        verify(redisCache, never())
+                .setCacheObject(LAST_ACCESS_KEY, 2000L, 300, TimeUnit.SECONDS);
+        verify(redisCache).setCacheObject(LAST_ACCESS_KEY, 3000L, 300, TimeUnit.SECONDS);
+    }
+
+    @Test
+    void skipsUnregisteredSessionsWithoutCreatingThrottleState() {
+        when(redisCache.exists(DATA_KEY)).thenReturn(false);
+
+        assertThat(registry.touch(SESSION_ID, 1234L, 300)).isFalse();
+
+        verify(redisCache, never())
+                .setIfAbsent(TOUCH_KEY, "1", 60, TimeUnit.SECONDS);
+        verify(redisCache, never())
+                .setCacheObject(LAST_ACCESS_KEY, 1234L, 300, TimeUnit.SECONDS);
     }
 
     @Test
