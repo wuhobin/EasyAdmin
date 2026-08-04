@@ -1,8 +1,7 @@
 <template>
-  <div class="menu-container">
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
+  <div class="menu-container data-list-page">
+    <el-card class="box-card data-list-card" shadow="never">
+        <div class="card-header data-list-toolbar">
           <ButtonGroup>
             <el-button
               v-permission="['sys:menu:add']"
@@ -12,15 +11,21 @@
             >新增</el-button>
           </ButtonGroup>
         </div>
-      </template>
       <!-- 表格区域 -->
       <el-table
+        class="data-list-table"
         v-loading="loading"
         :data="menuList"
         row-key="id"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
       >
-        <el-table-column label="菜单名称" prop="title" show-overflow-tooltip />
+        <el-table-column
+          label="菜单名称"
+          prop="title"
+          min-width="180"
+          class-name="data-list-tree-column"
+          show-overflow-tooltip
+        />
         <el-table-column label="图标" align="center" width="60">
           <template #default="{ row }">
             <el-icon v-if="row.icon">
@@ -35,10 +40,10 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="路由地址" prop="path" show-overflow-tooltip />
-        <el-table-column label="组件路径" prop="component" show-overflow-tooltip />
-        <el-table-column label="权限标识" prop="perm" show-overflow-tooltip />
-        <el-table-column label="排序" prop="sort" width="60" align="center" />
+        <el-table-column label="路由地址" prop="path" min-width="150" show-overflow-tooltip />
+        <el-table-column label="组件路径" prop="component" min-width="180" show-overflow-tooltip />
+        <el-table-column label="权限标识" prop="perm" min-width="180" show-overflow-tooltip />
+        <el-table-column label="排序" prop="sort" width="72" align="center" />
      
         <el-table-column label="状态" align="center" width="80">
           <template #default="{ row }">
@@ -47,9 +52,9 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" align="center">
+        <el-table-column label="操作" width="210" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="success" link @click="handleAdd(row)" v-permission="['sys:menu:add']">
+            <el-button type="primary" link @click="handleAdd(row)" v-permission="['sys:menu:add']">
               <el-icon><Plus /></el-icon>新增
             </el-button>
             <el-button type="primary" link @click="handleEdit(row)" v-permission="['sys:menu:update']">
@@ -385,10 +390,10 @@ const formatIconName = (icon: string) => {
 
 <style lang="scss" scoped>
 .menu-container {
-  padding: 10px;
+  padding: 0;
 
   .box-card {
-    margin-bottom: 10px;
+    margin-bottom: 0;
   }
 
   .card-header {

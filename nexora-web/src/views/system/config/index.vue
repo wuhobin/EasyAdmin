@@ -1,328 +1,613 @@
 <template>
-  <main class="config-container">
-    <div class="search-wrapper">
-      <el-form :inline="true" :model="queryParams" class="search-form" @submit.prevent>
-        <el-form-item label="配置键">
-          <el-input
-            v-model.trim="queryParams.configKey"
-            placeholder="请输入配置键关键字"
-            clearable
-            maxlength="128"
-            @keyup.enter="handleQuery"
+  <main class="config-page">
+    <el-card class="config-card" shadow="never">
+      <div class="config-toolbar">
+        <el-tabs v-model="activeGroup" class="config-tabs" @tab-change="changeGroup">
+          <el-tab-pane
+            v-for="tab in summaries"
+            :key="tab.groupCode"
+            :name="tab.groupCode"
+            :label="tab.groupName"
           />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
-          <ButtonGroup>
-            <el-button
-              v-permission="['sys:config:add']"
-              type="primary"
-              icon="Plus"
-              @click="handleAdd"
-            >
-              新增
-            </el-button>
-          </ButtonGroup>
+        </el-tabs>
+        <span v-if="activeSummary?.updateTime" class="update-time">
+          最近更新 {{ activeSummary.updateTime }}
+        </span>
+        <div class="header-actions">
+          <el-button
+            v-permission="['sys:config:update']"
+            icon="Refresh"
+            :loading="refreshing"
+            @click="refreshCache"
+          >
+            刷新缓存
+          </el-button>
+          <el-button
+            v-permission="['sys:config:update']"
+            type="primary"
+            icon="Check"
+            :loading="saving"
+            @click="saveCurrentGroup"
+          >
+            保存当前分组
+          </el-button>
         </div>
-      </template>
-
-      <el-table v-loading="loading" :data="configList" row-key="id">
-        <el-table-column label="配置键" prop="configKey" min-width="220" show-overflow-tooltip />
-        <el-table-column label="配置值" prop="configValue" min-width="260" show-overflow-tooltip />
-        <el-table-column label="备注" prop="remark" min-width="220" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ row.remark || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="更新时间" prop="updateTime" width="180" align="center" />
-        <el-table-column label="操作" width="160" align="center" fixed="right">
-          <template #default="{ row }">
-            <el-button
-              v-permission="['sys:config:update']"
-              type="primary"
-              link
-              icon="Edit"
-              @click="handleEdit(row)"
-            >
-              修改
-            </el-button>
-            <el-button
-              v-permission="['sys:config:delete']"
-              type="danger"
-              link
-              icon="Delete"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <el-empty description="暂无配置" :image-size="88" />
-        </template>
-      </el-table>
-
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="queryParams.pageNum"
-          v-model:page-size="queryParams.pageSize"
-          background
-          :page-sizes="[10, 20, 30, 50]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="getList"
-          @current-change="getList"
-        />
       </div>
-    </el-card>
 
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogType === 'add' ? '新增配置' : '修改配置'"
-      width="min(560px, calc(100vw - 32px))"
-      append-to-body
-      destroy-on-close
-      @closed="resetForm"
-    >
-      <p class="dialog-form-intro">维护系统配置键、配置值及用途说明。</p>
       <el-form
-        ref="configFormRef"
-        :model="configForm"
-        :rules="rules"
-        label-position="top"
+        ref="formRef"
+        v-loading="loading"
+        :model="activeForm"
+        :rules="activeRules"
+        label-position="right"
+        :label-width="labelWidths[activeGroup]"
+        class="config-form"
         @submit.prevent
       >
-        <el-form-item label="配置键" prop="configKey">
-          <el-input
-            v-model.trim="configForm.configKey"
-            :disabled="dialogType === 'edit'"
-            maxlength="128"
-            placeholder="例如 register.enabled"
-          />
-          <div class="form-tip">
-            只能使用小写字母以及 . _ -，不允许数字；创建后不能修改。
-          </div>
-        </el-form-item>
-        <el-form-item label="配置值" prop="configValue">
-          <el-input
-            v-model.trim="configForm.configValue"
-            type="textarea"
-            :rows="5"
-            maxlength="512"
-            show-word-limit
-            resize="vertical"
-            placeholder="请输入配置值"
-          />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input
-            v-model.trim="configForm.remark"
-            type="textarea"
-            :rows="3"
-            maxlength="255"
-            show-word-limit
-            resize="vertical"
-            placeholder="可填写用途、单位或修改影响"
-          />
-        </el-form-item>
+        <SystemConfigForm
+          v-if="activeGroup === 'system'"
+          v-model="forms.system"
+        />
+        <RegisterConfigForm
+          v-else-if="activeGroup === 'register'"
+          v-model="forms.register"
+        />
+        <LoginConfigForm
+          v-else-if="activeGroup === 'login'"
+          v-model="forms.login"
+        />
+        <PasswordConfigForm
+          v-else-if="activeGroup === 'password'"
+          v-model="forms.password"
+        />
+        <EmailConfigForm
+          v-else-if="activeGroup === 'email'"
+          v-model="forms.email"
+        />
       </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="submitForm">确定</el-button>
-        </div>
-      </template>
-    </el-dialog>
+    </el-card>
   </main>
 </template>
 
 <script setup lang="ts">
-import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import ButtonGroup from '@/components/ButtonGroup/index.vue'
+import type { FormInstance, FormRules, TabPaneName } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import {
-  addConfigApi,
-  deleteConfigApi,
-  getConfigListApi,
-  updateConfigApi,
-  type SysConfigForm,
-  type SysConfigQuery,
-  type SysConfigRecord
+  getConfigGroupApi,
+  getConfigGroupListApi,
+  refreshConfigGroupCacheApi,
+  updateConfigGroupApi,
+  type ConfigGroupCode,
+  type ConfigValueByGroup,
+  type SysConfigGroupSummary
 } from '@/api/system/config'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
+import EmailConfigForm from './components/EmailConfigForm.vue'
+import LoginConfigForm from './components/LoginConfigForm.vue'
+import PasswordConfigForm from './components/PasswordConfigForm.vue'
+import RegisterConfigForm from './components/RegisterConfigForm.vue'
+import SystemConfigForm from './components/SystemConfigForm.vue'
 
-const CONFIG_KEY_PATTERN = /^[a-z]+(?:[._-][a-z]+)*$/
+const forms = reactive<ConfigValueByGroup>({
+  system: {
+    siteName: '',
+    shortTitle: '',
+    siteDescription: '',
+    siteLogo: '',
+    copyright: '',
+    icp: '',
+    watermarkEnabled: false,
+    watermarkType: 'username_time',
+    watermarkCustomText: '',
+    watermarkOpacity: 0.15
+  },
+  register: {
+    enabled: true,
+    captchaEnabled: true,
+    verifyEmail: true,
+    defaultRoleCode: 'user',
+    needAudit: false
+  },
+  login: {
+    maxRetryCount: 5,
+    lockTimeMinutes: 30,
+    rememberMeEnabled: true,
+    sessionTimeoutSeconds: 3600,
+    rememberMeTimeoutSeconds: 259200,
+    singleLogin: false
+  },
+  password: {
+    minLength: 6,
+    maxLength: 20,
+    requireUppercase: false,
+    requireLowercase: false,
+    requireNumber: false,
+    requireSpecial: false
+  },
+  email: {
+    enabled: false,
+    host: '',
+    port: 465,
+    username: '',
+    password: '',
+    fromName: 'Nexora Admin',
+    ssl: true
+  }
+})
 
+const activeGroup = ref<ConfigGroupCode>('system')
+const labelWidths: Record<ConfigGroupCode, string> = {
+  system: '120px',
+  register: '120px',
+  login: '180px',
+  password: '150px',
+  email: '120px'
+}
+const summaries = ref<SysConfigGroupSummary[]>([])
 const loading = ref(false)
-const submitLoading = ref(false)
-const total = ref(0)
-const configList = ref<SysConfigRecord[]>([])
-const dialogVisible = ref(false)
-const dialogType = ref<'add' | 'edit'>('add')
-const configFormRef = ref<FormInstance>()
+const saving = ref(false)
+const refreshing = ref(false)
+const formRef = ref<FormInstance>()
+const publicConfigStore = usePublicConfigStore()
 
-const queryParams = reactive<SysConfigQuery>({
-  pageNum: 1,
-  pageSize: 10,
-  configKey: ''
-})
+const activeSummary = computed(() =>
+  summaries.value.find(group => group.groupCode === activeGroup.value)
+)
+const activeForm = computed(() => forms[activeGroup.value])
 
-const configForm = reactive<SysConfigForm>({
-  configKey: '',
-  configValue: '',
-  remark: ''
-})
+const requiredText = (message: string, max: number) => [
+  { required: true, whitespace: true, message, trigger: 'blur' },
+  { max, message: `不能超过 ${max} 个字符`, trigger: 'blur' }
+]
 
-const rules: FormRules<SysConfigForm> = {
-  configKey: [
-    { required: true, message: '请输入配置键', trigger: 'blur' },
-    { min: 2, max: 128, message: '配置键长度必须在2到128个字符之间', trigger: 'blur' },
-    {
-      pattern: CONFIG_KEY_PATTERN,
-      message: '只能使用小写字母及点、短横线、下划线，且不能使用数字',
+const rulesByGroup: Record<ConfigGroupCode, FormRules> = {
+  system: {
+    siteName: requiredText('请输入站点名称', 100),
+    shortTitle: requiredText('请输入后台短标题', 100),
+    siteDescription: [{ required: true, message: '请输入站点描述', trigger: 'blur' }],
+    siteLogo: [{ max: 1024, message: 'Logo 地址不能超过 1024 个字符', trigger: 'blur' }],
+    copyright: [{ max: 255, message: '版权信息不能超过 255 个字符', trigger: 'blur' }],
+    icp: [{ max: 100, message: 'ICP备案信息不能超过 100 个字符', trigger: 'blur' }],
+    watermarkCustomText: [{
+      validator: (_rule, value: string, callback) => {
+        if (forms.system.watermarkType === 'custom' && !value.trim()) {
+          callback(new Error('请输入自定义水印文本'))
+          return
+        }
+        callback()
+      },
       trigger: 'blur'
-    }
-  ],
-  configValue: [
-    { required: true, whitespace: true, message: '请输入配置值', trigger: 'blur' },
-    { max: 512, message: '配置值不能超过512个字符', trigger: 'blur' }
-  ],
-  remark: [
-    { max: 255, message: '备注不能超过255个字符', trigger: 'blur' }
-  ]
+    }]
+  },
+  register: {
+    defaultRoleCode: requiredText('请输入默认角色编码', 50)
+  },
+  login: {
+    rememberMeTimeoutSeconds: [{
+      validator: (_rule, value: number, callback) => {
+        if (value < forms.login.sessionTimeoutSeconds) {
+          callback(new Error('记住我会话时长不能小于普通会话时长'))
+          return
+        }
+        callback()
+      },
+      trigger: 'change'
+    }]
+  },
+  password: {
+    maxLength: [{
+      validator: (_rule, value: number, callback) => {
+        if (value < forms.password.minLength) {
+          callback(new Error('密码最大长度不能小于最小长度'))
+          return
+        }
+        callback()
+      },
+      trigger: 'change'
+    }]
+  },
+  email: {
+    host: [{
+      validator: (_rule, value: string, callback) => {
+        if (forms.email.enabled && !value.trim()) {
+          callback(new Error('请输入 SMTP 服务器'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }],
+    username: [{
+      validator: (_rule, value: string, callback) => {
+        if (forms.email.enabled && !value.trim()) {
+          callback(new Error('请输入 SMTP 用户名'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }],
+    password: [{
+      validator: (_rule, value: string, callback) => {
+        if (forms.email.enabled && !value.trim()) {
+          callback(new Error('请输入 SMTP 密码或授权码'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }],
+    fromName: [{ max: 100, message: '发件人名称不能超过 100 个字符', trigger: 'blur' }]
+  }
 }
 
-async function getList() {
+const activeRules = computed(() => rulesByGroup[activeGroup.value])
+
+async function loadTypedGroup<T extends ConfigGroupCode>(
+  groupCode: T,
+  target: ConfigValueByGroup[T]
+) {
+  const { data } = await getConfigGroupApi(groupCode)
+  Object.assign(target, data.configValue)
+}
+
+const groupLoaders: Record<ConfigGroupCode, () => Promise<void>> = {
+  system: () => loadTypedGroup('system', forms.system),
+  register: () => loadTypedGroup('register', forms.register),
+  login: () => loadTypedGroup('login', forms.login),
+  password: () => loadTypedGroup('password', forms.password),
+  email: () => loadTypedGroup('email', forms.email)
+}
+
+const groupSavers: Record<ConfigGroupCode, () => Promise<unknown>> = {
+  system: () => updateConfigGroupApi('system', forms.system),
+  register: () => updateConfigGroupApi('register', forms.register),
+  login: () => updateConfigGroupApi('login', forms.login),
+  password: () => updateConfigGroupApi('password', forms.password),
+  email: () => updateConfigGroupApi('email', forms.email)
+}
+
+async function loadGroup(groupCode: ConfigGroupCode) {
   loading.value = true
   try {
-    const { data } = await getConfigListApi(queryParams)
-    configList.value = data.records
-    total.value = data.total
+    await groupLoaders[groupCode]()
+    await nextTick()
+    formRef.value?.clearValidate()
   } finally {
     loading.value = false
   }
 }
 
-function handleQuery() {
-  queryParams.pageNum = 1
-  void getList()
+async function loadPage() {
+  const { data } = await getConfigGroupListApi()
+  summaries.value = data
+  await loadGroup(activeGroup.value)
 }
 
-function resetQuery() {
-  queryParams.configKey = ''
-  handleQuery()
+function isConfigGroupCode(value: string): value is ConfigGroupCode {
+  return Object.hasOwn(groupLoaders, value)
 }
 
-function resetForm() {
-  configForm.id = undefined
-  configForm.configKey = ''
-  configForm.configValue = ''
-  configForm.remark = ''
-  configFormRef.value?.clearValidate()
+function changeGroup(name: TabPaneName) {
+  const groupCode = String(name)
+  if (!isConfigGroupCode(groupCode)) return
+  activeGroup.value = groupCode
+  void loadGroup(groupCode)
 }
 
-function handleAdd() {
-  resetForm()
-  dialogType.value = 'add'
-  dialogVisible.value = true
-}
-
-function handleEdit(row: unknown) {
-  const config = row as SysConfigRecord
-  resetForm()
-  dialogType.value = 'edit'
-  Object.assign(configForm, {
-    id: config.id,
-    configKey: config.configKey,
-    configValue: config.configValue,
-    remark: config.remark || ''
-  })
-  dialogVisible.value = true
-}
-
-async function submitForm() {
-  if (!configFormRef.value) return
-  const valid = await configFormRef.value.validate().catch(() => false)
-  if (!valid) return
-
-  submitLoading.value = true
+async function saveCurrentGroup() {
+  if (!formRef.value || !(await formRef.value.validate().catch(() => false))) return
+  saving.value = true
   try {
-    if (dialogType.value === 'add') {
-      await addConfigApi(configForm)
-      ElMessage.success('新增成功')
-    } else {
-      await updateConfigApi(configForm)
-      ElMessage.success('修改成功')
+    const groupCode = activeGroup.value
+    await groupSavers[groupCode]()
+    ElMessage.success(`${activeSummary.value?.groupName ?? '配置分组'}已保存`)
+    await loadGroup(groupCode)
+    const { data } = await getConfigGroupListApi()
+    summaries.value = data
+    if (!(await publicConfigStore.load(true))) {
+      ElMessage.warning('配置已保存，但公共配置刷新失败，请稍后重试')
     }
-    dialogVisible.value = false
-    await getList()
   } finally {
-    submitLoading.value = false
+    saving.value = false
   }
 }
 
-function handleDelete(row: unknown) {
-  const config = row as SysConfigRecord
-  ElMessageBox.confirm(
-    `删除配置“${config.configKey}”后，依赖它的业务可能使用默认值或执行失败。确定删除吗？`,
-    '删除配置',
-    {
-      confirmButtonText: '确定删除',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(async () => {
-    await deleteConfigApi(config.id)
-    ElMessage.success('删除成功')
-    if (configList.value.length === 1 && queryParams.pageNum > 1) {
-      queryParams.pageNum -= 1
-    }
-    await getList()
-  }).catch(() => undefined)
+async function refreshCache() {
+  refreshing.value = true
+  try {
+    await refreshConfigGroupCacheApi()
+    await loadGroup(activeGroup.value)
+    ElMessage.success('全部配置缓存已刷新')
+  } finally {
+    refreshing.value = false
+  }
 }
 
-onMounted(getList)
+onMounted(() => void loadPage())
 </script>
 
-<style scoped>
-.config-container {
+<style scoped lang="scss">
+.config-page {
+  --config-surface: var(--el-bg-color, #fff);
+  --config-ink: var(--el-text-color-primary, #18212f);
+  --config-muted: var(--el-text-color-secondary, #697586);
+  --config-border: color-mix(in srgb, var(--el-border-color-light, #e5eaf2) 88%, var(--el-color-primary) 12%);
+  --config-soft: color-mix(in srgb, var(--el-color-primary) 4%, var(--config-surface));
+
+  width: 100%;
   min-width: 0;
 }
 
-.search-form {
-  margin-bottom: 20px;
+.config-card {
+  overflow: hidden;
+  min-height: calc(100vh - 140px);
+  background: var(--config-surface);
+  border: 1px solid var(--config-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%), 0 12px 32px -28px rgb(15 23 42 / 36%);
 }
 
-.card-header {
+.config-card :deep(.el-card__body) {
+  min-width: 0;
+  padding: 0;
+}
+
+.config-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  padding: 0 20px;
+  background: var(--config-surface);
+  border-bottom: 1px solid var(--config-border);
 }
 
-.pagination-container {
+.config-tabs {
+  flex: 1;
+  min-width: 0;
+
+  :deep(.el-tabs__header) {
+    margin-bottom: 0;
+  }
+
+  :deep(.el-tabs__nav-wrap::after) {
+    display: none;
+  }
+
+  :deep(.el-tabs__item) {
+    height: 56px;
+    padding: 0 16px;
+    color: var(--config-muted);
+    font-weight: 600;
+  }
+
+  :deep(.el-tabs__item.is-active) {
+    color: var(--el-color-primary);
+  }
+
+  :deep(.el-tabs__active-bar) {
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+  }
+
+  :deep(.el-tabs__content) {
+    display: none;
+  }
+}
+
+.header-actions {
   display: flex;
-  justify-content: flex-end;
-  overflow-x: auto;
-  padding-top: 20px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
 }
 
-.form-tip {
-  margin-top: 6px;
-  color: var(--el-text-color-secondary);
+.header-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.update-time {
+  flex-shrink: 0;
+  color: var(--config-muted);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 12px;
+  white-space: nowrap;
+}
+
+.config-form {
+  width: 100%;
+  max-width: 660px;
+  padding: 20px 24px 16px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+:deep(.form-section) {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--config-border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+:deep(.section-content) {
+  min-width: 0;
+}
+
+:deep(.form-grid) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:deep(.two-columns) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:deep(.full-width) {
+  grid-column: 1 / -1;
+}
+
+:deep(.logo-field) {
+  display: flex;
+  width: 100%;
+  max-width: 400px;
+  gap: 12px;
+}
+
+:deep(.logo-field .el-input) {
+  min-width: 0;
+  flex: 1;
+}
+
+:deep(.logo-preview) {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  overflow: hidden;
+  color: var(--config-muted);
+  font-size: 11px;
+  background: var(--config-soft);
+  border: 1px solid var(--config-border);
+  border-radius: 7px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+:deep(.form-hint) {
+  margin-left: 12px;
+  color: var(--config-muted);
+  font-size: 13px;
   line-height: 1.5;
 }
 
-.dialog-footer {
+:deep(.el-form-item__label) {
+  color: var(--el-text-color-regular);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+:deep(.el-input),
+:deep(.el-textarea),
+:deep(.el-select),
+:deep(.el-input-number),
+:deep(.el-slider),
+:deep(.el-alert) {
+  width: 100%;
+  max-width: 400px;
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-select__wrapper) {
+  min-height: 36px;
+}
+
+:deep(.el-input-number) {
+  width: 240px;
+  max-width: 100%;
+}
+
+:deep(.el-input-number .el-input__wrapper) {
+  min-height: 38px;
+  padding-right: 56px;
+  padding-left: 14px;
+}
+
+:deep(.el-input-number .el-input__inner) {
+  text-align: left;
+}
+
+:deep(.el-input-number__decrease),
+:deep(.el-input-number__increase) {
+  top: 1px;
+  bottom: 1px;
+  left: auto;
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: auto;
+  color: var(--config-muted);
+  line-height: normal;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+:deep(.el-input-number__decrease) {
+  right: 28px;
+}
+
+:deep(.el-input-number__increase) {
+  right: 8px;
+}
+
+:deep(.el-input-number__decrease:not(.is-disabled):hover),
+:deep(.el-input-number__increase:not(.is-disabled):hover) {
+  color: var(--el-color-primary);
+}
+
+@media (max-width: 760px) {
+  .config-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+    padding: 0 18px 16px;
+  }
+
+  .header-actions {
+    justify-content: flex-end;
+  }
+
+  .update-time {
+    display: none;
+  }
+
+  .config-form {
+    padding: 18px 18px 12px;
+  }
+
+  .config-tabs :deep(.el-tabs__item) {
+    height: 56px;
+    padding: 0 12px;
+  }
+
+  :deep(.el-form-item) {
+    display: block;
+  }
+
+  :deep(.el-form-item__label) {
+    width: auto !important;
+    height: auto;
+    justify-content: flex-start;
+    padding: 0 0 8px;
+    line-height: 1.5;
+  }
+
+  :deep(.el-form-item__content) {
+    margin-left: 0 !important;
+  }
+
+  :deep(.two-columns) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-actions :deep(.el-button) {
+    flex: 1;
+    margin-left: 0;
+  }
+
+  :deep(.form-section) {
+    padding: 22px 0;
+  }
 }
 </style>

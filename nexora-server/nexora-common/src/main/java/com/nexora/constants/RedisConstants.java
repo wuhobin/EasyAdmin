@@ -23,7 +23,12 @@ public class RedisConstants {
     /**
      * 系统配置 redis key
      */
-    public static final String SYS_CONFIG_KEY = "nexora:sys-config";
+    public static final String SYS_CONFIG_GROUP_KEY = "nexora:sys-config-group";
+
+    /**
+     * 登录失败重试 redis key
+     */
+    public static final String LOGIN_RETRY_KEY = "nexora:login-retry";
 
     /**
      * 用户授权信息 redis key

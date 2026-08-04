@@ -7,12 +7,15 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useSettingsStore } from '@/store/modules/settings'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
 
 const settingsStore = useSettingsStore()
+const publicConfigStore = usePublicConfigStore()
 
 onMounted(() => {
   // 初始化主题设置
   settingsStore.initTheme()
+  void publicConfigStore.load()
 })
 </script>
 
@@ -31,15 +34,25 @@ html, body {
   --el-font-size-base: 14px;
   --el-color-primary: #2563EB;
   --el-bg-color-page: #f8fafc;
+  --el-text-color-primary: #1f2937;
+  --el-text-color-regular: #6b7280;
+  --el-text-color-secondary: #6b7280;
+  --el-text-color-placeholder: #9ca3af;
+  --el-text-color-disabled: #9ca3af;
+  --el-disabled-text-color: #9ca3af;
+  --nexora-text-label: #374151;
   --nexora-content-bg: #f8fafc;
   --el-border-color-lighter: #e8eaf0;
   --el-border-radius-base: 8px;
   --el-border-radius-small: 6px;
   --nexora-sidebar-bg: #ffffff;
   --nexora-sidebar-border: #e8eaf0;
-  --nexora-sidebar-text: #64748b;
-  --nexora-sidebar-title: #1e293b;
-  --nexora-sidebar-hover: #f1f5f9;
+  --nexora-sidebar-text: #6b7280;
+  --nexora-sidebar-title: #1f2937;
+  --nexora-sidebar-hover: #f3f4f6;
+  --nexora-sidebar-active: #f3f4f6;
+  --nexora-sidebar-active-hover: #e5e7eb;
+  --nexora-sidebar-active-text: #111827;
   --nexora-sidebar-submenu: transparent;
 }
 
@@ -63,13 +76,17 @@ html, body {
   --el-text-color-disabled: #64748b;
   --el-disabled-bg-color: #263246;
   --el-disabled-text-color: #64748b;
+  --nexora-text-label: #c4cedd;
   --el-box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
   --el-box-shadow-light: 0 1px 6px 0 rgba(0, 0, 0, 0.2);
   --nexora-sidebar-bg: #151b28;
   --nexora-sidebar-border: rgba(148, 163, 184, 0.13);
   --nexora-sidebar-text: #a9b5c7;
   --nexora-sidebar-title: #f8fafc;
-  --nexora-sidebar-hover: rgba(148, 163, 184, 0.10);
+  --nexora-sidebar-hover: #27272a;
+  --nexora-sidebar-active: #27272a;
+  --nexora-sidebar-active-hover: #3f3f46;
+  --nexora-sidebar-active-text: #ffffff;
   --nexora-sidebar-submenu: transparent;
 }
 
@@ -165,6 +182,7 @@ html, body {
 
 /* 字体大小过渡仅作用于 body，避免全局通配符影响性能 */
 body {
+  color: var(--el-text-color-primary);
   font-size: var(--el-font-size-base);
   transition: font-size 0.3s ease;
 }

@@ -79,6 +79,13 @@ export function resetPasswordApi(data: SysUserForm) {
   })
 }
 
+export function auditUserApi(id: number) {
+  return request<void>({
+    url: `/sys/user/audit/${id}`,
+    method: 'put'
+  })
+}
+
 
 // 获取用户个人信息
 export function getUserProfileApi() {

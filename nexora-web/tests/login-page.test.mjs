@@ -8,6 +8,8 @@ const sliderCaptchaPath = new URL('../src/components/SliderCaptcha/index.vue', i
 const sliderCaptchaSource = await readFile(sliderCaptchaPath, 'utf8')
 const authApiPath = new URL('../src/api/system/auth.ts', import.meta.url)
 const authApiSource = await readFile(authApiPath, 'utf8')
+const publicConfigStorePath = new URL('../src/store/modules/publicConfig.ts', import.meta.url)
+const publicConfigStoreSource = await readFile(publicConfigStorePath, 'utf8')
 const indexHtmlPath = new URL('../index.html', import.meta.url)
 const indexHtmlSource = await readFile(indexHtmlPath, 'utf8')
 const logoPath = new URL('../src/layouts/components/Sidebar/Logo.vue', import.meta.url)
@@ -40,24 +42,50 @@ test('authentication validation runs on actions instead of field blur or change'
 })
 
 test('login page exposes registration only when the public system setting is true', () => {
-  assert.match(loginPageSource, /getConfigValueApi\(REGISTER_ENABLED_CONFIG_KEY\)/)
-  assert.match(loginPageSource, /data === ['"]true['"]/)
+  assert.match(loginPageSource, /usePublicConfigStore/)
+  assert.match(loginPageSource, /registerConfig\.value\.enabled/)
   assert.match(loginPageSource, /v-if="registerEnabled \|\| !registerConfigLoaded"/)
   assert.match(loginPageSource, /activeMode === ['"]register['"]/)
 })
 
 test('registration config loading reserves the tab space to prevent layout shift', () => {
-  assert.match(loginPageSource, /const registerConfigLoaded = ref\(false\)/)
-  assert.match(loginPageSource, /registerConfigLoaded\.value = true/)
+  assert.match(loginPageSource, /registerConfigLoaded = computed\(\(\) => publicConfigStore\.loaded\)/)
+  assert.match(loginPageSource, /publicConfigStore\.load\(\)/)
   assert.match(loginPageSource, /'is-loading': !registerConfigLoaded/)
   assert.match(loginPageSource, /\.auth-tabs\.is-loading\s*\{[^}]*visibility:\s*hidden/s)
+})
+
+test('public configuration failures remain retryable and never become loaded defaults', () => {
+  assert.match(publicConfigStoreSource, /'idle' \| 'loading' \| 'success' \| 'error'/)
+  assert.match(publicConfigStoreSource, /loaded: state => state\.status === 'success'/)
+  assert.match(publicConfigStoreSource, /this\.status = 'error'/)
+  assert.match(publicConfigStoreSource, /return false/)
+  assert.doesNotMatch(publicConfigStoreSource, /finally\s*\{[^}]*loaded\s*=\s*true/s)
+})
+
+test('security-sensitive authentication actions require public configuration', () => {
+  assert.match(loginPageSource, /const ensurePublicConfig = async \(\)/)
+  assert.match(loginPageSource, /系统安全配置加载失败，请稍后重试/)
+  for (const handler of [
+    'handleLogin',
+    'handleSendRegisterCode',
+    'handleRegister',
+    'handleImageCaptchaSuccess',
+    'handleSendResetCode',
+    'handleResetPassword'
+  ]) {
+    const source = loginPageSource.match(
+      new RegExp(`const ${handler} = async \\([^)]*\\) => \\{[\\s\\S]*?(?=\\nconst |\\n\\nconst )`)
+    )?.[0] ?? ''
+    assert.match(source, /await ensurePublicConfig\(\)/, `${handler} must load security configuration`)
+  }
 })
 
 test('registration uses email code and password with a sixty-second cooldown', () => {
   assert.match(loginPageSource, /v-model="registerForm\.email"/)
   assert.match(loginPageSource, /v-model="registerForm\.code"/)
   assert.match(loginPageSource, /v-model="registerForm\.password"/)
-  assert.match(loginPageSource, /v-model="registerForm\.password"[^>]*placeholder="请输入密码（6～20 位字符）"/)
+  assert.match(loginPageSource, /v-model="registerForm\.password"[^>]*:placeholder="passwordDescription"/)
   assert.match(loginPageSource, /sendRegisterCodeApi\(registerForm\)/)
   assert.match(loginPageSource, /codeCountdown\.value = 60/)
   assert.match(loginPageSource, /loginForm\.email = registerForm\.email/)
@@ -66,18 +94,29 @@ test('registration uses email code and password with a sixty-second cooldown', (
 
 test('registration opens image verification before creating the account', () => {
   const registerHandler = loginPageSource.match(
-    /const handleRegister = async \(\) => \{[\s\S]*?\n\}/
+    /const handleRegister = async \(\) => \{[\s\S]*?(?=\nconst handleImageCaptchaSuccess)/
   )?.[0] ?? ''
-  const captchaSuccessHandler = loginPageSource.match(
-    /const handleImageCaptchaSuccess = async \(captchaId: string\) => \{[\s\S]*?\n\}/
-  )?.[0] ?? ''
-
   assert.match(loginPageSource, /import SliderCaptcha from/)
   assert.match(loginPageSource, /<SliderCaptcha[\s\S]*v-model="captchaDialogVisible"[\s\S]*@success="handleImageCaptchaSuccess"/)
+  assert.match(registerHandler, /registerConfig\.value\.captchaEnabled/)
   assert.match(registerHandler, /captchaDialogVisible\.value = true/)
   assert.doesNotMatch(registerHandler, /registerApi\(/)
-  assert.match(captchaSuccessHandler, /captchaDialogVisible\.value = false/)
-  assert.match(captchaSuccessHandler, /registerApi\(\{[\s\S]*captchaId/)
+  assert.match(registerHandler, /await performRegister\(\)/)
+  assert.match(loginPageSource, /await performRegister\(captchaId\)/)
+  assert.doesNotMatch(loginPageSource, /captchaPurpose/)
+  assert.match(loginPageSource, /registerApi\(\{[\s\S]*captchaId/)
+})
+
+test('login and registration apply the public security switches', () => {
+  assert.match(loginPageSource, /v-if="loginConfig\.rememberMeEnabled"/)
+  assert.doesNotMatch(loginPageSource, /loginConfig\.value\.captchaEnabled/)
+  assert.doesNotMatch(loginPageSource, /performLogin\(captchaId\)/)
+  assert.match(loginPageSource, /registerConfig\.value\.captchaEnabled/)
+  assert.match(loginPageSource, /v-if="registerConfig\.verifyEmail"/)
+  assert.match(loginPageSource, /registerConfig\.value\.verifyEmail \? registerForm\.code : undefined/)
+  assert.match(loginPageSource, /validatePasswordByPolicy/)
+  assert.match(loginPageSource, /registerConfig\.value\.needAudit/)
+  assert.match(loginPageSource, /注册申请已提交，请等待管理员审核/)
 })
 
 test('image captcha API follows the tianai challenge and track contract', () => {
@@ -87,7 +126,7 @@ test('image captcha API follows the tianai challenge and track contract', () => 
   assert.match(authApiSource, /export interface ImageCaptchaTrack/)
   assert.match(authApiSource, /url:\s*['"]\/auth\/image['"]/)
   assert.match(authApiSource, /\/auth\/image\/\$\{encodeURIComponent\(captchaId\)\}\/match/)
-  assert.match(authApiSource, /export type RegisterParams[\s\S]*captchaId:\s*string/)
+  assert.match(authApiSource, /export type RegisterParams[\s\S]*captchaId\?:\s*string/)
 })
 
 test('slider captcha renders server images and only accepts an explicit match result', () => {
@@ -132,7 +171,7 @@ test('forgot password opens an email verification dialog and resets the password
   assert.match(loginPageSource, /v-model="resetPasswordForm\.email"/)
   assert.match(loginPageSource, /v-model="resetPasswordForm\.code"/)
   assert.match(loginPageSource, /v-model="resetPasswordForm\.password"/)
-  assert.match(loginPageSource, /v-model="resetPasswordForm\.password"[\s\S]*?placeholder="请输入新密码（6～20 位字符）"/)
+  assert.match(loginPageSource, /v-model="resetPasswordForm\.password"[\s\S]*?:placeholder="passwordDescription"/)
   assert.match(loginPageSource, /v-model="resetPasswordForm\.confirmPassword"/)
   assert.match(loginPageSource, /sendResetPasswordCodeApi\(\{ email: resetPasswordForm\.email \}\)/)
   assert.match(loginPageSource, /resetPasswordApi\(\{/)

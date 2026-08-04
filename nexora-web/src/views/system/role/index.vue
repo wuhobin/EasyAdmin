@@ -1,7 +1,8 @@
 <template>
-  <div class="app-container">
+  <div class="app-container data-list-page">
+    <el-card class="box-card data-list-card" shadow="never">
     <!-- 搜索表单 -->
-    <div class="search-wrapper">
+    <div class="search-wrapper data-list-filters">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="角色名称" prop="name">
           <el-input
@@ -18,10 +19,8 @@
       </el-form>
     </div>
 
-    <!-- 操作按钮区域 -->
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
+      <!-- 操作按钮区域 -->
+        <div class="card-header data-list-toolbar">
           <ButtonGroup>
             <el-button
               v-permission="['sys:role:add']"
@@ -32,33 +31,34 @@
             <el-button
               v-permission="['sys:role:delete']"
               type="danger"
+              plain
               icon="Delete"
               :disabled="selectedIds.length === 0"
               @click="handleBatchDelete"
             >批量删除</el-button>
             <el-button
               v-permission="['sys:role:delete']"
-              type="primary"
               icon="Download"
               @click="handleExport"
             >导出</el-button>
           </ButtonGroup>
         </div>
-      </template>
 
       <!-- 数据表格 -->
       <el-table
+        class="data-list-table"
         v-loading="loading"
         :data="roleList"
         style="width: 100%"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="角色名称" align="center" prop="name" show-overflow-tooltip />
-        <el-table-column label="角色编码" align="center" prop="code" show-overflow-tooltip />
-        <el-table-column label="备注" prop="remarks"  align="center" width="400" show-overflow-tooltip />
+        <el-table-column label="ID" prop="id" width="90" align="center" />
+        <el-table-column label="角色名称" prop="name" min-width="150" show-overflow-tooltip />
+        <el-table-column label="角色编码" prop="code" min-width="150" show-overflow-tooltip />
+        <el-table-column label="备注" prop="remarks" min-width="240" show-overflow-tooltip />
         <el-table-column label="创建时间" align="center" prop="createTime" width="180" show-overflow-tooltip />
-        <el-table-column label="操作" align="center" width="250" fixed="right">
+        <el-table-column label="操作" align="center" width="220" fixed="right">
           <template #default="scope">
             <el-button
               v-permission="['sys:role:update']"
@@ -86,7 +86,7 @@
       </el-table>
 
       <!-- 分页组件 -->
-      <div class="pagination-container">
+      <div class="pagination-container data-list-pagination">
         <el-pagination
           v-model:current-page="queryParams.pageNum"
           v-model:page-size="queryParams.pageSize"
@@ -450,4 +450,4 @@ onMounted(() => {
     display: block !important;
   }
 
-</style> 
+</style>

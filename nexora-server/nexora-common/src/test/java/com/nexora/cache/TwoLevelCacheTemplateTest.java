@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -77,12 +78,14 @@ class TwoLevelCacheTemplateTest {
     void writesAndEvictsImmediatelyWithoutAnActiveTransaction() {
         when(cacheManager.get(CACHE_NAME)).thenReturn(twoLevelCache);
 
-        cacheTemplate.setAfterCommit(
+        cacheTemplate.replaceAfterCommitBestEffort(
                 CACHE_NAME, CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
-        cacheTemplate.evictAfterCommit(CACHE_NAME, CACHE_KEY);
+        cacheTemplate.evictAfterCommitBestEffort(CACHE_NAME, CACHE_KEY);
 
-        verify(twoLevelCache).set(CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
-        verify(twoLevelCache).evict(CACHE_KEY);
+        var ordered = inOrder(twoLevelCache);
+        ordered.verify(twoLevelCache).evict(CACHE_KEY);
+        ordered.verify(twoLevelCache).set(CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
+        ordered.verify(twoLevelCache).evict(CACHE_KEY);
     }
 
     @Test
@@ -91,9 +94,9 @@ class TwoLevelCacheTemplateTest {
         TransactionSynchronizationManager.initSynchronization();
         TransactionSynchronizationManager.setActualTransactionActive(true);
         try {
-            cacheTemplate.setAfterCommit(
+            cacheTemplate.replaceAfterCommitBestEffort(
                     CACHE_NAME, CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
-            cacheTemplate.evictAfterCommit(CACHE_NAME, CACHE_KEY);
+            cacheTemplate.evictAfterCommitBestEffort(CACHE_NAME, CACHE_KEY);
 
             verifyNoInteractions(cacheManager);
             for (TransactionSynchronization synchronization
@@ -101,8 +104,10 @@ class TwoLevelCacheTemplateTest {
                 synchronization.afterCommit();
             }
 
-            verify(twoLevelCache).set(CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
-            verify(twoLevelCache).evict(CACHE_KEY);
+            var ordered = inOrder(twoLevelCache);
+            ordered.verify(twoLevelCache).evict(CACHE_KEY);
+            ordered.verify(twoLevelCache).set(CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
+            ordered.verify(twoLevelCache).evict(CACHE_KEY);
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
             TransactionSynchronizationManager.setActualTransactionActive(false);
@@ -118,8 +123,41 @@ class TwoLevelCacheTemplateTest {
                 .when(twoLevelCache).evict(CACHE_KEY);
 
         assertThatCode(() -> {
-            cacheTemplate.set(CACHE_NAME, CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
-            cacheTemplate.evict(CACHE_NAME, CACHE_KEY);
+            cacheTemplate.setBestEffort(
+                    CACHE_NAME, CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
+            cacheTemplate.evictBestEffort(CACHE_NAME, CACHE_KEY);
         }).doesNotThrowAnyException();
+    }
+
+    @Test
+    void requiredWritesAndEvictionsPropagateFailures() {
+        when(cacheManager.get(CACHE_NAME)).thenReturn(twoLevelCache);
+        doThrow(new RedisConnectionFailureException("redis set unavailable"))
+                .when(twoLevelCache).set(CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
+
+        assertThatThrownBy(() -> cacheTemplate.setRequired(
+                CACHE_NAME, CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS))
+                .isInstanceOf(RedisConnectionFailureException.class)
+                .hasMessageContaining("redis set unavailable");
+
+        doThrow(new RedisConnectionFailureException("redis evict unavailable"))
+                .when(twoLevelCache).evict(CACHE_KEY);
+
+        assertThatThrownBy(() -> cacheTemplate.evictRequired(CACHE_NAME, CACHE_KEY))
+                .isInstanceOf(RedisConnectionFailureException.class)
+                .hasMessageContaining("redis evict unavailable");
+    }
+
+    @Test
+    void compensatesAFailedPostCommitWriteWithAnotherEviction() {
+        when(cacheManager.get(CACHE_NAME)).thenReturn(twoLevelCache);
+        doThrow(new RedisConnectionFailureException("redis unavailable"))
+                .when(twoLevelCache).set(CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS);
+
+        assertThatCode(() -> cacheTemplate.replaceAfterCommitBestEffort(
+                CACHE_NAME, CACHE_KEY, "enabled", 30L, TimeUnit.SECONDS))
+                .doesNotThrowAnyException();
+
+        verify(twoLevelCache, org.mockito.Mockito.times(2)).evict(CACHE_KEY);
     }
 }

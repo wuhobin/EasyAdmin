@@ -1,7 +1,8 @@
 <template>
-  <div class="app-container">
+  <div class="app-container data-list-page">
+    <el-card class="box-card data-list-card" shadow="never">
     <!-- 搜索表单 -->
-    <div class="search-wrapper">
+    <div class="search-wrapper data-list-filters">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="昵称" prop="nickname">
           <el-input
@@ -23,6 +24,7 @@
           <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
             <el-option label="启用" value="1" />
             <el-option label="禁用" value="0" />
+            <el-option label="待审核" value="2" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -32,10 +34,8 @@
       </el-form>
     </div>
 
-    <!-- 操作按钮区域 -->
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
+      <!-- 操作按钮区域 -->
+        <div class="card-header data-list-toolbar">
           <ButtonGroup>
             <el-button
               v-permission="['sys:user:add']"
@@ -44,25 +44,27 @@
               @click="handleAdd"
             >新增</el-button>
             <el-button
-             v-permission="['sys:user:delete']"
+              v-permission="['sys:user:delete']"
               type="danger"
+              plain
               icon="Delete"
               :disabled="selectedIds.length === 0"
               @click="handleBatchDelete"
             >批量删除</el-button>
           </ButtonGroup>
         </div>
-      </template>
 
       <!-- 数据表格 -->
       <el-table
+        class="data-list-table"
         v-loading="loading"
         :data="userList"
         style="width: 100%"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" :selectable="row => row.id !== 1" width="55" align="center" />
-        <el-table-column label="头像"  prop="avatar" align="center">
+        <el-table-column label="ID" prop="id" width="90" align="center" />
+        <el-table-column label="头像" prop="avatar" align="center" width="72">
           <template #default="{ row }">
             <el-image
               :src="row.avatar"
@@ -72,24 +74,32 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="昵称" align="center" prop="nickname" show-overflow-tooltip />
-        <el-table-column label="邮箱" align="center" prop="email" min-width="190" show-overflow-tooltip />
-        <el-table-column label="手机号" align="center" prop="mobile" width="130" />
-        <el-table-column label="角色" align="center" min-width="140" show-overflow-tooltip>
+        <el-table-column label="昵称" prop="nickname" min-width="120" show-overflow-tooltip />
+        <el-table-column label="邮箱" prop="email" min-width="190" show-overflow-tooltip />
+        <el-table-column label="手机号" prop="mobile" min-width="150" show-overflow-tooltip />
+        <el-table-column label="角色" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">{{ roleNames(row.roleIds) }}</template>
         </el-table-column>
-        <el-table-column label="登录IP" align="center" prop="ip" show-overflow-tooltip />
-        <el-table-column label="登录地址" align="center" prop="ipLocation" show-overflow-tooltip />
-        <el-table-column label="状态" align="center" width="80">
+        <el-table-column label="登录IP" prop="ip" min-width="130" show-overflow-tooltip />
+        <el-table-column label="登录地址" prop="ipLocation" min-width="140" show-overflow-tooltip />
+        <el-table-column label="状态" align="center" width="88">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'">
-              {{ row.status === 1 ? '启用' : '禁用' }}
+            <el-tag :type="statusMeta(row.status).type">
+              {{ statusMeta(row.status).label }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="创建时间" align="center" prop="createTime" width="180" />
-        <el-table-column label="操作" align="center" width="280" fixed="right">
+        <el-table-column label="操作" align="center" width="320" fixed="right">
           <template #default="scope">
+            <el-button
+              v-if="scope.row.status === 2"
+              v-permission="['sys:user:update']"
+              type="success"
+              link
+              icon="CircleCheck"
+              @click="handleAudit(scope.row)"
+            >审核通过</el-button>
             <el-button
               v-permission="['sys:user:update']"
               type="primary"
@@ -117,7 +127,7 @@
       </el-table>
 
       <!-- 分页组件 -->
-      <div class="pagination-container">
+      <div class="pagination-container data-list-pagination">
         <el-pagination
           v-model:current-page="queryParams.pageNum"
           v-model:page-size="queryParams.pageSize"
@@ -181,7 +191,7 @@
             <el-input
               v-model="userForm.password"
               type="password"
-              placeholder="请输入密码"
+              :placeholder="passwordDescription"
               show-password
               clearable
             />
@@ -203,6 +213,7 @@
             <el-radio-group v-model="userForm.status" :disabled="userForm.id === 1">
               <el-radio :value="1">启用</el-radio>
               <el-radio :value="0">禁用</el-radio>
+              <el-radio v-if="dialog.type === 'edit'" :value="2">待审核</el-radio>
             </el-radio-group>
           </el-form-item>
 
@@ -255,7 +266,7 @@
           <el-input
             v-model="resetPwdForm.password"
             type="password"
-            placeholder="请输入新密码"
+            :placeholder="passwordDescription"
             show-password
             clearable
           />
@@ -288,10 +299,25 @@ import {
   createUserApi,
   updateUserApi,
   deleteUserApi,
-  resetPasswordApi
+  resetPasswordApi,
+  auditUserApi
 } from '@/api/system/user'
 import { getAllRoleList } from '@/api/system/role'
 import ButtonGroup from '@/components/ButtonGroup/index.vue'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
+import {
+  passwordPolicyDescription,
+  validatePasswordByPolicy
+} from '@/utils/password-policy'
+
+const publicConfigStore = usePublicConfigStore()
+const passwordDescription = computed(() =>
+  passwordPolicyDescription(publicConfigStore.password)
+)
+const passwordValidator = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  const message = validatePasswordByPolicy(value, publicConfigStore.password)
+  message ? callback(new Error(message)) : callback()
+}
 
 // 查询参数
 const queryParams = reactive({
@@ -347,8 +373,7 @@ const rules = reactive<FormRules>({
     { required: true, message: '请输入昵称', trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+    { validator: passwordValidator, trigger: 'blur' }
   ],
   mobile: [
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
@@ -380,8 +405,7 @@ const resetPwdForm = reactive({
 // 重置密码表单校验规则
 const resetPwdRules = reactive<FormRules>({
   password: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+    { validator: passwordValidator, trigger: 'blur' }
   ],
   confirmPassword: [
     { required: true, message: '请再次输入新密码', trigger: 'blur' },
@@ -399,6 +423,24 @@ const resetPwdRules = reactive<FormRules>({
 })
 
 const resetPwdFormRef = ref<FormInstance>()
+
+const statusMeta = (status: number) => {
+  if (status === 1) return { label: '启用', type: 'success' as const }
+  if (status === 2) return { label: '待审核', type: 'warning' as const }
+  return { label: '禁用', type: 'info' as const }
+}
+
+const handleAudit = (row: any) => {
+  ElMessageBox.confirm(
+    `确认审核通过用户“${row.nickname || row.email}”吗？`,
+    '用户审核',
+    { type: 'warning', confirmButtonText: '审核通过', cancelButtonText: '取消' }
+  ).then(async () => {
+    await auditUserApi(row.id)
+    ElMessage.success('用户已审核通过')
+    await getList()
+  }).catch(() => undefined)
+}
 
 // 获取用户列表
 const getList = async () => {
@@ -612,11 +654,6 @@ onMounted(() => {
     background: var(--el-fill-color-light);
   }
 
-  .pagination-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
 }
 </style>
 

@@ -210,7 +210,7 @@
               <span class="callout-mark"><el-icon><Lock /></el-icon></span>
               <div>
                 <strong>密码建议</strong>
-                <p>至少 6 位，建议同时包含字母、数字和符号，并避免与其他网站重复。</p>
+                <p>{{ passwordDescription }}</p>
               </div>
             </div>
 
@@ -305,8 +305,17 @@ import {
 } from '@/api/system/user'
 import { uploadApi } from '@/api/file'
 import { useUserStore } from '@/store/modules/user'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
+import {
+  passwordPolicyDescription,
+  validatePasswordByPolicy
+} from '@/utils/password-policy'
 
 const userStore = useUserStore()
+const publicConfigStore = usePublicConfigStore()
+const passwordDescription = computed(() =>
+  passwordPolicyDescription(publicConfigStore.password)
+)
 const activeTab = ref<'basic' | 'password'>('basic')
 const userFormRef = ref()
 const pwdFormRef = ref()
@@ -372,8 +381,13 @@ const userRules = reactive<any>({
 const pwdRules = reactive<any>({
   oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
   newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能小于 6 位', trigger: 'blur' }
+    {
+      validator: (_rule: any, value: string, callback: Function) => {
+        const message = validatePasswordByPolicy(value, publicConfigStore.password)
+        message ? callback(new Error(message)) : callback()
+      },
+      trigger: 'blur'
+    }
   ],
   confirmPassword: [
     { required: true, message: '请确认新密码', trigger: 'blur' },

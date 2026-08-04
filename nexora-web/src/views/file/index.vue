@@ -1,6 +1,7 @@
 <template>
-  <div class="app-container">
-    <div class="search-wrapper">
+  <div class="app-container data-list-page">
+    <el-card class="data-list-card" shadow="never">
+    <div class="search-wrapper data-list-filters">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="文件名称" prop="fileName">
           <el-input
@@ -49,10 +50,8 @@
       </el-form>
     </div>
 
-    <el-card shadow="never">
-      <template #header>
-        <div class="file-card-header">
-          <div class="file-card-heading">
+        <div class="file-card-header data-list-toolbar">
+          <div class="file-card-heading data-list-heading">
             <strong>文件列表</strong>
             <span>共 {{ total }} 个文件</span>
           </div>
@@ -65,16 +64,16 @@
             上传文件
           </el-button>
         </div>
-      </template>
 
-      <el-table v-loading="loading" :data="fileList" row-key="id">
+      <el-table v-loading="loading" :data="fileList" row-key="id" class="data-list-table">
+        <el-table-column prop="id" label="ID" width="90" align="center" />
         <el-table-column prop="fileName" label="文件名称" min-width="280" show-overflow-tooltip />
         <el-table-column prop="contentType" label="文件类型" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
             <el-tag :type="getMimeTagType(row.contentType)" effect="plain">{{ row.contentType || '-' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="大小" min-width="110" align="right">
+        <el-table-column label="大小" min-width="110" align="center">
           <template #default="{ row }">{{ formatFileSize(row.fileSize) }}</template>
         </el-table-column>
         <el-table-column prop="createTime" label="上传时间" min-width="180" align="center" />
@@ -167,7 +166,7 @@
         </el-table-column>
       </el-table>
 
-      <div class="pagination-container">
+      <div class="pagination-container data-list-pagination">
         <el-pagination
           v-model:current-page="queryParams.pageNum"
           v-model:page-size="queryParams.pageSize"

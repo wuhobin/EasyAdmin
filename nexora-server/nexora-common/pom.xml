@@ -13,26 +13,6 @@
     <description>通用模块</description>
 
     <dependencies>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct-processor</artifactId>
-            <version>${mapstruct.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok-mapstruct-binding</artifactId>
-            <version>${lombok-mapstruct-binding.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- Spring Boot（BOM 已统一排除 spring-boot-starter-logging，下游无需再写 exclusion） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -56,12 +36,6 @@
         <dependency>
             <groupId>io.github.wuhobin</groupId>
             <artifactId>platform-webmvc</artifactId>
-        </dependency>
-
-        <!-- MySQL -->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
         </dependency>
 
         <!-- MyBatis Plus（platform-boot-starter；BOM 已统一排除默认 logging） -->
@@ -100,24 +74,10 @@
             <artifactId>oss-spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- 七牛云 SDK（OSS starter 依赖，用于 qiniu-kodo 平台） -->
-        <dependency>
-            <groupId>com.qiniu</groupId>
-            <artifactId>qiniu-java-sdk</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.lionsoul</groupId>
-            <artifactId>ip2region</artifactId>
-            <version>${ip2region.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>cn.idev.excel</groupId>
             <artifactId>fastexcel</artifactId>
-            <version>${fastexcel.version}</version>
             <exclusions>
-                <!-- logback 排除针对 BOM 未管控的传递依赖，作为最终兜底 -->
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>logback-classic</artifactId>
@@ -142,25 +102,11 @@
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.angus</groupId>
-            <artifactId>angus-mail</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-core</artifactId>
-        </dependency>
     </dependencies>
 
 </project>

@@ -1,129 +1,112 @@
 <template>
-    <div v-show="showWatermark" class="watermark-container">
-      <canvas ref="watermarkRef" style="display: none;"></canvas>
-      <div class="watermark-wrapper" ref="wrapperRef"></div>
-    </div>
-  </template>
-  
-  <script setup lang="ts">
-  import { useSettingsStore,useUserStore } from '@/store'
-  import settings from '@/config/settings'  // 导入系统配置
-  
-  const settingsStore = useSettingsStore()
-  const userStore = useUserStore()
-  const watermarkRef = ref<HTMLCanvasElement | null>(null)
-  const wrapperRef = ref<HTMLDivElement | null>(null)
-  const showWatermark = computed(() => settingsStore.watermark)
-  
-  const createWatermark = () => {
-    const canvas = watermarkRef.value
-    const wrapper = wrapperRef.value
-    if (!canvas || !wrapper) return
-  
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-  
-    // 设置画布大小
-    canvas.width = 400
-    canvas.height = 200
-  
-    // 清除画布
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    
-    // 设置水印样式
-    ctx.font = ' 15px Arial'
-    ctx.fillStyle = settingsStore.theme === 'dark' 
-      ? 'rgba(255, 255, 255, 0.15)'
-      : 'rgba(0, 0, 0, 0.15)'
-    ctx.rotate(-15 * Math.PI / 180)
-    
-    // 获取当前时间
-    const currentTime = new Intl.DateTimeFormat('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    }).format(new Date())
-    // 使用系统名称
-    const systemName = settings.title + "-" + (userStore.user.nickname || userStore.user.email)
-    
-    // 绘制水印文本
-    ctx.fillText(systemName, 20, 100)
-    ctx.fillText(currentTime, 20, 120)
-  
-    // 将 canvas 转换为背景图片
-    const base64Url = canvas.toDataURL('image/png')
-    
-    // 设置水印容器样式
-    wrapper.style.backgroundImage = `url(${base64Url})`
+  <div v-show="showWatermark" class="watermark-container">
+    <canvas ref="watermarkRef" class="watermark-canvas" />
+    <div ref="wrapperRef" class="watermark-wrapper" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useSettingsStore, useUserStore } from '@/store'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
+
+const settingsStore = useSettingsStore()
+const userStore = useUserStore()
+const publicConfigStore = usePublicConfigStore()
+const watermarkRef = ref<HTMLCanvasElement | null>(null)
+const wrapperRef = ref<HTMLDivElement | null>(null)
+
+const systemConfig = computed(() => publicConfigStore.system)
+const showWatermark = computed(() =>
+  systemConfig.value.watermarkEnabled || settingsStore.watermark
+)
+
+function currentUserName() {
+  return userStore.user.nickname || userStore.user.email || 'Nexora User'
+}
+
+function watermarkLines() {
+  switch (systemConfig.value.watermarkType) {
+    case 'username':
+      return [currentUserName()]
+    case 'sitename':
+      return [systemConfig.value.siteName]
+    case 'custom':
+      return [systemConfig.value.watermarkCustomText || systemConfig.value.siteName]
+    default:
+      return [currentUserName(), new Intl.DateTimeFormat('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).format(new Date())]
   }
-  
-  // 监听水印状态和主题变化
-  watch([
-    () => settingsStore.watermark,
-    () => settingsStore.theme
-  ], ([newWatermark]) => {
-    if (newWatermark) {
-      createWatermark()
-    }
-  }, { immediate: true })
-  
-  // 定时更新水印
-  let timer: number
-  onMounted(() => {
-    if (settingsStore.watermark) {
-      createWatermark()
-      timer = window.setInterval(createWatermark, 60000)
-    }
-  })
-  
-  onUnmounted(() => {
-    if (timer) {
-      clearInterval(timer)
-    }
-  })
-  
-  // 防止水印被篡改
-  const observer = new MutationObserver(() => {
-    if (settingsStore.watermark) {
-      createWatermark()
-    }
-  })
-  
-  onMounted(() => {
-    if (wrapperRef.value) {
-      observer.observe(wrapperRef.value, {
-        attributes: true,
-        childList: true,
-        characterData: true,
-        subtree: true
-      })
-    }
-  })
-  
-  onUnmounted(() => {
-    observer.disconnect()
-  })
-  </script>
-  
-  <style scoped>
-  .watermark-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 3000;
-  }
-  
-  .watermark-wrapper {
-    width: 100%;
-    height: 100%;
-    background-repeat: repeat;
-    pointer-events: none;
-  }
-  </style>
+}
+
+function createWatermark() {
+  const canvas = watermarkRef.value
+  const wrapper = wrapperRef.value
+  if (!canvas || !wrapper || !showWatermark.value) return
+  const context = canvas.getContext('2d')
+  if (!context) return
+
+  canvas.width = 360
+  canvas.height = 190
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  context.save()
+  context.translate(30, 120)
+  context.rotate(-15 * Math.PI / 180)
+  const color = settingsStore.theme === 'dark' ? '255, 255, 255' : '15, 23, 42'
+  context.fillStyle = `rgba(${color}, ${systemConfig.value.watermarkOpacity})`
+  context.font = '14px Inter, "Microsoft YaHei", sans-serif'
+  watermarkLines().forEach((line, index) => context.fillText(line, 0, index * 22))
+  context.restore()
+  wrapper.style.backgroundImage = `url(${canvas.toDataURL('image/png')})`
+}
+
+watch(
+  [
+    showWatermark,
+    () => settingsStore.theme,
+    () => systemConfig.value.watermarkType,
+    () => systemConfig.value.watermarkCustomText,
+    () => systemConfig.value.watermarkOpacity,
+    () => systemConfig.value.siteName,
+    () => userStore.user.nickname,
+    () => userStore.user.email
+  ],
+  () => nextTick(createWatermark),
+  { immediate: true }
+)
+
+let timer: number | undefined
+onMounted(() => {
+  createWatermark()
+  timer = window.setInterval(createWatermark, 60_000)
+})
+
+onUnmounted(() => {
+  if (timer) window.clearInterval(timer)
+})
+</script>
+
+<style scoped>
+.watermark-container {
+  position: fixed;
+  z-index: 3000;
+  inset: 0;
+  pointer-events: none;
+}
+
+.watermark-canvas {
+  display: none;
+}
+
+.watermark-wrapper {
+  width: 100%;
+  height: 100%;
+  background-repeat: repeat;
+  pointer-events: none;
+}
+</style>

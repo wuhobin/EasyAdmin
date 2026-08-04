@@ -1,104 +1,53 @@
 <template>
-  <div class="footer">
+  <footer class="footer">
     <div class="footer-content">
-      <div class="left-section">
-        <div class="copyright">
-          Copyright © {{ currentYear }} 
-          <a :href="settings.repository" target="_blank" rel="noopener noreferrer">
-            {{ title }}
-          </a>
-          <span class="version">v1.0.0</span>
-        </div>
+      <div class="copyright">
+        {{ systemConfig.copyright }}
+        <span v-if="systemConfig.icp" class="icp">{{ systemConfig.icp }}</span>
       </div>
-      
-      <div class="right-section">
-        <div class="powered-by">
-          Powered by Vue3 & Element Plus
-        </div>
-      </div>
+      <div class="powered-by">Powered by Vue 3 & Element Plus</div>
     </div>
-  </div>
+  </footer>
 </template>
 
 <script setup lang="ts">
-import { useSettingsStore } from '@/store/modules/settings'
-import settings from '@/config/settings'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
 
-
-const settingsStore = useSettingsStore()
-const title = computed(() => settingsStore.title)
-const currentYear = computed(() => new Date().getFullYear())
+const publicConfigStore = usePublicConfigStore()
+const systemConfig = computed(() => publicConfigStore.system)
 </script>
 
 <style lang="scss" scoped>
 .footer {
   padding: 12px 24px;
   color: var(--el-text-color-secondary);
-  font-size: 14px;
+  font-size: 13px;
   background: var(--el-bg-color);
   border-top: 1px solid var(--el-border-color-light);
-  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
-  
-  .footer-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1400px;
-    margin: 0 auto;
-    
-    @media screen and (max-width: 768px) {
-      flex-direction: column;
-      gap: 8px;
-      text-align: center;
-    }
-  }
-  
-  .left-section {
-    .copyright {
-      color: var(--el-text-color-regular);
-      
-      a {
-        color: var(--el-color-primary);
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.3s;
-        
-        &:hover {
-          color: var(--el-color-primary-light-3);
-        }
-      }
-      
-      .version {
-        display: inline-block;
-        margin-left: 8px;
-        padding: 1px 6px;
-        font-size: 12px;
-        color: var(--el-color-info);
-        background: var(--el-fill-color-light);
-        border-radius: 4px;
-      }
-    }
-  }
-  
-  .right-section {
-    .powered-by {
-      font-size: 13px;
-      color: var(--el-text-color-secondary);
-    }
-  }
 }
 
-// 暗黑模式适配
-:root[data-theme='dark'] {
-  .footer {
-    background: var(--el-bg-color-overlay);
-    border-top-color: var(--el-border-color-darker);
-    
-    .left-section {
-      .copyright .version {
-        background: var(--el-fill-color-darker);
-      }
-    }
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.copyright {
+  color: var(--el-text-color-regular);
+}
+
+.icp {
+  margin-left: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+@media (max-width: 768px) {
+  .footer-content {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
   }
 }
 </style>

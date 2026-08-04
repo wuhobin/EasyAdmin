@@ -87,7 +87,7 @@ onUnmounted(() => {
     .error-title {
       font-size: 72px;
       font-weight: 700;
-      color: #303133;
+      color: var(--el-text-color-primary);
       margin: 0;
       background: linear-gradient(45deg, #409EFF, #36cfc9);
       -webkit-background-clip: text;
@@ -97,14 +97,14 @@ onUnmounted(() => {
     
     .error-desc {
       font-size: 24px;
-      color: #606266;
+      color: var(--el-text-color-regular);
       margin: 16px 0;
       font-weight: 500;
     }
     
     .error-info {
       font-size: 16px;
-      color: #909399;
+      color: var(--el-text-color-secondary);
       margin-bottom: 32px;
       line-height: 1.6;
     }
@@ -136,7 +136,7 @@ onUnmounted(() => {
       .error-time {
         font-family: monospace;
         font-size: 18px;
-        color: #909399;
+        color: var(--el-text-color-secondary);
         margin: 0;
       }
     }
@@ -210,7 +210,7 @@ onUnmounted(() => {
       }
       
       .error-info {
-        color: #909399;
+        color: var(--el-text-color-secondary);
       }
       
       .error-footer {

@@ -98,11 +98,6 @@ REDIS_HOST=
 REDIS_PASSWORD=
 
 MAIL_CREDENTIAL_SECRET=
-MAIL_VERIFICATION_ENABLED=
-SMTP_HOST=
-SMTP_PORT=
-SMTP_USERNAME=
-SMTP_PASSWORD=
 
 OSS_QINIU_ACCESS_KEY=
 OSS_QINIU_SECRET_KEY=
@@ -111,7 +106,7 @@ OSS_QINIU_DOMAIN=
 OSS_QINIU_BASE_PATH=
 ```
 
-启动前至少填写 MySQL、Redis 配置和不少于 16 位的 `MAIL_CREDENTIAL_SECRET`。不启用邮件验证码时，将 `MAIL_VERIFICATION_ENABLED` 设置为 `false`；启用时还需填写 SMTP 配置，其中 `SMTP_PORT` 通常为 `465`。使用文件管理功能时还需填写自己的七牛 Kodo 配置。不要提交真实凭据。
+启动前至少填写 MySQL、Redis 配置和不少于 16 位的 `MAIL_CREDENTIAL_SECRET`。系统 SMTP 参数在启动后的“系统管理 / 配置管理 / 邮箱配置”中维护，无需写入本地配置文件。使用文件管理功能时还需填写自己的七牛 Kodo 配置。不要提交真实凭据。
 
 ### 3. 启动后端
 
@@ -220,7 +215,6 @@ vi .env
 | `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PASSWORD` | MySQL 地址和账号 |
 | `REDIS_HOST` / `REDIS_PASSWORD` | Redis 地址和密码 |
 | `MAIL_CREDENTIAL_SECRET` | 邮箱授权码加密密钥，至少 16 位；保存邮箱账号后不可随意更换 |
-| `MAIL_VERIFICATION_ENABLED` / `SMTP_*` | 邮箱换绑验证码开关与 SMTP 发件配置；配置完成后再启用 |
 | `OSS_QINIU_*` | 七牛 Kodo 的 AK、SK、Bucket 和访问域名 |
 | `JAVA_TOOL_OPTIONS` | JVM 内存、编码和时区参数，按服务器内存调整 |
 | `LOG_PATH` | 容器日志目录，保持 `/app/logs` 即可 |
@@ -228,6 +222,8 @@ vi .env
 | `KNIFE4J_*` / `SPRINGDOC_*` | 生产 API 文档开关，模板默认关闭 |
 
 不要把真实 `.env` 上传到 Git、聊天记录或工单。模板中的所有 `CHANGE_ME` 都必须替换。
+
+系统 SMTP 发件配置保存在数据库中，请在“系统管理 / 配置管理 / 邮箱配置”中设置并发送测试邮件，无需配置 `SMTP_*` 环境变量。
 
 MySQL 或 Redis 位于 Docker 宿主机时，地址填写 `host.docker.internal`；`compose.yml` 已通过 `host-gateway` 提供该域名。服务还必须监听 Docker 网桥可访问的地址，不能只监听宿主机 `127.0.0.1`。如果 MySQL 或 Redis 位于其他机器，直接填写其内网 IP 或域名。
 

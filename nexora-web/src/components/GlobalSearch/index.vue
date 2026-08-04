@@ -310,7 +310,7 @@ const getItemIndex = (group: any, idx: string | number) => {
 
     .search-icon {
       font-size: 16px;
-      color: #606266;
+      color: var(--el-text-color-regular);
     }
 
     .shortcut-hint {
@@ -322,7 +322,7 @@ const getItemIndex = (group: any, idx: string | number) => {
         font-size: 12px;
         background: #fff;
         border-radius: 4px;
-        color: #909399;
+        color: var(--el-text-color-secondary);
         box-shadow: 0 1px 1px rgba(0,0,0,0.1);
       }
     }
@@ -370,7 +370,7 @@ const getItemIndex = (group: any, idx: string | number) => {
     font-size: 12px;
     background: #f5f7fa;
     border-radius: 4px;
-    color: #909399;
+    color: var(--el-text-color-secondary);
   }
 }
 
@@ -381,7 +381,7 @@ const getItemIndex = (group: any, idx: string | number) => {
     display: flex;
     align-items: center;
     padding: 12px 16px 8px;
-    color: #606266;
+    color: var(--el-text-color-regular);
     font-size: 14px;
     font-weight: 500;
     
@@ -394,7 +394,7 @@ const getItemIndex = (group: any, idx: string | number) => {
     .item-count {
       margin-left: auto;
       font-size: 12px;
-      color: #909399;
+      color: var(--el-text-color-secondary);
       font-weight: normal;
     }
   }
@@ -456,7 +456,7 @@ const getItemIndex = (group: any, idx: string | number) => {
 
     .item-icon {
       font-size: 16px;
-      color: #909399;
+      color: var(--el-text-color-secondary);
       margin-right: 12px;
     }
 
@@ -469,12 +469,12 @@ const getItemIndex = (group: any, idx: string | number) => {
 
     .item-title {
       font-size: 14px;
-      color: #303133;
+      color: var(--el-text-color-primary);
     }
 
     .item-path {
       font-size: 12px;
-      color: #909399;
+      color: var(--el-text-color-secondary);
     }
 
     .enter-icon {
@@ -533,12 +533,12 @@ const getItemIndex = (group: any, idx: string | number) => {
       font-size: 12px;
       background: #f5f7fa;
       border-radius: 4px;
-      color: #909399;
+      color: var(--el-text-color-secondary);
     }
     
     .desc {
       font-size: 12px;
-      color: #909399;
+      color: var(--el-text-color-secondary);
     }
   }
 }

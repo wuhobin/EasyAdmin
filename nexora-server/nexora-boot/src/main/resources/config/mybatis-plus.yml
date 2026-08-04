@@ -1,6 +1,6 @@
 mybatis-plus:
-  mapper-locations: classpath:/mapper/*Mapper.xml
-  typeAliasesPackage: com.nexora.entity
+  mapper-locations: classpath*:/mapper/**/*.xml
+  typeAliasesPackage: com.nexora.identity.entity,com.nexora.file.entity,com.nexora.mail.entity,com.nexora.monitor.entity,com.nexora.system.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl

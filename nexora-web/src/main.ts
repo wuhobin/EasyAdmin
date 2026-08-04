@@ -7,6 +7,7 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import '@/styles/global.scss'
+import '@/styles/data-list.scss'
 
 
 import { setupAuthSession, setupElIcons, setupPermission } from '@/plugins'

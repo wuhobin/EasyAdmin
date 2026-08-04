@@ -330,7 +330,8 @@ html.dark {
   gap: 12px;
 }
 
-:deep(.el-form-item__label) {
+.el-form-item__label {
+  color: var(--nexora-text-label);
   font-weight: 500;
 }
 
@@ -340,7 +341,7 @@ html.dark {
   padding: 8px;
   border-radius: 50%;
   transition: color 0.3s, background-color 0.3s;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .setting-icon:focus-visible {
@@ -393,8 +394,9 @@ html.grey-mode {
  * 这里使用全局选择器，确保 append-to-body 的弹窗和后续新增弹窗也能自动继承。
  */
 :root {
-  --nexora-font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei UI",
-    "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --nexora-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --el-font-family: var(--nexora-font-sans);
   --nexora-overlay-surface: var(--el-bg-color-overlay, #ffffff);
   --nexora-overlay-border: color-mix(in srgb, var(--el-border-color-light, #e5e7eb) 84%, var(--el-color-primary) 16%);
   --nexora-overlay-header-bg: color-mix(in srgb, var(--el-color-primary) 5%, var(--nexora-overlay-surface));
@@ -409,6 +411,12 @@ html.grey-mode {
     0 10px 24px -18px color-mix(in srgb, var(--el-color-primary) 30%, transparent);
   --nexora-floating-shadow: 0 18px 44px -22px rgba(15, 23, 42, 0.42),
     0 8px 18px -14px rgba(15, 23, 42, 0.24);
+}
+
+html,
+body,
+#app {
+  font-family: var(--nexora-font-sans);
 }
 
 :root[data-theme='dark'],
@@ -583,7 +591,7 @@ html.dark {
 
 .el-dialog .el-form-item__label {
   min-height: 42px;
-  color: var(--el-text-color-regular);
+  color: var(--nexora-text-label);
   font-family: var(--nexora-font-sans);
   font-size: 13px;
   font-weight: 600;

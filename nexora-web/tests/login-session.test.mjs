@@ -51,7 +51,12 @@ test('authentication API types match the shared login and registration form', ()
   assert.match(authApiSource, /rememberMe:\s*boolean/)
   assert.match(authApiSource, /email:\s*string/)
   assert.match(authApiSource, /password:\s*string/)
-  assert.match(authApiSource, /code:\s*string/)
+  assert.match(authApiSource, /code\?:\s*string/)
+  const authParamsSource = authApiSource.match(
+    /export interface AuthParams\s*\{[\s\S]*?\n\}/
+  )?.[0] ?? ''
+  assert.doesNotMatch(authParamsSource, /captchaId/)
+  assert.match(authApiSource, /export type RegisterParams[\s\S]*captchaId\?:\s*string/)
   assert.doesNotMatch(authApiSource, /username:\s*string/)
   assert.match(authApiSource, /Promise<ApiResponse<LoginResult>>/)
   assert.match(authApiSource, /Promise<ApiResponse<CurrentUserResult>>/)
@@ -162,6 +167,8 @@ test('user management and operation logs use email, nickname, and user id identi
   assert.doesNotMatch(userApiSource, /SysUserCreatePayload|SysUserUpdatePayload/)
   assert.match(userManagementSource, /createUserApi\(\{\s*nickname:/)
   assert.match(userManagementSource, /updateUserApi\(\{\s*id:/)
+  assert.match(userManagementSource, /auditUserApi\(row\.id\)/)
+  assert.match(userManagementSource, /row\.status === 2/)
   assert.match(userApiSource, /\/sys\/user\/profile\/email\/sendCode/)
   assert.match(userApiSource, /\/sys\/user\/profile\/changeEmail/)
   assert.match(operationLogSource, /queryParams\.userId/)

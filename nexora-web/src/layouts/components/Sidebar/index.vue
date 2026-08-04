@@ -2,7 +2,7 @@
   <div class="sidebar-container">
     <div v-if="settingsStore.showLogo" class="logo-container">
       <Logo :size="32" class="logo-icon" :color="settingsStore.themeColor" />
-      <span v-show="!isCollapse" class="logo-text">{{ settings.title }}</span>
+      <span v-show="!isCollapse" class="logo-text">{{ publicConfigStore.system.siteName }}</span>
     </div>
 
     <el-scrollbar class="menu-scrollbar">
@@ -56,10 +56,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { usePermissionStore } from '@/store/modules/permission'
 import { useSettingsStore } from '@/store/modules/settings'
+import { usePublicConfigStore } from '@/store/modules/publicConfig'
 import Logo from './Logo.vue'
 import MenuItem from './MenuItem.vue'
 import UserPanel from './UserPanel.vue'
-import settings from '@/config/settings'
 import { isExternal } from '@/utils/validate'
 
 defineProps({
@@ -74,6 +74,7 @@ const route = useRoute()
 const router = useRouter()
 const permissionStore = usePermissionStore()
 const settingsStore = useSettingsStore()
+const publicConfigStore = usePublicConfigStore()
 const COLLAPSED_GROUPS_KEY = 'nexora-sidebar-collapsed-groups'
 const collapsedGroups = ref(new Set<string>())
 
@@ -244,7 +245,9 @@ const handleSelect = (index: string) => {
       border-radius: 8px;
       color: var(--nexora-sidebar-text);
       line-height: 42px;
-      transition: color 0.18s ease, background-color 0.18s ease;
+      transition:
+        color 0.18s ease,
+        background-color 0.18s ease;
 
       .el-icon {
         width: 24px;
@@ -261,14 +264,37 @@ const handleSelect = (index: string) => {
       font-size: 12px;
     }
 
-    .el-menu-item.is-active {
-      background-color: v-bind('`${settingsStore.themeColor}14`');
-      color: v-bind('settingsStore.themeColor');
+    .el-menu-item:hover,
+    .el-sub-menu__title:hover {
+      color: var(--nexora-sidebar-active-text);
+      background-color: var(--nexora-sidebar-hover);
+    }
+
+    .el-sub-menu.is-active > .el-sub-menu__title {
+      color: var(--nexora-sidebar-active-text);
       font-weight: 600;
     }
 
-    .el-menu-item:hover,
-    .el-sub-menu__title:hover { background-color: var(--nexora-sidebar-hover); }
+    .el-menu-item.is-active {
+      color: var(--nexora-sidebar-active-text);
+      background-color: var(--nexora-sidebar-active);
+      font-weight: 600;
+    }
+
+    .el-menu-item.is-active:hover {
+      color: var(--nexora-sidebar-active-text);
+      background-color: var(--nexora-sidebar-active-hover);
+    }
+
+    .el-sub-menu.is-active > .el-sub-menu__title:hover {
+      color: var(--nexora-sidebar-active-text);
+    }
+
+    .el-menu-item:focus-visible,
+    .el-sub-menu__title:focus-visible {
+      outline: 2px solid v-bind('settingsStore.themeColor');
+      outline-offset: -2px;
+    }
   }
 }
 
@@ -294,7 +320,7 @@ const handleSelect = (index: string) => {
     height: 40px;
     margin: 2px 0;
     line-height: 40px;
-    &.is-active { background-color: v-bind('`${settingsStore.themeColor}14`'); }
+    &.is-active { background-color: var(--nexora-sidebar-active); }
   }
 }
 

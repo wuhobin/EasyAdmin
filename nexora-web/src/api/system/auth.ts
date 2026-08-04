@@ -3,13 +3,13 @@ import request, { type ApiResponse } from '@/utils/request'
 export interface AuthParams {
   email: string
   password: string
-  code: string
+  code?: string
   rememberMe: boolean
   source?: string
 }
 
 export type RegisterParams = Pick<AuthParams, 'email' | 'password' | 'code' | 'source'> & {
-  captchaId: string
+  captchaId?: string
 }
 
 export type ResetPasswordParams = Pick<AuthParams, 'email' | 'password' | 'code'>

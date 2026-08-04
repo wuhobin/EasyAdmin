@@ -31,17 +31,14 @@ class PlatformBizExceptionUsageTest {
 
     @Test
     void productionSourcesUsePlatformBusinessExceptionOnly() throws IOException {
-        Path appRoot = findNexoraServerRoot();
-        Path serviceImplementationRoot = appRoot.resolve(
-                "nexora-system/src/main/java/com/nexora/service/impl");
-        Path localBusinessException = appRoot.resolve(
+        Path serverRoot = findNexoraServerRoot();
+        Path localBusinessException = serverRoot.resolve(
                 "nexora-common/src/main/java/com/nexora/exception/BusinessException.java");
 
         assertThat(localBusinessException).doesNotExist();
 
         List<String> violations = new ArrayList<>();
-        for (String module : List.of("nexora-common", "nexora-system", "nexora-boot")) {
-            Path sourceRoot = appRoot.resolve(module).resolve("src/main/java");
+        for (Path sourceRoot : productionSourceRoots(serverRoot)) {
             if (!Files.isDirectory(sourceRoot)) {
                 continue;
             }
@@ -50,9 +47,9 @@ class PlatformBizExceptionUsageTest {
                     String content = Files.readString(source);
                     if (content.contains("com.nexora.exception.BusinessException")
                             || content.contains("new BusinessException(")
-                            || (source.startsWith(serviceImplementationRoot)
+                            || (isServiceImplementation(source)
                             && content.contains("throw new RuntimeException("))) {
-                        violations.add(appRoot.relativize(source).toString());
+                        violations.add(serverRoot.relativize(source).toString());
                     }
                 }
             }
@@ -77,8 +74,24 @@ class PlatformBizExceptionUsageTest {
         throw new IllegalStateException("Cannot locate nexora-server root from " + current);
     }
 
+    private static List<Path> productionSourceRoots(Path serverRoot) {
+        Path modulesRoot = serverRoot.resolve("nexora-modules");
+        return List.of(
+                serverRoot.resolve("nexora-common/src/main/java"),
+                modulesRoot.resolve("nexora-monitor/src/main/java"),
+                modulesRoot.resolve("nexora-system/src/main/java"),
+                modulesRoot.resolve("nexora-identity/src/main/java"),
+                modulesRoot.resolve("nexora-file/src/main/java"),
+                modulesRoot.resolve("nexora-mail/src/main/java"),
+                serverRoot.resolve("nexora-boot/src/main/java"));
+    }
+
+    private static boolean isServiceImplementation(Path source) {
+        return source.toString().replace('\\', '/').contains("/service/impl/");
+    }
+
     private static boolean isNexoraServerRoot(Path candidate) {
         return Files.isRegularFile(candidate.resolve("nexora-common/pom.xml"))
-                && Files.isRegularFile(candidate.resolve("nexora-system/pom.xml"));
+                && Files.isRegularFile(candidate.resolve("nexora-modules/pom.xml"));
     }
 }

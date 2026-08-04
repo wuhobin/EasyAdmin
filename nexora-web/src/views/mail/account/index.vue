@@ -1,6 +1,11 @@
 <template>
-  <div class="account-page">
-    <header class="page-hero">
+  <div class="account-page data-list-page">
+    <el-card class="account-card data-list-card" shadow="never">
+    <header class="page-hero data-list-toolbar">
+      <div class="data-list-heading">
+        <strong>邮箱列表</strong>
+        <span>统一管理邮箱账户和连接状态</span>
+      </div>
       <div class="hero-actions">
         <el-button :icon="Refresh" :loading="loading" @click="loadAccounts">刷新</el-button>
         <el-button v-permission="['mail:account:add']" type="primary" :icon="Plus" @click="openCreateDialog">
@@ -9,7 +14,7 @@
       </div>
     </header>
 
-    <section class="account-stats">
+    <section class="account-stats data-list-summary">
       <div class="stat-card">
         <span class="stat-icon total"><Message /></span>
         <div><strong>{{ accounts.length }}</strong><small>邮箱总数</small></div>
@@ -24,8 +29,7 @@
       </div>
     </section>
 
-    <el-card class="account-card" shadow="never">
-      <div class="filter-bar">
+      <div class="filter-bar data-list-filters">
         <el-input v-model="keyword" :prefix-icon="Search" clearable placeholder="搜索账户名称或邮箱地址" />
         <el-select v-model="providerFilter" clearable placeholder="全部邮箱类型">
           <el-option v-for="item in providerOptions" :key="item.value" :label="item.label" :value="item.value" />
@@ -34,10 +38,17 @@
           <el-option label="已启用" :value="1" />
           <el-option label="已停用" :value="0" />
         </el-select>
-        <span class="filter-result">显示 {{ filteredAccounts.length }} 个账户</span>
+        <span class="filter-result data-list-result">显示 {{ filteredAccounts.length }} 个账户</span>
       </div>
 
-      <el-table v-loading="loading" :data="filteredAccounts" row-key="id" class="account-table">
+      <el-table
+        v-loading="loading"
+        :data="filteredAccounts"
+        row-key="id"
+        class="account-table data-list-table"
+        empty-text="没有符合条件的邮箱账户"
+      >
+        <el-table-column label="ID" prop="id" width="90" align="center" />
         <el-table-column label="邮箱账户" min-width="230">
           <template #default="{ row }">
             <div class="account-cell">
@@ -71,7 +82,7 @@
           <template #default="{ row }">{{ row.lastConnectTime || '-' }}</template>
         </el-table-column>
         <el-table-column prop="sort" label="排序" width="80" align="center" />
-        <el-table-column label="操作" width="250" align="center" fixed="right">
+        <el-table-column label="操作" width="240" align="center" fixed="right">
           <template #default="{ row }">
             <el-button link :icon="View" @click="openDetail(row)">查看</el-button>
             <el-button
@@ -92,8 +103,6 @@
           </template>
         </el-table-column>
       </el-table>
-
-      <el-empty v-if="!loading && !filteredAccounts.length" description="没有符合条件的邮箱账户" />
     </el-card>
 
     <el-drawer v-model="detailVisible" title="邮箱账户详情" size="430px">
@@ -247,32 +256,38 @@ onMounted(() => Promise.all([loadProviderOptions(), loadAccounts()]))
 
 <style scoped>
 .account-page {
-  --ink: #17253f;
-  --muted: #6d7890;
-  --line: #dce4ef;
-  --accent: #3267d6;
-  min-height: calc(100vh - 84px);
-  padding: 24px;
+  --ink: var(--el-text-color-primary);
+  --muted: var(--el-text-color-secondary);
+  --line: var(--el-border-color-lighter);
+  --accent: var(--el-color-primary);
+  min-height: 0;
+  padding: 0;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 88% 0, rgba(50, 103, 214, .12), transparent 26%),
-    linear-gradient(145deg, #f8faff 0%, #eef3fa 100%);
+  background: transparent;
 }
-.page-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+.page-hero { display: flex; align-items: center; justify-content: flex-start; gap: 20px; margin-bottom: 16px; }
 .eyebrow { margin: 0 0 4px; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .18em; }
 .page-hero h1 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: 32px; letter-spacing: -.03em; }
 .page-hero p:not(.eyebrow) { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 .hero-actions { display: flex; gap: 10px; }
 .account-stats { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
-.stat-card { display: flex; align-items: center; gap: 13px; padding: 16px 18px; border: 1px solid rgba(207, 221, 217, .9); border-radius: 13px; background: rgba(255,255,255,.88); }
+.stat-card { display: flex; align-items: center; gap: 13px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--el-fill-color-lighter); }
 .stat-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; font-size: 20px; }
-.stat-icon.total { color: #236a8d; background: #e6f3f8; }.stat-icon.active { color: #168362; background: #e2f3ed; }.stat-icon.warning { color: #bd692d; background: #fff0df; }
+.stat-icon.total { color: var(--el-color-primary); background: var(--el-color-primary-light-9); }.stat-icon.active { color: var(--el-color-success); background: var(--el-color-success-light-9); }.stat-icon.warning { color: var(--el-color-warning); background: var(--el-color-warning-light-9); }
 .stat-card strong, .stat-card small { display: block; }.stat-card strong { font-family: Georgia, serif; font-size: 24px; }.stat-card small { margin-top: 1px; color: var(--muted); font-size: 11px; }
-.account-card { border-color: rgba(198, 211, 232, .9); border-radius: 14px; background: rgba(255,255,255,.94); }
 .filter-bar { display: grid; grid-template-columns: minmax(260px, 1fr) 180px 150px auto; gap: 10px; align-items: center; margin-bottom: 16px; }
 .filter-result { padding-left: 8px; color: var(--muted); font-size: 12px; white-space: nowrap; }
-.account-cell { display: flex; align-items: center; gap: 11px; }
-.account-cell strong, .account-cell small { display: block; }.account-cell strong { font-size: 13px; }.account-cell small { margin-top: 3px; color: var(--muted); font-size: 11px; }
+.account-cell {
+  display: grid;
+  width: min(100%, 200px);
+  margin: 0 auto;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+}
+.account-cell > div { min-width: 0; }
+.account-cell strong, .account-cell small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.account-cell strong { font-size: 13px; }.account-cell small { margin-top: 3px; color: var(--muted); font-size: 11px; }
 .provider-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px; color: #fff; background: #61736f; font-size: 11px; font-weight: 800; }
 .provider-avatar.qq { background: #168bd2; }.provider-avatar.netease-163 { background: #d74b3f; }.provider-avatar.netease-126 { background: #df7048; }.provider-avatar.yeah { background: #52934a; }
 .provider-avatar.large { width: 52px; height: 52px; border-radius: 15px; font-size: 14px; }
@@ -292,7 +307,6 @@ onMounted(() => Promise.all([loadProviderOptions(), loadAccounts()]))
   .filter-result { display: none; }
 }
 @media (max-width: 640px) {
-  .account-page { padding: 14px; }
   .page-hero h1 { font-size: 27px; }
   .hero-actions { width: 100%; }
   .hero-actions .el-button { flex: 1; }
@@ -302,7 +316,7 @@ onMounted(() => Promise.all([loadProviderOptions(), loadAccounts()]))
 }
 
 .account-table :deep(.el-table__row) { transition: background-color .18s ease; }
-.account-table :deep(.el-table__row:hover > td) { background: #f3f7ff !important; }
+.account-table :deep(.el-table__row:hover > td) { background: var(--nexora-list-hover) !important; }
 .account-table :deep(.el-button:focus-visible), .hero-actions :deep(.el-button:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .account-table :deep(.el-table__row) { transition: none; }
