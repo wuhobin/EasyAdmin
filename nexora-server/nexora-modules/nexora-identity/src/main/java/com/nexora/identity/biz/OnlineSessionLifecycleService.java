@@ -68,11 +68,26 @@ public class OnlineSessionLifecycleService {
     }
 
     private void rollbackNewSession(Integer userId, String sessionId, RuntimeException originalException) {
+        boolean preciselyLoggedOut = false;
         try {
-            if (!tokenResolver.logoutSession(userId, sessionId)) {
-                SecurityUtils.logout();
-            }
+            preciselyLoggedOut = tokenResolver.logoutSession(userId, sessionId);
         } catch (RuntimeException cleanupException) {
+            addSuppressed(originalException, cleanupException);
+        }
+        if (preciselyLoggedOut) {
+            return;
+        }
+        try {
+            SecurityUtils.logout();
+        } catch (RuntimeException cleanupException) {
+            addSuppressed(originalException, cleanupException);
+        }
+    }
+
+    private static void addSuppressed(
+            RuntimeException originalException,
+            RuntimeException cleanupException) {
+        if (cleanupException != originalException) {
             originalException.addSuppressed(cleanupException);
         }
     }

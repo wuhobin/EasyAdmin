@@ -95,6 +95,28 @@ class OnlineSessionLifecycleServiceTest {
     }
 
     @Test
+    void fallsBackToCurrentLogoutWhenPreciseNewTokenRollbackFails() {
+        IllegalStateException originalException = new IllegalStateException("login initialization failed");
+        IllegalStateException preciseCleanupException =
+                new IllegalStateException("terminal lookup failed");
+        IllegalStateException fallbackCleanupException =
+                new IllegalStateException("current logout failed");
+        when(tokenResolver.logoutSession(7, SESSION_ID))
+                .thenThrow(preciseCleanupException);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(SecurityUtils::logout)
+                    .thenThrow(fallbackCleanupException);
+
+            service.rollbackUnregisteredSession(7, SESSION_ID, originalException);
+
+            securityUtils.verify(SecurityUtils::logout);
+            assertThat(originalException.getSuppressed())
+                    .containsExactly(preciseCleanupException, fallbackCleanupException);
+        }
+    }
+
+    @Test
     void capturesCurrentSessionBeforeLogoutAndRemovesOnlyThatRecord() {
         when(tokenResolver.currentSessionId()).thenReturn(Optional.of(SESSION_ID));
 
