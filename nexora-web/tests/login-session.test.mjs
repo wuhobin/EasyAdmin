@@ -217,7 +217,7 @@ test('frontend dependencies use the coordinated Node 18 compatible versions', ()
 test('package scripts expose repeatable test, typecheck, and full verification commands', () => {
   assert.equal(
     packageJson.scripts.test,
-    'node --test tests/login-page.test.mjs tests/login-session.test.mjs tests/file-management.test.mjs tests/mail-inbox.test.mjs tests/configuration-management.test.mjs'
+    'node --test tests/login-page.test.mjs tests/login-session.test.mjs tests/file-management.test.mjs tests/mail-inbox.test.mjs tests/configuration-management.test.mjs tests/online-users.test.mjs'
   )
   assert.equal(packageJson.scripts.typecheck, 'vue-tsc --noEmit')
   assert.equal(packageJson.scripts.check, 'npm run typecheck && npm run test && npm run build')
