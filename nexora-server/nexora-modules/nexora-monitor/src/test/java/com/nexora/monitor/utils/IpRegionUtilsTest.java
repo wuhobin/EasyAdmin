@@ -1,4 +1,4 @@
-package com.nexora.monitor.infrastructure;
+package com.nexora.monitor.utils;
 
 import com.nexora.monitor.constants.MonitorConstants;
 import org.junit.jupiter.api.Test;
@@ -9,13 +9,14 @@ class IpRegionUtilsTest {
 
     @Test
     void resolvesAddressFromClasspathDatabase() {
-        assertThat(com.nexora.utils.IpRegionUtils.resolve("58.20.50.137"))
+        assertThat(IpRegionUtils.resolve("58.20.50.137"))
                 .isNotBlank()
                 .isNotEqualTo(MonitorConstants.UNKNOWN_REGION);
     }
 
     @Test
     void returnsUnknownForInvalidIp() {
-        assertThat(com.nexora.utils.IpRegionUtils.resolve("not-an-ip")).isEqualTo(MonitorConstants.UNKNOWN_REGION);
+        assertThat(IpRegionUtils.resolve("not-an-ip"))
+                .isEqualTo(MonitorConstants.UNKNOWN_REGION);
     }
 }
