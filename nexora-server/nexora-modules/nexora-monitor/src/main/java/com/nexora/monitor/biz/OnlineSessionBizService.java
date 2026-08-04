@@ -8,6 +8,7 @@ import com.nexora.monitor.domain.vo.ForceLogoutResultVo;
 import com.nexora.monitor.domain.vo.OnlineSessionVo;
 import com.nexora.monitor.constants.OnlineSessionConstants;
 import com.nexora.monitor.infrastructure.IpRegionUtils;
+import com.nexora.monitor.infrastructure.OperationLogContext;
 import com.nexora.security.session.OnlineSessionRecord;
 import com.nexora.security.session.OnlineSessionRegistry;
 import com.nexora.security.session.OnlineSessionTokenResolver;
@@ -67,22 +68,31 @@ public class OnlineSessionBizService {
                 onlineSessionRegistry.find(normalizedSessionId);
         if (target.isEmpty()) {
             onlineSessionRegistry.removeStaleSessions(List.of(normalizedSessionId));
-            return new ForceLogoutResultVo(
+            ForceLogoutResultVo result = new ForceLogoutResultVo(
                     ForceLogoutResultVo.Outcome.ALREADY_OFFLINE, false);
+            OperationLogContext.setOutcome(result.getOutcome().name());
+            return result;
         }
 
         OnlineSessionRecord record = target.orElseThrow();
+        OperationLogContext.setTarget(
+                record.userId(),
+                record.email(),
+                record.sessionId(),
+                record.ip());
         boolean currentSession = tokenResolver.currentSessionId()
                 .map(normalizedSessionId::equals)
                 .orElse(false);
         boolean loggedOut = tokenResolver.logoutSession(
                 record.userId(), normalizedSessionId);
         onlineSessionRegistry.remove(normalizedSessionId, record.userId());
-        return new ForceLogoutResultVo(
+        ForceLogoutResultVo result = new ForceLogoutResultVo(
                 loggedOut
                         ? ForceLogoutResultVo.Outcome.LOGGED_OUT
                         : ForceLogoutResultVo.Outcome.ALREADY_OFFLINE,
                 currentSession);
+        OperationLogContext.setOutcome(result.getOutcome().name());
+        return result;
     }
 
     private static String normalizeSessionId(String sessionId) {

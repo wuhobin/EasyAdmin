@@ -5,10 +5,12 @@ import com.nexora.monitor.domain.form.OnlineSessionQueryForm;
 import com.nexora.monitor.domain.vo.ForceLogoutResultVo;
 import com.nexora.monitor.domain.vo.OnlineSessionVo;
 import com.nexora.monitor.infrastructure.IpRegionUtils;
+import com.nexora.monitor.infrastructure.OperationLogContext;
 import com.nexora.security.session.OnlineSessionRecord;
 import com.nexora.security.session.OnlineSessionRegistry;
 import com.nexora.security.session.OnlineSessionTokenResolver;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.mockito.MockedStatic;
 
 import java.time.LocalDateTime;
@@ -46,6 +48,11 @@ class OnlineSessionBizServiceTest {
             mock(OnlineSessionTokenResolver.class);
     private final OnlineSessionBizService service =
             new OnlineSessionBizService(onlineSessionRegistry, tokenResolver);
+
+    @AfterEach
+    void clearOperationLogContext() {
+        OperationLogContext.clear();
+    }
 
     @Test
     void returnsTheDefaultPageSortedByLoginTimeAndMarksTheCurrentSession() {
@@ -256,6 +263,12 @@ class OnlineSessionBizServiceTest {
         verify(tokenResolver).logoutSession(7, FIRST_SESSION_ID);
         verify(onlineSessionRegistry).remove(FIRST_SESSION_ID, 7);
         verify(onlineSessionRegistry, never()).removeByUserId(7);
+        assertThat(OperationLogContext.parameters())
+                .containsEntry("targetUserId", 7)
+                .containsEntry("targetEmail", "user@example.com")
+                .containsEntry("targetSessionId", FIRST_SESSION_ID)
+                .containsEntry("targetIp", "10.0.0.1")
+                .containsEntry("outcome", "LOGGED_OUT");
     }
 
     @Test
@@ -310,6 +323,9 @@ class OnlineSessionBizServiceTest {
         verify(onlineSessionRegistry)
                 .removeStaleSessions(List.of(FIRST_SESSION_ID));
         verifyNoInteractions(tokenResolver);
+        assertThat(OperationLogContext.parameters())
+                .containsOnlyKeys("outcome")
+                .containsEntry("outcome", "ALREADY_OFFLINE");
     }
 
     @Test
