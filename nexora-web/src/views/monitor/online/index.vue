@@ -96,6 +96,21 @@
             <span v-else>--</span>
           </template>
         </el-table-column>
+        <el-table-column label="操作" width="96" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              v-permission="['sys:online:forceLogout']"
+              link
+              type="danger"
+              :loading="forcingSessionId === row.sessionId"
+              :disabled="Boolean(forcingSessionId) && forcingSessionId !== row.sessionId"
+              :aria-label="`强退会话 ${abbreviateSessionId(row.sessionId)}`"
+              @click="handleForceLogout(row)"
+            >
+              强退
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
 
       <div class="pagination-container data-list-pagination">
@@ -107,7 +122,7 @@
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
-          @current-change="getList"
+          @current-change="handleCurrentChange"
         />
       </div>
     </el-card>
@@ -117,17 +132,29 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { Refresh, Search } from '@element-plus/icons-vue'
-import type { FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import {
+  forceLogoutOnlineSessionApi,
   getOnlineSessionListApi,
+  type ForceLogoutOutcome,
   type OnlineSessionQuery,
   type OnlineSessionRecord
 } from '@/api/monitor/online'
+import { useUserStoreHook } from '@/store/modules/user'
+import {
+  abbreviateSessionId,
+  runForceLogoutFlow,
+  type OnlineSessionPageState
+} from './force-logout'
 
+const router = useRouter()
+const userStore = useUserStoreHook()
 const queryFormRef = ref<FormInstance>()
 const loading = ref(false)
 const total = ref(0)
 const sessionList = ref<OnlineSessionRecord[]>([])
+const forcingSessionId = ref('')
+let suppressPaginationChange = false
 const queryParams = reactive<OnlineSessionQuery>({
   pageNum: 1,
   pageSize: 10,
@@ -139,25 +166,24 @@ const normalize = (value?: string) => value?.trim() || ''
 
 const displayValue = (value?: string) => normalize(value) || '--'
 
-const abbreviateSessionId = (sessionId: string) => {
-  const value = normalize(sessionId)
-  if (!value) return '--'
-  if (value.length <= 13) return value
-  return `${value.slice(0, 8)}…${value.slice(-4)}`
-}
-
 const formatDateTime = (value?: string) => {
   if (!value) return '--'
   const parsed = dayjs(value)
   return parsed.isValid() ? parsed.format('YYYY-MM-DD HH:mm:ss') : '--'
 }
 
-const getList = async () => {
+const getList = async (): Promise<OnlineSessionPageState> => {
   loading.value = true
   try {
     const { data } = await getOnlineSessionListApi(queryParams)
     sessionList.value = data.records
     total.value = data.total
+    return {
+      pageNum: queryParams.pageNum,
+      pageSize: queryParams.pageSize,
+      total: total.value,
+      recordCount: sessionList.value.length
+    }
   } finally {
     loading.value = false
   }
@@ -181,6 +207,55 @@ const handleRefresh = () => {
 const handleSizeChange = () => {
   queryParams.pageNum = 1
   getList()
+}
+
+const handleCurrentChange = () => {
+  if (suppressPaginationChange) return
+  getList()
+}
+
+const notifyForceLogout = (
+  outcome: ForceLogoutOutcome,
+  currentSession: boolean
+) => {
+  if (currentSession) {
+    ElMessage.success('当前会话已退出，请重新登录')
+  } else if (outcome === 'LOGGED_OUT') {
+    ElMessage.success('强退成功')
+  } else {
+    ElMessage.warning('该会话已离线，列表已刷新')
+  }
+}
+
+const handleForceLogout = async (row: unknown) => {
+  const session = row as OnlineSessionRecord
+  if (forcingSessionId.value) return
+  forcingSessionId.value = session.sessionId
+  suppressPaginationChange = true
+  try {
+    await runForceLogoutFlow(session, {
+      confirm: (message) => ElMessageBox.confirm(message, '强退确认', {
+        type: 'warning',
+        confirmButtonText: '强退',
+        cancelButtonText: '取消'
+      }),
+      forceLogout: async (sessionId) => {
+        const { data } = await forceLogoutOnlineSessionApi(sessionId)
+        return data
+      },
+      refresh: async (pageNum) => {
+        if (pageNum !== undefined) queryParams.pageNum = pageNum
+        return getList()
+      },
+      clearSession: () => userStore.forceLogout(),
+      redirectToLogin: () => router.replace('/login'),
+      notify: notifyForceLogout
+    })
+  } finally {
+    await nextTick()
+    suppressPaginationChange = false
+    forcingSessionId.value = ''
+  }
 }
 
 getList()
