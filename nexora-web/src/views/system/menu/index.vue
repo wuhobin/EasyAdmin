@@ -19,7 +19,6 @@
         row-key="id"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
       >
-        <el-table-column label="ID" prop="id" width="90" align="center" />
         <el-table-column
           label="菜单名称"
           prop="title"

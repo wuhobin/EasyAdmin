@@ -58,7 +58,6 @@
         style="width: 100%"
       >
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="ID" prop="id" width="90" align="center" />
         <el-table-column label="字典名称" prop="name" min-width="160" show-overflow-tooltip />
         <el-table-column label="字典类型" prop="type" min-width="180" show-overflow-tooltip />
         <el-table-column label="状态" align="center" width="88">
