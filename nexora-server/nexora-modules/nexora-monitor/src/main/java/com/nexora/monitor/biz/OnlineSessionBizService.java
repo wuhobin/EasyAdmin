@@ -4,7 +4,9 @@ import com.aurora.starter.mybatisplus.model.PageParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexora.monitor.domain.form.OnlineSessionQueryForm;
+import com.nexora.monitor.domain.vo.ForceLogoutResultVo;
 import com.nexora.monitor.domain.vo.OnlineSessionVo;
+import com.nexora.monitor.constants.OnlineSessionConstants;
 import com.nexora.monitor.infrastructure.IpRegionUtils;
 import com.nexora.security.session.OnlineSessionRecord;
 import com.nexora.security.session.OnlineSessionRegistry;
@@ -24,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -56,6 +59,51 @@ public class OnlineSessionBizService {
                 .sorted(Comparator.comparing(OnlineSessionRecord::loginTime).reversed())
                 .toList();
         return toPage(filteredRecords, criteria);
+    }
+
+    public ForceLogoutResultVo forceLogout(String sessionId) {
+        String normalizedSessionId = normalizeSessionId(sessionId);
+        Optional<OnlineSessionRecord> target =
+                onlineSessionRegistry.find(normalizedSessionId);
+        if (target.isEmpty()) {
+            onlineSessionRegistry.removeStaleSessions(List.of(normalizedSessionId));
+            return new ForceLogoutResultVo(
+                    ForceLogoutResultVo.Outcome.ALREADY_OFFLINE, false);
+        }
+
+        OnlineSessionRecord record = target.orElseThrow();
+        boolean currentSession = tokenResolver.currentSessionId()
+                .map(normalizedSessionId::equals)
+                .orElse(false);
+        boolean loggedOut = tokenResolver.logoutSession(
+                record.userId(), normalizedSessionId);
+        onlineSessionRegistry.remove(normalizedSessionId, record.userId());
+        return new ForceLogoutResultVo(
+                loggedOut
+                        ? ForceLogoutResultVo.Outcome.LOGGED_OUT
+                        : ForceLogoutResultVo.Outcome.ALREADY_OFFLINE,
+                currentSession);
+    }
+
+    private static String normalizeSessionId(String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            throw new IllegalArgumentException(
+                    OnlineSessionConstants.INVALID_SESSION_ID_MESSAGE);
+        }
+        UUID parsed;
+        try {
+            parsed = UUID.fromString(sessionId);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException(
+                    OnlineSessionConstants.INVALID_SESSION_ID_MESSAGE,
+                    exception);
+        }
+        if (parsed.version() != 4
+                || !parsed.toString().equalsIgnoreCase(sessionId)) {
+            throw new IllegalArgumentException(
+                    OnlineSessionConstants.INVALID_SESSION_ID_MESSAGE);
+        }
+        return parsed.toString();
     }
 
     private Map<Integer, Set<String>> resolveOnlineSessionIdsByUser(
