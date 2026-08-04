@@ -27,8 +27,9 @@ public class OnlineSessionTouchInterceptor implements HandlerInterceptor {
         try {
             tokenResolver.currentSessionId().ifPresent(this::touch);
         } catch (RuntimeException exception) {
-            log.warn("Failed to update online-session last-access time; request will continue",
-                    exception);
+            log.warn("Failed to update online-session last-access time; "
+                    + "request will continue (failure type: {})",
+                    exception.getClass().getName());
         }
         return true;
     }
