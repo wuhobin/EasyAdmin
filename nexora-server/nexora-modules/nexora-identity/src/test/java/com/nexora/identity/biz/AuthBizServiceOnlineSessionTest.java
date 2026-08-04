@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -114,6 +115,31 @@ class AuthBizServiceOnlineSessionTest {
             assertThatThrownBy(() -> service.login(loginForm()))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessage("registry unavailable");
+        }
+    }
+
+    @Test
+    void rollsBackTheNewTokenWhenPostLoginInitializationFails() {
+        SysUser user = SysUser.builder()
+                .id(7)
+                .email("user@example.com")
+                .password(BCrypt.hashpw("secret", BCrypt.gensalt()))
+                .status(1)
+                .build();
+        when(userService.getByEmail("user@example.com")).thenReturn(user);
+        when(configReader.login()).thenReturn(loginConfig());
+        when(onlineSessionLifecycleService.createSessionId()).thenReturn(FIRST_SESSION_ID);
+        IllegalStateException failure = new IllegalStateException("token context unavailable");
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(SecurityUtils::getTokenValue).thenThrow(failure);
+
+            assertThatThrownBy(() -> service.login(loginForm()))
+                    .isSameAs(failure);
+
+            verify(onlineSessionLifecycleService)
+                    .rollbackUnregisteredSession(7, FIRST_SESSION_ID, failure);
+            verify(onlineSessionLifecycleService, never()).register(user, FIRST_SESSION_ID);
         }
     }
 

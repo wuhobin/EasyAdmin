@@ -60,9 +60,16 @@ public class AuthBizService {
                 .setIsShare(false)
                 .setTimeout(LoginSecurityService.tokenTimeout(loginConfig, form.isRememberMe())));
 
-        LoginUserInfoVo loginUserInfo = toLoginUserInfo(user);
-        loginUserInfo.setToken(SecurityUtils.getTokenValue());
-        SecurityUtils.setSessionAttribute(IdentityConstants.CURRENT_USER, loginUserInfo);
+        LoginUserInfoVo loginUserInfo;
+        try {
+            loginUserInfo = toLoginUserInfo(user);
+            loginUserInfo.setToken(SecurityUtils.getTokenValue());
+            SecurityUtils.setSessionAttribute(IdentityConstants.CURRENT_USER, loginUserInfo);
+        } catch (RuntimeException exception) {
+            onlineSessionLifecycleService.rollbackUnregisteredSession(
+                    user.getId(), sessionId, exception);
+            throw exception;
+        }
         onlineSessionLifecycleService.register(user, sessionId);
         return loginUserInfo;
     }

@@ -46,6 +46,16 @@ public class OnlineSessionLifecycleService {
         }
     }
 
+    /**
+     * Invalidates a newly created token when login initialization cannot reach registration.
+     */
+    public void rollbackUnregisteredSession(
+            Integer userId,
+            String sessionId,
+            RuntimeException originalException) {
+        rollbackNewSession(userId, sessionId, originalException);
+    }
+
     public void logoutCurrentSession() {
         Optional<String> sessionId = tokenResolver.currentSessionId();
         SecurityUtils.logout();
