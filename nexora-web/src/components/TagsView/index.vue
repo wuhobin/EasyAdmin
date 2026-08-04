@@ -567,27 +567,24 @@ onBeforeUnmount(() => {
     position: relative;
     
     &:hover {
-      border-color: v-bind('settingsStore.themeColor');
-      color: v-bind('settingsStore.themeColor');
+      color: var(--nexora-sidebar-active-text);
+      background: var(--nexora-sidebar-hover);
+      border-color: var(--nexora-sidebar-hover);
     }
     
     &.active {
-      color: v-bind('settingsStore.themeColor');
-      border-color: v-bind('settingsStore.themeColor');
-      background: v-bind('`${settingsStore.themeColor}10`');
-      font-weight: bold;
+      color: var(--nexora-sidebar-active-text);
+      background: var(--nexora-sidebar-active);
+      border-color: var(--nexora-sidebar-active);
+      font-weight: 600;
       
       &::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        height: 100%;
-        background-color: v-bind('settingsStore.themeColor');
-        border-radius: 2px 0 0 2px;
-        transform: none;
+        content: none;
+      }
+
+      &:hover {
+        background: var(--nexora-sidebar-active-hover);
+        border-color: var(--nexora-sidebar-active-hover);
       }
     }
   }
@@ -657,8 +654,9 @@ onBeforeUnmount(() => {
     
     .tags-view-item {
       &.active {
-        background-color: v-bind('`${settingsStore.themeColor}2a`');
-        border-color: v-bind('settingsStore.themeColor');
+        color: var(--nexora-sidebar-active-text);
+        background-color: var(--nexora-sidebar-active);
+        border-color: var(--nexora-sidebar-active);
       }
     }
   }

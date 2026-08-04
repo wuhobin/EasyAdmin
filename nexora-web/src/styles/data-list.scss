@@ -5,6 +5,21 @@
   --nexora-list-header: color-mix(in srgb, var(--el-fill-color-light, #f5f7fa) 78%, var(--nexora-list-surface));
   --nexora-list-hover: color-mix(in srgb, var(--el-color-primary) 5%, var(--nexora-list-surface));
   --nexora-list-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -20px rgba(15, 23, 42, 0.24);
+  --nexora-list-tag-primary: #111827;
+  --nexora-list-tag-info: #111827;
+  --nexora-list-tag-success: #18a058;
+  --nexora-list-tag-warning: #111827;
+  --nexora-list-tag-danger: #d03050;
+  --nexora-list-tag-primary-bg-strength: 12%;
+  --nexora-list-tag-info-bg-strength: 8%;
+  --nexora-list-tag-success-bg-strength: 12%;
+  --nexora-list-tag-warning-bg-strength: 15%;
+  --nexora-list-tag-danger-bg-strength: 12%;
+  --nexora-list-tag-primary-border-strength: 30%;
+  --nexora-list-tag-info-border-strength: 25%;
+  --nexora-list-tag-success-border-strength: 30%;
+  --nexora-list-tag-warning-border-strength: 35%;
+  --nexora-list-tag-danger-border-strength: 30%;
 }
 
 :root[data-theme='dark'],
@@ -13,6 +28,18 @@
   --nexora-list-header: color-mix(in srgb, var(--el-fill-color-light) 72%, var(--nexora-list-surface));
   --nexora-list-hover: color-mix(in srgb, var(--el-color-primary) 9%, var(--nexora-list-surface));
   --nexora-list-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -22px rgba(0, 0, 0, 0.72);
+  --nexora-list-tag-primary: #4d5463;
+  --nexora-list-tag-info: #4d5463;
+  --nexora-list-tag-success: #63e2b7;
+  --nexora-list-tag-warning: #4d5463;
+  --nexora-list-tag-danger: #e88080;
+  --nexora-list-tag-primary-bg-strength: 16%;
+  --nexora-list-tag-info-bg-strength: 12%;
+  --nexora-list-tag-success-bg-strength: 16%;
+  --nexora-list-tag-warning-bg-strength: 16%;
+  --nexora-list-tag-danger-bg-strength: 16%;
+  --nexora-list-tag-info-border-strength: 31%;
+  --nexora-list-tag-warning-border-strength: 30%;
 }
 
 .data-list-page {
@@ -56,7 +83,7 @@
 }
 
 .data-list-filters .el-form-item__label {
-  color: var(--el-text-color-regular);
+  color: var(--nexora-text-label);
   font-size: 13px;
   font-weight: 500;
 }
@@ -183,8 +210,47 @@
 
 .data-list-card .el-table .el-tag,
 .data-list-subpanel .el-table .el-tag {
-  border-radius: 999px;
-  font-weight: 600;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  font-size: 12px !important;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.data-list-card .el-table .el-tag.el-tag--primary,
+.data-list-subpanel .el-table .el-tag.el-tag--primary {
+  color: var(--nexora-list-tag-primary);
+  background-color: color-mix(in srgb, var(--nexora-list-tag-primary) var(--nexora-list-tag-primary-bg-strength), transparent);
+  border-color: color-mix(in srgb, var(--nexora-list-tag-primary) var(--nexora-list-tag-primary-border-strength), transparent);
+}
+
+.data-list-card .el-table .el-tag.el-tag--info,
+.data-list-subpanel .el-table .el-tag.el-tag--info {
+  color: var(--nexora-list-tag-info);
+  background-color: color-mix(in srgb, var(--nexora-list-tag-info) var(--nexora-list-tag-info-bg-strength), transparent);
+  border-color: color-mix(in srgb, var(--nexora-list-tag-info) var(--nexora-list-tag-info-border-strength), transparent);
+}
+
+.data-list-card .el-table .el-tag.el-tag--success,
+.data-list-subpanel .el-table .el-tag.el-tag--success {
+  color: var(--nexora-list-tag-success);
+  background-color: color-mix(in srgb, var(--nexora-list-tag-success) var(--nexora-list-tag-success-bg-strength), transparent);
+  border-color: color-mix(in srgb, var(--nexora-list-tag-success) var(--nexora-list-tag-success-border-strength), transparent);
+}
+
+.data-list-card .el-table .el-tag.el-tag--warning,
+.data-list-subpanel .el-table .el-tag.el-tag--warning {
+  color: var(--nexora-list-tag-warning);
+  background-color: color-mix(in srgb, var(--nexora-list-tag-warning) var(--nexora-list-tag-warning-bg-strength), transparent);
+  border-color: color-mix(in srgb, var(--nexora-list-tag-warning) var(--nexora-list-tag-warning-border-strength), transparent);
+}
+
+.data-list-card .el-table .el-tag.el-tag--danger,
+.data-list-subpanel .el-table .el-tag.el-tag--danger {
+  color: var(--nexora-list-tag-danger);
+  background-color: color-mix(in srgb, var(--nexora-list-tag-danger) var(--nexora-list-tag-danger-bg-strength), transparent);
+  border-color: color-mix(in srgb, var(--nexora-list-tag-danger) var(--nexora-list-tag-danger-border-strength), transparent);
 }
 
 .data-list-card .el-table__empty-block,

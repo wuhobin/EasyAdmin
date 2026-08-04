@@ -152,7 +152,7 @@ watch(() => props.modelValue, () => {
 .upload-container {
   .upload-tip {
     font-size: 12px;
-    color: #909399;
+    color: var(--el-text-color-secondary);
     margin-top: 8px;
   }
 }

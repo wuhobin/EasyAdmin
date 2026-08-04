@@ -261,7 +261,7 @@ const vClickOutside = {
     padding: 8px;
     border-radius: 50%;
     transition: color 0.3s, background-color 0.3s, transform 0.3s;
-    color: #606266;
+    color: var(--el-text-color-regular);
     
     &:hover {
       background-color: v-bind('`${settingsStore.themeColor}1a`');

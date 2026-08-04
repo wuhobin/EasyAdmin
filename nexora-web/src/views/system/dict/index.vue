@@ -57,41 +57,43 @@
         @selection-change="handleSelectionChange"
         style="width: 100%"
       >
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="字典名称" prop="name" min-width="160" show-overflow-tooltip />
-        <el-table-column label="字典类型" prop="type" min-width="180" show-overflow-tooltip />
-        <el-table-column label="状态" align="center" width="88">
+        <el-table-column type="selection" width="48" align="center" />
+        <el-table-column label="字典名称" prop="name" width="150" show-overflow-tooltip />
+        <el-table-column label="字典类型" prop="type" width="160" show-overflow-tooltip />
+        <el-table-column label="状态" align="center" width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'">
               {{ row.status === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="备注" prop="remark" min-width="180" show-overflow-tooltip />
-        <el-table-column label="创建时间" align="center" prop="createTime" width="180" />
-        <el-table-column label="操作" width="220" align="center" fixed="right">
+        <el-table-column label="备注" prop="remark" min-width="160" show-overflow-tooltip />
+        <el-table-column label="创建时间" align="center" prop="createTime" width="168" />
+        <el-table-column label="操作" width="240" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button icon="List" type="primary" link @click="handleData(row)">
-              字典数据
-            </el-button>
-            <el-button
-              v-permission="['sys:dict:update']"
-              type="primary"
-              link
-              icon="Edit"
-              @click="handleEdit(row)"
-            >
-              修改
-            </el-button>
-            <el-button 
-              v-permission="['sys:dict:delete']"
-              type="danger"
-              link
-              icon="Delete"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
+            <div class="dict-actions">
+              <el-button icon="List" type="primary" link @click="handleData(row)">
+                字典数据
+              </el-button>
+              <el-button
+                v-permission="['sys:dict:update']"
+                type="primary"
+                link
+                icon="Edit"
+                @click="handleEdit(row)"
+              >
+                修改
+              </el-button>
+              <el-button
+                v-permission="['sys:dict:delete']"
+                type="danger"
+                link
+                icon="Delete"
+                @click="handleDelete(row)"
+              >
+                删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -376,6 +378,23 @@ getList()
 </script>
 
 <style scoped>
+.dict-container :deep(.data-list-table .cell) {
+  padding-right: 8px;
+  padding-left: 8px;
+}
+
+.dict-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.dict-actions :deep(.el-button.is-link + .el-button.is-link) {
+  margin-left: 0;
+}
+
 .dialog-footer {
   display: flex;
   justify-content: flex-end;

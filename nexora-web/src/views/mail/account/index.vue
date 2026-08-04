@@ -277,8 +277,17 @@ onMounted(() => Promise.all([loadProviderOptions(), loadAccounts()]))
 .stat-card strong, .stat-card small { display: block; }.stat-card strong { font-family: Georgia, serif; font-size: 24px; }.stat-card small { margin-top: 1px; color: var(--muted); font-size: 11px; }
 .filter-bar { display: grid; grid-template-columns: minmax(260px, 1fr) 180px 150px auto; gap: 10px; align-items: center; margin-bottom: 16px; }
 .filter-result { padding-left: 8px; color: var(--muted); font-size: 12px; white-space: nowrap; }
-.account-cell { display: flex; align-items: center; justify-content: center; gap: 11px; text-align: left; }
-.account-cell strong, .account-cell small { display: block; }.account-cell strong { font-size: 13px; }.account-cell small { margin-top: 3px; color: var(--muted); font-size: 11px; }
+.account-cell {
+  display: grid;
+  width: min(100%, 200px);
+  margin: 0 auto;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+}
+.account-cell > div { min-width: 0; }
+.account-cell strong, .account-cell small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.account-cell strong { font-size: 13px; }.account-cell small { margin-top: 3px; color: var(--muted); font-size: 11px; }
 .provider-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px; color: #fff; background: #61736f; font-size: 11px; font-weight: 800; }
 .provider-avatar.qq { background: #168bd2; }.provider-avatar.netease-163 { background: #d74b3f; }.provider-avatar.netease-126 { background: #df7048; }.provider-avatar.yeah { background: #52934a; }
 .provider-avatar.large { width: 52px; height: 52px; border-radius: 15px; font-size: 14px; }
