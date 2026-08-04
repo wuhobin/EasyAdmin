@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -122,16 +123,19 @@ class OnlineSessionRegistryTest {
     }
 
     @Test
-    void removesExpiredSessionFromEveryUserIndex() {
+    void removesStaleSessionsWithOneScanAndOneReadPerUserIndex() {
+        String secondId = "550e8400-e29b-41d4-a716-446655440001";
         when(redisCache.scan(USER_KEY_PATTERN)).thenReturn(Set.of(USER_KEY, SECOND_USER_KEY));
-        when(redisCache.getCacheSet(USER_KEY)).thenReturn(Set.of());
-        when(redisCache.getCacheSet(SECOND_USER_KEY)).thenReturn(Set.of("another-session"));
+        when(redisCache.getCacheSet(USER_KEY)).thenReturn(Set.of(SESSION_ID, "another-session"));
+        when(redisCache.getCacheSet(SECOND_USER_KEY)).thenReturn(Set.of(secondId));
 
-        registry.remove(SESSION_ID);
+        registry.removeStaleSessions(List.of(SESSION_ID, secondId));
 
         verify(redisCache).removeSet(USER_KEY, SESSION_ID);
-        verify(redisCache).removeSet(SECOND_USER_KEY, SESSION_ID);
-        verify(redisCache).deleteObject(USER_KEY);
+        verify(redisCache).removeSet(SECOND_USER_KEY, secondId);
+        verify(redisCache, times(1)).scan(USER_KEY_PATTERN);
+        verify(redisCache, times(1)).getCacheSet(USER_KEY);
+        verify(redisCache, times(1)).getCacheSet(SECOND_USER_KEY);
     }
 
     @Test

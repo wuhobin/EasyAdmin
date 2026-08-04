@@ -103,20 +103,30 @@ public class OnlineSessionRegistry {
 
     public void remove(String sessionId) {
         Integer userId = find(sessionId).map(OnlineSessionRecord::userId).orElse(null);
+        if (userId == null) {
+            removeStaleSessions(List.of(sessionId));
+            return;
+        }
         remove(sessionId, userId);
     }
 
     public void remove(String sessionId, Integer userId) {
-        redisCache.deleteObject(List.of(
-                dataKey(sessionId),
-                lastAccessKey(sessionId),
-                touchKey(sessionId)));
-        redisCache.removeZset(indexKey(), sessionId);
-        if (userId != null) {
-            removeFromUserIndex(userKey(userId), sessionId);
-        } else {
-            removeFromAllUserIndexes(sessionId);
+        if (userId == null) {
+            removeStaleSessions(List.of(sessionId));
+            return;
         }
+        removeSessionState(List.of(sessionId));
+        removeFromUserIndex(userKey(userId), sessionId);
+    }
+
+    public void removeStaleSessions(Collection<String> sessionIds) {
+        List<String> staleSessionIds = normalizedSessionIds(sessionIds);
+        if (staleSessionIds.isEmpty()) {
+            return;
+        }
+
+        removeSessionState(staleSessionIds);
+        removeFromAllUserIndexes(new LinkedHashSet<>(staleSessionIds));
     }
 
     public void removeByUserId(Integer userId) {
@@ -127,14 +137,7 @@ public class OnlineSessionRegistry {
         }
 
         List<String> sessionIds = values.stream().map(String::valueOf).toList();
-        List<String> keys = new ArrayList<>(sessionIds.size() * 3);
-        for (String sessionId : sessionIds) {
-            keys.add(dataKey(sessionId));
-            keys.add(lastAccessKey(sessionId));
-            keys.add(touchKey(sessionId));
-            redisCache.removeZset(indexKey(), sessionId);
-        }
-        redisCache.deleteObject(keys);
+        removeSessionState(sessionIds);
         redisCache.deleteObject(userKey(userId));
     }
 
@@ -146,10 +149,7 @@ public class OnlineSessionRegistry {
             return Map.of();
         }
 
-        List<String> orderedSessionIds = sessionIds.stream()
-                .filter(id -> id != null && !id.isBlank())
-                .distinct()
-                .toList();
+        List<String> orderedSessionIds = normalizedSessionIds(sessionIds);
         if (orderedSessionIds.isEmpty()) {
             return Map.of();
         }
@@ -210,12 +210,42 @@ public class OnlineSessionRegistry {
                 .toEpochMilli();
     }
 
-    private void removeFromAllUserIndexes(String sessionId) {
+    private static List<String> normalizedSessionIds(Collection<String> sessionIds) {
+        if (sessionIds == null || sessionIds.isEmpty()) {
+            return List.of();
+        }
+        return sessionIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .toList();
+    }
+
+    private void removeSessionState(Collection<String> sessionIds) {
+        List<String> keys = new ArrayList<>(sessionIds.size() * 3);
+        for (String sessionId : sessionIds) {
+            keys.add(dataKey(sessionId));
+            keys.add(lastAccessKey(sessionId));
+            keys.add(touchKey(sessionId));
+            redisCache.removeZset(indexKey(), sessionId);
+        }
+        redisCache.deleteObject(keys);
+    }
+
+    private void removeFromAllUserIndexes(Set<String> sessionIds) {
         Collection<String> userKeys = redisCache.scan(userKeyPattern());
         if (userKeys == null || userKeys.isEmpty()) {
             return;
         }
-        userKeys.forEach(key -> removeFromUserIndex(key, sessionId));
+        for (String key : userKeys) {
+            Set<Object> members = redisCache.getCacheSet(key);
+            if (members == null || members.isEmpty()) {
+                redisCache.deleteObject(key);
+                continue;
+            }
+            members.stream()
+                    .filter(member -> sessionIds.contains(String.valueOf(member)))
+                    .forEach(member -> redisCache.removeSet(key, member));
+        }
     }
 
     private void removeFromUserIndex(String key, String sessionId) {
