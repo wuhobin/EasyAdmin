@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexora.monitor.domain.form.OnlineSessionQueryForm;
 import com.nexora.monitor.domain.vo.OnlineSessionVo;
-import com.nexora.monitor.utils.IpRegionUtils;
+import com.nexora.monitor.infrastructure.IpRegionUtils;
 import com.nexora.security.session.OnlineSessionRecord;
 import com.nexora.security.session.OnlineSessionRegistry;
 import com.nexora.security.session.OnlineSessionTokenResolver;

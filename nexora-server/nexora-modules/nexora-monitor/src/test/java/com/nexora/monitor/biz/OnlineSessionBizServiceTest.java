@@ -3,7 +3,7 @@ package com.nexora.monitor.biz;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nexora.monitor.domain.form.OnlineSessionQueryForm;
 import com.nexora.monitor.domain.vo.OnlineSessionVo;
-import com.nexora.monitor.utils.IpRegionUtils;
+import com.nexora.monitor.infrastructure.IpRegionUtils;
 import com.nexora.security.session.OnlineSessionRecord;
 import com.nexora.security.session.OnlineSessionRegistry;
 import com.nexora.security.session.OnlineSessionTokenResolver;
@@ -90,21 +90,28 @@ class OnlineSessionBizServiceTest {
     }
 
     @Test
-    void appliesCaseInsensitiveUserSearchAndIpContainsSearch() {
+    void appliesCaseInsensitiveNicknameSearchAndIpContainsSearch() {
         OnlineSessionRecord matching = record(
-                FIRST_SESSION_ID, 7, "ADMIN@example.com", "Alice Admin",
+                FIRST_SESSION_ID, 7, "owner@example.com", "Alice Admin",
                 "203.0.113.8", LOGIN_TIME);
         OnlineSessionRecord wrongIp = record(
                 SECOND_SESSION_ID, 8, "alice@example.com", "Alice",
                 "198.51.100.2", LOGIN_TIME.plusMinutes(1));
+        OnlineSessionRecord emptyNickname = record(
+                THIRD_SESSION_ID, 9, "other@example.com", null,
+                "203.0.113.9", LOGIN_TIME.plusMinutes(2));
         when(onlineSessionRegistry.listSessionIds())
-                .thenReturn(List.of(FIRST_SESSION_ID, SECOND_SESSION_ID));
-        when(onlineSessionRegistry.findAll(List.of(FIRST_SESSION_ID, SECOND_SESSION_ID)))
+                .thenReturn(List.of(
+                        FIRST_SESSION_ID, SECOND_SESSION_ID, THIRD_SESSION_ID));
+        when(onlineSessionRegistry.findAll(List.of(
+                FIRST_SESSION_ID, SECOND_SESSION_ID, THIRD_SESSION_ID)))
                 .thenReturn(Map.of(
                         FIRST_SESSION_ID, matching,
-                        SECOND_SESSION_ID, wrongIp));
+                        SECOND_SESSION_ID, wrongIp,
+                        THIRD_SESSION_ID, emptyNickname));
         when(tokenResolver.onlineSessionIds(7)).thenReturn(Set.of(FIRST_SESSION_ID));
         when(tokenResolver.onlineSessionIds(8)).thenReturn(Set.of(SECOND_SESSION_ID));
+        when(tokenResolver.onlineSessionIds(9)).thenReturn(Set.of(THIRD_SESSION_ID));
         when(onlineSessionRegistry.findLastAccessTimes(List.of(FIRST_SESSION_ID)))
                 .thenReturn(Map.of());
         when(tokenResolver.currentSessionId()).thenReturn(Optional.empty());
@@ -119,6 +126,34 @@ class OnlineSessionBizServiceTest {
             IPage<OnlineSessionVo> page = service.list(form);
 
             assertThat(page.getTotal()).isEqualTo(1);
+            assertThat(page.getRecords())
+                    .extracting(OnlineSessionVo::getSessionId)
+                    .containsExactly(FIRST_SESSION_ID);
+        }
+    }
+
+    @Test
+    void matchesEmailWhenNicknameIsNull() {
+        OnlineSessionRecord record = record(
+                FIRST_SESSION_ID, 7, "USER@example.com", null,
+                "203.0.113.8", LOGIN_TIME);
+        when(onlineSessionRegistry.listSessionIds())
+                .thenReturn(List.of(FIRST_SESSION_ID));
+        when(onlineSessionRegistry.findAll(List.of(FIRST_SESSION_ID)))
+                .thenReturn(Map.of(FIRST_SESSION_ID, record));
+        when(tokenResolver.onlineSessionIds(7)).thenReturn(Set.of(FIRST_SESSION_ID));
+        when(onlineSessionRegistry.findLastAccessTimes(List.of(FIRST_SESSION_ID)))
+                .thenReturn(Map.of());
+        when(tokenResolver.currentSessionId()).thenReturn(Optional.empty());
+        OnlineSessionQueryForm form = new OnlineSessionQueryForm();
+        form.setKeyword(" user@ ");
+
+        try (MockedStatic<IpRegionUtils> ipRegion = mockStatic(IpRegionUtils.class)) {
+            ipRegion.when(() -> IpRegionUtils.resolve("203.0.113.8"))
+                    .thenReturn("Location");
+
+            IPage<OnlineSessionVo> page = service.list(form);
+
             assertThat(page.getRecords())
                     .extracting(OnlineSessionVo::getSessionId)
                     .containsExactly(FIRST_SESSION_ID);
