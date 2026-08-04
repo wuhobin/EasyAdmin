@@ -114,10 +114,10 @@ CREATE TABLE `sys_config_group`  (
 -- Records of sys_config_group
 -- ----------------------------
 INSERT INTO `sys_config_group` VALUES (1, 'system', '系统配置', '{\"icp\": \"1111\", \"siteLogo\": \"\", \"siteName\": \"Nexora Admin\", \"copyright\": \"Copyright © 2026 Nexora Admin\", \"shortTitle\": \"Nexora Admin 后台管理\", \"watermarkType\": \"username\", \"siteDescription\": \"一个现代化的后台管理系统\", \"watermarkEnabled\": true, \"watermarkOpacity\": 0.05, \"watermarkCustomText\": \"\"}', 1, '2026-07-31 15:42:51', '2026-08-03 15:18:38');
-INSERT INTO `sys_config_group` VALUES (2, 'register', '注册配置', '{\"enabled\": true, \"needAudit\": true, \"verifyEmail\": true, \"captchaEnabled\": true, \"defaultRoleCode\": \"user\"}', 2, '2026-07-31 15:42:51', '2026-08-04 10:13:27');
+INSERT INTO `sys_config_group` VALUES (2, 'register', '注册配置', '{"enabled": true, "needAudit": true, "verifyEmail": true, "captchaEnabled":true, "defaultRoleCode": "user"}', 2, '2026-07-31 15:42:51', '2026-08-04 10:13:27');
 INSERT INTO `sys_config_group` VALUES (3, 'login', '登录配置', '{\"singleLogin\": false, \"maxRetryCount\": 5, \"lockTimeMinutes\": 30, \"rememberMeEnabled\": true, \"sessionTimeoutSeconds\": 3600, \"rememberMeTimeoutSeconds\": 259200}', 3, '2026-07-31 15:42:51', '2026-08-04 10:06:40');
 INSERT INTO `sys_config_group` VALUES (4, 'password', '密码配置', '{\"maxLength\": 20, \"minLength\": 6, \"requireNumber\": false, \"requireSpecial\": false, \"requireLowercase\": false, \"requireUppercase\": false}', 4, '2026-07-31 15:42:51', '2026-07-31 16:04:38');
-INSERT INTO `sys_config_group` VALUES (5, 'email', '邮箱配置', '{\"ssl\": true, \"host\": \"smtp.qq.com\", \"port\": 465, \"enabled\": true, \"fromName\": \"Nexora Admin\", \"password\": \"kdhbqfnrlvpshjjc\", \"username\": \"1289066006@qq.com\"}', 5, '2026-08-01 21:49:21', '2026-08-01 21:51:02');
+INSERT INTO `sys_config_group` VALUES (5, 'email', '邮箱配置', '{\"ssl\": true, \"host\": \"smtp.qq.com\", \"port\": 465, \"enabled\": false, \"fromName\": \"Nexora Admin\", \"password\": \"\", \"username\": \"\"}', 5, '2026-08-01 21:49:21', '2026-08-04 20:04:00');
 
 -- ----------------------------
 -- Table structure for sys_dict
@@ -195,7 +195,7 @@ CREATE TABLE `sys_menu`  (
   `perm` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '权限标识',
   `is_external` int NULL DEFAULT 0 COMMENT '是否外链 0:否  1:是',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 139 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '权限资源表 ' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 142 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '权限资源表 ' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -259,6 +259,9 @@ INSERT INTO `sys_menu` VALUES (135, '32', 'job-log', '/monitor/job/log', '调度
 INSERT INTO `sys_menu` VALUES (136, '135', '', '', '列表', 1, '', 'BUTTON', '2026-08-04 11:25:33', '2026-08-04 11:25:33', '', '', 1, 'sys:jobLog', 0);
 INSERT INTO `sys_menu` VALUES (137, '135', '', '', '删除', 1, '', 'BUTTON', '2026-08-04 11:25:51', '2026-08-04 11:25:51', '', '', 1, 'sys:jobLog:delete', 0);
 INSERT INTO `sys_menu` VALUES (138, '135', '', '', '清空', 1, '', 'BUTTON', '2026-08-04 11:26:07', '2026-08-04 11:26:07', '', '', 1, 'sys:jobLog:clean', 0);
+INSERT INTO `sys_menu` VALUES (139, '4', 'online', '/monitor/online/index', '在线用户', 2, 'UserFilled', 'MENU', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (140, '139', '', '', '列表', 1, '', 'BUTTON', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 1, 'sys:online', 0);
+INSERT INTO `sys_menu` VALUES (141, '139', '', '', '强退', 2, '', 'BUTTON', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 1, 'sys:online:forceLogout', 0);
 
 -- ----------------------------
 -- Table structure for sys_operate_log
