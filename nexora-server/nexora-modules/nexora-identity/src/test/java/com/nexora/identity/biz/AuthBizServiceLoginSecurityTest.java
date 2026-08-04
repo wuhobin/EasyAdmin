@@ -34,18 +34,17 @@ class AuthBizServiceLoginSecurityTest {
     private final AuthBizService bizService = createService();
 
     @Test
-    void verifiesTheSliderBeforeLookingUpTheAccount() {
-        LoginSettings config = loginConfig();
-        config.setCaptchaEnabled(true);
-        when(configReader.login()).thenReturn(config);
-        when(imageVerificationService.verifyAndConsume("captcha-id")).thenReturn(false);
+    void loginDoesNotUseImageCaptcha() {
+        when(configReader.login()).thenReturn(loginConfig());
+        when(userService.getByEmail("user@example.com")).thenReturn(user(1));
 
-        assertThatThrownBy(() -> bizService.login(loginForm("secret", "captcha-id")))
-                .isInstanceOf(BizException.class)
-                .hasMessageContaining(IdentityConstants.IMAGE_CAPTCHA_INVALID_MESSAGE);
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(SecurityUtils::getTokenValue).thenReturn("token");
 
-        verify(userService, never()).getByEmail(any());
-        verify(loginRetryCache, never()).getFailureCount(any());
+            bizService.login(loginForm("secret", "obsolete-captcha-id"));
+
+            verify(imageVerificationService, never()).verifyAndConsume(any());
+        }
     }
 
     @Test
@@ -132,7 +131,6 @@ class AuthBizServiceLoginSecurityTest {
 
     private static LoginSettings loginConfig() {
         LoginSettings config = new LoginSettings();
-        config.setCaptchaEnabled(false);
         config.setMaxRetryCount(5);
         config.setLockTimeMinutes(30);
         config.setRememberMeEnabled(true);

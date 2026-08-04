@@ -5,6 +5,10 @@
         <el-switch v-model="model.enabled" />
         <span class="form-hint">关闭后隐藏注册入口并拒绝注册请求。</span>
       </el-form-item>
+      <el-form-item label="注册滑块验证" prop="captchaEnabled">
+        <el-switch v-model="model.captchaEnabled" />
+        <span class="form-hint">开启后创建账号前必须完成滑块验证。</span>
+      </el-form-item>
       <el-form-item label="验证邮箱" prop="verifyEmail">
         <el-switch v-model="model.verifyEmail" />
         <span class="form-hint">关闭后注册页不再要求邮箱验证码。</span>

@@ -94,21 +94,24 @@ test('registration uses email code and password with a sixty-second cooldown', (
 
 test('registration opens image verification before creating the account', () => {
   const registerHandler = loginPageSource.match(
-    /const handleRegister = async \(\) => \{[\s\S]*?\n\}/
+    /const handleRegister = async \(\) => \{[\s\S]*?(?=\nconst handleImageCaptchaSuccess)/
   )?.[0] ?? ''
   assert.match(loginPageSource, /import SliderCaptcha from/)
   assert.match(loginPageSource, /<SliderCaptcha[\s\S]*v-model="captchaDialogVisible"[\s\S]*@success="handleImageCaptchaSuccess"/)
+  assert.match(registerHandler, /registerConfig\.value\.captchaEnabled/)
   assert.match(registerHandler, /captchaDialogVisible\.value = true/)
   assert.doesNotMatch(registerHandler, /registerApi\(/)
-  assert.match(loginPageSource, /captchaPurpose\.value = 'register'/)
-  assert.match(loginPageSource, /captchaPurpose\.value === 'login'/)
+  assert.match(registerHandler, /await performRegister\(\)/)
+  assert.match(loginPageSource, /await performRegister\(captchaId\)/)
+  assert.doesNotMatch(loginPageSource, /captchaPurpose/)
   assert.match(loginPageSource, /registerApi\(\{[\s\S]*captchaId/)
 })
 
 test('login and registration apply the public security switches', () => {
   assert.match(loginPageSource, /v-if="loginConfig\.rememberMeEnabled"/)
-  assert.match(loginPageSource, /loginConfig\.value\.captchaEnabled/)
-  assert.match(loginPageSource, /performLogin\(captchaId\)/)
+  assert.doesNotMatch(loginPageSource, /loginConfig\.value\.captchaEnabled/)
+  assert.doesNotMatch(loginPageSource, /performLogin\(captchaId\)/)
+  assert.match(loginPageSource, /registerConfig\.value\.captchaEnabled/)
   assert.match(loginPageSource, /v-if="registerConfig\.verifyEmail"/)
   assert.match(loginPageSource, /registerConfig\.value\.verifyEmail \? registerForm\.code : undefined/)
   assert.match(loginPageSource, /validatePasswordByPolicy/)
@@ -123,7 +126,7 @@ test('image captcha API follows the tianai challenge and track contract', () => 
   assert.match(authApiSource, /export interface ImageCaptchaTrack/)
   assert.match(authApiSource, /url:\s*['"]\/auth\/image['"]/)
   assert.match(authApiSource, /\/auth\/image\/\$\{encodeURIComponent\(captchaId\)\}\/match/)
-  assert.match(authApiSource, /export type RegisterParams[\s\S]*captchaId:\s*string/)
+  assert.match(authApiSource, /export type RegisterParams[\s\S]*captchaId\?:\s*string/)
 })
 
 test('slider captcha renders server images and only accepts an explicit match result', () => {

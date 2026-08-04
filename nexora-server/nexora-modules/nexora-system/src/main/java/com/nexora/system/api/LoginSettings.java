@@ -12,9 +12,6 @@ import lombok.Data;
 @Schema(description = "用户登录配置")
 public class LoginSettings {
 
-    @NotNull(message = "登录验证码开关不能为空")
-    private Boolean captchaEnabled;
-
     @NotNull(message = "最大重试次数不能为空")
     @Min(value = 1, message = "最大重试次数不能小于1")
     @Max(value = 20, message = "最大重试次数不能大于20")

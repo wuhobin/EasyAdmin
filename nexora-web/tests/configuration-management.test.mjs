@@ -61,7 +61,9 @@ test('configuration page uses five dedicated group forms and whole-group save', 
   assert.match(systemFormSource, /:disabled="model\.watermarkType !== 'custom'"/)
   assert.doesNotMatch(systemFormSource, /<el-form-item v-if="model\.watermarkEnabled"/)
   assert.doesNotMatch(systemFormSource, /show-input/)
+  assert.match(registerFormSource, /v-model="model\.captchaEnabled"/)
   assert.match(registerFormSource, /v-model="model\.verifyEmail"/)
+  assert.doesNotMatch(loginFormSource, /captchaEnabled|登录滑块验证/)
   assert.match(loginFormSource, /v-model="model\.maxRetryCount"/)
   assert.doesNotMatch(loginFormSource, /controls-position/)
   assert.match(passwordFormSource, /v-model="model\.requireSpecial"/)
@@ -79,6 +81,12 @@ test('configuration page uses five dedicated group forms and whole-group save', 
 test('public configuration drives branding, password policy, and pending-user audit', () => {
   assert.match(publicStoreSource, /getPublicConfigApi\(\)/)
   assert.match(publicStoreSource, /applyDocumentTitle/)
+  assert.match(apiSource, /interface PublicRegisterConfig[\s\S]*captchaEnabled:\s*boolean/)
+  const publicLoginConfig = apiSource.match(
+    /export interface PublicLoginConfig\s*\{[\s\S]*?\n\}/
+  )?.[0] ?? ''
+  assert.doesNotMatch(publicLoginConfig, /captchaEnabled/)
+  assert.match(publicStoreSource, /register:\s*\{[\s\S]*captchaEnabled:\s*true/)
   assert.match(passwordPolicySource, /Array\.from\(password\)\.length/)
   assert.match(passwordPolicySource, /TextEncoder\(\).*72/s)
   assert.match(passwordPolicySource, /\\p\{Lu\}/)

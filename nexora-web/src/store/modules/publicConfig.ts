@@ -19,11 +19,11 @@ export const DEFAULT_PUBLIC_CONFIG: SysConfigPublic = {
   },
   register: {
     enabled: true,
+    captchaEnabled: true,
     verifyEmail: true,
     needAudit: false
   },
   login: {
-    captchaEnabled: false,
     rememberMeEnabled: true
   },
   password: {

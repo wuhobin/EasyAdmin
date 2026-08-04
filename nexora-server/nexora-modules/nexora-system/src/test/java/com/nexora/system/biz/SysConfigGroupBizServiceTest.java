@@ -8,7 +8,10 @@ import com.nexora.system.api.SystemSettingsValidator;
 import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.system.config.SysConfigGroupRegistry;
 import com.nexora.system.constants.SysConfigGroupEnum;
+import com.nexora.system.api.LoginSettings;
+import com.nexora.system.api.PasswordSettings;
 import com.nexora.system.api.RegistrationSettings;
+import com.nexora.system.api.SystemSettings;
 import com.nexora.system.entity.SysConfigGroup;
 import com.nexora.system.service.SysConfigGroupService;
 import org.junit.jupiter.api.Test;
@@ -16,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -36,7 +40,7 @@ class SysConfigGroupBizServiceTest {
     void replacesTheWholeGroupAndRefreshesItsCacheAfterCommit() {
         JsonNode input = new ObjectMapper().createObjectNode().put("enabled", true);
         RegistrationSettings value = registerConfig();
-        String json = "{\"enabled\":true,\"verifyEmail\":true,"
+        String json = "{\"enabled\":true,\"captchaEnabled\":true,\"verifyEmail\":true,"
                 + "\"defaultRoleCode\":\"user\",\"needAudit\":false}";
         SysConfigGroup group = group("register", "{}");
         when(registry.normalizeCode("register")).thenReturn("register");
@@ -68,6 +72,27 @@ class SysConfigGroupBizServiceTest {
         assertThatThrownBy(() -> bizService.update("register", input))
                 .isInstanceOf(BizException.class);
         verify(configService, never()).updateById(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void exposesTheCaptchaSwitchAsRegistrationConfiguration() {
+        SystemSettings system = new SystemSettings();
+        RegistrationSettings register = registerConfig();
+        register.setCaptchaEnabled(true);
+        register.setVerifyEmail(false);
+        LoginSettings login = new LoginSettings();
+        login.setRememberMeEnabled(false);
+        PasswordSettings password = new PasswordSettings();
+        when(reader.system()).thenReturn(system);
+        when(reader.register()).thenReturn(register);
+        when(reader.login()).thenReturn(login);
+        when(reader.password()).thenReturn(password);
+
+        var publicConfig = bizService.getPublicConfig();
+
+        assertThat(publicConfig.register().captchaEnabled()).isTrue();
+        assertThat(publicConfig.register().verifyEmail()).isFalse();
+        assertThat(publicConfig.login().rememberMeEnabled()).isFalse();
     }
 
     @Test
@@ -120,6 +145,7 @@ class SysConfigGroupBizServiceTest {
     private static RegistrationSettings registerConfig() {
         RegistrationSettings value = new RegistrationSettings();
         value.setEnabled(true);
+        value.setCaptchaEnabled(true);
         value.setVerifyEmail(true);
         value.setDefaultRoleCode("user");
         value.setNeedAudit(false);

@@ -155,7 +155,6 @@ class AuthBizServiceTest {
 
     private static LoginSettings loginConfig() {
         LoginSettings config = new LoginSettings();
-        config.setCaptchaEnabled(false);
         config.setMaxRetryCount(5);
         config.setLockTimeMinutes(30);
         config.setRememberMeEnabled(true);

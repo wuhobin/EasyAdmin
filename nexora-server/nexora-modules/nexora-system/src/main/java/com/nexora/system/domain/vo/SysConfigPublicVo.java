@@ -22,10 +22,14 @@ public record SysConfigPublicVo(
             Double watermarkOpacity) {
     }
 
-    public record RegisterConfig(Boolean enabled, Boolean verifyEmail, Boolean needAudit) {
+    public record RegisterConfig(
+            Boolean enabled,
+            Boolean captchaEnabled,
+            Boolean verifyEmail,
+            Boolean needAudit) {
     }
 
-    public record LoginConfig(Boolean captchaEnabled, Boolean rememberMeEnabled) {
+    public record LoginConfig(Boolean rememberMeEnabled) {
     }
 
     public record PasswordConfig(

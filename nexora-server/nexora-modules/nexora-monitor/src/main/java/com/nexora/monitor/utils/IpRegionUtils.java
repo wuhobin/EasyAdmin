@@ -1,7 +1,7 @@
-package com.nexora.utils;
+package com.nexora.monitor.utils;
 
-import com.nexora.monitor.constants.MonitorConstants;
 import com.aurora.starter.common.utils.StringUtils;
+import com.nexora.monitor.constants.MonitorConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.lionsoul.ip2region.xdb.Searcher;
 

@@ -152,7 +152,7 @@
 
           <div class="security-note">
             <el-icon aria-hidden="true"><Lock /></el-icon>
-            <span>{{ activeMode === 'login' ? '安全连接已建立，会话凭证将被加密传输' : '验证码仅用于完成本次账号注册' }}</span>
+            <span>{{ activeMode === 'login' ? '安全连接已建立，会话凭证将被加密传输' : '注册信息仅用于完成本次账号创建' }}</span>
           </div>
         </section>
 
@@ -311,7 +311,6 @@ const resetCodeSending = ref(false)
 const resetCodeCountdown = ref(0)
 const resettingPassword = ref(false)
 const activeMode = ref<AuthMode>('login')
-const captchaPurpose = ref<'login' | 'register'>('register')
 let countdownTimer: ReturnType<typeof setInterval> | undefined
 let resetCountdownTimer: ReturnType<typeof setInterval> | undefined
 
@@ -420,18 +419,13 @@ const handleForgotPassword = async () => {
 const handleLogin = async () => {
   if (!(await ensurePublicConfig())) return
   if (!loginFormRef.value || !(await loginFormRef.value.validate().catch(() => false))) return
-  if (loginConfig.value.captchaEnabled) {
-    captchaPurpose.value = 'login'
-    captchaDialogVisible.value = true
-    return
-  }
   await performLogin()
 }
 
-const performLogin = async (captchaId?: string) => {
+const performLogin = async () => {
   loading.value = true
   try {
-    await userStore.login({ ...loginForm, captchaId })
+    await userStore.login({ ...loginForm })
     await router.push('/')
     ElMessage.success('登录成功')
   } catch (error) {
@@ -486,17 +480,20 @@ const handleRegister = async () => {
   if (registering.value) return
   if (!(await ensurePublicConfig())) return
   if (!registerFormRef.value || !(await registerFormRef.value.validate().catch(() => false))) return
-  captchaPurpose.value = 'register'
-  captchaDialogVisible.value = true
+  if (registerConfig.value.captchaEnabled) {
+    captchaDialogVisible.value = true
+    return
+  }
+  await performRegister()
 }
 
 const handleImageCaptchaSuccess = async (captchaId: string) => {
   captchaDialogVisible.value = false
   if (!(await ensurePublicConfig())) return
-  if (captchaPurpose.value === 'login') {
-    await performLogin(captchaId)
-    return
-  }
+  await performRegister(captchaId)
+}
+
+const performRegister = async (captchaId?: string) => {
   registering.value = true
   try {
     await registerApi({

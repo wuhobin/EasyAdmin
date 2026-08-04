@@ -3,6 +3,7 @@ package com.nexora.system.config;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.nexora.system.api.RegistrationSettings;
 import com.nexora.system.api.SystemSettings;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -59,6 +60,34 @@ class SysConfigGroupRegistryTest {
         assertThatThrownBy(() -> registry.normalize("password", input))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining("密码最大长度不能小于最小长度");
+    }
+
+    @Test
+    void requiresTheRegistrationCaptchaSwitch() {
+        ObjectNode input = objectMapper.createObjectNode()
+                .put("enabled", true)
+                .put("verifyEmail", true)
+                .put("defaultRoleCode", "user")
+                .put("needAudit", false);
+
+        assertThatThrownBy(() -> registry.normalize("register", input))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("注册滑块验证开关不能为空");
+    }
+
+    @Test
+    void parsesTheRegistrationCaptchaSwitchIndependentlyFromEmailVerification() {
+        ObjectNode input = objectMapper.createObjectNode()
+                .put("enabled", true)
+                .put("captchaEnabled", false)
+                .put("verifyEmail", true)
+                .put("defaultRoleCode", "user")
+                .put("needAudit", false);
+
+        RegistrationSettings config = (RegistrationSettings) registry.normalize("register", input).value();
+
+        assertThat(config.getCaptchaEnabled()).isFalse();
+        assertThat(config.getVerifyEmail()).isTrue();
     }
 
     @Test

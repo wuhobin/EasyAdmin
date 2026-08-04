@@ -8,6 +8,7 @@ import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.constants.IdentityConstants;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MailVerificationOrchestrator {
 
     private final ObjectProvider<MailVerificationService> mailVerificationServiceProvider;
@@ -34,7 +36,8 @@ public class MailVerificationOrchestrator {
         } catch (VerificationCooldownException exception) {
             throw new BizException(IdentityConstants.EMAIL_CODE_SEND_TOO_FREQUENT_MESSAGE);
         } catch (VerificationException | IllegalArgumentException exception) {
-            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_FAILED_MESSAGE);
+            log.error("Failed to send verification code to {} for {}", email, scene, exception);
+            throw new BizException(IdentityConstants.EMAIL_CODE_SEND_FAILED_MESSAGE, exception);
         }
     }
 

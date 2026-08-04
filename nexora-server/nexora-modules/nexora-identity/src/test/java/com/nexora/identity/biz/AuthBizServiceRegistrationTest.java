@@ -98,6 +98,7 @@ class AuthBizServiceRegistrationTest {
         verify(mailVerificationOrchestrator).sendCode(emailCaptor.capture(), sceneCaptor.capture());
         assertThat(emailCaptor.getValue()).isEqualTo("user@example.com");
         assertThat(sceneCaptor.getValue()).isEqualTo(CommonVerificationScene.REGISTER);
+        verify(imageVerificationService, never()).verifyAndConsume(any());
     }
 
     @Test
@@ -164,6 +165,32 @@ class AuthBizServiceRegistrationTest {
         verify(userService).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(SysUserStatusEnum.PENDING.getCode());
         verify(mailVerificationOrchestrator, never()).verifyCode(anyString(), any(), anyString());
+    }
+
+    @Test
+    void createsAUserWithoutImageCaptchaWhenRegistrationCaptchaIsDisabled() {
+        SysRole role = new SysRole();
+        role.setId(9);
+        RegistrationSettings config = registerConfig();
+        config.setCaptchaEnabled(false);
+        config.setVerifyEmail(false);
+        when(configReader.register()).thenReturn(config);
+        when(passwordPolicyValidator.validateNewPassword(any())).thenAnswer(
+                invocation -> invocation.getArgument(0));
+        when(roleService.getByCode("user")).thenReturn(role);
+        doAnswer(invocation -> {
+            SysUser user = invocation.getArgument(0);
+            user.setId(42);
+            return true;
+        }).when(userService).save(any(SysUser.class));
+
+        bizService.register(form("user@example.com", null, "secret"));
+
+        verify(imageVerificationService, never()).verifyAndConsume(any());
+        verify(mailVerificationOrchestrator, never()).verifyCode(anyString(), any(), anyString());
+        verify(configReader).register();
+        verify(userService).save(any(SysUser.class));
+        verify(roleService).addUserRoles(42, List.of(9));
     }
 
     @Test
@@ -244,6 +271,7 @@ class AuthBizServiceRegistrationTest {
     private static RegistrationSettings registerConfig() {
         RegistrationSettings config = new RegistrationSettings();
         config.setEnabled(true);
+        config.setCaptchaEnabled(true);
         config.setVerifyEmail(true);
         config.setDefaultRoleCode("user");
         config.setNeedAudit(false);

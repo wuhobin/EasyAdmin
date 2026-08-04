@@ -97,9 +97,10 @@ public class SysConfigGroupBizService {
                         system.getWatermarkEnabled(), system.getWatermarkType(),
                         system.getWatermarkCustomText(), system.getWatermarkOpacity()),
                 new SysConfigPublicVo.RegisterConfig(
-                        register.getEnabled(), register.getVerifyEmail(), register.getNeedAudit()),
+                        register.getEnabled(), register.getCaptchaEnabled(),
+                        register.getVerifyEmail(), register.getNeedAudit()),
                 new SysConfigPublicVo.LoginConfig(
-                        login.getCaptchaEnabled(), login.getRememberMeEnabled()),
+                        login.getRememberMeEnabled()),
                 new SysConfigPublicVo.PasswordConfig(
                         password.getMinLength(), password.getMaxLength(),
                         password.getRequireUppercase(), password.getRequireLowercase(),

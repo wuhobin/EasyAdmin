@@ -34,15 +34,34 @@ public class DatabaseMailVerificationService implements MailVerificationService 
         if (!Boolean.TRUE.equals(config.getEnabled())) {
             throw new IllegalArgumentException(MailConstants.SYSTEM_MAIL_DISABLED_MESSAGE);
         }
-        delegate(mailSenderFactory.create(config), mailSenderFactory.fromAddress(config)).send(request);
+        delegate(mailSenderFactory.create(config), config.getUsername(), scopedProperties(config)).send(request);
     }
 
     @Override
     public boolean verifyAndConsume(MailVerificationVerifyRequest request) {
-        return delegate(new JavaMailSenderImpl(), UNUSED_FROM_ADDRESS).verifyAndConsume(request);
+        return delegate(new JavaMailSenderImpl(), UNUSED_FROM_ADDRESS, properties).verifyAndConsume(request);
     }
 
-    private DefaultMailVerificationService delegate(JavaMailSender mailSender, String from) {
-        return new DefaultMailVerificationService(mailSender, repository, codeGenerator, properties, from);
+    private DefaultMailVerificationService delegate(JavaMailSender mailSender, String from,
+                                                     VerificationProperties delegateProperties) {
+        return new DefaultMailVerificationService(
+                mailSender, repository, codeGenerator, delegateProperties, from);
+    }
+
+    private VerificationProperties scopedProperties(EmailSettings config) {
+        VerificationProperties scoped = new VerificationProperties();
+        scoped.setKeyPrefix(properties.getKeyPrefix());
+        scoped.setImage(properties.getImage());
+        scoped.setSms(properties.getSms());
+
+        VerificationProperties.MailProperties source = properties.getMail();
+        VerificationProperties.MailProperties mail = scoped.getMail();
+        mail.setEnabled(source.isEnabled());
+        mail.setFrom(source.getFrom());
+        mail.setFromName(config.getFromName());
+        mail.setCodeLength(source.getCodeLength());
+        mail.setExpireTime(source.getExpireTime());
+        mail.setCooldown(source.getCooldown());
+        return scoped;
     }
 }

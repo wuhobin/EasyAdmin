@@ -17,13 +17,13 @@ export interface SystemConfig {
 
 export interface RegisterConfig {
   enabled: boolean
+  captchaEnabled: boolean
   verifyEmail: boolean
   defaultRoleCode: string
   needAudit: boolean
 }
 
 export interface LoginConfig {
-  captchaEnabled: boolean
   maxRetryCount: number
   lockTimeMinutes: number
   rememberMeEnabled: boolean
@@ -79,12 +79,12 @@ export interface SysConfigGroupDetail<T extends ConfigGroupCode = ConfigGroupCod
 
 export interface PublicRegisterConfig {
   enabled: boolean
+  captchaEnabled: boolean
   verifyEmail: boolean
   needAudit: boolean
 }
 
 export interface PublicLoginConfig {
-  captchaEnabled: boolean
   rememberMeEnabled: boolean
 }
 

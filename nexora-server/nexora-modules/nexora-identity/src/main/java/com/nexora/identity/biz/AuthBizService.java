@@ -49,10 +49,6 @@ public class AuthBizService {
                 InputValidator.requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
         String password = requireLoginPassword(form.getPassword());
         LoginSettings loginConfig = configReader.login();
-        if (Boolean.TRUE.equals(loginConfig.getCaptchaEnabled())) {
-            verifyImageCaptcha(InputValidator.requireText(
-                    form.getCaptchaId(), IdentityConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE));
-        }
         loginSecurityService.assertNotLocked(email, loginConfig);
         SysUser user = sysUserService.getByEmail(email);
         loginSecurityService.validateCredentials(email, password, user, loginConfig);
@@ -82,15 +78,20 @@ public class AuthBizService {
         SysRole role = registrationService.requireRegistrationRole(registerConfig);
         String email = StringUtils.normalizeEmail(
                 InputValidator.requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
-        String captchaId = InputValidator.requireText(
-                form.getCaptchaId(), IdentityConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
+        String captchaId = null;
+        if (Boolean.TRUE.equals(registerConfig.getCaptchaEnabled())) {
+            captchaId = InputValidator.requireText(
+                    form.getCaptchaId(), IdentityConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
+        }
         registrationService.ensureEmailAvailable(email);
-        verifyImageCaptcha(captchaId);
+        if (captchaId != null) {
+            verifyImageCaptcha(captchaId);
+        }
         if (Boolean.TRUE.equals(registerConfig.getVerifyEmail())) {
             mailVerificationOrchestrator.verifyCode(email, CommonVerificationScene.REGISTER,
                     InputValidator.requireText(form.getCode(), IdentityConstants.EMAIL_CODE_REQUIRED_MESSAGE));
         }
-        registrationService.register(form);
+        registrationService.register(form, registerConfig, role);
     }
 
     // ---- Delegated to PasswordResetService ----

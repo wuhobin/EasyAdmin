@@ -49,24 +49,33 @@ class SysConfigGroupSchemaTest {
     }
 
     @Test
-    void incrementalSqlMigratesTheTwoLegacyValuesAndDropsLegacyObjects() throws Exception {
+    void captchaConfigurationBelongsToRegistration() throws Exception {
         Path repositoryRoot = repositoryRoot();
+        String initializationSql = Files.readString(
+                repositoryRoot.resolve("nexora-admin.sql"), StandardCharsets.UTF_8);
+        String registerInsert = initializationSql.lines()
+                .filter(line -> line.contains("'register', '注册配置'"))
+                .findFirst()
+                .orElseThrow();
+        String loginInsert = initializationSql.lines()
+                .filter(line -> line.contains("'login', '登录配置'"))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(registerInsert).contains("\"captchaEnabled\":true");
+        assertThat(loginInsert).doesNotContain("\"captchaEnabled\"");
+
         String migrationSql = Files.readString(repositoryRoot.resolve(
-                Path.of("deploy", "sql", "20260731_replace_sys_config.sql")), StandardCharsets.UTF_8);
+                Path.of("deploy", "sql", "20260804_move_login_captcha_to_register.sql")),
+                StandardCharsets.UTF_8);
 
         assertThat(migrationSql).contains(
-                "CREATE TABLE `sys_config_group`",
-                "('system', '系统配置'",
-                "('register', '注册配置'",
-                "('login', '登录配置'",
-                "('password', '密码配置'",
-                "WHERE `config_key` = 'register.enabled'",
-                "WHERE `config_key` = 'register.role-code'",
-                "DELETE FROM `sys_role_menu` WHERE `menu_id` IN (131, 133)",
-                "DELETE FROM `sys_menu` WHERE `id` IN (131, 133)",
-                "DROP TABLE `sys_config`");
-        assertThat(migrationSql).doesNotContain(
-                "`group_icon`", "`status`", "`remark`", "`version`");
+                "JSON_SET(",
+                "'$.captchaEnabled'",
+                "CAST('true' AS JSON)",
+                "WHERE `group_code` = 'register'",
+                "JSON_REMOVE(`config_value`, '$.captchaEnabled')",
+                "WHERE `group_code` = 'login'");
     }
 
     private static Path repositoryRoot() {

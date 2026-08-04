@@ -6,11 +6,10 @@ export interface AuthParams {
   code?: string
   rememberMe: boolean
   source?: string
-  captchaId?: string
 }
 
 export type RegisterParams = Pick<AuthParams, 'email' | 'password' | 'code' | 'source'> & {
-  captchaId: string
+  captchaId?: string
 }
 
 export type ResetPasswordParams = Pick<AuthParams, 'email' | 'password' | 'code'>

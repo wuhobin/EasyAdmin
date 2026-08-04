@@ -1,10 +1,6 @@
 <template>
   <section class="form-section">
     <div class="section-content form-grid two-columns">
-      <el-form-item label="登录滑块验证" prop="captchaEnabled">
-        <el-switch v-model="model.captchaEnabled" />
-        <span class="form-hint">滑块失败不累计密码错误。</span>
-      </el-form-item>
       <el-form-item label="允许记住我" prop="rememberMeEnabled">
         <el-switch v-model="model.rememberMeEnabled" />
         <span class="form-hint">关闭后使用普通会话时长。</span>

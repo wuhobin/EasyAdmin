@@ -52,7 +52,11 @@ test('authentication API types match the shared login and registration form', ()
   assert.match(authApiSource, /email:\s*string/)
   assert.match(authApiSource, /password:\s*string/)
   assert.match(authApiSource, /code\?:\s*string/)
-  assert.match(authApiSource, /captchaId\?:\s*string/)
+  const authParamsSource = authApiSource.match(
+    /export interface AuthParams\s*\{[\s\S]*?\n\}/
+  )?.[0] ?? ''
+  assert.doesNotMatch(authParamsSource, /captchaId/)
+  assert.match(authApiSource, /export type RegisterParams[\s\S]*captchaId\?:\s*string/)
   assert.doesNotMatch(authApiSource, /username:\s*string/)
   assert.match(authApiSource, /Promise<ApiResponse<LoginResult>>/)
   assert.match(authApiSource, /Promise<ApiResponse<CurrentUserResult>>/)

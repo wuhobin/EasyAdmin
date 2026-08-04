@@ -45,14 +45,10 @@ public class RegistrationService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void register(AuthForm form) {
-        RegistrationSettings registerConfig = requireRegistrationConfig();
-        SysRole role = requireRegistrationRole(registerConfig);
+    public void register(AuthForm form, RegistrationSettings registerConfig, SysRole role) {
         String email = StringUtils.normalizeEmail(
                 InputValidator.requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
         String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
-        String captchaId = InputValidator.requireText(
-                form.getCaptchaId(), IdentityConstants.IMAGE_CAPTCHA_REQUIRED_MESSAGE);
         ensureEmailAvailable(email);
         // captcha verification is handled by AuthBizService caller
 

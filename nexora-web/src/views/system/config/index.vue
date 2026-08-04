@@ -103,12 +103,12 @@ const forms = reactive<ConfigValueByGroup>({
   },
   register: {
     enabled: true,
+    captchaEnabled: true,
     verifyEmail: true,
     defaultRoleCode: 'user',
     needAudit: false
   },
   login: {
-    captchaEnabled: false,
     maxRetryCount: 5,
     lockTimeMinutes: 30,
     rememberMeEnabled: true,
