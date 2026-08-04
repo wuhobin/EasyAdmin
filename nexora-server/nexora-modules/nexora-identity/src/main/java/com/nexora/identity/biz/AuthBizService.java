@@ -1,6 +1,5 @@
 package com.nexora.identity.biz;
 
-import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
 import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.common.utils.bean.BeanUtils;
@@ -14,7 +13,6 @@ import cloud.tianai.captcha.validator.common.model.dto.ImageCaptchaTrack;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.security.NexoraPermissionProvider;
 import com.nexora.identity.constants.IdentityConstants;
-import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.constants.ResultCode;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.system.api.LoginSettings;
@@ -29,8 +27,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class AuthBizService {
@@ -43,6 +39,7 @@ public class AuthBizService {
     private final RegistrationService registrationService;
     private final PasswordResetService passwordResetService;
     private final MailVerificationOrchestrator mailVerificationOrchestrator;
+    private final OnlineSessionLifecycleService onlineSessionLifecycleService;
 
     public LoginUserInfoVo login(AuthForm form) {
         String email = StringUtils.normalizeEmail(
@@ -54,15 +51,26 @@ public class AuthBizService {
         loginSecurityService.validateCredentials(email, password, user, loginConfig);
         loginSecurityService.clearFailures(email);
         loginSecurityService.validateUserStatus(user);
+        String sessionId = onlineSessionLifecycleService.createSessionId();
         if (Boolean.TRUE.equals(loginConfig.getSingleLogin())) {
-            SecurityUtils.kickout(user.getId());
+            onlineSessionLifecycleService.invalidateUserSessions(user.getId());
         }
         SecurityUtils.login(user.getId(), new SaLoginParameter()
+                .setDeviceId(sessionId)
+                .setIsShare(false)
                 .setTimeout(LoginSecurityService.tokenTimeout(loginConfig, form.isRememberMe())));
 
-        LoginUserInfoVo loginUserInfo = toLoginUserInfo(user);
-        loginUserInfo.setToken(SecurityUtils.getTokenValue());
-        SecurityUtils.setSessionAttribute(IdentityConstants.CURRENT_USER, loginUserInfo);
+        LoginUserInfoVo loginUserInfo;
+        try {
+            loginUserInfo = toLoginUserInfo(user);
+            loginUserInfo.setToken(SecurityUtils.getTokenValue());
+            SecurityUtils.setSessionAttribute(IdentityConstants.CURRENT_USER, loginUserInfo);
+        } catch (RuntimeException exception) {
+            onlineSessionLifecycleService.rollbackUnregisteredSession(
+                    user.getId(), sessionId, exception);
+            throw exception;
+        }
+        onlineSessionLifecycleService.register(user, sessionId);
         return loginUserInfo;
     }
 
@@ -118,7 +126,7 @@ public class AuthBizService {
     // ---- Session ----
 
     public void logout() {
-        SecurityUtils.logout();
+        onlineSessionLifecycleService.logoutCurrentSession();
     }
 
     public LoginUserInfoVo getLoginUserInfo() {

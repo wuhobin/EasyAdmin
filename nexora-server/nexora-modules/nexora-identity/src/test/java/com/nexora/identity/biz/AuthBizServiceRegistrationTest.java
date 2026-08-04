@@ -51,7 +51,8 @@ class AuthBizServiceRegistrationTest {
             new LoginSecurityService(mock(LoginRetryCache.class)),
             imageVerificationService,
             registrationService, mock(PasswordResetService.class),
-            mailVerificationOrchestrator);
+            mailVerificationOrchestrator,
+            mock(OnlineSessionLifecycleService.class));
 
     @Test
     void disabledRegistrationIsRejected() {

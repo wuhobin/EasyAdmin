@@ -150,7 +150,8 @@ class AuthBizServiceTest {
                 new LoginSecurityService(mock(LoginRetryCache.class)),
                 mock(ImageVerificationService.class),
                 mock(RegistrationService.class), mock(PasswordResetService.class),
-                mock(MailVerificationOrchestrator.class));
+                mock(MailVerificationOrchestrator.class),
+                mock(OnlineSessionLifecycleService.class));
     }
 
     private static LoginSettings loginConfig() {

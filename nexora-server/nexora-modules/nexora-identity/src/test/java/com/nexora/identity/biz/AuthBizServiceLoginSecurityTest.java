@@ -31,6 +31,8 @@ class AuthBizServiceLoginSecurityTest {
     private final SystemConfigReader configReader = mock(SystemConfigReader.class);
     private final LoginRetryCache loginRetryCache = mock(LoginRetryCache.class);
     private final ImageVerificationService imageVerificationService = mock(ImageVerificationService.class);
+    private final OnlineSessionLifecycleService onlineSessionLifecycleService =
+            mock(OnlineSessionLifecycleService.class);
     private final AuthBizService bizService = createService();
 
     @Test
@@ -113,7 +115,7 @@ class AuthBizServiceLoginSecurityTest {
 
             bizService.login(loginForm("secret", null));
 
-            securityUtils.verify(() -> SecurityUtils.kickout(7));
+            verify(onlineSessionLifecycleService).invalidateUserSessions(7);
         }
     }
 
@@ -126,7 +128,8 @@ class AuthBizServiceLoginSecurityTest {
                 new LoginSecurityService(loginRetryCache),
                 imageVerificationService,
                 mock(RegistrationService.class), mock(PasswordResetService.class),
-                mock(MailVerificationOrchestrator.class));
+                mock(MailVerificationOrchestrator.class),
+                onlineSessionLifecycleService);
     }
 
     private static LoginSettings loginConfig() {
