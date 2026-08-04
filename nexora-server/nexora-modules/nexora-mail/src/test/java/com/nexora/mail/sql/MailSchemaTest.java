@@ -37,7 +37,7 @@ class MailSchemaTest {
         assertThat(migrationSql).contains("ADD UNIQUE INDEX `uk_mail_account_owner_email`");
 
         String mapperXml = Files.readString(repositoryRoot.resolve(
-                "nexora-server/nexora-boot/src/main/resources/mapper/MailAccountMapper.xml"),
+                "nexora-server/nexora-modules/nexora-mail/src/main/resources/mapper/MailAccountMapper.xml"),
                 StandardCharsets.UTF_8);
         assertThat(mapperXml).contains("INNER JOIN sys_user su ON su.id = ma.owner_id");
         assertThat(mapperXml).contains("AND su.status = 1");

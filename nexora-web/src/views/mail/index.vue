@@ -1,6 +1,11 @@
 <template>
   <div class="mail-page">
     <header class="mail-header">
+      <div>
+        <p class="mail-eyebrow">MAIL CENTER</p>
+        <h1>最新邮件</h1>
+        <p class="mail-subtitle">邮件实时来自邮箱服务器，系统不保存历史正文。</p>
+      </div>
       <div class="mail-header-actions">
         <span class="refresh-status">
           <i :class="['status-pulse', { active: autoRefresh }]" />
