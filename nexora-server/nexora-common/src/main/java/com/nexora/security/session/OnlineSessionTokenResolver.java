@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,10 @@ public class OnlineSessionTokenResolver {
 
     public Optional<String> currentSessionId() {
         SaTerminalInfo terminal = stpLogic().getTerminalInfo();
-        return terminal == null ? Optional.empty() : optionalText(terminal.getDeviceId());
+        return terminal == null
+                ? Optional.empty()
+                : optionalText(terminal.getDeviceId())
+                        .filter(OnlineSessionTokenResolver::isPublicSessionId);
     }
 
     public long currentTokenTimeout() {
@@ -50,7 +54,7 @@ public class OnlineSessionTokenResolver {
         return terminals.stream()
                 .filter(terminal -> isValidTerminal(loginId, terminal))
                 .map(SaTerminalInfo::getDeviceId)
-                .filter(id -> id != null && !id.isBlank())
+                .filter(OnlineSessionTokenResolver::isPublicSessionId)
                 .collect(Collectors.collectingAndThen(
                         Collectors.toSet(), Collections::unmodifiableSet));
     }
@@ -73,7 +77,7 @@ public class OnlineSessionTokenResolver {
     }
 
     private Optional<SaTerminalInfo> findValidTerminal(Object loginId, String sessionId) {
-        if (loginId == null || sessionId == null || sessionId.isBlank()) {
+        if (loginId == null || !isPublicSessionId(sessionId)) {
             return Optional.empty();
         }
         List<SaTerminalInfo> terminals = stpLogic().getTerminalListByLoginId(loginId);
@@ -101,5 +105,17 @@ public class OnlineSessionTokenResolver {
 
     private static Optional<String> optionalText(String value) {
         return value == null || value.isBlank() ? Optional.empty() : Optional.of(value);
+    }
+
+    private static boolean isPublicSessionId(String value) {
+        if (value == null) {
+            return false;
+        }
+        try {
+            UUID sessionId = UUID.fromString(value);
+            return sessionId.version() == 4 && sessionId.toString().equals(value);
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
     }
 }

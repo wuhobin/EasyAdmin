@@ -26,6 +26,8 @@ class OnlineSessionRegistryTest {
     private static final String TOUCH_KEY = "nexora:online-session:touch:" + SESSION_ID;
     private static final String INDEX_KEY = "nexora:online-session:index";
     private static final String USER_KEY = "nexora:online-session:user:7";
+    private static final String SECOND_USER_KEY = "nexora:online-session:user:8";
+    private static final String USER_KEY_PATTERN = "nexora:online-session:user:*";
     private static final LocalDateTime LOGIN_TIME = LocalDateTime.of(2026, 8, 4, 10, 30);
 
     private final RedisCache redisCache = mock(RedisCache.class);
@@ -116,6 +118,19 @@ class OnlineSessionRegistryTest {
         verify(redisCache).deleteObject(List.of(DATA_KEY, LAST_ACCESS_KEY, TOUCH_KEY));
         verify(redisCache).removeZset(INDEX_KEY, SESSION_ID);
         verify(redisCache).removeSet(USER_KEY, SESSION_ID);
+        verify(redisCache).deleteObject(USER_KEY);
+    }
+
+    @Test
+    void removesExpiredSessionFromEveryUserIndex() {
+        when(redisCache.scan(USER_KEY_PATTERN)).thenReturn(Set.of(USER_KEY, SECOND_USER_KEY));
+        when(redisCache.getCacheSet(USER_KEY)).thenReturn(Set.of());
+        when(redisCache.getCacheSet(SECOND_USER_KEY)).thenReturn(Set.of("another-session"));
+
+        registry.remove(SESSION_ID);
+
+        verify(redisCache).removeSet(USER_KEY, SESSION_ID);
+        verify(redisCache).removeSet(SECOND_USER_KEY, SESSION_ID);
         verify(redisCache).deleteObject(USER_KEY);
     }
 

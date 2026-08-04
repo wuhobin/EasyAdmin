@@ -113,11 +113,9 @@ public class OnlineSessionRegistry {
                 touchKey(sessionId)));
         redisCache.removeZset(indexKey(), sessionId);
         if (userId != null) {
-            redisCache.removeSet(userKey(userId), sessionId);
-            Set<Object> remaining = redisCache.getCacheSet(userKey(userId));
-            if (remaining == null || remaining.isEmpty()) {
-                redisCache.deleteObject(userKey(userId));
-            }
+            removeFromUserIndex(userKey(userId), sessionId);
+        } else {
+            removeFromAllUserIndexes(sessionId);
         }
     }
 
@@ -212,6 +210,22 @@ public class OnlineSessionRegistry {
                 .toEpochMilli();
     }
 
+    private void removeFromAllUserIndexes(String sessionId) {
+        Collection<String> userKeys = redisCache.scan(userKeyPattern());
+        if (userKeys == null || userKeys.isEmpty()) {
+            return;
+        }
+        userKeys.forEach(key -> removeFromUserIndex(key, sessionId));
+    }
+
+    private void removeFromUserIndex(String key, String sessionId) {
+        redisCache.removeSet(key, sessionId);
+        Set<Object> remaining = redisCache.getCacheSet(key);
+        if (remaining == null || remaining.isEmpty()) {
+            redisCache.deleteObject(key);
+        }
+    }
+
     static String dataKey(String sessionId) {
         return RedisKeyUtil.generate(RedisConstants.ONLINE_SESSION_DATA_KEY, sessionId);
     }
@@ -230,5 +244,9 @@ public class OnlineSessionRegistry {
 
     static String userKey(Integer userId) {
         return RedisKeyUtil.generate(RedisConstants.ONLINE_SESSION_USER_KEY, userId.toString());
+    }
+
+    static String userKeyPattern() {
+        return RedisKeyUtil.generate(RedisConstants.ONLINE_SESSION_USER_KEY, "*");
     }
 }
