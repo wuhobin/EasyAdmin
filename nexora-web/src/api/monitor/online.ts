@@ -27,10 +27,24 @@ export interface OnlineSessionPage {
   size: number
 }
 
+export type ForceLogoutOutcome = 'LOGGED_OUT' | 'ALREADY_OFFLINE'
+
+export interface ForceLogoutResult {
+  outcome: ForceLogoutOutcome
+  currentSession: boolean
+}
+
 export function getOnlineSessionListApi(params: OnlineSessionQuery) {
   return request<OnlineSessionPage>({
     url: '/monitor/online/list',
     method: 'get',
     params
+  })
+}
+
+export function forceLogoutOnlineSessionApi(sessionId: string) {
+  return request<ForceLogoutResult>({
+    url: `/monitor/online/${sessionId}`,
+    method: 'delete'
   })
 }
