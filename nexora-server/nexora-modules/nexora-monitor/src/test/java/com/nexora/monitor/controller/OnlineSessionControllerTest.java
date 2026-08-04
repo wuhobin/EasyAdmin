@@ -4,8 +4,12 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexora.monitor.biz.OnlineSessionBizService;
 import com.nexora.monitor.domain.form.OnlineSessionQueryForm;
+import com.nexora.monitor.domain.vo.ForceLogoutResultVo;
 import com.nexora.monitor.domain.vo.OnlineSessionVo;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -48,9 +52,56 @@ class OnlineSessionControllerTest {
     }
 
     @Test
+    void exposesThePermissionProtectedForceLogoutEndpoint() throws Exception {
+        Method method = OnlineSessionController.class
+                .getMethod("forceLogout", String.class);
+
+        assertThat(method.getAnnotation(DeleteMapping.class).value())
+                .containsExactly("/{sessionId}");
+        assertThat(method.getAnnotation(SaCheckPermission.class).value())
+                .containsExactly("sys:online:forceLogout");
+    }
+
+    @Test
+    void rejectsNonUuidSessionIdsBeforeControllerInvocation() throws Exception {
+        OnlineSessionController controller =
+                new OnlineSessionController(mock(OnlineSessionBizService.class));
+        Method method = OnlineSessionController.class
+                .getMethod("forceLogout", String.class);
+
+        try (ValidatorFactory factory =
+                     Validation.buildDefaultValidatorFactory()) {
+            assertThat(factory.getValidator().forExecutables()
+                    .validateParameters(
+                            controller, method, new Object[]{"credential-value"}))
+                    .hasSize(1);
+        }
+    }
+
+    @Test
+    void delegatesForceLogoutAndReturnsItsIdempotentOutcome() {
+        OnlineSessionBizService bizService = mock(OnlineSessionBizService.class);
+        OnlineSessionController controller = new OnlineSessionController(bizService);
+        ForceLogoutResultVo outcome = new ForceLogoutResultVo(
+                ForceLogoutResultVo.Outcome.LOGGED_OUT, true);
+        when(bizService.forceLogout("550e8400-e29b-41d4-a716-446655440000"))
+                .thenReturn(outcome);
+
+        var result = controller.forceLogout(
+                "550e8400-e29b-41d4-a716-446655440000");
+
+        assertThat(result.getData()).isSameAs(outcome);
+        verify(bizService)
+                .forceLogout("550e8400-e29b-41d4-a716-446655440000");
+    }
+
+    @Test
     void responseContractDoesNotExposeCredentialsOrInternalStatus() {
         assertThat(Arrays.stream(OnlineSessionVo.class.getDeclaredFields())
                 .map(java.lang.reflect.Field::getName))
                 .doesNotContain("token", "tokenValue", "userId", "userAgent", "status");
+        assertThat(Arrays.stream(ForceLogoutResultVo.class.getDeclaredFields())
+                .map(java.lang.reflect.Field::getName))
+                .doesNotContain("token", "tokenValue", "userId", "userAgent");
     }
 }

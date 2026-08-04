@@ -2,6 +2,7 @@ package com.nexora.monitor.biz;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nexora.monitor.domain.form.OnlineSessionQueryForm;
+import com.nexora.monitor.domain.vo.ForceLogoutResultVo;
 import com.nexora.monitor.domain.vo.OnlineSessionVo;
 import com.nexora.monitor.infrastructure.IpRegionUtils;
 import com.nexora.security.session.OnlineSessionRecord;
@@ -19,10 +20,13 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class OnlineSessionBizServiceTest {
@@ -230,6 +234,93 @@ class OnlineSessionBizServiceTest {
                     .extracting(OnlineSessionVo::getSessionId)
                     .containsExactly(FIRST_SESSION_ID);
         }
+    }
+
+    @Test
+    void forceLogoutInvalidatesOnlyTheSelectedDeviceSession() {
+        OnlineSessionRecord target = record(
+                FIRST_SESSION_ID, 7, "user@example.com", "User",
+                "10.0.0.1", LOGIN_TIME);
+        when(onlineSessionRegistry.find(FIRST_SESSION_ID))
+                .thenReturn(Optional.of(target));
+        when(tokenResolver.currentSessionId())
+                .thenReturn(Optional.of(SECOND_SESSION_ID));
+        when(tokenResolver.logoutSession(7, FIRST_SESSION_ID))
+                .thenReturn(true);
+
+        ForceLogoutResultVo result = service.forceLogout(FIRST_SESSION_ID);
+
+        assertThat(result.getOutcome())
+                .isEqualTo(ForceLogoutResultVo.Outcome.LOGGED_OUT);
+        assertThat(result.isCurrentSession()).isFalse();
+        verify(tokenResolver).logoutSession(7, FIRST_SESSION_ID);
+        verify(onlineSessionRegistry).remove(FIRST_SESSION_ID, 7);
+        verify(onlineSessionRegistry, never()).removeByUserId(7);
+    }
+
+    @Test
+    void forceLogoutCalculatesCurrentSessionBeforeInvalidatingIt() {
+        OnlineSessionRecord target = record(
+                FIRST_SESSION_ID, 7, "user@example.com", "User",
+                "10.0.0.1", LOGIN_TIME);
+        when(onlineSessionRegistry.find(FIRST_SESSION_ID))
+                .thenReturn(Optional.of(target));
+        when(tokenResolver.currentSessionId())
+                .thenReturn(Optional.of(FIRST_SESSION_ID));
+        when(tokenResolver.logoutSession(7, FIRST_SESSION_ID))
+                .thenReturn(true);
+
+        ForceLogoutResultVo result = service.forceLogout(
+                FIRST_SESSION_ID.toUpperCase());
+
+        assertThat(result.getOutcome())
+                .isEqualTo(ForceLogoutResultVo.Outcome.LOGGED_OUT);
+        assertThat(result.isCurrentSession()).isTrue();
+        verify(tokenResolver).logoutSession(7, FIRST_SESSION_ID);
+    }
+
+    @Test
+    void repeatedOrRacingForceLogoutReturnsAlreadyOfflineAndCleansState() {
+        OnlineSessionRecord target = record(
+                FIRST_SESSION_ID, 7, "user@example.com", "User",
+                "10.0.0.1", LOGIN_TIME);
+        when(onlineSessionRegistry.find(FIRST_SESSION_ID))
+                .thenReturn(Optional.of(target));
+        when(tokenResolver.currentSessionId()).thenReturn(Optional.empty());
+        when(tokenResolver.logoutSession(7, FIRST_SESSION_ID))
+                .thenReturn(false);
+
+        ForceLogoutResultVo result = service.forceLogout(FIRST_SESSION_ID);
+
+        assertThat(result.getOutcome())
+                .isEqualTo(ForceLogoutResultVo.Outcome.ALREADY_OFFLINE);
+        verify(onlineSessionRegistry).remove(FIRST_SESSION_ID, 7);
+    }
+
+    @Test
+    void missingRegistryRecordReturnsAlreadyOfflineAndCleansStaleIndexes() {
+        when(onlineSessionRegistry.find(FIRST_SESSION_ID))
+                .thenReturn(Optional.empty());
+
+        ForceLogoutResultVo result = service.forceLogout(FIRST_SESSION_ID);
+
+        assertThat(result.getOutcome())
+                .isEqualTo(ForceLogoutResultVo.Outcome.ALREADY_OFFLINE);
+        assertThat(result.isCurrentSession()).isFalse();
+        verify(onlineSessionRegistry)
+                .removeStaleSessions(List.of(FIRST_SESSION_ID));
+        verifyNoInteractions(tokenResolver);
+    }
+
+    @Test
+    void rejectsCredentialsAndNonUuidV4ValuesBeforeRegistryAccess() {
+        assertThatThrownBy(() -> service.forceLogout("credential-value"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.forceLogout(
+                "550e8400-e29b-11d4-a716-446655440000"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verifyNoInteractions(onlineSessionRegistry, tokenResolver);
     }
 
     private static OnlineSessionRecord record(
