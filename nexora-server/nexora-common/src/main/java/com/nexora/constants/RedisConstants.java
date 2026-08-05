@@ -17,7 +17,7 @@ public class RedisConstants {
     /**
      * 用户授权信息 redis key
      */
-    public static final String SECURITY_AUTHORIZATION_KEY = "nexora:security:authorization";
+    public static final String SECURITY_PERMISSION_LIST_KEY = "nexora:user:permission-list";
 
     /**
      * 在线会话数据 redis key
@@ -48,10 +48,5 @@ public class RedisConstants {
      * 在线会话访问时间写入间隔（秒）
      */
     public static final long ONLINE_SESSION_TOUCH_INTERVAL_SECONDS = 60L;
-
-    /**
-     * 验证码有效期（分钟）
-     */
-    public static final Integer CAPTCHA_EXPIRATION = 1;
 
 }

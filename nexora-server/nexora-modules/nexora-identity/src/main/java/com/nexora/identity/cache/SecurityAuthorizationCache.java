@@ -75,7 +75,7 @@ public class SecurityAuthorizationCache {
     private void safeEvictAll() {
         try {
             redisCache.deleteByPattern(RedisKeyUtil.generate(
-                    RedisConstants.SECURITY_AUTHORIZATION_KEY, "*"));
+                    RedisConstants.SECURITY_PERMISSION_LIST_KEY, "*"));
         } catch (RuntimeException exception) {
             log.warn("Failed to evict all authorization caches", exception);
         }
@@ -96,7 +96,7 @@ public class SecurityAuthorizationCache {
     }
 
     private static String redisKey(Integer userId, AccountType accountType) {
-        return RedisKeyUtil.generate(RedisConstants.SECURITY_AUTHORIZATION_KEY,
+        return RedisKeyUtil.generate(RedisConstants.SECURITY_PERMISSION_LIST_KEY,
                 accountType.getCode(), userId.toString());
     }
 
