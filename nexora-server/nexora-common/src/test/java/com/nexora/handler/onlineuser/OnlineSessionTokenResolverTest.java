@@ -1,8 +1,7 @@
-package com.nexora.security.session;
+package com.nexora.handler.onlineuser;
 
 import cn.dev33.satoken.session.SaTerminalInfo;
 import cn.dev33.satoken.stp.StpLogic;
-import com.nexora.handler.onlineuser.OnlineSessionTokenResolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

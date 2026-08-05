@@ -52,12 +52,11 @@ public class AuthBizService {
         loginSecurityService.clearFailures(email);
         loginSecurityService.validateUserStatus(user);
         String sessionId = onlineSessionLifecycleService.createSessionId();
-        if (Boolean.TRUE.equals(loginConfig.getSingleLogin())) {
-            onlineSessionLifecycleService.invalidateUserSessions(user.getId());
-        }
+        boolean singleLogin = Boolean.TRUE.equals(loginConfig.getSingleLogin());
         SecurityUtils.login(user.getId(), new SaLoginParameter()
                 .setDeviceId(sessionId)
-                .setIsShare(false)
+                .setIsConcurrent(!singleLogin)
+                .setIsShare(true)
                 .setTimeout(LoginSecurityService.tokenTimeout(loginConfig, form.isRememberMe())));
 
         LoginUserInfoVo loginUserInfo;

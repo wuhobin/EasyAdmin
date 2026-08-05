@@ -39,6 +39,7 @@ public class OnlineSessionLifecycleService {
                     clientInfo.browser(),
                     clientInfo.os(),
                     LocalDateTime.now());
+            onlineSessionRegistry.removeByUserId(user.getId());
             onlineSessionRegistry.register(record, tokenResolver.currentTokenTimeout());
         } catch (RuntimeException exception) {
             rollbackNewSession(user.getId(), sessionId, exception);

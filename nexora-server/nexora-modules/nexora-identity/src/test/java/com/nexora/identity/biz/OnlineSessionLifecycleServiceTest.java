@@ -8,6 +8,7 @@ import com.nexora.handler.onlineuser.OnlineSessionRegistry;
 import com.nexora.handler.onlineuser.OnlineSessionTokenResolver;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.MockedStatic;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -62,7 +64,10 @@ class OnlineSessionLifecycleServiceTest {
         LocalDateTime after = LocalDateTime.now();
         ArgumentCaptor<OnlineSessionRecord> captor =
                 ArgumentCaptor.forClass(OnlineSessionRecord.class);
-        verify(registry).register(captor.capture(), org.mockito.ArgumentMatchers.eq(120L));
+        InOrder registrationOrder = inOrder(registry);
+        registrationOrder.verify(registry).removeByUserId(7);
+        registrationOrder.verify(registry)
+                .register(captor.capture(), org.mockito.ArgumentMatchers.eq(120L));
         OnlineSessionRecord record = captor.getValue();
         assertThat(record.sessionId()).isEqualTo(SESSION_ID);
         assertThat(record.userId()).isEqualTo(7);

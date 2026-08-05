@@ -49,7 +49,7 @@ class AuthBizServiceOnlineSessionTest {
             onlineSessionLifecycleService);
 
     @Test
-    void createsAnIndependentDeviceIdAndRegistryRecordForEveryLogin() {
+    void configuresConcurrentSharedLoginsWithFreshSessionSnapshots() {
         SysUser user = SysUser.builder()
                 .id(7)
                 .email("user@example.com")
@@ -78,8 +78,11 @@ class AuthBizServiceOnlineSessionTest {
                     .extracting(SaLoginParameter::getDeviceId)
                     .containsExactly(FIRST_SESSION_ID, SECOND_SESSION_ID);
             assertThat(parameters)
+                    .extracting(SaLoginParameter::getIsConcurrent)
+                    .containsOnly(true);
+            assertThat(parameters)
                     .extracting(SaLoginParameter::getIsShare)
-                    .containsOnly(false);
+                    .containsOnly(true);
             assertThat(parameters)
                     .extracting(SaLoginParameter::getTimeout)
                     .containsOnly(3_600L);
