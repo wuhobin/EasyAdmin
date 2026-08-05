@@ -1,4 +1,4 @@
-package com.nexora.security.session;
+package com.nexora.handler.onlineuser;
 
 import java.io.Serial;
 import java.io.Serializable;

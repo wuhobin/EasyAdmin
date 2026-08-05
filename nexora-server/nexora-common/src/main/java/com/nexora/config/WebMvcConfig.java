@@ -1,6 +1,6 @@
 package com.nexora.config;
 
-import com.nexora.security.session.OnlineSessionTouchInterceptor;
+import com.nexora.handler.onlineuser.OnlineSessionTouchInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

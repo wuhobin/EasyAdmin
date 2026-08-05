@@ -1,6 +1,6 @@
 package com.nexora.config;
 
-import com.nexora.security.session.OnlineSessionTouchInterceptor;
+import com.nexora.handler.onlineuser.OnlineSessionTouchInterceptor;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 

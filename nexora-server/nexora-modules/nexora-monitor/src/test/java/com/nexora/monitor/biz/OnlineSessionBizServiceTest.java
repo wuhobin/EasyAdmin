@@ -6,9 +6,9 @@ import com.nexora.monitor.domain.vo.ForceLogoutResultVo;
 import com.nexora.monitor.domain.vo.OnlineSessionVo;
 import com.nexora.monitor.infrastructure.IpRegionUtils;
 import com.nexora.monitor.infrastructure.OperationLogContext;
-import com.nexora.security.session.OnlineSessionRecord;
-import com.nexora.security.session.OnlineSessionRegistry;
-import com.nexora.security.session.OnlineSessionTokenResolver;
+import com.nexora.handler.onlineuser.OnlineSessionRecord;
+import com.nexora.handler.onlineuser.OnlineSessionRegistry;
+import com.nexora.handler.onlineuser.OnlineSessionTokenResolver;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.mockito.MockedStatic;
@@ -202,6 +202,25 @@ class OnlineSessionBizServiceTest {
                     .isEqualTo(idle.loginTime());
         }
 
+        verify(onlineSessionRegistry).removeStaleSessions(new LinkedHashSet<>(
+                List.of(FIRST_SESSION_ID, SECOND_SESSION_ID)));
+        verify(tokenResolver, times(1)).onlineSessionIds(7);
+    }
+
+    @Test
+    void cleanupInvalidSessionsRemovesMissingAndOfflineRecords() {
+        OnlineSessionRecord offline = record(
+                SECOND_SESSION_ID, 7, "offline@example.com", null,
+                "10.0.0.2", LOGIN_TIME);
+        List<String> indexedSessionIds = List.of(FIRST_SESSION_ID, SECOND_SESSION_ID);
+        when(onlineSessionRegistry.listSessionIds()).thenReturn(indexedSessionIds);
+        when(onlineSessionRegistry.findAll(indexedSessionIds))
+                .thenReturn(Map.of(SECOND_SESSION_ID, offline));
+        when(tokenResolver.onlineSessionIds(7)).thenReturn(Set.of());
+
+        int removedCount = service.cleanupInvalidSessions();
+
+        assertThat(removedCount).isEqualTo(2);
         verify(onlineSessionRegistry).removeStaleSessions(new LinkedHashSet<>(
                 List.of(FIRST_SESSION_ID, SECOND_SESSION_ID)));
         verify(tokenResolver, times(1)).onlineSessionIds(7);

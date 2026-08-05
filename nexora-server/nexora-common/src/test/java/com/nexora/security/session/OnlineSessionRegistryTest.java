@@ -2,6 +2,8 @@ package com.nexora.security.session;
 
 import cn.dev33.satoken.dao.SaTokenDao;
 import com.aurora.starter.redis.core.RedisCache;
+import com.nexora.handler.onlineuser.OnlineSessionRecord;
+import com.nexora.handler.onlineuser.OnlineSessionRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

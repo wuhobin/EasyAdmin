@@ -27,6 +27,23 @@ class OnlineUserMenuSchemaTest {
                 "'sys:online:forceLogout'");
     }
 
+    @Test
+    void initializationAndMigrationSqlContainOnlineSessionCleanupJob() throws Exception {
+        Path repositoryRoot = repositoryRoot();
+        String initializationSql = Files.readString(
+                repositoryRoot.resolve("nexora-admin.sql"), StandardCharsets.UTF_8);
+        String migrationSql = Files.readString(repositoryRoot.resolve(
+                "deploy/sql/20260805_online_session_cleanup_job.sql"), StandardCharsets.UTF_8);
+
+        assertThat(initializationSql).contains(
+                "'在线会话清理', 'SYSTEM', '0 0/10 * * * ?', "
+                        + "'onlineSessionCleanupTask.cleanupInvalidSessions()', '1', '3', '0'");
+        assertThat(migrationSql).contains(
+                "'0 0/10 * * * ?'",
+                "'onlineSessionCleanupTask.cleanupInvalidSessions()'",
+                "WHERE NOT EXISTS");
+    }
+
     private static Path repositoryRoot() {
         Path currentPath = Path.of("").toAbsolutePath().normalize();
         while (currentPath != null) {

@@ -1,4 +1,4 @@
-package com.nexora.security.session;
+package com.nexora.handler.onlineuser;
 
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.session.SaTerminalInfo;

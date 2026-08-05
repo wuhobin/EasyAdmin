@@ -1,5 +1,8 @@
 package com.nexora.security.session;
 
+import com.nexora.handler.onlineuser.OnlineSessionRegistry;
+import com.nexora.handler.onlineuser.OnlineSessionTokenResolver;
+import com.nexora.handler.onlineuser.OnlineSessionTouchInterceptor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;

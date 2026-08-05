@@ -63,12 +63,13 @@ CREATE TABLE `quartz_job`  (
   `misfire_policy` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '0' COMMENT 'misfire策略',
   `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '0' COMMENT '状态',
   PRIMARY KEY (`job_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '定时任务表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '定时任务表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of quartz_job
 -- ----------------------------
 INSERT INTO `quartz_job` VALUES (3, '邮箱新邮件检查', 'SYSTEM', '0 0 0 * * ?', 'mailFetchTask.checkNewMails()', '1', '3', '0');
+INSERT INTO `quartz_job` VALUES (4, '在线会话清理', 'SYSTEM', '0 0/10 * * * ?', 'onlineSessionCleanupTask.cleanupInvalidSessions()', '1', '3', '0');
 
 -- ----------------------------
 -- Table structure for quartz_job_log

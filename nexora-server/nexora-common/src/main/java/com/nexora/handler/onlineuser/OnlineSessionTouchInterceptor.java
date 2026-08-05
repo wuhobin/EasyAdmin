@@ -1,4 +1,4 @@
-package com.nexora.security.session;
+package com.nexora.handler.onlineuser;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -2,6 +2,7 @@ package com.nexora.security.session;
 
 import cn.dev33.satoken.session.SaTerminalInfo;
 import cn.dev33.satoken.stp.StpLogic;
+import com.nexora.handler.onlineuser.OnlineSessionTokenResolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -9,9 +9,9 @@ import com.nexora.monitor.domain.vo.OnlineSessionVo;
 import com.nexora.monitor.constants.OnlineSessionConstants;
 import com.nexora.monitor.infrastructure.IpRegionUtils;
 import com.nexora.monitor.infrastructure.OperationLogContext;
-import com.nexora.security.session.OnlineSessionRecord;
-import com.nexora.security.session.OnlineSessionRegistry;
-import com.nexora.security.session.OnlineSessionTokenResolver;
+import com.nexora.handler.onlineuser.OnlineSessionRecord;
+import com.nexora.handler.onlineuser.OnlineSessionRegistry;
+import com.nexora.handler.onlineuser.OnlineSessionTokenResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -38,20 +38,15 @@ public class OnlineSessionBizService {
 
     public IPage<OnlineSessionVo> list(OnlineSessionQueryForm form) {
         QueryCriteria criteria = QueryCriteria.from(form);
-        List<String> indexedSessionIds = onlineSessionRegistry.listSessionIds();
+        SessionScan scan = scanSessions();
+        List<String> indexedSessionIds = scan.indexedSessionIds();
         if (indexedSessionIds.isEmpty()) {
             return emptyPage(criteria);
         }
 
-        Map<String, OnlineSessionRecord> records =
-                onlineSessionRegistry.findAll(indexedSessionIds);
-        Map<Integer, Set<String>> onlineSessionIdsByUser =
-                resolveOnlineSessionIdsByUser(records.values());
-        LinkedHashSet<String> staleSessionIds = findStaleSessionIds(
-                indexedSessionIds, records, onlineSessionIdsByUser);
-        if (!staleSessionIds.isEmpty()) {
-            onlineSessionRegistry.removeStaleSessions(staleSessionIds);
-        }
+        Map<String, OnlineSessionRecord> records = scan.records();
+        LinkedHashSet<String> staleSessionIds = scan.staleSessionIds();
+        removeStaleSessions(staleSessionIds);
 
         List<OnlineSessionRecord> filteredRecords = indexedSessionIds.stream()
                 .filter(sessionId -> !staleSessionIds.contains(sessionId))
@@ -60,6 +55,17 @@ public class OnlineSessionBizService {
                 .sorted(Comparator.comparing(OnlineSessionRecord::loginTime).reversed())
                 .toList();
         return toPage(filteredRecords, criteria);
+    }
+
+    /**
+     * Removes indexed sessions whose metadata is missing or whose Sa-Token terminal is no longer valid.
+     *
+     * @return number of stale sessions removed
+     */
+    public int cleanupInvalidSessions() {
+        SessionScan scan = scanSessions();
+        removeStaleSessions(scan.staleSessionIds());
+        return scan.staleSessionIds().size();
     }
 
     public ForceLogoutResultVo forceLogout(String sessionId) {
@@ -93,6 +99,27 @@ public class OnlineSessionBizService {
                 currentSession);
         OperationLogContext.setOutcome(result.getOutcome().name());
         return result;
+    }
+
+    private SessionScan scanSessions() {
+        List<String> indexedSessionIds = onlineSessionRegistry.listSessionIds();
+        if (indexedSessionIds.isEmpty()) {
+            return new SessionScan(List.of(), Map.of(), new LinkedHashSet<>());
+        }
+
+        Map<String, OnlineSessionRecord> records =
+                onlineSessionRegistry.findAll(indexedSessionIds);
+        Map<Integer, Set<String>> onlineSessionIdsByUser =
+                resolveOnlineSessionIdsByUser(records.values());
+        LinkedHashSet<String> staleSessionIds = findStaleSessionIds(
+                indexedSessionIds, records, onlineSessionIdsByUser);
+        return new SessionScan(indexedSessionIds, records, staleSessionIds);
+    }
+
+    private void removeStaleSessions(LinkedHashSet<String> staleSessionIds) {
+        if (!staleSessionIds.isEmpty()) {
+            onlineSessionRegistry.removeStaleSessions(staleSessionIds);
+        }
     }
 
     private static String normalizeSessionId(String sessionId) {
@@ -247,5 +274,11 @@ public class OnlineSessionBizService {
         private static String normalize(String value) {
             return value == null || value.isBlank() ? null : value.trim();
         }
+    }
+
+    private record SessionScan(
+            List<String> indexedSessionIds,
+            Map<String, OnlineSessionRecord> records,
+            LinkedHashSet<String> staleSessionIds) {
     }
 }
