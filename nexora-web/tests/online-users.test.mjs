@@ -47,6 +47,10 @@ test('online user page renders the required session fields and neutral current-s
   assert.match(pageSource, /v-if=["']normalize\(row\.nickname\)["']/)
   assert.match(pageSource, /displayValue\(row\.email\)/)
   assert.match(pageSource, /const displayValue[\s\S]*?['"]--['"]/)
+  assert.match(
+    pageSource,
+    /<el-table-column\s+label=["']操作系统["'][^>]*show-overflow-tooltip/
+  )
   assert.doesNotMatch(pageSource, /label=["']状态["']/)
 })
 

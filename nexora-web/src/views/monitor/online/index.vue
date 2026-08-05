@@ -79,7 +79,12 @@
         <el-table-column label="浏览器" min-width="140" align="center">
           <template #default="{ row }">{{ displayValue(row.browser) }}</template>
         </el-table-column>
-        <el-table-column label="操作系统" min-width="150" align="center">
+        <el-table-column
+          label="操作系统"
+          min-width="150"
+          align="center"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">{{ displayValue(row.os) }}</template>
         </el-table-column>
         <el-table-column label="登录时间" min-width="180" align="center">
