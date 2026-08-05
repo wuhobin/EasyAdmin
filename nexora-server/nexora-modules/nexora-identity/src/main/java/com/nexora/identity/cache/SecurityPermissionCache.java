@@ -20,7 +20,7 @@ import java.util.function.Supplier;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SecurityAuthorizationCache {
+public class SecurityPermissionCache {
 
     private static final long CACHE_TTL_HOURS = 24;
 

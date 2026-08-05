@@ -5,7 +5,7 @@ import com.nexora.identity.domain.form.SysRoleQueryForm;
 import com.nexora.identity.domain.form.SysRoleForm;
 import com.nexora.identity.domain.vo.SysRoleVo;
 import com.nexora.identity.entity.SysRole;
-import com.nexora.identity.cache.SecurityAuthorizationCache;
+import com.nexora.identity.cache.SecurityPermissionCache;
 import com.nexora.identity.service.SysRoleService;
 import com.aurora.starter.mybatisplus.model.PageParam;
 import com.nexora.utils.FastExcelUtils;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SysRoleBizService {
     private final SysRoleService sysRoleService;
-    private final SecurityAuthorizationCache authorizationCache;
+    private final SecurityPermissionCache authorizationCache;
 
     public IPage<SysRoleVo> list(SysRoleQueryForm form, PageParam pageParam) {
         if (pageParam != null && (pageParam.getOrderBy() == null || pageParam.getOrderBy().isBlank())) {

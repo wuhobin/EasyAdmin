@@ -2,15 +2,13 @@ package com.nexora.identity.biz;
 
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.identity.security.NexoraPermissionProvider;
-import com.nexora.identity.config.PasswordPolicyValidator;
 import com.nexora.system.api.SystemConfigReader;
 import com.nexora.identity.cache.LoginRetryCache;
-import com.nexora.identity.cache.SecurityAuthorizationCache;
+import com.nexora.identity.cache.SecurityPermissionCache;
 import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.system.api.LoginSettings;
 import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.service.SysUserService;
-import com.nexora.identity.service.SysRoleService;
 import com.aurora.starter.security.account.AccountType;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.verification.image.ImageVerificationService;
@@ -95,7 +93,7 @@ class AuthBizServiceTest {
         SysUser user = SysUser.builder().id(7).email("admin@example.com").build();
         when(userService.getById(7)).thenReturn(user);
         when(permissionProvider.getAuthorization(7, AccountType.LOGIN))
-                .thenReturn(new SecurityAuthorizationCache.Authorization(
+                .thenReturn(new SecurityPermissionCache.Authorization(
                         List.of("admin"), List.of("sys:config:list")));
         AuthBizService service = createService(userService, permissionProvider);
 

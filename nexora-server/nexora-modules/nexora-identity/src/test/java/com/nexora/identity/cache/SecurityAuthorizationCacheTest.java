@@ -21,16 +21,16 @@ import static org.mockito.Mockito.when;
 class SecurityAuthorizationCacheTest {
 
     private final RedisCache redisCache = mock(RedisCache.class);
-    private final SecurityAuthorizationCache cache = new SecurityAuthorizationCache(redisCache);
+    private final SecurityPermissionCache cache = new SecurityPermissionCache(redisCache);
 
     @Test
     void returnsCachedAuthorizationWithoutLoadingDatabase() {
-        SecurityAuthorizationCache.Authorization authorization = authorization();
+        SecurityPermissionCache.Authorization authorization = authorization();
         when(redisCache.getCacheObject("nexora:security:authorization:login:7"))
                 .thenReturn(authorization);
         AtomicInteger loads = new AtomicInteger();
 
-        SecurityAuthorizationCache.Authorization result = cache.get(7, AccountType.LOGIN, () -> {
+        SecurityPermissionCache.Authorization result = cache.get(7, AccountType.LOGIN, () -> {
             loads.incrementAndGet();
             return authorization();
         });
@@ -41,9 +41,9 @@ class SecurityAuthorizationCacheTest {
 
     @Test
     void loadsDatabaseAndWritesRedisOnCacheMiss() {
-        SecurityAuthorizationCache.Authorization authorization = authorization();
+        SecurityPermissionCache.Authorization authorization = authorization();
 
-        SecurityAuthorizationCache.Authorization result =
+        SecurityPermissionCache.Authorization result =
                 cache.get(7, AccountType.LOGIN, () -> authorization);
 
         assertThat(result).isSameAs(authorization);
@@ -56,7 +56,7 @@ class SecurityAuthorizationCacheTest {
         when(redisCache.getCacheObject("nexora:security:authorization:login:7"))
                 .thenThrow(new RedisConnectionFailureException("redis unavailable"));
 
-        SecurityAuthorizationCache.Authorization result =
+        SecurityPermissionCache.Authorization result =
                 cache.get(7, AccountType.LOGIN, SecurityAuthorizationCacheTest::authorization);
 
         assertThat(result.roles()).containsExactly("admin");
@@ -66,7 +66,7 @@ class SecurityAuthorizationCacheTest {
     void authorizationCanRoundTripThroughStarterJsonSerializer() {
         GenericJackson2JsonRedisSerializer serializer =
                 new GenericJackson2JsonRedisSerializer();
-        SecurityAuthorizationCache.Authorization authorization = authorization();
+        SecurityPermissionCache.Authorization authorization = authorization();
 
         Object restored = serializer.deserialize(serializer.serialize(authorization));
 
@@ -113,8 +113,8 @@ class SecurityAuthorizationCacheTest {
         }
     }
 
-    private static SecurityAuthorizationCache.Authorization authorization() {
-        return new SecurityAuthorizationCache.Authorization(
+    private static SecurityPermissionCache.Authorization authorization() {
+        return new SecurityPermissionCache.Authorization(
                 List.of("admin"), List.of("sys:config:list"));
     }
 }

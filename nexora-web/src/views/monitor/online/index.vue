@@ -267,6 +267,10 @@ getList()
 </script>
 
 <style scoped>
+.online-session-page :deep(.data-list-table td.el-table__cell) {
+  height: 72px;
+}
+
 .session-cell,
 .user-cell,
 .detail-cell {

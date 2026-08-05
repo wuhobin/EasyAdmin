@@ -1,6 +1,6 @@
 package com.nexora.identity.biz;
 
-import com.nexora.identity.cache.SecurityAuthorizationCache;
+import com.nexora.identity.cache.SecurityPermissionCache;
 import com.nexora.identity.service.SysRoleService;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,7 @@ class SysRoleBizServiceTest {
     @Test
     void evictsAffectedUsersWhenRolePermissionsChange() {
         SysRoleService roleService = mock(SysRoleService.class);
-        SecurityAuthorizationCache authorizationCache = mock(SecurityAuthorizationCache.class);
+        SecurityPermissionCache authorizationCache = mock(SecurityPermissionCache.class);
         when(roleService.listUserIdsByRoleIds(List.of(3))).thenReturn(List.of(7, 8));
         SysRoleBizService service = new SysRoleBizService(roleService, authorizationCache);
 

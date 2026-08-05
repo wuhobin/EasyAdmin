@@ -7,8 +7,8 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nexora.constants.SecurityConstants;
 import com.nexora.contract.UserDeletionCleanup;
-import com.nexora.identity.cache.SecurityAuthorizationCache;
-import com.nexora.identity.config.PasswordPolicyValidator;
+import com.nexora.identity.cache.SecurityPermissionCache;
+import com.nexora.identity.infrastructure.PasswordPolicyValidator;
 import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.identity.domain.convert.SysUserConvert;
@@ -33,7 +33,7 @@ public class UserManagementService {
 
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
-    private final SecurityAuthorizationCache authorizationCache;
+    private final SecurityPermissionCache authorizationCache;
     private final List<UserDeletionCleanup> userDeletionCleanups;
     private final PasswordPolicyValidator passwordPolicyValidator;
 

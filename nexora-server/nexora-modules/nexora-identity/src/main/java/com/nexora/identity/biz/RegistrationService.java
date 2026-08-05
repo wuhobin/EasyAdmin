@@ -4,7 +4,7 @@ import cn.dev33.satoken.secure.BCrypt;
 import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.identity.config.PasswordPolicyValidator;
+import com.nexora.identity.infrastructure.PasswordPolicyValidator;
 import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.identity.domain.form.AuthForm;

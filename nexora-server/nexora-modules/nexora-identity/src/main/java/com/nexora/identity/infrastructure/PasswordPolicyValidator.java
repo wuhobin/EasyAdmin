@@ -1,4 +1,4 @@
-package com.nexora.identity.config;
+package com.nexora.identity.infrastructure;
 
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.constants.IdentityConstants;

@@ -3,7 +3,7 @@ package com.nexora.identity.biz;
 import com.nexora.constants.SecurityConstants;
 import com.nexora.identity.domain.vo.SysRouterVo;
 import com.nexora.identity.entity.SysMenu;
-import com.nexora.identity.cache.SecurityAuthorizationCache;
+import com.nexora.identity.cache.SecurityPermissionCache;
 import com.nexora.identity.constants.MenuTypeEnum;
 import com.nexora.identity.service.SysMenuService;
 import com.aurora.starter.security.context.SecurityUtils;
@@ -32,7 +32,7 @@ class SysMenuBizServiceTest {
             securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(true);
 
             List<SysRouterVo> routes = new SysMenuBizService(menuService,
-                    mock(SecurityAuthorizationCache.class)).getCurrentUserMenu();
+                    mock(SecurityPermissionCache.class)).getCurrentUserMenu();
 
             assertThat(routes).extracting(SysRouterVo::getId).containsExactly(1);
         }
@@ -41,7 +41,7 @@ class SysMenuBizServiceTest {
     @Test
     void evictsAllAuthorizationWhenMenuIsDeleted() {
         SysMenuService menuService = mock(SysMenuService.class);
-        SecurityAuthorizationCache authorizationCache = mock(SecurityAuthorizationCache.class);
+        SecurityPermissionCache authorizationCache = mock(SecurityPermissionCache.class);
         SysMenuBizService service = new SysMenuBizService(menuService, authorizationCache);
 
         service.delete(12);

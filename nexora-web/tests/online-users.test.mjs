@@ -51,6 +51,10 @@ test('online user page renders the required session fields and neutral current-s
     pageSource,
     /<el-table-column\s+label=["']操作系统["'][^>]*show-overflow-tooltip/
   )
+  assert.match(
+    pageSource,
+    /\.online-session-page\s+:deep\(\.data-list-table td\.el-table__cell\)\s*\{[^}]*height:\s*72px/
+  )
   assert.doesNotMatch(pageSource, /label=["']状态["']/)
 })
 

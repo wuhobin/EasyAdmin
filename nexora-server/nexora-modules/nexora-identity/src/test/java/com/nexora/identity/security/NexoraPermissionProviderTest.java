@@ -1,7 +1,7 @@
 package com.nexora.identity.security;
 
 import com.aurora.starter.security.account.AccountType;
-import com.nexora.identity.cache.SecurityAuthorizationCache;
+import com.nexora.identity.cache.SecurityPermissionCache;
 import com.nexora.identity.mapper.SysMenuMapper;
 import com.nexora.identity.mapper.SysRoleMapper;
 import org.junit.jupiter.api.Test;
@@ -20,9 +20,9 @@ class NexoraPermissionProviderTest {
     void usesCachedAuthorizationWithoutQueryingMappers() {
         SysRoleMapper roleMapper = mock(SysRoleMapper.class);
         SysMenuMapper menuMapper = mock(SysMenuMapper.class);
-        SecurityAuthorizationCache authorizationCache = mock(SecurityAuthorizationCache.class);
-        SecurityAuthorizationCache.Authorization authorization =
-                new SecurityAuthorizationCache.Authorization(
+        SecurityPermissionCache authorizationCache = mock(SecurityPermissionCache.class);
+        SecurityPermissionCache.Authorization authorization =
+                new SecurityPermissionCache.Authorization(
                         List.of("admin"), List.of("sys:config:list"));
         when(authorizationCache.get(any(), any(), any())).thenReturn(authorization);
         NexoraPermissionProvider provider =
