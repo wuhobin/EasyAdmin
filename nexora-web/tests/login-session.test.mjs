@@ -158,6 +158,10 @@ test('profile redesign preserves account editing and avatar upload behavior', ()
 })
 
 test('user management and operation logs use email, nickname, and user id identities', () => {
+  assert.match(
+    userManagementSource,
+    /\.user-management-page\s*\{[\s\S]*:deep\(\.data-list-table td\.el-table__cell\)\s*\{[^}]*height:\s*72px/
+  )
   assert.match(userManagementSource, /queryParams\.email/)
   assert.match(userManagementSource, /prop="email"/)
   assert.match(userManagementSource, /:disabled="dialog\.type === 'edit'"/)
