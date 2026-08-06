@@ -606,6 +606,7 @@ html.dark {
 }
 
 .el-dialog .el-form-item__content {
+  position: relative;
   min-width: 0;
   line-height: 1.5;
 }
@@ -726,8 +727,10 @@ html.dark {
 }
 
 .el-dialog .el-form-item__error {
-  position: static;
-  padding-top: 6px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding-top: 2px;
   font-family: var(--nexora-font-sans);
   font-size: 12px;
   line-height: 18px;

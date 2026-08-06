@@ -4,8 +4,8 @@
     :title="form.id ? '编辑服务器' : '添加服务器'"
     width="620px"
     destroy-on-close
+    class="managed-server-dialog"
   >
-    <p class="dialog-form-intro">配置 SSH 连接信息。每个用户只能查看和操作自己添加的服务器。</p>
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
       <div class="form-grid">
         <el-form-item label="服务器名称" prop="name">
@@ -25,42 +25,41 @@
         </el-form-item>
       </div>
 
-      <el-form-item label="SSH 密码" prop="password">
-        <el-input
-          v-model="form.password"
-          type="password"
-          show-password
-          maxlength="512"
-          autocomplete="new-password"
-          :placeholder="form.id ? '留空表示不修改已保存的密码' : '可留空，连接时再临时输入'"
-        />
-        <div class="password-options">
-          <el-checkbox v-model="form.savePassword" :disabled="!form.password">
-            加密保存本次填写的密码
-          </el-checkbox>
-          <el-checkbox
-            v-if="server?.hasSavedPassword"
-            v-model="form.clearSavedPassword"
-            :disabled="form.savePassword"
-          >
-            清除已保存密码
-          </el-checkbox>
-        </div>
-        <p class="field-tip">
-          默认不保存。临时密码只用于连接测试或打开终端，不会写入数据库。
-        </p>
-      </el-form-item>
+      <div class="details-grid">
+        <el-form-item label="SSH 密码" prop="password">
+          <el-input
+            v-model="form.password"
+            type="password"
+            show-password
+            maxlength="512"
+            autocomplete="new-password"
+            :placeholder="form.id ? '留空表示不修改已保存的密码' : '可留空，连接时再临时输入'"
+          />
+          <div class="password-options">
+            <el-checkbox v-model="form.savePassword" :disabled="!form.password">
+              加密保存本次填写的密码
+            </el-checkbox>
+            <el-checkbox
+              v-if="server?.hasSavedPassword"
+              v-model="form.clearSavedPassword"
+              :disabled="form.savePassword"
+            >
+              清除已保存密码
+            </el-checkbox>
+          </div>
+        </el-form-item>
 
-      <el-form-item label="描述" prop="description">
-        <el-input
-          v-model="form.description"
-          type="textarea"
-          :rows="3"
-          maxlength="500"
-          show-word-limit
-          placeholder="记录用途、环境或负责人等信息"
-        />
-      </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="2"
+            maxlength="500"
+            show-word-limit
+            placeholder="记录用途、环境或负责人等信息"
+          />
+        </el-form-item>
+      </div>
 
       <div class="form-grid compact">
         <el-form-item label="排序" prop="sort">
@@ -71,13 +70,6 @@
         </el-form-item>
       </div>
     </el-form>
-
-    <el-alert
-      title="出于安全考虑，不能连接 Nexora 所在主机、回环、链路本地或保留地址。"
-      type="info"
-      :closable="false"
-      show-icon
-    />
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
@@ -195,6 +187,39 @@ watch(() => form.savePassword, (savePassword) => {
 </script>
 
 <style scoped>
+:global(.managed-server-dialog .el-dialog__body) {
+  overflow: hidden;
+  padding: 12px 24px 0;
+}
+
+:global(.managed-server-dialog .el-form-item) {
+  margin-bottom: 10px;
+}
+
+:global(.managed-server-dialog .el-form-item__label) {
+  margin-bottom: 3px;
+  line-height: 18px;
+}
+
+:global(.managed-server-dialog .el-input__wrapper),
+:global(.managed-server-dialog .el-select__wrapper) {
+  min-height: 38px;
+}
+
+:global(.managed-server-dialog .el-textarea__inner) {
+  min-height: 72px;
+  padding-block: 8px;
+}
+
+:global(.managed-server-dialog .form-grid:not(.compact)),
+:global(.managed-server-dialog .endpoint-grid) {
+  margin-bottom: 10px;
+}
+
+:global(.managed-server-dialog .el-dialog__body > .el-form:last-child .el-form-item:last-child) {
+  margin-bottom: 0;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
@@ -204,6 +229,14 @@ watch(() => form.savePassword, (savePassword) => {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 140px;
   column-gap: 20px;
+}
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 20px;
+}
+.details-grid > :deep(.el-form-item) {
+  min-width: 0;
 }
 .form-grid.compact {
   grid-template-columns: 1fr 1fr;
@@ -219,21 +252,38 @@ watch(() => form.savePassword, (savePassword) => {
 .password-options :deep(.el-checkbox + .el-checkbox) {
   margin-left: 0;
 }
-.field-tip {
-  margin: 1px 0 0;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-  line-height: 1.6;
-}
 .endpoint-grid :deep(.el-input-number),
 .form-grid.compact :deep(.el-input-number) {
   width: 100%;
 }
 @media (max-width: 640px) {
-  .form-grid,
-  .endpoint-grid,
-  .form-grid.compact {
-    grid-template-columns: 1fr;
+  :global(.managed-server-dialog .form-grid) {
+    grid-template-columns: 1.25fr 1fr !important;
+  }
+
+  :global(.managed-server-dialog .endpoint-grid) {
+    grid-template-columns: minmax(0, 1fr) 140px !important;
+  }
+
+  :global(.managed-server-dialog .form-grid.compact) {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :global(.managed-server-dialog .form-grid),
+  :global(.managed-server-dialog .endpoint-grid),
+  :global(.managed-server-dialog .form-grid.compact),
+  :global(.managed-server-dialog .details-grid) {
+    grid-template-columns: 1fr !important;
+    row-gap: 20px;
+  }
+
+  :global(.managed-server-dialog .form-grid > .el-form-item),
+  :global(.managed-server-dialog .endpoint-grid > .el-form-item),
+  :global(.managed-server-dialog .form-grid.compact > .el-form-item),
+  :global(.managed-server-dialog .details-grid > .el-form-item) {
+    margin-bottom: 0;
   }
 }
 </style>

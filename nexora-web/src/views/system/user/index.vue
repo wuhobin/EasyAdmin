@@ -727,10 +727,6 @@ onMounted(() => {
     margin-right: 0;
   }
 
-  .el-form-item__error {
-    position: static;
-    padding-top: 6px;
-  }
 }
 
 @media (max-width: 640px) {

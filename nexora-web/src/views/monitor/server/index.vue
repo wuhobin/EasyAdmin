@@ -22,29 +22,28 @@
             <el-button type="primary" :icon="Search" @click="handleQuery">搜索</el-button>
             <el-button :icon="Refresh" @click="resetQuery">重置</el-button>
           </el-form-item>
+          <el-form-item class="server-list-actions">
+            <el-button :icon="Refresh" :loading="loading" @click="loadServers">刷新</el-button>
+            <el-button
+              v-permission="['monitor:server:add']"
+              type="primary"
+              :icon="Plus"
+              @click="openCreateDialog"
+            >
+              添加服务器
+            </el-button>
+          </el-form-item>
         </el-form>
       </div>
 
-      <header class="data-list-toolbar">
-        <div class="data-list-heading">
-          <strong>服务器管理</strong>
-          <span>共 {{ total }} 台，仅展示你添加的服务器</span>
-        </div>
-        <div class="hero-actions">
-          <el-button :icon="Refresh" :loading="loading" @click="loadServers">刷新</el-button>
-          <el-button
-            v-permission="['monitor:server:add']"
-            type="primary"
-            :icon="Plus"
-            @click="openCreateDialog"
-          >
-            添加服务器
-          </el-button>
-        </div>
-      </header>
-
       <div v-loading="loading" class="server-grid" aria-live="polite">
-        <article v-for="server in servers" :key="server.id" class="server-card">
+        <article
+          v-for="server in servers"
+          :key="server.id"
+          class="server-card"
+          :class="serverState(server).className"
+          :aria-label="`${server.name}，${serverState(server).label}`"
+        >
           <header class="server-card-header">
             <span :class="['server-mark', serverState(server).className]">
               <Platform />
@@ -475,49 +474,114 @@ onMounted(loadServers)
   --server-muted: var(--el-text-color-secondary);
   --server-code: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
 }
+.server-list-actions {
+  margin-left: auto !important;
+}
+.server-list-actions :deep(.el-form-item__content) {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.server-list-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
 .server-grid {
   display: grid;
-  min-height: 190px;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-  gap: 14px;
+  min-height: 220px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
 }
 .server-card {
+  --server-state-color: var(--el-color-info);
+  --server-state-soft: var(--el-color-info-light-9);
+  position: relative;
   display: flex;
   min-width: 0;
+  overflow: hidden;
   flex-direction: column;
-  padding: 16px;
-  border: 1px solid var(--nexora-list-border);
-  border-radius: 10px;
-  background: var(--el-bg-color);
-  box-shadow: 0 8px 20px -22px rgba(15, 23, 42, .7);
-  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  padding: 18px 18px 16px 20px;
+  border: 1px solid color-mix(
+    in srgb,
+    var(--server-state-color) 14%,
+    var(--nexora-list-border)
+  );
+  border-radius: 14px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--server-state-color) 5%, var(--el-bg-color)) 0,
+      var(--el-bg-color) 42%
+    );
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, .04),
+    0 14px 30px -26px rgba(15, 23, 42, .5);
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease;
+}
+.server-card::before {
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 0;
+  width: 4px;
+  content: '';
+  background: var(--server-state-color);
+  border-radius: 0 999px 999px 0;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--server-state-color) 26%, transparent);
+}
+.server-card.online {
+  --server-state-color: var(--el-color-success);
+  --server-state-soft: var(--el-color-success-light-9);
+}
+.server-card.error {
+  --server-state-color: var(--el-color-danger);
+  --server-state-soft: var(--el-color-danger-light-9);
+}
+.server-card.disabled {
+  --server-state-color: var(--el-text-color-placeholder);
+  --server-state-soft: var(--el-fill-color-light);
 }
 .server-card:hover {
-  border-color: color-mix(in srgb, var(--el-color-primary) 35%, var(--nexora-list-border));
-  box-shadow: 0 14px 28px -24px color-mix(in srgb, var(--el-color-primary) 55%, transparent);
-  transform: translateY(-2px);
+  border-color: color-mix(
+    in srgb,
+    var(--server-state-color) 42%,
+    var(--nexora-list-border)
+  );
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, .06),
+    0 20px 36px -28px color-mix(in srgb, var(--server-state-color) 58%, transparent);
+  transform: translateY(-3px);
+}
+.server-card:focus-within {
+  border-color: color-mix(
+    in srgb,
+    var(--el-color-primary) 48%,
+    var(--nexora-list-border)
+  );
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--el-color-primary) 11%, transparent);
 }
 .server-card-header {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
 }
 .server-mark {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   place-items: center;
-  border-radius: 9px;
-  color: var(--el-color-info);
-  background: var(--el-fill-color-light);
+  color: var(--server-state-color);
+  background: color-mix(in srgb, var(--server-state-soft) 84%, var(--el-bg-color));
+  border: 1px solid color-mix(in srgb, var(--server-state-color) 18%, transparent);
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--el-bg-color) 54%, transparent);
 }
 .server-mark :deep(svg) {
-  width: 21px;
+  width: 22px;
 }
-.server-mark.online { color: var(--el-color-success); background: var(--el-color-success-light-9); }
-.server-mark.error { color: var(--el-color-danger); background: var(--el-color-danger-light-9); }
-.server-mark.disabled { color: var(--el-text-color-placeholder); }
 .server-title {
   min-width: 0;
 }
@@ -530,61 +594,69 @@ onMounted(loadServers)
 }
 .server-title strong {
   color: var(--el-text-color-primary);
-  font-size: 15px;
-  font-weight: 650;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: -.01em;
 }
 .server-title code {
-  margin-top: 5px;
+  margin-top: 4px;
   color: var(--server-muted);
   font-family: var(--server-code);
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 .state-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: var(--server-muted);
+  padding: 4px 8px;
+  color: var(--server-state-color);
+  background: color-mix(in srgb, var(--server-state-soft) 72%, var(--el-bg-color));
+  border: 1px solid color-mix(in srgb, var(--server-state-color) 20%, transparent);
+  border-radius: 999px;
   font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
 }
 .state-badge i {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--el-color-info);
+  background: var(--server-state-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--server-state-color) 11%, transparent);
 }
-.state-badge.online { color: var(--el-color-success); }
-.state-badge.online i { background: var(--el-color-success); }
-.state-badge.error { color: var(--el-color-danger); }
-.state-badge.error i { background: var(--el-color-danger); }
-.state-badge.disabled i { background: var(--el-text-color-placeholder); }
 .server-description {
   display: -webkit-box;
   min-height: 40px;
-  margin: 14px 0;
+  margin: 16px 2px 14px;
   overflow: hidden;
   color: var(--el-text-color-regular);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 20px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
 .server-meta {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 8px;
-  margin: 0 0 12px;
+  overflow: hidden;
+  grid-template-columns: .85fr 1.15fr;
+  gap: 1px;
+  padding: 1px;
+  margin: 0 0 14px;
+  background: var(--server-line);
+  border-radius: 10px;
 }
 .server-meta > div {
   min-width: 0;
-  padding: 9px 10px;
-  border: 1px solid var(--server-line);
-  border-radius: 7px;
-  background: var(--el-fill-color-lighter);
+  padding: 10px 11px;
+  background: color-mix(in srgb, var(--el-fill-color-lighter) 68%, var(--el-bg-color));
 }
 .server-meta dt {
   color: var(--server-muted);
   font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
 }
 .server-meta dd {
   display: flex;
@@ -594,7 +666,8 @@ onMounted(loadServers)
   margin: 4px 0 0;
   overflow: hidden;
   color: var(--el-text-color-primary);
-  font-size: 11px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -603,16 +676,15 @@ onMounted(loadServers)
   flex: 0 0 auto;
 }
 .fingerprint-strip {
-  min-height: 94px;
-  padding: 11px 12px;
-  border: 1px solid var(--server-line);
-  border-left: 3px solid var(--el-color-info-light-5);
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--el-fill-color-light) 72%, var(--el-bg-color));
+  min-height: 92px;
+  padding: 12px 13px;
+  border: 1px solid color-mix(in srgb, var(--el-color-info) 18%, var(--server-line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--el-color-info) 4%, var(--el-bg-color));
 }
 .fingerprint-strip.trusted {
-  border-left-color: var(--el-color-success);
-  background: color-mix(in srgb, var(--el-color-success) 5%, var(--el-bg-color));
+  border-color: color-mix(in srgb, var(--el-color-success) 23%, var(--server-line));
+  background: color-mix(in srgb, var(--el-color-success) 4%, var(--el-bg-color));
 }
 .fingerprint-label {
   display: flex;
@@ -625,9 +697,9 @@ onMounted(loadServers)
   align-items: center;
   gap: 6px;
   color: var(--el-text-color-primary);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 650;
-  letter-spacing: .03em;
+  letter-spacing: .02em;
 }
 .fingerprint-label :deep(svg) {
   width: 13px;
@@ -643,7 +715,8 @@ onMounted(loadServers)
   margin-top: 9px;
   color: var(--el-text-color-primary);
   font-family: var(--server-code);
-  font-size: 11px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
   cursor: help;
 }
 .fingerprint-strip small {
@@ -658,7 +731,9 @@ onMounted(loadServers)
   line-height: 18px;
 }
 .server-error {
-  margin-top: 10px;
+  margin-top: 12px;
+  border: 1px solid color-mix(in srgb, var(--el-color-danger) 22%, transparent);
+  border-radius: 9px;
 }
 .server-error :deep(.el-alert__title) {
   display: block;
@@ -672,13 +747,24 @@ onMounted(loadServers)
   align-items: center;
   gap: 8px;
   margin-top: auto;
-  padding-top: 14px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--server-line) 86%, transparent);
 }
 .server-actions .el-button + .el-button {
   margin-left: 0;
 }
+.server-actions :deep(.el-button) {
+  min-height: 34px;
+  border-radius: 8px;
+}
 .server-actions > .el-button:first-child {
   flex: 1;
+  font-weight: 600;
+  box-shadow: 0 8px 16px -12px color-mix(in srgb, var(--el-color-primary) 78%, transparent);
+}
+.server-actions :deep(.el-button:focus-visible) {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
 }
 .server-empty {
   min-height: 260px;
@@ -689,7 +775,19 @@ onMounted(loadServers)
     grid-template-columns: 1fr;
   }
 }
+@media (max-width: 640px) {
+  .server-list-actions {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+  .server-list-actions :deep(.el-form-item__content) {
+    justify-content: flex-end;
+  }
+}
 @media (max-width: 420px) {
+  .server-card {
+    padding: 16px 15px 14px 18px;
+  }
   .server-card-header {
     grid-template-columns: 38px minmax(0, 1fr);
   }
@@ -699,6 +797,7 @@ onMounted(loadServers)
   }
   .state-badge {
     grid-column: 2;
+    justify-self: start;
   }
   .server-meta {
     grid-template-columns: 1fr;
