@@ -15,6 +15,8 @@ public final class ServerConstants {
             "主机指纹与当前服务器不一致，请重新测试";
     public static final String SSH_TERMINAL_LIMIT_MESSAGE = "最多同时打开 3 个 SSH 终端";
     public static final String SSH_TICKET_INVALID_MESSAGE = "终端票据无效或已过期";
+    public static final int DEFAULT_TERMINAL_COLUMNS = 80;
+    public static final int DEFAULT_TERMINAL_ROWS = 24;
 
     public static final String TEST_STATUS_SUCCESS = "SUCCESS";
     public static final String TEST_STATUS_CONFIRM_REQUIRED = "CONFIRM_REQUIRED";

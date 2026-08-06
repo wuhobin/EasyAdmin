@@ -110,12 +110,12 @@ public class ManagedServerBizService {
         if (Boolean.TRUE.equals(form.getClearSavedPassword())) {
             serverService.clearSavedPassword(current.getId(), ownerId);
         }
-        ticketStore.removeByServer(ownerId, current.getId());
+        invalidateTerminalTickets(ownerId, current.getId());
         if (endpointChanged) {
             serverService.clearTrustedFingerprint(current.getId(), ownerId);
         }
         if (endpointChanged || !Integer.valueOf(1).equals(form.getEnabled())) {
-            terminalSessionManager.closeByServer(ownerId, current.getId());
+            closeTerminalSessions(ownerId, current.getId());
         }
     }
 
@@ -123,8 +123,7 @@ public class ManagedServerBizService {
     public void delete(Long id) {
         Integer ownerId = currentOwnerId();
         getRequired(id, ownerId);
-        ticketStore.removeByServer(ownerId, id);
-        terminalSessionManager.closeByServer(ownerId, id);
+        invalidateTerminalAccess(ownerId, id);
         if (!serverService.removeByIdAndOwnerId(id, ownerId)) {
             throw new BizException(ServerConstants.SERVER_UNAVAILABLE_MESSAGE);
         }
@@ -133,33 +132,15 @@ public class ManagedServerBizService {
     public ServerConnectionTestVo test(Long id, ServerPasswordForm form) {
         Integer ownerId = currentOwnerId();
         ManagedServer server = getEnabled(id, ownerId);
-        if (!StringUtils.hasText(server.getTrustedFingerprint())) {
-            SshConnectionService.SshHostKey hostKey = connectionService.probeHostKey(server);
-            return ServerConnectionTestVo.builder()
-                    .status(ServerConstants.TEST_STATUS_CONFIRM_REQUIRED)
-                    .fingerprint(hostKey.fingerprint())
-                    .algorithm(hostKey.algorithm())
-                    .build();
+        if (hasNoTrustedFingerprint(server)) {
+            return buildFingerprintConfirmationResult(server);
         }
 
         String password = resolvePassword(server, form == null ? null : form.getPassword());
         try (AuthenticatedSshConnection ignored = connectionService.authenticate(server, password)) {
-            serverService.updateConnectionState(id, ownerId, "");
-            return ServerConnectionTestVo.builder()
-                    .status(ServerConstants.TEST_STATUS_SUCCESS)
-                    .fingerprint(server.getTrustedFingerprint())
-                    .trustedFingerprint(server.getTrustedFingerprint())
-                    .algorithm(server.getFingerprintAlgorithm())
-                    .build();
+            return recordSuccessfulConnection(id, ownerId, server);
         } catch (SshHostKeyMismatchException exception) {
-            serverService.updateConnectionState(
-                    id, ownerId, ServerConstants.SSH_HOST_KEY_CHANGED_MESSAGE);
-            return ServerConnectionTestVo.builder()
-                    .status(ServerConstants.TEST_STATUS_FINGERPRINT_MISMATCH)
-                    .fingerprint(exception.getPresentedFingerprint())
-                    .trustedFingerprint(exception.getTrustedFingerprint())
-                    .algorithm(exception.getAlgorithm())
-                    .build();
+            return recordFingerprintMismatch(id, ownerId, exception);
         } catch (BizException exception) {
             serverService.updateConnectionState(id, ownerId, exception.getMessage());
             throw exception;
@@ -182,8 +163,7 @@ public class ManagedServerBizService {
     public void resetFingerprint(Long id) {
         Integer ownerId = currentOwnerId();
         getRequired(id, ownerId);
-        ticketStore.removeByServer(ownerId, id);
-        terminalSessionManager.closeByServer(ownerId, id);
+        invalidateTerminalAccess(ownerId, id);
         serverService.clearTrustedFingerprint(id, ownerId);
     }
 
@@ -197,8 +177,10 @@ public class ManagedServerBizService {
             throw new BizException(ServerConstants.SSH_TERMINAL_LIMIT_MESSAGE);
         }
         String password = resolvePassword(server, form == null ? null : form.getPassword());
-        int columns = form == null || form.getColumns() == null ? 80 : form.getColumns();
-        int rows = form == null || form.getRows() == null ? 24 : form.getRows();
+        int columns = valueOrDefault(
+                form == null ? null : form.getColumns(), ServerConstants.DEFAULT_TERMINAL_COLUMNS);
+        int rows = valueOrDefault(
+                form == null ? null : form.getRows(), ServerConstants.DEFAULT_TERMINAL_ROWS);
         TerminalTicketStore.TerminalTicket ticket =
                 ticketStore.issue(ownerId, id, password, columns, rows);
         return TerminalTicketVo.builder()
@@ -298,5 +280,58 @@ public class ManagedServerBizService {
             result.setOrderBy("sort asc,id desc");
         }
         return result;
+    }
+
+    private void invalidateTerminalAccess(Integer ownerId, Long serverId) {
+        invalidateTerminalTickets(ownerId, serverId);
+        closeTerminalSessions(ownerId, serverId);
+    }
+
+    private void invalidateTerminalTickets(Integer ownerId, Long serverId) {
+        ticketStore.removeByServer(ownerId, serverId);
+    }
+
+    private void closeTerminalSessions(Integer ownerId, Long serverId) {
+        terminalSessionManager.closeByServer(ownerId, serverId);
+    }
+
+    private static boolean hasNoTrustedFingerprint(ManagedServer server) {
+        return !StringUtils.hasText(server.getTrustedFingerprint());
+    }
+
+    private ServerConnectionTestVo buildFingerprintConfirmationResult(ManagedServer server) {
+        SshConnectionService.SshHostKey hostKey = connectionService.probeHostKey(server);
+        return ServerConnectionTestVo.builder()
+                .status(ServerConstants.TEST_STATUS_CONFIRM_REQUIRED)
+                .fingerprint(hostKey.fingerprint())
+                .algorithm(hostKey.algorithm())
+                .build();
+    }
+
+    private ServerConnectionTestVo recordSuccessfulConnection(
+            Long id, Integer ownerId, ManagedServer server) {
+        serverService.updateConnectionState(id, ownerId, "");
+        return ServerConnectionTestVo.builder()
+                .status(ServerConstants.TEST_STATUS_SUCCESS)
+                .fingerprint(server.getTrustedFingerprint())
+                .trustedFingerprint(server.getTrustedFingerprint())
+                .algorithm(server.getFingerprintAlgorithm())
+                .build();
+    }
+
+    private ServerConnectionTestVo recordFingerprintMismatch(
+            Long id, Integer ownerId, SshHostKeyMismatchException exception) {
+        serverService.updateConnectionState(
+                id, ownerId, ServerConstants.SSH_HOST_KEY_CHANGED_MESSAGE);
+        return ServerConnectionTestVo.builder()
+                .status(ServerConstants.TEST_STATUS_FINGERPRINT_MISMATCH)
+                .fingerprint(exception.getPresentedFingerprint())
+                .trustedFingerprint(exception.getTrustedFingerprint())
+                .algorithm(exception.getAlgorithm())
+                .build();
+    }
+
+    private static int valueOrDefault(Integer value, int defaultValue) {
+        return value == null ? defaultValue : value;
     }
 }

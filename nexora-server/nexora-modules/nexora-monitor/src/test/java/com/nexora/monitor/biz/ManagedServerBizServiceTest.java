@@ -135,6 +135,45 @@ class ManagedServerBizServiceTest {
         verify(fixture.cipher, never()).decrypt(any(), any());
     }
 
+    @Test
+    void usesStableTerminalDimensionsWhenTheClientOmitsThem() {
+        Fixture fixture = new Fixture();
+        ManagedServer server = server();
+        server.setTrustedFingerprint("SHA256:test");
+        when(fixture.serverService.getByIdAndOwnerId(11L, 7)).thenReturn(server);
+        TerminalTicketStore.TerminalTicket issued = new TerminalTicketStore.TerminalTicket(
+                "ticket", 7, 11L, "temporary",
+                ServerConstants.DEFAULT_TERMINAL_COLUMNS,
+                ServerConstants.DEFAULT_TERMINAL_ROWS,
+                Instant.now().plusSeconds(30));
+        when(fixture.ticketStore.issue(
+                7, 11L, "temporary",
+                ServerConstants.DEFAULT_TERMINAL_COLUMNS,
+                ServerConstants.DEFAULT_TERMINAL_ROWS)).thenReturn(issued);
+        TerminalTicketForm form = new TerminalTicketForm();
+        form.setPassword("temporary");
+
+        withOwner(7, () -> fixture.service.issueTerminalTicket(11L, form));
+
+        verify(fixture.ticketStore).issue(
+                7, 11L, "temporary",
+                ServerConstants.DEFAULT_TERMINAL_COLUMNS,
+                ServerConstants.DEFAULT_TERMINAL_ROWS);
+    }
+
+    @Test
+    void invalidatesAllTerminalAccessBeforeDeletingAServer() {
+        Fixture fixture = new Fixture();
+        when(fixture.serverService.getByIdAndOwnerId(11L, 7)).thenReturn(server());
+        when(fixture.serverService.removeByIdAndOwnerId(11L, 7)).thenReturn(true);
+
+        withOwner(7, () -> fixture.service.delete(11L));
+
+        verify(fixture.ticketStore).removeByServer(7, 11L);
+        verify(fixture.terminalSessionManager).closeByServer(7, 11L);
+        verify(fixture.serverService).removeByIdAndOwnerId(11L, 7);
+    }
+
     private static ManagedServerForm form() {
         ManagedServerForm form = new ManagedServerForm();
         form.setName("Production");
