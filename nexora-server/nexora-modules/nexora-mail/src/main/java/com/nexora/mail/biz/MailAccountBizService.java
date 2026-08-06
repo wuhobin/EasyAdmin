@@ -9,7 +9,7 @@ import com.nexora.mail.domain.vo.MailProviderVo;
 import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.infrastructure.ImapMailClient;
 import com.nexora.mail.service.MailAccountService;
-import com.nexora.security.PlatformCredentialCipher;
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import com.nexora.system.api.DictionaryEntry;
 import com.nexora.system.api.SystemDictionaryReader;
 import com.aurora.starter.security.context.SecurityUtils;

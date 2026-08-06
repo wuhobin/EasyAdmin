@@ -7,7 +7,7 @@ import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.infrastructure.ImapMailClient;
 import com.nexora.mail.infrastructure.MailMessagePage;
 import com.nexora.mail.service.MailAccountService;
-import com.nexora.security.PlatformCredentialCipher;
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.ObjectMapper;

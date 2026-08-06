@@ -23,7 +23,7 @@ import com.nexora.monitor.infrastructure.serverssh.SshTargetValidator;
 import com.nexora.monitor.infrastructure.serverssh.SshTerminalSessionManager;
 import com.nexora.monitor.infrastructure.serverssh.TerminalTicketStore;
 import com.nexora.monitor.service.ManagedServerService;
-import com.nexora.security.PlatformCredentialCipher;
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;

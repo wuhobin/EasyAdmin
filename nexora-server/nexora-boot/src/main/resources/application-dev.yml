@@ -31,10 +31,6 @@ spring:
           # 最小空闲连接数 默认0
           min-idle: 0
 
-nexora:
-  security:
-    # Base64 编码的 32 字节平台凭据密钥；邮件授权码和 SSH 密码统一使用。
-    credential-secret: ${PLATFORM_CREDENTIAL_SECRET:}
 # knife4j Basic 认证（环境相关：dev/prod 账号密码不同）
 knife4j:
   basic:

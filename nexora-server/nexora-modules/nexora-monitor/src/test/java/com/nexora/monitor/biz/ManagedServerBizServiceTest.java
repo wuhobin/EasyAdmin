@@ -16,7 +16,7 @@ import com.nexora.monitor.infrastructure.serverssh.SshTargetValidator;
 import com.nexora.monitor.infrastructure.serverssh.SshTerminalSessionManager;
 import com.nexora.monitor.infrastructure.serverssh.TerminalTicketStore;
 import com.nexora.monitor.service.ManagedServerService;
-import com.nexora.security.PlatformCredentialCipher;
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;

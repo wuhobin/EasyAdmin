@@ -2,7 +2,7 @@ package com.nexora.mail.task;
 
 import com.nexora.mail.infrastructure.ImapMailClient;
 import com.nexora.mail.service.MailAccountService;
-import com.nexora.security.PlatformCredentialCipher;
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

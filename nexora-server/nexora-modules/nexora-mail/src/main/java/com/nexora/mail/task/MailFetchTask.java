@@ -5,7 +5,7 @@ import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.infrastructure.ImapMailClient;
 import com.nexora.mail.infrastructure.MailCursor;
 import com.nexora.mail.service.MailAccountService;
-import com.nexora.security.PlatformCredentialCipher;
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
