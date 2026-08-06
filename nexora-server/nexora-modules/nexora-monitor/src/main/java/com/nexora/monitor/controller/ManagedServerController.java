@@ -32,41 +32,43 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ManagedServerController {
 
-    private final ManagedServerBizService serverBizService;
+    private final ManagedServerBizService managedServerBizService;
 
     @GetMapping("/list")
+    @Operation(summary = "获取服务器列表")
     @SaCheckPermission("monitor:server:list")
     public Result<IPage<ManagedServerVo>> list(
             ManagedServerQueryForm form, PageParam pageParam) {
-        return Result.data(serverBizService.list(form, pageParam));
+        return Result.data(managedServerBizService.list(form, pageParam));
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "获取服务器详情")
     @SaCheckPermission("monitor:server:list")
-    public Result<ManagedServerVo> get(@PathVariable Long id) {
-        return Result.data(serverBizService.get(id));
+    public Result<ManagedServerVo> get(@PathVariable("id") Long id) {
+        return Result.data(managedServerBizService.get(id));
     }
 
     @PostMapping
     @Operation(summary = "新增服务器")
     @SaCheckPermission("monitor:server:add")
     public Result<ManagedServerVo> add(@Valid @RequestBody ManagedServerForm form) {
-        return Result.data(serverBizService.add(form));
+        return Result.data(managedServerBizService.add(form));
     }
 
     @PutMapping
     @Operation(summary = "修改服务器")
     @SaCheckPermission("monitor:server:update")
     public Result<Void> update(@Valid @RequestBody ManagedServerForm form) {
-        serverBizService.update(form);
+        managedServerBizService.update(form);
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除服务器")
     @SaCheckPermission("monitor:server:delete")
-    public Result<Void> delete(@PathVariable Long id) {
-        serverBizService.delete(id);
+    public Result<Void> delete(@PathVariable("id") Long id) {
+        managedServerBizService.delete(id);
         return Result.success();
     }
 
@@ -74,26 +76,26 @@ public class ManagedServerController {
     @Operation(summary = "测试 SSH 连接")
     @SaCheckPermission("monitor:server:test")
     public Result<ServerConnectionTestVo> test(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody(required = false) ServerPasswordForm form) {
-        return Result.data(serverBizService.test(id, form));
+        return Result.data(managedServerBizService.test(id, form));
     }
 
     @PostMapping("/{id}/fingerprint")
     @Operation(summary = "确认 SSH 主机指纹")
     @SaCheckPermission("monitor:server:fingerprint")
     public Result<Void> confirmFingerprint(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody ServerFingerprintForm form) {
-        serverBizService.confirmFingerprint(id, form);
+        managedServerBizService.confirmFingerprint(id, form);
         return Result.success();
     }
 
     @DeleteMapping("/{id}/fingerprint")
     @Operation(summary = "重置 SSH 主机指纹")
     @SaCheckPermission("monitor:server:fingerprint")
-    public Result<Void> resetFingerprint(@PathVariable Long id) {
-        serverBizService.resetFingerprint(id);
+    public Result<Void> resetFingerprint(@PathVariable("id") Long id) {
+        managedServerBizService.resetFingerprint(id);
         return Result.success();
     }
 
@@ -101,8 +103,8 @@ public class ManagedServerController {
     @Operation(summary = "签发一次性 SSH 终端票据")
     @SaCheckPermission("monitor:server:terminal")
     public Result<TerminalTicketVo> terminalTicket(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody(required = false) TerminalTicketForm form) {
-        return Result.data(serverBizService.issueTerminalTicket(id, form));
+        return Result.data(managedServerBizService.issueTerminalTicket(id, form));
     }
 }
