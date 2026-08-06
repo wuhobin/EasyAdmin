@@ -294,6 +294,9 @@ public class ManagedServerBizService {
         if (result.getPageSize() == null) {
             result.setPageSize(PageParam.DEFAULT_SIZE);
         }
+        if (result.getOrderBy() == null || result.getOrderBy().isBlank()) {
+            result.setOrderBy("sort asc,id desc");
+        }
         return result;
     }
 }

@@ -1,9 +1,8 @@
 package com.nexora.monitor.service.impl;
 
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nexora.monitor.domain.query.ManagedServerQuery;
@@ -11,10 +10,10 @@ import com.nexora.monitor.entity.ManagedServer;
 import com.nexora.monitor.mapper.ManagedServerMapper;
 import com.nexora.monitor.service.ManagedServerService;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Objects;
 
 @Service
 public class ManagedServerServiceImpl extends ServiceImpl<ManagedServerMapper, ManagedServer>
@@ -22,34 +21,42 @@ public class ManagedServerServiceImpl extends ServiceImpl<ManagedServerMapper, M
 
     @Override
     public IPage<ManagedServer> listOwned(ManagedServerQuery query, PageParam pageParam) {
-        LambdaQueryWrapper<ManagedServer> wrapper = new LambdaQueryWrapper<ManagedServer>()
-                .eq(ManagedServer::getOwnerId, query.getOwnerId())
-                .like(StringUtils.hasText(query.getName()), ManagedServer::getName, query.getName())
-                .eq(query.getEnabled() != null, ManagedServer::getEnabled, query.getEnabled())
-                .orderByAsc(ManagedServer::getSort)
-                .orderByDesc(ManagedServer::getId);
-        return page(PageUtils.buildPage(pageParam), wrapper);
+        Objects.requireNonNull(query, "query");
+        Objects.requireNonNull(query.getOwnerId(), "ownerId");
+        return page(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
     }
 
     @Override
     public ManagedServer getByIdAndOwnerId(Long id, Integer ownerId) {
-        return getOne(new LambdaQueryWrapper<ManagedServer>()
-                .eq(ManagedServer::getId, id)
-                .eq(ManagedServer::getOwnerId, ownerId), false);
+        if (id == null || ownerId == null) {
+            return null;
+        }
+        ManagedServerQuery query = new ManagedServerQuery();
+        query.setId(id);
+        query.setOwnerId(ownerId);
+        return getOne(DynamicCondition.toWrapper(query), false);
     }
 
     @Override
     public boolean updateByIdAndOwnerId(ManagedServer server, Integer ownerId) {
-        return update(server, new LambdaUpdateWrapper<ManagedServer>()
-                .eq(ManagedServer::getId, server.getId())
-                .eq(ManagedServer::getOwnerId, ownerId));
+        if (server == null || server.getId() == null || ownerId == null) {
+            return false;
+        }
+        ManagedServerQuery query = new ManagedServerQuery();
+        query.setId(server.getId());
+        query.setOwnerId(ownerId);
+        return update(server, DynamicCondition.toWrapper(query));
     }
 
     @Override
     public boolean removeByIdAndOwnerId(Long id, Integer ownerId) {
-        return remove(new LambdaQueryWrapper<ManagedServer>()
-                .eq(ManagedServer::getId, id)
-                .eq(ManagedServer::getOwnerId, ownerId));
+        if (id == null || ownerId == null) {
+            return false;
+        }
+        ManagedServerQuery query = new ManagedServerQuery();
+        query.setId(id);
+        query.setOwnerId(ownerId);
+        return remove(DynamicCondition.toWrapper(query));
     }
 
     @Override
@@ -57,48 +64,53 @@ public class ManagedServerServiceImpl extends ServiceImpl<ManagedServerMapper, M
         if (ownerIds == null || ownerIds.isEmpty()) {
             return true;
         }
-        return remove(new LambdaQueryWrapper<ManagedServer>()
-                .in(ManagedServer::getOwnerId, ownerIds));
+        ManagedServerQuery query = new ManagedServerQuery();
+        query.setOwnerIds(ownerIds);
+        return remove(DynamicCondition.toWrapper(query));
     }
 
     @Override
     public boolean updateTrustedFingerprint(Long id, Integer ownerId, String fingerprint,
                                             String algorithm, LocalDateTime verifiedTime) {
-        return update(new LambdaUpdateWrapper<ManagedServer>()
-                .eq(ManagedServer::getId, id)
-                .eq(ManagedServer::getOwnerId, ownerId)
-                .set(ManagedServer::getTrustedFingerprint, fingerprint)
-                .set(ManagedServer::getFingerprintAlgorithm, algorithm)
-                .set(ManagedServer::getFingerprintVerifiedTime, verifiedTime)
-                .set(ManagedServer::getLastError, ""));
+        if (id == null || ownerId == null) {
+            return false;
+        }
+        ManagedServerQuery query = byIdAndOwner(id, ownerId);
+        return baseMapper.updateTrustedFingerprint(fingerprint, algorithm, verifiedTime,
+                DynamicCondition.toWrapper(query)) > 0;
     }
 
     @Override
     public boolean clearTrustedFingerprint(Long id, Integer ownerId) {
-        return update(new LambdaUpdateWrapper<ManagedServer>()
-                .eq(ManagedServer::getId, id)
-                .eq(ManagedServer::getOwnerId, ownerId)
-                .set(ManagedServer::getTrustedFingerprint, null)
-                .set(ManagedServer::getFingerprintAlgorithm, null)
-                .set(ManagedServer::getFingerprintVerifiedTime, null)
-                .set(ManagedServer::getLastConnectTime, null)
-                .set(ManagedServer::getLastError, ""));
+        if (id == null || ownerId == null) {
+            return false;
+        }
+        return baseMapper.clearTrustedFingerprint(
+                DynamicCondition.toWrapper(byIdAndOwner(id, ownerId))) > 0;
     }
 
     @Override
     public boolean clearSavedPassword(Long id, Integer ownerId) {
-        return update(new LambdaUpdateWrapper<ManagedServer>()
-                .eq(ManagedServer::getId, id)
-                .eq(ManagedServer::getOwnerId, ownerId)
-                .set(ManagedServer::getPasswordCiphertext, null));
+        if (id == null || ownerId == null) {
+            return false;
+        }
+        return baseMapper.clearSavedPassword(
+                DynamicCondition.toWrapper(byIdAndOwner(id, ownerId))) > 0;
     }
 
     @Override
     public void updateConnectionState(Long id, Integer ownerId, String error) {
-        update(new LambdaUpdateWrapper<ManagedServer>()
-                .eq(ManagedServer::getId, id)
-                .eq(ManagedServer::getOwnerId, ownerId)
-                .set(ManagedServer::getLastConnectTime, LocalDateTime.now())
-                .set(ManagedServer::getLastError, error == null ? "" : error));
+        if (id == null || ownerId == null) {
+            return;
+        }
+        baseMapper.updateConnectionState(LocalDateTime.now(), error == null ? "" : error,
+                DynamicCondition.toWrapper(byIdAndOwner(id, ownerId)));
+    }
+
+    private static ManagedServerQuery byIdAndOwner(Long id, Integer ownerId) {
+        ManagedServerQuery query = new ManagedServerQuery();
+        query.setId(id);
+        query.setOwnerId(ownerId);
+        return query;
     }
 }

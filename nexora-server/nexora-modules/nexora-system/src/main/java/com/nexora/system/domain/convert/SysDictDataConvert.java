@@ -6,11 +6,13 @@ import com.nexora.system.domain.query.SysDictDataQuery;
 import com.nexora.system.domain.vo.SysDictDataVo;
 import com.nexora.system.entity.SysDictData;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper
 public interface SysDictDataConvert {
     SysDictDataConvert INSTANCE = Mappers.getMapper(SysDictDataConvert.class);
+    @Mapping(target = "status", ignore = true)
     SysDictDataQuery toQuery(SysDictDataQueryForm form);
     SysDictData toEntity(SysDictDataForm form);
     SysDictDataVo toVo(SysDictData entity);

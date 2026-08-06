@@ -20,6 +20,13 @@
         <result column="perm" property="perm"/>
     </resultMap>
 
+    <select id="selectOrdered" resultMap="BaseResultMap">
+        SELECT *
+        FROM sys_menu
+        ${ew.customSqlSegment}
+        ORDER BY sort ASC
+    </select>
+
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         id, parent_id, path, component, title, sort, icon, type, 

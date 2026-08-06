@@ -2,10 +2,10 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.nexora.system.mapper.SysDictDataMapper">
-    <select id="selectOrdered" resultType="com.nexora.system.entity.SysDictData">
+<mapper namespace="com.nexora.system.mapper.SysConfigGroupMapper">
+    <select id="selectOrdered" resultType="com.nexora.system.entity.SysConfigGroup">
         SELECT *
-        FROM sys_dict_data
+        FROM sys_config_group
         ${ew.customSqlSegment}
         ORDER BY sort ASC, id ASC
     </select>

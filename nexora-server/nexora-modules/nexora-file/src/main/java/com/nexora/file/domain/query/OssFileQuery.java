@@ -15,10 +15,12 @@ public class OssFileQuery {
     private String fileName;
 
     @Schema(description = "MIME 类型")
-    @QueryField
     private String contentType;
 
     @Schema(description = "上传人ID")
-    @QueryField
     private Long uploaderId;
+
+    @Schema(description = "文件标识")
+    @QueryField(queryEmpty = true)
+    private String fileId;
 }

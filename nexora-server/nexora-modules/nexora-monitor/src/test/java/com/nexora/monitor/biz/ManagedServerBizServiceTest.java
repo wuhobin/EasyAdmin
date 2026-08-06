@@ -47,8 +47,24 @@ class ManagedServerBizServiceTest {
 
         ArgumentCaptor<ManagedServerQuery> query =
                 ArgumentCaptor.forClass(ManagedServerQuery.class);
-        verify(fixture.serverService).listOwned(query.capture(), any());
+        ArgumentCaptor<PageParam> page = ArgumentCaptor.forClass(PageParam.class);
+        verify(fixture.serverService).listOwned(query.capture(), page.capture());
         assertThat(query.getValue().getOwnerId()).isEqualTo(7);
+        assertThat(page.getValue().getOrderBy()).isEqualTo("sort asc,id desc");
+    }
+
+    @Test
+    void keepsCallerProvidedServerOrder() {
+        Fixture fixture = new Fixture();
+        when(fixture.serverService.listOwned(any(), any()))
+                .thenReturn(new Page<ManagedServer>(1, 10));
+        PageParam pageParam = new PageParam(1, 10, "name desc");
+
+        withOwner(7, () -> fixture.service.list(new ManagedServerQueryForm(), pageParam));
+
+        ArgumentCaptor<PageParam> page = ArgumentCaptor.forClass(PageParam.class);
+        verify(fixture.serverService).listOwned(any(), page.capture());
+        assertThat(page.getValue().getOrderBy()).isEqualTo("name desc");
     }
 
     @Test

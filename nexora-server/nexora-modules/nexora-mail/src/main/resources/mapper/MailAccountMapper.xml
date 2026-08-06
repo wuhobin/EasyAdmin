@@ -3,6 +3,13 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nexora.mail.mapper.MailAccountMapper">
+    <select id="selectOrdered" resultType="com.nexora.mail.entity.MailAccount">
+        SELECT *
+        FROM mail_account
+        ${ew.customSqlSegment}
+        ORDER BY sort ASC, id ASC
+    </select>
+
     <select id="selectEnabledForActiveOwners" resultType="com.nexora.mail.entity.MailAccount">
         SELECT ma.*
         FROM mail_account ma

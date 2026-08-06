@@ -1,6 +1,5 @@
 package com.nexora.system.config;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexora.system.entity.SysDict;
 import com.nexora.system.entity.SysDictData;
 import com.nexora.system.service.SysDictDataService;
@@ -24,7 +23,7 @@ class SysDictionaryReaderTest {
 
     @Test
     void returnsEmptyWhenEnabledDictionaryDoesNotExist() {
-        when(dictService.getOne(any(LambdaQueryWrapper.class), eq(false))).thenReturn(null);
+        when(dictService.getOne(any(), eq(false))).thenReturn(null);
 
         assertThat(reader.findEnabledEntries("mail_provider")).isEmpty();
         verifyNoInteractions(dictDataService);
@@ -38,8 +37,8 @@ class SysDictionaryReaderTest {
         item.setLabel("QQ邮箱");
         item.setValue("QQ");
         item.setIsDefault("1");
-        when(dictService.getOne(any(LambdaQueryWrapper.class), eq(false))).thenReturn(dict);
-        when(dictDataService.list(any(LambdaQueryWrapper.class))).thenReturn(List.of(item));
+        when(dictService.getOne(any(), eq(false))).thenReturn(dict);
+        when(dictDataService.listOrdered(any())).thenReturn(List.of(item));
 
         assertThat(reader.findEnabledEntries("mail_provider"))
                 .hasValueSatisfying(entries -> assertThat(entries)

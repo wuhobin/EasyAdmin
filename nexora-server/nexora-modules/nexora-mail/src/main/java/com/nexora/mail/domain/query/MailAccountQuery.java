@@ -1,4 +1,4 @@
-package com.nexora.monitor.domain.query;
+package com.nexora.mail.domain.query;
 
 import com.aurora.starter.mybatisplus.annotation.Operator;
 import com.aurora.starter.mybatisplus.annotation.QueryField;
@@ -7,16 +7,19 @@ import lombok.Data;
 import java.util.Collection;
 
 @Data
-public class ManagedServerQuery {
+public class MailAccountQuery {
 
     private Long id;
 
     private Integer ownerId;
 
-    @QueryField(operator = Operator.LIKE)
-    private String name;
+    @QueryField(queryEmpty = true)
+    private String email;
 
     private Integer enabled;
+
+    @QueryField(field = "id", operator = Operator.NE)
+    private Long excludeId;
 
     @QueryField(field = "ownerId", operator = Operator.IN)
     private Collection<Integer> ownerIds;

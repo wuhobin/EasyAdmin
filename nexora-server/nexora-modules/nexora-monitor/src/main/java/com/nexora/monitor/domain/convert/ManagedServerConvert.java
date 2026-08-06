@@ -14,6 +14,8 @@ public interface ManagedServerConvert {
     ManagedServerConvert INSTANCE = Mappers.getMapper(ManagedServerConvert.class);
 
     @Mapping(target = "ownerId", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "ownerIds", ignore = true)
     ManagedServerQuery toQuery(ManagedServerQueryForm form);
 
     @Mapping(target = "hasSavedPassword", ignore = true)
