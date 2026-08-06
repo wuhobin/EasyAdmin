@@ -40,14 +40,42 @@ CREATE TABLE `mail_account`  (
   UNIQUE INDEX `uk_mail_account_owner_email`(`owner_id` ASC, `email` ASC) USING BTREE,
   INDEX `idx_mail_account_enabled_sort`(`enabled` ASC, `sort` ASC) USING BTREE,
   INDEX `idx_mail_account_owner_sort`(`owner_id` ASC, `sort` ASC, `id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '聚合邮箱账户' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '聚合邮箱账户' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mail_account
 -- ----------------------------
-INSERT INTO `mail_account` VALUES (1, 1, 'QQ邮箱', 'QQ', '1289066006@qq.com', 'v1:2jdaO+DSabB/rHuv:YDskUtAw10RUebiHvDOO8SEOIeoYacs47qcdPRFayfI=', 1, 0, 3066, 1763133047, '2026-08-04 15:04:43', '', '2026-07-19 21:23:12', '2026-08-04 15:04:43');
-INSERT INTO `mail_account` VALUES (2, 1, '网易邮箱', 'NETEASE_163', 'wuhongbinyos@163.com', 'v1:PraA3Styz5bgaZlp:ep5JyA4rcv3kDWYmOpVbrVwfjkRx9F68dB70h5B0NpY=', 1, 1, 1672974450, 1, '2026-08-04 15:04:49', '', '2026-07-19 21:54:58', '2026-08-04 15:04:49');
-INSERT INTO `mail_account` VALUES (3, 1, '126邮箱', 'NETEASE_126', 'wuhobin@126.com', 'v1:mvC+jFbn0KjEsPmq:vEjeTZKk1bCenSFkmcjODllLW/21+s4sdUoLwoGAM08=', 1, 3, 1784626138, 1, '2026-08-04 15:04:49', '', '2026-07-21 17:29:44', '2026-08-04 15:04:49');
+
+-- ----------------------------
+-- Table structure for monitor_server
+-- ----------------------------
+DROP TABLE IF EXISTS `monitor_server`;
+CREATE TABLE `monitor_server`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `owner_id` int NOT NULL COMMENT '所属用户ID',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '服务器名称',
+  `host` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '服务器地址',
+  `port` int NOT NULL DEFAULT 22 COMMENT 'SSH端口',
+  `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'SSH用户名',
+  `password_ciphertext` varchar(4096) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '加密后的SSH密码',
+  `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '服务器描述',
+  `enabled` tinyint NOT NULL DEFAULT 1 COMMENT '是否启用：0否，1是',
+  `sort` int NOT NULL DEFAULT 0 COMMENT '排序',
+  `trusted_fingerprint` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '已信任的SSH主机指纹',
+  `fingerprint_algorithm` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '主机密钥算法',
+  `fingerprint_verified_time` datetime NULL DEFAULT NULL COMMENT '指纹确认时间',
+  `last_connect_time` datetime NULL DEFAULT NULL COMMENT '最后连接时间',
+  `last_error` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '最后连接错误',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_monitor_server_owner_sort`(`owner_id` ASC, `sort` ASC, `id` DESC) USING BTREE,
+  INDEX `idx_monitor_server_owner_enabled`(`owner_id` ASC, `enabled` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '服务器管理' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of monitor_server
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for quartz_job
@@ -196,7 +224,7 @@ CREATE TABLE `sys_menu`  (
   `perm` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '权限标识',
   `is_external` int NULL DEFAULT 0 COMMENT '是否外链 0:否  1:是',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 142 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '权限资源表 ' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 150 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '权限资源表 ' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -263,6 +291,14 @@ INSERT INTO `sys_menu` VALUES (138, '135', '', '', '清空', 1, '', 'BUTTON', '2
 INSERT INTO `sys_menu` VALUES (139, '4', 'online', '/monitor/online/index', '在线用户', 2, 'UserFilled', 'MENU', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (140, '139', '', '', '列表', 1, '', 'BUTTON', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 1, 'sys:online', 0);
 INSERT INTO `sys_menu` VALUES (141, '139', '', '', '强退', 2, '', 'BUTTON', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 1, 'sys:online:forceLogout', 0);
+INSERT INTO `sys_menu` VALUES (142, '4', 'server', '/monitor/server/index', '服务器管理', 1, 'Platform', 'MENU', '2026-08-05 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (143, '142', '', '', '列表', 1, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:list', 0);
+INSERT INTO `sys_menu` VALUES (144, '142', '', '', '新增', 2, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:add', 0);
+INSERT INTO `sys_menu` VALUES (145, '142', '', '', '修改', 3, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:update', 0);
+INSERT INTO `sys_menu` VALUES (146, '142', '', '', '删除', 4, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:delete', 0);
+INSERT INTO `sys_menu` VALUES (147, '142', '', '', '连接测试', 5, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:test', 0);
+INSERT INTO `sys_menu` VALUES (148, '142', '', '', '指纹管理', 6, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:fingerprint', 0);
+INSERT INTO `sys_menu` VALUES (149, '142', '', '', 'SSH终端', 7, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:terminal', 0);
 
 -- ----------------------------
 -- Table structure for sys_operate_log
@@ -354,7 +390,7 @@ CREATE TABLE `sys_role_menu`  (
   `menu_id` int NULL DEFAULT NULL COMMENT '菜单ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `role_id`(`role_id` ASC, `menu_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 549 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色-权限资源关联表 ' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 565 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色-权限资源关联表 ' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_role_menu
@@ -466,6 +502,22 @@ INSERT INTO `sys_role_menu` VALUES (534, 20, 124);
 INSERT INTO `sys_role_menu` VALUES (535, 20, 125);
 INSERT INTO `sys_role_menu` VALUES (536, 20, 126);
 INSERT INTO `sys_role_menu` VALUES (537, 20, 127);
+INSERT INTO `sys_role_menu` VALUES (549, 1, 142);
+INSERT INTO `sys_role_menu` VALUES (550, 1, 143);
+INSERT INTO `sys_role_menu` VALUES (551, 1, 144);
+INSERT INTO `sys_role_menu` VALUES (552, 1, 145);
+INSERT INTO `sys_role_menu` VALUES (553, 1, 146);
+INSERT INTO `sys_role_menu` VALUES (554, 1, 147);
+INSERT INTO `sys_role_menu` VALUES (555, 1, 148);
+INSERT INTO `sys_role_menu` VALUES (556, 1, 149);
+INSERT INTO `sys_role_menu` VALUES (557, 20, 142);
+INSERT INTO `sys_role_menu` VALUES (558, 20, 143);
+INSERT INTO `sys_role_menu` VALUES (559, 20, 144);
+INSERT INTO `sys_role_menu` VALUES (560, 20, 145);
+INSERT INTO `sys_role_menu` VALUES (561, 20, 146);
+INSERT INTO `sys_role_menu` VALUES (562, 20, 147);
+INSERT INTO `sys_role_menu` VALUES (563, 20, 148);
+INSERT INTO `sys_role_menu` VALUES (564, 20, 149);
 
 -- ----------------------------
 -- Table structure for sys_user

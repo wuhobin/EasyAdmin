@@ -4,6 +4,7 @@ public final class MailConstants {
 
     public static final String SYSTEM_MAIL_DISABLED_MESSAGE = "邮件服务未启用";
     public static final String TEST_EMAIL_SEND_FAILED_MESSAGE = "测试邮件发送失败：%s";
+    public static final String MAIL_CREDENTIAL_PURPOSE = "mail.auth-code";
     public static final String MAIL_PROVIDER_DICT_TYPE = "mail_provider";
     public static final String MAIL_ACCOUNT_AUTH_CODE_REQUIRED_MESSAGE = "新增邮箱时授权码不能为空";
     public static final String MAIL_ACCOUNT_ID_REQUIRED_MESSAGE = "邮箱账户ID不能为空";

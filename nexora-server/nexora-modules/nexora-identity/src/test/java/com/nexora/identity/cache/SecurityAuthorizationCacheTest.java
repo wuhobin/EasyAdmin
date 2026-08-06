@@ -26,7 +26,7 @@ class SecurityAuthorizationCacheTest {
     @Test
     void returnsCachedAuthorizationWithoutLoadingDatabase() {
         SecurityPermissionCache.Authorization authorization = authorization();
-        when(redisCache.getCacheObject("nexora:security:authorization:login:7"))
+        when(redisCache.getCacheObject("nexora:user:permission-list:login:7"))
                 .thenReturn(authorization);
         AtomicInteger loads = new AtomicInteger();
 
@@ -47,13 +47,13 @@ class SecurityAuthorizationCacheTest {
                 cache.get(7, AccountType.LOGIN, () -> authorization);
 
         assertThat(result).isSameAs(authorization);
-        verify(redisCache).setCacheObject("nexora:security:authorization:login:7",
+        verify(redisCache).setCacheObject("nexora:user:permission-list:login:7",
                 authorization, 24L, TimeUnit.HOURS);
     }
 
     @Test
     void fallsBackToDatabaseWhenRedisIsUnavailable() {
-        when(redisCache.getCacheObject("nexora:security:authorization:login:7"))
+        when(redisCache.getCacheObject("nexora:user:permission-list:login:7"))
                 .thenThrow(new RedisConnectionFailureException("redis unavailable"));
 
         SecurityPermissionCache.Authorization result =
@@ -85,10 +85,10 @@ class SecurityAuthorizationCacheTest {
                     .forEach(TransactionSynchronization::afterCommit);
 
             verify(redisCache).deleteObject(List.of(
-                    "nexora:security:authorization:login:7",
-                    "nexora:security:authorization:user:7",
-                    "nexora:security:authorization:admin:7",
-                    "nexora:security:authorization:merchant:7"));
+                    "nexora:user:permission-list:login:7",
+                    "nexora:user:permission-list:user:7",
+                    "nexora:user:permission-list:admin:7",
+                    "nexora:user:permission-list:merchant:7"));
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
             TransactionSynchronizationManager.setActualTransactionActive(false);
@@ -106,7 +106,7 @@ class SecurityAuthorizationCacheTest {
             TransactionSynchronizationManager.getSynchronizations()
                     .forEach(TransactionSynchronization::afterCommit);
 
-            verify(redisCache).deleteByPattern("nexora:security:authorization:*");
+            verify(redisCache).deleteByPattern("nexora:user:permission-list:*");
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
             TransactionSynchronizationManager.setActualTransactionActive(false);

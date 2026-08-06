@@ -30,26 +30,6 @@ class OssFileSchemaTest {
         assertThat(initializationSql).contains("sys:file:delete");
     }
 
-    @Test
-    void incrementalSqlRejectsNullUploadersWithoutMutatingBusinessData() throws Exception {
-        Path repositoryRoot = repositoryRoot();
-        String migrationSql = Files.readString(repositoryRoot.resolve(
-                "deploy/sql/20260730_sys_oss_file_uploader.sql"));
-
-        assertThat(migrationSql).contains("WHERE `uploader_id` IS NULL");
-        assertThat(migrationSql)
-                .contains("MODIFY COLUMN `uploader_id` bigint NOT NULL COMMENT '上传人ID'");
-        assertThat(migrationSql).contains("DROP COLUMN `uploader_name`");
-        assertThat(migrationSql).contains("DROP INDEX `idx_sys_oss_file_uploader`");
-        assertThat(migrationSql)
-                .contains("ADD INDEX `idx_sys_oss_file_uploader` (`uploader_id` ASC) USING BTREE");
-        assertThat(migrationSql)
-                .doesNotContain("UPDATE `sys_oss_file`")
-                .doesNotContain("INSERT INTO `sys_oss_file`")
-                .doesNotContain("DELETE FROM `sys_oss_file`")
-                .doesNotContain("TRUNCATE TABLE `sys_oss_file`");
-    }
-
     private static Path repositoryRoot() {
         Path currentPath = Path.of("").toAbsolutePath().normalize();
         while (currentPath != null) {

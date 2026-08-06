@@ -7,8 +7,8 @@ import com.nexora.mail.constants.MailProviderEnum;
 import com.nexora.mail.domain.form.MailAccountForm;
 import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.infrastructure.ImapMailClient;
-import com.nexora.mail.infrastructure.MailCredentialCipher;
 import com.nexora.mail.service.MailAccountService;
+import com.nexora.security.PlatformCredentialCipher;
 import com.nexora.system.api.DictionaryEntry;
 import com.nexora.system.api.SystemDictionaryReader;
 import org.junit.jupiter.api.Test;
@@ -48,8 +48,9 @@ class MailAccountBizServiceTest {
     @Test
     void assignsTheCurrentUserAndChecksEmailUniquenessWithinThatUser() {
         MailAccountService accountService = mock(MailAccountService.class);
-        MailCredentialCipher credentialCipher = mock(MailCredentialCipher.class);
-        when(credentialCipher.encrypt("secret")).thenReturn("ciphertext");
+        PlatformCredentialCipher credentialCipher = mock(PlatformCredentialCipher.class);
+        when(credentialCipher.encrypt(MailConstants.MAIL_CREDENTIAL_PURPOSE, "secret"))
+                .thenReturn("ciphertext");
         MailAccountBizService service = service(accountService, credentialCipher);
         MailAccountForm form = form();
 
@@ -93,7 +94,7 @@ class MailAccountBizServiceTest {
                         new DictionaryEntry("未知邮箱", "UNKNOWN", false))));
         MailAccountBizService service = service(
                 mock(MailAccountService.class),
-                mock(MailCredentialCipher.class),
+                mock(PlatformCredentialCipher.class),
                 dictionaryReader);
 
         assertThat(service.listProviders())
@@ -106,16 +107,16 @@ class MailAccountBizServiceTest {
     }
 
     private static MailAccountBizService service(MailAccountService accountService) {
-        return service(accountService, mock(MailCredentialCipher.class));
+        return service(accountService, mock(PlatformCredentialCipher.class));
     }
 
     private static MailAccountBizService service(MailAccountService accountService,
-                                                 MailCredentialCipher credentialCipher) {
+                                                 PlatformCredentialCipher credentialCipher) {
         return service(accountService, credentialCipher, mock(SystemDictionaryReader.class));
     }
 
     private static MailAccountBizService service(MailAccountService accountService,
-                                                 MailCredentialCipher credentialCipher,
+                                                 PlatformCredentialCipher credentialCipher,
                                                  SystemDictionaryReader dictionaryReader) {
         return new MailAccountBizService(
                 accountService,

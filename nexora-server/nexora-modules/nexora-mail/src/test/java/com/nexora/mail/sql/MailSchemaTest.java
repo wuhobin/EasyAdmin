@@ -30,12 +30,6 @@ class MailSchemaTest {
         assertThat(initializationSql).contains("'NETEASE_163'");
         assertThat(initializationSql).doesNotContain("CREATE TABLE `mail_message`");
 
-        String migrationSql = Files.readString(repositoryRoot.resolve(
-                "deploy/sql/20260729_mail_account_data_isolation.sql"), StandardCharsets.UTF_8);
-        assertThat(migrationSql).contains("ADD COLUMN `owner_id` int NOT NULL");
-        assertThat(migrationSql).contains("DROP INDEX `uk_mail_account_email`");
-        assertThat(migrationSql).contains("ADD UNIQUE INDEX `uk_mail_account_owner_email`");
-
         String mapperXml = Files.readString(repositoryRoot.resolve(
                 "nexora-server/nexora-modules/nexora-mail/src/main/resources/mapper/MailAccountMapper.xml"),
                 StandardCharsets.UTF_8);

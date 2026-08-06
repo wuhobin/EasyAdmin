@@ -1,12 +1,13 @@
 package com.nexora.mail.biz;
 
+import com.nexora.mail.constants.MailConstants;
 import com.nexora.mail.domain.vo.MailMessagePageVo;
 import com.nexora.mail.domain.vo.MailMessageSummaryVo;
 import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.infrastructure.ImapMailClient;
-import com.nexora.mail.infrastructure.MailCredentialCipher;
 import com.nexora.mail.infrastructure.MailMessagePage;
 import com.nexora.mail.service.MailAccountService;
+import com.nexora.security.PlatformCredentialCipher;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,12 +33,13 @@ class MailInboxBizServiceTest {
     @Test
     void keepsPerAccountOffsetsInAggregateCursor() {
         MailAccountService accountService = mock(MailAccountService.class);
-        MailCredentialCipher credentialCipher = mock(MailCredentialCipher.class);
+        PlatformCredentialCipher credentialCipher = mock(PlatformCredentialCipher.class);
         ImapMailClient imapMailClient = mock(ImapMailClient.class);
         MailAccount first = account(1L);
         MailAccount second = account(2L);
         when(accountService.listEnabledByOwnerId(7)).thenReturn(List.of(first, second));
-        when(credentialCipher.decrypt(anyString())).thenReturn("auth-code");
+        when(credentialCipher.decrypt(eq(MailConstants.MAIL_CREDENTIAL_PURPOSE), anyString()))
+                .thenReturn("auth-code");
         when(imapMailClient.listPage(eq(first), anyString(), anyInt(), isNull(), eq(0)))
                 .thenReturn(new MailMessagePage(List.of(message(1L, 11, 10), message(1L, 10, 8)), 100, true));
         when(imapMailClient.listPage(eq(second), anyString(), anyInt(), isNull(), eq(0)))
@@ -68,7 +70,7 @@ class MailInboxBizServiceTest {
     @Test
     void rejectsReadingAnotherUsersAccountWithoutCallingImap() {
         MailAccountService accountService = mock(MailAccountService.class);
-        MailCredentialCipher credentialCipher = mock(MailCredentialCipher.class);
+        PlatformCredentialCipher credentialCipher = mock(PlatformCredentialCipher.class);
         ImapMailClient imapMailClient = mock(ImapMailClient.class);
         when(accountService.getByIdAndOwnerId(99L, 7)).thenReturn(null);
         MailInboxBizService service = new MailInboxBizService(accountService, credentialCipher,
@@ -82,7 +84,7 @@ class MailInboxBizServiceTest {
                     .hasMessage("邮箱账户不存在或不可用");
         }
 
-        verify(credentialCipher, never()).decrypt(anyString());
+        verify(credentialCipher, never()).decrypt(anyString(), anyString());
     }
 
     private static MailAccount account(Long id) {

@@ -1,10 +1,11 @@
 package com.nexora.mail.task;
 
+import com.nexora.mail.constants.MailConstants;
 import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.infrastructure.ImapMailClient;
-import com.nexora.mail.infrastructure.MailCredentialCipher;
 import com.nexora.mail.infrastructure.MailCursor;
 import com.nexora.mail.service.MailAccountService;
+import com.nexora.security.PlatformCredentialCipher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -17,12 +18,12 @@ import java.util.concurrent.Executor;
 @Component("mailFetchTask")
 public class MailFetchTask {
     private final MailAccountService mailAccountService;
-    private final MailCredentialCipher credentialCipher;
+    private final PlatformCredentialCipher credentialCipher;
     private final ImapMailClient imapMailClient;
     private final Executor mailExecutor;
 
     public MailFetchTask(MailAccountService mailAccountService,
-                         MailCredentialCipher credentialCipher,
+                         PlatformCredentialCipher credentialCipher,
                          ImapMailClient imapMailClient,
                          @Qualifier("mailExecutor") Executor mailExecutor) {
         this.mailAccountService = mailAccountService;
@@ -41,7 +42,8 @@ public class MailFetchTask {
     private void checkAccount(MailAccount account) {
         try {
             MailCursor cursor = imapMailClient.latestCursor(account,
-                    credentialCipher.decrypt(account.getAuthCodeCiphertext()));
+                    credentialCipher.decrypt(
+                            MailConstants.MAIL_CREDENTIAL_PURPOSE, account.getAuthCodeCiphertext()));
             if (account.getUidValidity() != null
                     && account.getUidValidity().longValue() == cursor.uidValidity()
                     && account.getLastUid() != null

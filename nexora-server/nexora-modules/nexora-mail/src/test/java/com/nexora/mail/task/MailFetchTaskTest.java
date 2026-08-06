@@ -1,8 +1,8 @@
 package com.nexora.mail.task;
 
 import com.nexora.mail.infrastructure.ImapMailClient;
-import com.nexora.mail.infrastructure.MailCredentialCipher;
 import com.nexora.mail.service.MailAccountService;
+import com.nexora.security.PlatformCredentialCipher;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -19,7 +19,7 @@ class MailFetchTaskTest {
         when(accountService.listEnabledForActiveOwners()).thenReturn(List.of());
         MailFetchTask task = new MailFetchTask(
                 accountService,
-                mock(MailCredentialCipher.class),
+                mock(PlatformCredentialCipher.class),
                 mock(ImapMailClient.class),
                 Runnable::run);
 

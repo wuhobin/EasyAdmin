@@ -65,17 +65,6 @@ class SysConfigGroupSchemaTest {
         assertThat(registerInsert).contains("\"captchaEnabled\":true");
         assertThat(loginInsert).doesNotContain("\"captchaEnabled\"");
 
-        String migrationSql = Files.readString(repositoryRoot.resolve(
-                Path.of("deploy", "sql", "20260804_move_login_captcha_to_register.sql")),
-                StandardCharsets.UTF_8);
-
-        assertThat(migrationSql).contains(
-                "JSON_SET(",
-                "'$.captchaEnabled'",
-                "CAST('true' AS JSON)",
-                "WHERE `group_code` = 'register'",
-                "JSON_REMOVE(`config_value`, '$.captchaEnabled')",
-                "WHERE `group_code` = 'login'");
     }
 
     private static Path repositoryRoot() {

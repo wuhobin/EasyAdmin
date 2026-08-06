@@ -42,6 +42,11 @@ springdoc:
   swagger-ui:
     enabled: ${springdoc.swagger-ui.enabled:false}
 
+nexora:
+  security:
+    # Base64 编码的 32 字节平台凭据密钥；缺失或格式错误时拒绝启动。
+    credential-secret: ${PLATFORM_CREDENTIAL_SECRET:}
+
 # ============================== 文件存储配置 ==============================
 # 生产环境建议使用不同的 OSS 账号/Bucket
 dromara:

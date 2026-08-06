@@ -29,6 +29,13 @@ Nexora Admin 是一个基于 Spring Boot 3 + Sa-Token 的企业级后台管理�
 - **聚合收件箱**：多账户邮件统一阅读，支持附件下载、自动刷新、新邮件通知
 - **安全加密**：授权码 AES-256-GCM 加密存储
 
+### 服务器管理
+
+- **服务器配置**：以卡片形式管理自己添加的 SSH 服务器，支持启停、连接测试和状态查看
+- **主机指纹**：首次连接采用 TOFU 确认，指纹变化时阻止连接，需人工核实后重置
+- **Web SSH 终端**：浏览器内交互终端，支持全屏；每个用户最多同时打开 3 个，30 分钟无键盘输入自动断开
+- **数据隔离**：所有用户（包括超级管理员）只能查看和操作自己创建的服务器
+
 ## 项目架构
 
 ```
@@ -97,7 +104,7 @@ MYSQL_PASSWORD=
 REDIS_HOST=
 REDIS_PASSWORD=
 
-MAIL_CREDENTIAL_SECRET=
+PLATFORM_CREDENTIAL_SECRET=
 
 OSS_QINIU_ACCESS_KEY=
 OSS_QINIU_SECRET_KEY=
@@ -106,7 +113,7 @@ OSS_QINIU_DOMAIN=
 OSS_QINIU_BASE_PATH=
 ```
 
-启动前至少填写 MySQL、Redis 配置和不少于 16 位的 `MAIL_CREDENTIAL_SECRET`。系统 SMTP 参数在启动后的“系统管理 / 配置管理 / 邮箱配置”中维护，无需写入本地配置文件。使用文件管理功能时还需填写自己的七牛 Kodo 配置。不要提交真实凭据。
+启动前至少填写 MySQL、Redis 配置和 `PLATFORM_CREDENTIAL_SECRET`。该值必须是 Base64 编码的 32 字节密钥，可使用 `openssl rand -base64 32` 生成；邮件授权码和已保存的 SSH 密码共用此密钥，保存凭据后不得随意更换。系统 SMTP 参数在启动后的“系统管理 / 配置管理 / 邮箱配置”中维护，无需写入本地配置文件。使用文件管理功能时还需填写自己的七牛 Kodo 配置。不要提交真实凭据。
 
 ### 3. 启动后端
 
@@ -214,7 +221,7 @@ vi .env
 | `BACKEND_PORT` / `SERVER_PORT` | 宿主机回环端口和容器内服务端口，默认均为 `8800` |
 | `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PASSWORD` | MySQL 地址和账号 |
 | `REDIS_HOST` / `REDIS_PASSWORD` | Redis 地址和密码 |
-| `MAIL_CREDENTIAL_SECRET` | 邮箱授权码加密密钥，至少 16 位；保存邮箱账号后不可随意更换 |
+| `PLATFORM_CREDENTIAL_SECRET` | 邮件授权码与 SSH 密码共用的 AES-256-GCM 密钥；必须为 Base64 编码的 32 字节，保存凭据后不可随意更换 |
 | `OSS_QINIU_*` | 七牛 Kodo 的 AK、SK、Bucket 和访问域名 |
 | `JAVA_TOOL_OPTIONS` | JVM 内存、编码和时区参数，按服务器内存调整 |
 | `LOG_PATH` | 容器日志目录，保持 `/app/logs` 即可 |
@@ -288,6 +295,20 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    # 浏览器 SSH 终端 WebSocket。/api/ws/ssh 转发为后端 /ws/ssh。
+    location /api/ws/ {
+        proxy_pass http://127.0.0.1:8800/ws/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 3600s;
+    }
+
     location /api/ {
         proxy_pass http://127.0.0.1:8800/;
         proxy_http_version 1.1;
@@ -301,7 +322,7 @@ server {
 }
 ```
 
-`proxy_pass` 末尾的 `/` 不能省略：它负责将浏览器请求中的 `/api` 前缀去掉，再转发给实际不带 `/api` 前缀的后端接口。
+`proxy_pass` 末尾的 `/` 不能省略：它负责将浏览器请求中的 `/api` 前缀去掉，再转发给实际不带 `/api` 前缀的后端接口。服务器终端的一次性票据和活动会话保存在单实例内存中，当前部署不要为后端配置多实例负载均衡。
 
 启用并检查站点：
 
@@ -456,6 +477,20 @@ POST   /mail/account/{id}/test     # 测试连接
 GET    /mail/inbox/list            # 邮件列表
 GET    /mail/inbox/detail          # 邮件详情
 GET    /mail/inbox/attachment      # 附件下载
+```
+
+**服务器管理：**
+
+```http
+GET    /monitor/server/list                  # 当前用户的服务器列表
+POST   /monitor/server                       # 新增服务器
+PUT    /monitor/server                       # 修改服务器
+DELETE /monitor/server/{id}                  # 删除服务器
+POST   /monitor/server/{id}/test             # 测试 SSH 连接
+POST   /monitor/server/{id}/fingerprint      # 确认主机指纹
+DELETE /monitor/server/{id}/fingerprint      # 重置主机指纹
+POST   /monitor/server/{id}/terminal-ticket  # 签发 30 秒一次性终端票据
+WS     /ws/ssh?ticket=...                    # SSH 终端 WebSocket
 ```
 
 ## 贡献指南
