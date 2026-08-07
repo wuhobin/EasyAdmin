@@ -3,6 +3,9 @@ package com.nexora.file.biz;
 import com.nexora.constants.SecurityConstants;
 import com.nexora.file.constants.FileConstants;
 import com.nexora.contract.StoredFileUsageChecker;
+import com.nexora.file.domain.form.FileBatchForm;
+import com.nexora.file.domain.form.FileMoveForm;
+import com.nexora.file.domain.form.FileRenameForm;
 import com.nexora.file.domain.form.OssFileQueryForm;
 import com.nexora.file.domain.query.OssFileQuery;
 import com.nexora.file.entity.SysOssFile;
@@ -17,7 +20,9 @@ import com.aurora.starter.oss.validation.FileUploadValidator;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.nexora.file.task.OssFileRecordRetryTask;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.dromara.x.file.storage.core.Downloader;
 import org.dromara.x.file.storage.core.FileInfo;
+import org.dromara.x.file.storage.core.FileStorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +41,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +50,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -459,6 +467,145 @@ class FileBizServiceTest {
 
         verify(ossTemplate).delete(any(FileInfo.class));
         verify(ossFileService).removeById(1L);
+    }
+
+    @Test
+    void preflightsEveryBatchDeleteBeforeRemovingAnyFile() {
+        SysOssFile first = storedFile(1L, 10L);
+        SysOssFile second = storedFile(2L, 10L);
+        second.setFileUrl("https://oss.example.com/file-2.png");
+        when(ossFileService.getById(1L)).thenReturn(first);
+        when(ossFileService.getById(2L)).thenReturn(second);
+        when(sysUserService.isInUse(second.getFileUrl())).thenReturn(true);
+        FileBatchForm form = new FileBatchForm();
+        form.setFileIds(List.of(1L, 2L));
+        FileBizService service = new FileBizService(
+                fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
+            securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
+
+            assertThatThrownBy(() -> service.deleteByIds(form))
+                    .hasMessage(FileConstants.FILE_AVATAR_IN_USE_MESSAGE);
+        }
+
+        verify(ossTemplate, never()).delete(any(FileInfo.class));
+        verify(ossFileService, never()).removeById(any());
+    }
+
+    @Test
+    void reportsAllFilesThatFailDuringBatchDeletion() {
+        SysOssFile first = storedFile(1L, 10L);
+        SysOssFile second = storedFile(2L, 10L);
+        when(ossFileService.getById(1L)).thenReturn(first);
+        when(ossFileService.getById(2L)).thenReturn(second);
+        when(ossTemplate.delete(any(FileInfo.class))).thenReturn(false, true);
+        when(ossFileService.removeById(2L)).thenReturn(true);
+        FileBatchForm form = new FileBatchForm();
+        form.setFileIds(List.of(1L, 2L));
+        FileBizService service = new FileBizService(
+                fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
+            securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
+
+            assertThatThrownBy(() -> service.deleteByIds(form))
+                    .hasMessage(FileConstants.FILE_BATCH_DELETE_FAILED_MESSAGE.formatted(List.of(1L)));
+        }
+
+        verify(ossFileService).removeById(2L);
+        verify(ossFileService, never()).removeById(1L);
+    }
+
+    @Test
+    void renamesOnlyTheDisplayFilename() {
+        SysOssFile file = storedFile(1L, 10L);
+        when(ossFileService.getById(1L)).thenReturn(file);
+        when(ossFileService.updateOriginalFilename(1L, 10L, "renamed.png")).thenReturn(1);
+        FileRenameForm form = new FileRenameForm();
+        form.setNewName("renamed.png");
+        FileBizService service = new FileBizService(
+                fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
+            securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
+
+            service.rename(1L, form);
+        }
+
+        verify(ossFileService).updateOriginalFilename(1L, 10L, "renamed.png");
+        verify(ossFileService, never()).updateById(any(SysOssFile.class));
+    }
+
+    @Test
+    void rejectsARenameLongerThanTheDatabaseColumn() {
+        when(ossFileService.getById(1L)).thenReturn(storedFile(1L, 10L));
+        FileRenameForm form = new FileRenameForm();
+        form.setNewName("a".repeat(252) + ".png");
+        FileBizService service = new FileBizService(
+                fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
+            securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
+
+            assertThatThrownBy(() -> service.rename(1L, form))
+                    .hasMessage(FileConstants.FILE_RENAME_TOO_LONG_MESSAGE);
+        }
+
+        verify(ossFileService, never()).updateOriginalFilename(any(), any(), anyString());
+    }
+
+    @Test
+    void rejectsBatchMoveWhenNotEveryFileWasUpdated() {
+        when(ossFileService.getById(1L)).thenReturn(storedFile(1L, 10L));
+        when(ossFileService.getById(2L)).thenReturn(storedFile(2L, 10L));
+        when(ossFileService.updateGroup(List.of(1L, 2L), 10L, null)).thenReturn(1);
+        when(ossFileService.count(any())).thenReturn(1L);
+        FileMoveForm form = new FileMoveForm();
+        form.setFileIds(List.of(1L, 2L));
+        FileBizService service = new FileBizService(
+                fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
+            securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
+
+            assertThatThrownBy(() -> service.move(form))
+                    .hasMessage(FileConstants.FILE_BATCH_MOVE_FAILED_MESSAGE);
+        }
+    }
+
+    @Test
+    void stopsTextPreviewAfterTheConfiguredMaximum() {
+        SysOssFile file = storedFile(1L, 10L);
+        file.setOriginalFilename("notes.txt");
+        file.setContentType("text/plain");
+        file.setFileSize(0L);
+        when(ossFileService.getById(1L)).thenReturn(file);
+        FileStorageService storageService = mock(FileStorageService.class);
+        Downloader downloader = mock(Downloader.class);
+        when(ossTemplate.getFileStorageService()).thenReturn(storageService);
+        when(storageService.download(any(FileInfo.class))).thenReturn(downloader);
+        doAnswer(invocation -> {
+            Consumer<java.io.InputStream> consumer = invocation.getArgument(0);
+            byte[] content = new byte[FileConstants.FILE_TEXT_PREVIEW_MAX_SIZE_BYTES + 1];
+            consumer.accept(new ByteArrayInputStream(content));
+            return null;
+        }).when(downloader).inputStream(any());
+        FileBizService service = new FileBizService(
+                fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(false);
+            securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
+
+            assertThatThrownBy(() -> service.textPreview(1L))
+                    .hasMessage(FileConstants.FILE_TEXT_PREVIEW_TOO_LARGE_MESSAGE);
+        }
     }
 
     @Test

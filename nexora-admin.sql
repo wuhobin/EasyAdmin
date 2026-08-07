@@ -340,6 +340,7 @@ CREATE TABLE `sys_oss_file`  (
   `platform` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '存储平台',
   `thumbnail_url` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '缩略图地址',
   `uploader_id` bigint NOT NULL COMMENT '上传人ID',
+  `group_id` bigint NULL DEFAULT NULL COMMENT '文件分组ID',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
@@ -347,18 +348,43 @@ CREATE TABLE `sys_oss_file`  (
   INDEX `idx_sys_oss_file_url`(`file_url`(255) ASC) USING BTREE,
   INDEX `idx_sys_oss_file_original_name`(`original_filename` ASC) USING BTREE,
   INDEX `idx_sys_oss_file_content_type`(`content_type` ASC) USING BTREE,
-  INDEX `idx_sys_oss_file_uploader`(`uploader_id` ASC) USING BTREE
+  INDEX `idx_sys_oss_file_uploader`(`uploader_id` ASC) USING BTREE,
+  INDEX `idx_sys_oss_file_group`(`group_id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'OSS文件流水表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_oss_file
 -- ----------------------------
-INSERT INTO `sys_oss_file` VALUES (9, '2082739780126294017', 'https://oss.wuhobin.top/base/20260730/6a6b0631101399263cde2e75.jpg', '6a6b0631101399263cde2e75.jpg', '微信图片_20260728142844_53285_21.jpg', 'image/jpeg', 154452, 'qiniu-kodo-1', NULL, 1, '2026-07-30 16:07:14', '2026-07-30 16:07:14');
-INSERT INTO `sys_oss_file` VALUES (10, '2082740367886696450', 'https://oss.wuhobin.top/base/20260730/6a6b06bd101399263cde2e76.png', '6a6b06bd101399263cde2e76.png', '微信图片_20260730160723_55651_21.png', 'image/png', 38851, 'qiniu-kodo-1', NULL, 1, '2026-07-30 16:09:34', '2026-07-30 16:09:34');
-INSERT INTO `sys_oss_file` VALUES (11, '2082740804446633985', 'https://oss.wuhobin.top/base/20260730/6a6b0725101399263cde2e77.jpg', '6a6b0725101399263cde2e77.jpg', '微信图片_20260730160939_14180_31.jpg', 'image/jpeg', 256923, 'qiniu-kodo-1', NULL, 1816, '2026-07-30 16:11:18', '2026-07-30 16:11:18');
-INSERT INTO `sys_oss_file` VALUES (13, '2082751416417431553', 'https://oss.wuhobin.top/base/20260730/6a6b1106101346deb9f8d8b7.jpg', '6a6b1106101346deb9f8d8b7.jpg', '微信图片_20260730161709_55684_21.jpg', 'image/jpeg', 330984, 'qiniu-kodo-1', NULL, 1, '2026-07-30 16:53:28', '2026-07-30 16:53:28');
-INSERT INTO `sys_oss_file` VALUES (14, '2082787138621001730', 'https://oss.wuhobin.top/base/20260730/6a6b324b10132a48a1712b16.mp4', '6a6b324b10132a48a1712b16.mp4', '03dbf31cd8e55f8e8e96c4ddb9ddd0e9.mp4', 'video/mp4', 861604, 'qiniu-kodo-1', NULL, 1, '2026-07-30 19:15:25', '2026-07-30 19:15:25');
-INSERT INTO `sys_oss_file` VALUES (15, '2082787781716856833', 'https://oss.wuhobin.top/base/20260730/6a6b32e410132a48a1712b17.pdf', '6a6b32e410132a48a1712b17.pdf', '58种姿势+高清无打码系列(1)(1)(1).pdf', 'application/pdf', 5895518, 'qiniu-kodo-1', NULL, 1, '2026-07-30 19:17:58', '2026-07-30 19:17:58');
+INSERT INTO `sys_oss_file` VALUES (9, '2082739780126294017', 'https://oss.wuhobin.top/base/20260730/6a6b0631101399263cde2e75.jpg', '6a6b0631101399263cde2e75.jpg', '微信图片_20260728142844_53285_21.jpg', 'image/jpeg', 154452, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 16:07:14', '2026-07-30 16:07:14');
+INSERT INTO `sys_oss_file` VALUES (10, '2082740367886696450', 'https://oss.wuhobin.top/base/20260730/6a6b06bd101399263cde2e76.png', '6a6b06bd101399263cde2e76.png', '微信图片_20260730160723_55651_21.png', 'image/png', 38851, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 16:09:34', '2026-07-30 16:09:34');
+INSERT INTO `sys_oss_file` VALUES (11, '2082740804446633985', 'https://oss.wuhobin.top/base/20260730/6a6b0725101399263cde2e77.jpg', '6a6b0725101399263cde2e77.jpg', '微信图片_20260730160939_14180_31.jpg', 'image/jpeg', 256923, 'qiniu-kodo-1', NULL, 1816, NULL, '2026-07-30 16:11:18', '2026-07-30 16:11:18');
+INSERT INTO `sys_oss_file` VALUES (13, '2082751416417431553', 'https://oss.wuhobin.top/base/20260730/6a6b1106101346deb9f8d8b7.jpg', '6a6b1106101346deb9f8d8b7.jpg', '微信图片_20260730161709_55684_21.jpg', 'image/jpeg', 330984, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 16:53:28', '2026-07-30 16:53:28');
+INSERT INTO `sys_oss_file` VALUES (14, '2082787138621001730', 'https://oss.wuhobin.top/base/20260730/6a6b324b10132a48a1712b16.mp4', '6a6b324b10132a48a1712b16.mp4', '03dbf31cd8e55f8e8e96c4ddb9ddd0e9.mp4', 'video/mp4', 861604, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 19:15:25', '2026-07-30 19:15:25');
+INSERT INTO `sys_oss_file` VALUES (15, '2082787781716856833', 'https://oss.wuhobin.top/base/20260730/6a6b32e410132a48a1712b17.pdf', '6a6b32e410132a48a1712b17.pdf', '58种姿势+高清无打码系列(1)(1)(1).pdf', 'application/pdf', 5895518, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 19:17:58', '2026-07-30 19:17:58');
+
+-- ----------------------------
+-- Table structure for sys_oss_file_group
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_oss_file_group`;
+CREATE TABLE `sys_oss_file_group`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `owner_id` bigint NOT NULL COMMENT '分组所有者ID',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '分组名称',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_sys_oss_file_group_owner_name`(`owner_id` ASC, `name` ASC) USING BTREE,
+  INDEX `idx_sys_oss_file_group_owner`(`owner_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'OSS文件分组表' ROW_FORMAT = DYNAMIC;
+
+ALTER TABLE `sys_oss_file`
+  ADD CONSTRAINT `fk_sys_oss_file_group`
+  FOREIGN KEY (`group_id`) REFERENCES `sys_oss_file_group` (`id`)
+  ON DELETE SET NULL;
+
+-- ----------------------------
+-- Records of sys_oss_file_group
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for sys_role

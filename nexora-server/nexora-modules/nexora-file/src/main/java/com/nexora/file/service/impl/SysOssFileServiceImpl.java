@@ -8,9 +8,13 @@ import com.aurora.starter.mybatisplus.model.PageParam;
 import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.aurora.starter.mybatisplus.mybatis.PageUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssFile>
@@ -34,8 +38,25 @@ public class SysOssFileServiceImpl extends ServiceImpl<SysOssFileMapper, SysOssF
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public IPage<SysOssFile> listFiles(OssFileQuery query, PageParam pageParam) {
-        return page(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
+        boolean ungrouped = Boolean.TRUE.equals(query.getUngrouped());
+        query.setUngrouped(null);
+        QueryWrapper<SysOssFile> wrapper = (QueryWrapper<SysOssFile>) (Wrapper<?>) DynamicCondition.toWrapper(query);
+        if (ungrouped) {
+            wrapper.isNull("group_id");
+        }
+        return page(PageUtils.buildPage(pageParam), wrapper);
+    }
+
+    @Override
+    public int updateOriginalFilename(Long id, Long uploaderId, String originalFilename) {
+        return baseMapper.updateOriginalFilename(id, uploaderId, originalFilename);
+    }
+
+    @Override
+    public int updateGroup(List<Long> fileIds, Long uploaderId, Long groupId) {
+        return baseMapper.updateGroup(fileIds, uploaderId, groupId);
     }
 
 }
