@@ -339,7 +339,7 @@ const selectedRows = ref<OssFileRecord[]>([])
 const userOptions = ref<{ id: number; nickname: string }[]>([])
 const contentTypeOptions = ref<{ label: string; value: string }[]>([])
 const groupData = ref<FileGroupList>({groups: [], ungroupedCount: 0, scopeRequired: false})
-const selectedOwnerId = ref<number | undefined>(isAdmin.value ? undefined : currentUserId.value || undefined)
+const selectedOwnerId = ref<number | undefined>(currentUserId.value || undefined)
 const activeGroupKey = ref('all')
 const groupPanelExpanded = ref(true)
 const viewMode = ref<'table' | 'grid'>((localStorage.getItem('nexora:file:view:' + currentUserId.value) as 'table' | 'grid') || 'table')
@@ -371,7 +371,7 @@ const queryParams = reactive<OssFileQuery>({
   pageSize: 20,
   fileName: '',
   contentType: '',
-  uploaderId: undefined,
+  uploaderId: selectedOwnerId.value,
   groupId: undefined,
   ungrouped: false
 })
@@ -428,7 +428,7 @@ const handleQuery = () => {
 }
 const resetQuery = async () => {
   queryFormRef.value?.resetFields();
-  selectedOwnerId.value = isAdmin.value ? undefined : currentUserId.value || undefined;
+  selectedOwnerId.value = currentUserId.value || undefined;
   queryParams.uploaderId = selectedOwnerId.value;
   queryParams.pageNum = 1;
   activeGroupKey.value = 'all';
@@ -437,7 +437,8 @@ const resetQuery = async () => {
   await getList()
 }
 const handleOwnerChange = async () => {
-  selectedOwnerId.value = queryParams.uploaderId;
+  selectedOwnerId.value = queryParams.uploaderId || currentUserId.value || undefined;
+  queryParams.uploaderId = selectedOwnerId.value;
   activeGroupKey.value = 'all';
   queryParams.pageNum = 1;
   resetSelection();

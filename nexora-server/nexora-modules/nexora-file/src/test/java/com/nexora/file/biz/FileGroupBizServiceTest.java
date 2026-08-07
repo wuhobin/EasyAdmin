@@ -14,6 +14,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,6 +31,28 @@ class FileGroupBizServiceTest {
 
     @Mock
     private SysOssFileService fileService;
+
+    @Test
+    void defaultsAnAdminGroupListToTheCurrentAdministrator() {
+        SysOssFileGroup group = SysOssFileGroup.builder().id(1L).ownerId(10L).name("Documents").build();
+        when(groupService.listByOwnerId(10L)).thenReturn(List.of(group));
+        when(groupService.countUngrouped(10L)).thenReturn(2L);
+        FileGroupBizService service = new FileGroupBizService(groupService, fileService);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(true);
+            securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
+
+            var result = service.list(null);
+
+            assertThat(result.isScopeRequired()).isFalse();
+            assertThat(result.getGroups()).hasSize(1);
+            assertThat(result.getUngroupedCount()).isEqualTo(2L);
+        }
+
+        verify(groupService).listByOwnerId(10L);
+        verify(groupService).countUngrouped(10L);
+    }
 
     @Test
     void createsAGroupForTheAuthenticatedUser() {

@@ -139,8 +139,9 @@ public class FileBizService {
         }
         if (!SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)) {
             query.setUploaderId(currentUploaderId());
-        } else if (query.getGroupId() != null && query.getUploaderId() == null) {
-            throw new BizException(FileConstants.FILE_GROUP_REQUIRED_MESSAGE);
+        } else if (query.getUploaderId() == null) {
+            // 管理员首次进入文件页时默认查看自己的文件；传入明确的 uploaderId 时仍允许切换查看范围。
+            query.setUploaderId(currentUploaderId());
         }
         validateListGroup(query);
         IPage<SysOssFile> page = ossFileService.listFiles(query, pageParam);

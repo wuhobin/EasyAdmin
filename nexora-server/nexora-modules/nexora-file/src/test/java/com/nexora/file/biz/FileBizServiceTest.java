@@ -82,6 +82,25 @@ class FileBizServiceTest {
         lenient().when(fileUploadValidator.validate(any(MultipartFile.class))).thenReturn("image/png");
     }
 
+    @Test
+    void defaultsAnAdminFileListToTheCurrentAdministrator() {
+        when(ossFileService.listFiles(any(OssFileQuery.class), any(PageParam.class)))
+                .thenReturn(new Page<>(1, 20));
+        FileBizService service = new FileBizService(
+                fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
+
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class)) {
+            securityUtils.when(() -> SecurityUtils.hasRole(SecurityConstants.ADMIN_ROLE_CODE)).thenReturn(true);
+            securityUtils.when(SecurityUtils::getLoginIdAsInt).thenReturn(10);
+
+            service.list(new OssFileQueryForm(), new PageParam());
+        }
+
+        ArgumentCaptor<OssFileQuery> queryCaptor = ArgumentCaptor.forClass(OssFileQuery.class);
+        verify(ossFileService).listFiles(queryCaptor.capture(), any(PageParam.class));
+        assertThat(queryCaptor.getValue().getUploaderId()).isEqualTo(10L);
+    }
+
     @ParameterizedTest(name = "{0}")
     @MethodSource("allowedUploads")
     void acceptsAllowedExtensionsWhenTheDetectedContentTypeMatches(String filename,

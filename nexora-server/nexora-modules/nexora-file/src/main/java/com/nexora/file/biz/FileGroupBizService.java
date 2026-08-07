@@ -30,13 +30,6 @@ public class FileGroupBizService {
     private final SysOssFileService fileService;
 
     public FileGroupListVo list(Long requestedOwnerId) {
-        if (isAdmin() && requestedOwnerId == null) {
-            return FileGroupListVo.builder()
-                    .groups(List.of())
-                    .ungroupedCount(0L)
-                    .scopeRequired(true)
-                    .build();
-        }
         Long ownerId = resolveOwnerId(requestedOwnerId);
         List<SysOssFileGroupVo> groups = groupService.listByOwnerId(ownerId).stream()
                 .map(SysOssFileGroupVo::from)
@@ -123,12 +116,13 @@ public class FileGroupBizService {
     }
 
     private Long resolveOwnerId(Long requestedOwnerId) {
-        if (isAdmin()) {
-            if (requestedOwnerId == null || requestedOwnerId <= 0) {
-                throw new BizException(FileConstants.FILE_GROUP_REQUIRED_MESSAGE);
-            }
+        if (isAdmin() && requestedOwnerId != null && requestedOwnerId > 0) {
             return requestedOwnerId;
         }
+        return currentOwnerId();
+    }
+
+    private static Long currentOwnerId() {
         int currentUserId = SecurityUtils.getLoginIdAsInt();
         if (currentUserId <= 0) {
             throw new BizException(FileConstants.FILE_CURRENT_USER_REQUIRED_MESSAGE);

@@ -17,6 +17,6 @@ public class FileGroupListVo {
     @Schema(description = "未分组文件数量")
     private Long ungroupedCount;
 
-    @Schema(description = "管理员未选择上传人时是否需要先选择范围")
+    @Schema(description = "是否需要先选择上传人范围")
     private boolean scopeRequired;
 }
