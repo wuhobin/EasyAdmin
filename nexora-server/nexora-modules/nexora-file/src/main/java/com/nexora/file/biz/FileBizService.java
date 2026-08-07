@@ -8,13 +8,14 @@ import com.nexora.file.domain.form.OssFileQueryForm;
 import com.nexora.file.domain.query.OssFileQuery;
 import com.nexora.file.domain.vo.SysOssFileVo;
 import com.nexora.file.entity.SysOssFile;
-import com.nexora.file.infrastructure.FileUploadValidator;
-import com.nexora.file.infrastructure.ValidatedMultipartFile;
 import com.nexora.file.service.SysOssFileService;
 import com.aurora.starter.common.utils.DateUtils;
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.oss.exception.FileValidationException;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
+import com.aurora.starter.oss.validation.FileUploadValidator;
+import com.aurora.starter.oss.validation.ValidatedMultipartFile;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.file.task.OssFileRecordRetryTask;
@@ -47,7 +48,7 @@ public class FileBizService {
     private final OssFileRecordRetryTask retryTask;
 
     public String upload(MultipartFile file) {
-        String detectedContentType = fileUploadValidator.validate(file);
+        String detectedContentType = validateUpload(file);
         MultipartFile validatedFile = new ValidatedMultipartFile(file, detectedContentType);
         Long uploaderId = currentUploaderId();
         String datePath = DateUtils.parseDateToStr(DateUtils.YYYYMMDD, DateUtils.getNowDate());
@@ -60,6 +61,26 @@ public class FileBizService {
         }
         recordUpload(validatedFile, result, uploaderId, detectedContentType);
         return result.getUrl();
+    }
+
+    private String validateUpload(MultipartFile file) {
+        try {
+            return fileUploadValidator.validate(file);
+        } catch (FileValidationException exception) {
+            throw new BizException(validationMessage(exception), exception);
+        }
+    }
+
+    private static String validationMessage(FileValidationException exception) {
+        return switch (exception.getReason()) {
+            case EMPTY -> FileConstants.FILE_EMPTY_MESSAGE;
+            case TOO_LARGE -> FileConstants.FILE_TOO_LARGE_MESSAGE;
+            case FILENAME_REQUIRED -> FileConstants.FILE_NAME_REQUIRED_MESSAGE;
+            case FILENAME_TOO_LONG -> FileConstants.FILE_NAME_TOO_LONG_MESSAGE;
+            case EXTENSION_NOT_ALLOWED -> FileConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE;
+            case CONTENT_DETECTION_FAILED -> FileConstants.FILE_CONTENT_DETECTION_FAILED_MESSAGE;
+            case CONTENT_TYPE_MISMATCH -> FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE;
+        };
     }
 
     public IPage<SysOssFileVo> list(OssFileQueryForm form, PageParam pageParam) {

@@ -1,8 +1,8 @@
 package com.nexora.system.cache;
 
 import com.aurora.starter.common.utils.RedisKeyUtil;
-import com.nexora.cache.TwoLevelCacheTemplate;
 import com.nexora.constants.RedisConstants;
+import com.aurora.starter.redis.core.TwoLevelCacheTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

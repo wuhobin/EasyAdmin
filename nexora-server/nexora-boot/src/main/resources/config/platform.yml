@@ -1,5 +1,5 @@
 # platform-boot-starter 配置（业务功能，与环境无关）
-# 包含：WebMVC、验证码、Redis、Quartz 定时任务、Sa-Token 认证
+# 包含：WebMVC、验证码、Redis、OSS 文件校验、Quartz 定时任务、Sa-Token 认证
 platform:
   webmvc:
     # 响应报文加密目前未使用；标注 @EncryptResponse 的接口使用时才校验。
@@ -33,6 +33,10 @@ platform:
         - name: sysConfigGroup
           max-size: 1000
           default-ttl: 3d
+  oss:
+    upload-validation:
+      max-size: 50MB
+      max-filename-length: 255
   # Quartz 定时任务
   quartz:
     auto-init-table: true

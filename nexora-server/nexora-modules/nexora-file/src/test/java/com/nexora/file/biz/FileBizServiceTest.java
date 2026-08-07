@@ -8,12 +8,14 @@ import com.nexora.file.domain.query.OssFileQuery;
 import com.nexora.file.entity.SysOssFile;
 import com.nexora.file.service.SysOssFileService;
 import com.aurora.starter.mybatisplus.model.PageParam;
+import com.aurora.starter.oss.config.FileUploadValidationProperties;
+import com.aurora.starter.oss.exception.FileValidationException;
+import com.aurora.starter.oss.exception.FileValidationReason;
 import com.aurora.starter.oss.model.OssUploadResult;
 import com.aurora.starter.oss.template.OssTemplate;
+import com.aurora.starter.oss.validation.FileUploadValidator;
 import com.aurora.starter.security.context.SecurityUtils;
-import com.nexora.file.infrastructure.FileUploadValidator;
 import com.nexora.file.task.OssFileRecordRetryTask;
-import com.aurora.starter.webmvc.exception.BizException;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.junit.jupiter.api.Test;
@@ -128,7 +130,7 @@ class FileBizServiceTest {
     @Test
     void rejectsAnUnsupportedExtensionBeforeCallingOss() {
         lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
-                .thenThrow(new BizException(FileConstants.FILE_EXTENSION_NOT_ALLOWED_MESSAGE));
+                .thenThrow(validationFailure(FileValidationReason.EXTENSION_NOT_ALLOWED));
         MockMultipartFile file = multipartFile("avatar.bmp", pngBytes());
         FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
@@ -141,7 +143,7 @@ class FileBizServiceTest {
     @Test
     void rejectsContentDisguisedWithAnAllowedExtensionBeforeCallingOss() {
         lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
-                .thenThrow(new BizException(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE));
+                .thenThrow(validationFailure(FileValidationReason.CONTENT_TYPE_MISMATCH));
         MockMultipartFile file = multipartFile("document.png", pdfBytes());
         FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
@@ -155,7 +157,7 @@ class FileBizServiceTest {
     @MethodSource("nonMp4FtypBrands")
     void rejectsOtherIsoBaseMediaFormatsRenamedAsMp4(String majorBrand) {
         lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
-                .thenThrow(new BizException(FileConstants.FILE_CONTENT_TYPE_MISMATCH_MESSAGE));
+                .thenThrow(validationFailure(FileValidationReason.CONTENT_TYPE_MISMATCH));
         MockMultipartFile file = multipartFile("video.mp4", ftypBytes(majorBrand));
         FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
@@ -166,11 +168,11 @@ class FileBizServiceTest {
     }
 
     @Test
-    void rejectsAFileLargerThanFiftyMegabytesBeforeCallingOss() {
+    void rejectsAFileLargerThanTheConfiguredLimitBeforeCallingOss() {
         lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
-                .thenThrow(new BizException(FileConstants.FILE_TOO_LARGE_MESSAGE));
+                .thenThrow(validationFailure(FileValidationReason.TOO_LARGE));
         MultipartFile file = mock(MultipartFile.class);
-        when(file.getSize()).thenReturn(FileConstants.FILE_UPLOAD_MAX_SIZE + 1);
+        when(file.getSize()).thenReturn(FileUploadValidationProperties.DEFAULT_MAX_SIZE_BYTES + 1);
         FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
         assertThatThrownBy(() -> service.upload(file))
@@ -180,9 +182,9 @@ class FileBizServiceTest {
     }
 
     @Test
-    void allowsAFileExactlyAtTheSizeLimit() throws Exception {
+    void allowsAFileExactlyAtTheConfiguredLimit() throws Exception {
         MultipartFile file = mock(MultipartFile.class);
-        when(file.getSize()).thenReturn(FileConstants.FILE_UPLOAD_MAX_SIZE);
+        when(file.getSize()).thenReturn(FileUploadValidationProperties.DEFAULT_MAX_SIZE_BYTES);
         when(file.getOriginalFilename()).thenReturn("avatar.png");
         when(file.getInputStream()).thenReturn(new ByteArrayInputStream(pngBytes()));
         when(ossTemplate.upload(any(MultipartFile.class), anyString())).thenReturn(uploadResult("file-123"));
@@ -201,7 +203,7 @@ class FileBizServiceTest {
     @Test
     void rejectsABlankOriginalFilenameBeforeCallingOss() {
         lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
-                .thenThrow(new BizException(FileConstants.FILE_NAME_REQUIRED_MESSAGE));
+                .thenThrow(validationFailure(FileValidationReason.FILENAME_REQUIRED));
         MockMultipartFile file = multipartFile(" ", pngBytes());
         FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
 
@@ -212,7 +214,7 @@ class FileBizServiceTest {
     }
 
     @Test
-    void allowsAnOriginalFilenameWithExactlyTwoHundredFiftyFiveCharacters() {
+    void allowsAnOriginalFilenameAtTheConfiguredLimit() {
         String filename = "a".repeat(251) + ".png";
         MockMultipartFile file = multipartFile(filename, pngBytes());
         when(ossTemplate.upload(any(MultipartFile.class), anyString())).thenReturn(uploadResult("file-123"));
@@ -225,14 +227,14 @@ class FileBizServiceTest {
             service.upload(file);
         }
 
-        assertThat(filename).hasSize(FileConstants.FILE_ORIGINAL_FILENAME_MAX_LENGTH);
+        assertThat(filename).hasSize(FileUploadValidationProperties.DEFAULT_MAX_FILENAME_LENGTH);
         verify(ossTemplate).upload(any(MultipartFile.class), anyString());
     }
 
     @Test
-    void rejectsAnOriginalFilenameLongerThanTwoHundredFiftyFiveCharacters() {
+    void rejectsAnOriginalFilenameOverTheConfiguredLimit() {
         lenient().when(fileUploadValidator.validate(any(MultipartFile.class)))
-                .thenThrow(new BizException(FileConstants.FILE_NAME_TOO_LONG_MESSAGE));
+                .thenThrow(validationFailure(FileValidationReason.FILENAME_TOO_LONG));
         String filename = "a".repeat(252) + ".png";
         MockMultipartFile file = multipartFile(filename, pngBytes());
         FileBizService service = new FileBizService(fileUploadValidator, ossTemplate, ossFileService, sysUserService, retryTask);
@@ -240,7 +242,7 @@ class FileBizServiceTest {
         assertThatThrownBy(() -> service.upload(file))
                 .hasMessage(FileConstants.FILE_NAME_TOO_LONG_MESSAGE);
 
-        assertThat(filename).hasSize(FileConstants.FILE_ORIGINAL_FILENAME_MAX_LENGTH + 1);
+        assertThat(filename).hasSize(FileUploadValidationProperties.DEFAULT_MAX_FILENAME_LENGTH + 1);
         verify(ossTemplate, never()).upload(any(MultipartFile.class), anyString());
     }
 
@@ -477,6 +479,10 @@ class FileBizServiceTest {
 
     private static MockMultipartFile file() {
         return multipartFile("avatar.png", pngBytes());
+    }
+
+    private static FileValidationException validationFailure(FileValidationReason reason) {
+        return new FileValidationException(reason, "validation failed");
     }
 
     private static MockMultipartFile multipartFile(String filename, byte[] content) {
