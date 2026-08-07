@@ -6,11 +6,9 @@
         <div class="toolbar-actions">
           <el-button-group class="view-switcher" aria-label="切换文件视图">
             <el-button :type="viewMode === 'table' ? 'primary' : ''" :icon="List" :aria-pressed="viewMode === 'table'"
-                       @click="setViewMode('table')">列表
-            </el-button>
+                       @click="setViewMode('table')"/>
             <el-button :type="viewMode === 'grid' ? 'primary' : ''" :icon="Grid" :aria-pressed="viewMode === 'grid'"
-                       @click="setViewMode('grid')">宫格
-            </el-button>
+                       @click="setViewMode('grid')"/>
           </el-button-group>
           <el-button v-permission="['sys:file:upload']" type="primary" :icon="UploadFilled" @click="openUploadDialog">
             上传文件
@@ -1126,9 +1124,9 @@ getList()
 }
 
 .view-switcher :deep(.el-button) {
-  min-width: 66px;
+  width: 36px;
   height: 36px;
-  padding: 0 12px;
+  padding: 0;
   border-color: var(--nexora-list-border, var(--el-border-color));
   font-weight: 600;
 }

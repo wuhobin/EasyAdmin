@@ -57,6 +57,12 @@ test('file page supports search, preview, authenticated download, URL commands, 
     assert.match(pageSource, /deleteFileApi/)
     assert.match(pageSource, /v-permission=["']\['sys:file:upload'\]["']/)
     assert.match(pageSource, />\s*上传文件\s*</)
+
+    // 视图切换按钮：去文本、只保留图标，保留 aria 无障碍
+    assert.match(pageSource, /:icon=["']List["']/)
+    assert.match(pageSource, /:icon=["']Grid["']/)
+    assert.match(pageSource, /:aria-pressed=["']viewMode\s*===\s*["']table["']/)
+    assert.doesNotMatch(pageSource, /icon=["']List["'][^>]*>\s*列表/)
 })
 
 test('file page previews supported media through the authenticated preview API', () => {
