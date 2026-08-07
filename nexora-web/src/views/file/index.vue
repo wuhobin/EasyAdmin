@@ -2,12 +2,14 @@
   <div class="app-container file-page">
     <el-card class="file-card" shadow="never">
       <div class="file-toolbar">
-        <div><h2>文件列表</h2><span class="file-total">共 {{ total }} 个文件</span></div>
+        <div class="file-heading"><h2>文件列表</h2><span class="file-total">共 {{ total }} 个文件</span></div>
         <div class="toolbar-actions">
-          <el-button-group>
-            <el-button :type="viewMode === 'table' ? 'primary' : ''" :icon="List" @click="setViewMode('table')">列表
+          <el-button-group class="view-switcher" aria-label="切换文件视图">
+            <el-button :type="viewMode === 'table' ? 'primary' : ''" :icon="List" :aria-pressed="viewMode === 'table'"
+                       @click="setViewMode('table')">列表
             </el-button>
-            <el-button :type="viewMode === 'grid' ? 'primary' : ''" :icon="Grid" @click="setViewMode('grid')">宫格
+            <el-button :type="viewMode === 'grid' ? 'primary' : ''" :icon="Grid" :aria-pressed="viewMode === 'grid'"
+                       @click="setViewMode('grid')">宫格
             </el-button>
           </el-button-group>
           <el-button v-permission="['sys:file:upload']" type="primary" :icon="UploadFilled" @click="openUploadDialog">
@@ -44,7 +46,7 @@
                 <span class="group-name" :title="group.name">{{ group.name }}</span><em>{{ group.fileCount }}</em>
                 <el-dropdown v-if="canManageGroups" trigger="click"
                              @command="command => handleGroupCommand(command, group)">
-                  <el-button link class="group-more" :icon="MoreFilled" @click.stop/>
+                  <el-button link class="group-more" :icon="MoreFilled" aria-label="更多分组操作" @click.stop/>
                   <template #dropdown>
                     <el-dropdown-menu>
                       <el-dropdown-item command="rename">重命名</el-dropdown-item>
@@ -58,7 +60,7 @@
         </aside>
 
         <main class="file-content">
-          <div class="search-wrapper">
+          <div class="search-wrapper file-filters">
             <el-form ref="queryFormRef" :model="queryParams" :inline="true">
               <el-form-item label="文件名称" prop="fileName">
                 <el-input v-model="queryParams.fileName" clearable placeholder="请输入文件名称"
@@ -84,7 +86,7 @@
             </el-form>
           </div>
 
-          <div v-if="selectedRows.length" class="selection-bar">
+          <div v-if="selectedRows.length" class="selection-bar" role="status" aria-live="polite">
             <span>已选 {{ selectedRows.length }} 个文件</span>
             <el-button v-permission="['sys:file:upload']" size="small" @click="openMoveDialog">移动到分组</el-button>
             <el-button v-permission="['sys:file:delete']" size="small" type="danger" @click="handleBatchDelete">
@@ -98,7 +100,8 @@
             <el-table-column label="文件" min-width="310">
               <template #default="{ row }">
                 <div class="file-cell">
-                  <button class="thumb-button" type="button" @click="openPreview(row)"><img
+                  <button class="thumb-button" type="button" :aria-label="`预览 ${displayName(row)}`"
+                          @click="openPreview(row)"><img
                       v-if="isImageFile(row) && (row.thumbnailUrl || row.fileUrl)"
                       :src="row.thumbnailUrl || row.fileUrl" alt=""/>
                     <el-icon v-else>
@@ -113,7 +116,7 @@
             </el-table-column>
             <el-table-column label="类型" min-width="170" show-overflow-tooltip>
               <template #default="{ row }">
-                <el-tag effect="plain">{{ row.contentType || '-' }}</el-tag>
+                <el-tag :type="mimeTagType(row)" effect="plain">{{ row.contentType || '-' }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column label="上传时间" prop="createTime" min-width="180" align="center"/>
@@ -145,9 +148,12 @@
           </el-table>
 
           <div v-else v-loading="loading" class="file-grid">
-            <el-empty v-if="!fileList.length && !loading" description="暂无文件"/>
+            <div v-if="!fileList.length && !loading" class="grid-empty">
+              <el-empty description="暂无文件"/>
+            </div>
             <article v-for="row in fileList" :key="row.id" class="file-grid-item">
-              <button class="grid-thumb" type="button" @click="openPreview(row)"><img
+              <button class="grid-thumb" type="button" :aria-label="`预览 ${displayName(row)}`"
+                      @click="openPreview(row)"><img
                   v-if="isImageFile(row) && (row.thumbnailUrl || row.fileUrl)" :src="row.thumbnailUrl || row.fileUrl"
                   alt=""/>
                 <el-icon v-else>
@@ -461,6 +467,13 @@ const isImageFile = (row: any) => normalizedType(row).startsWith('image/')
 const isTextFile = (row: any) => normalizedType(row).startsWith('text/') || /\.(txt|md|csv|log|java|kt|js|ts|vue|html|css|json|xml|yaml|yml|sql)$/i.test(displayName(row))
 const canPreview = (row: any) => isImageFile(row) || normalizedType(row).startsWith('video/') || normalizedType(row).startsWith('audio/') || normalizedType(row) === 'application/pdf' || isTextFile(row)
 const fileIcon = (row: any) => isImageFile(row) ? Picture : normalizedType(row).startsWith('video/') ? VideoPlay : normalizedType(row).startsWith('audio/') ? Headset : Document
+const mimeTagType = (row: any) => {
+  const type = normalizedType(row)
+  if (type.startsWith('image/')) return 'success'
+  if (type.startsWith('video/') || type.startsWith('audio/')) return 'warning'
+  if (type === 'application/pdf') return 'danger'
+  return 'info'
+}
 const formatFileSize = (size?: number) => {
   if (!size) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB'];
@@ -1051,6 +1064,646 @@ getList()
   .pagination-container :deep(.el-pagination) {
     flex-wrap: wrap;
     justify-content: center;
+  }
+}
+
+/* 文件工作台：内容优先、轻边界、低干扰的视觉层级 */
+.file-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.file-card.el-card {
+  overflow: hidden;
+  min-height: calc(100vh - 120px);
+  margin: 0;
+  background: var(--nexora-list-surface, var(--el-bg-color));
+  border: 1px solid var(--nexora-list-border, var(--el-border-color-lighter));
+  border-radius: 14px;
+  box-shadow: var(--nexora-list-shadow, 0 8px 24px rgb(15 23 42 / 5%));
+}
+
+.file-card :deep(.el-card__body) {
+  min-width: 0;
+  padding: 0;
+}
+
+.file-toolbar {
+  min-width: 0;
+  padding: 22px 24px 20px;
+  margin: 0;
+  background: linear-gradient(112deg, color-mix(in srgb, var(--el-color-primary) 5%, var(--el-bg-color)) 0%, var(--el-bg-color) 58%);
+  border-bottom: 1px solid var(--nexora-list-divider, var(--el-border-color-lighter));
+}
+
+.file-heading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.file-toolbar h2 {
+  flex: none;
+  margin: 0;
+  color: var(--el-text-color-primary);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.file-total {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbar-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.view-switcher :deep(.el-button) {
+  min-width: 66px;
+  height: 36px;
+  padding: 0 12px;
+  border-color: var(--nexora-list-border, var(--el-border-color));
+  font-weight: 600;
+}
+
+.view-switcher :deep(.el-button:not(.el-button--primary):hover) {
+  color: var(--el-color-primary);
+  background: color-mix(in srgb, var(--el-color-primary) 6%, var(--el-bg-color));
+  border-color: color-mix(in srgb, var(--el-color-primary) 45%, var(--el-border-color));
+}
+
+.toolbar-actions > :deep(.el-button--primary) {
+  min-height: 36px;
+  padding-inline: 16px;
+  border-radius: 7px;
+  box-shadow: 0 8px 16px -10px color-mix(in srgb, var(--el-color-primary) 80%, transparent);
+  font-weight: 650;
+}
+
+.file-body {
+  gap: 24px;
+  padding: 20px 24px 24px;
+}
+
+.group-panel {
+  width: 216px;
+  padding-right: 18px;
+  border-right-color: var(--nexora-list-divider, var(--el-border-color-lighter));
+}
+
+.group-panel-title {
+  min-height: 32px;
+  margin: 0 4px 10px;
+  color: var(--el-text-color-primary);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+.group-panel-title > span {
+  font-weight: 700;
+}
+
+.group-panel-title :deep(.el-button) {
+  min-height: 32px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.group-panel :deep(.el-menu) {
+  padding: 4px 0;
+  background: transparent;
+}
+
+.group-panel :deep(.el-menu-item) {
+  min-height: 42px;
+  height: 42px;
+  padding: 0 10px;
+  margin: 3px 0;
+  color: var(--el-text-color-secondary);
+  border-radius: 8px;
+  line-height: 42px;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.group-panel :deep(.el-menu-item:hover) {
+  color: var(--el-text-color-primary);
+  background: color-mix(in srgb, var(--el-color-primary) 6%, transparent);
+}
+
+.group-panel :deep(.el-menu-item.is-active) {
+  color: var(--el-color-primary);
+  background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
+  font-weight: 650;
+}
+
+.group-panel :deep(.el-menu-item .el-icon) {
+  margin-right: 7px;
+  color: currentColor;
+  font-size: 17px;
+}
+
+.group-panel em {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--el-fill-color-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.group-panel :deep(.el-menu-item.is-active) em {
+  color: var(--el-color-primary);
+  background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+}
+
+.group-more {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 5px;
+  border-radius: 6px;
+}
+
+.group-more:hover {
+  color: var(--el-color-primary);
+  background: color-mix(in srgb, var(--el-color-primary) 9%, transparent);
+}
+
+.file-filters {
+  padding: 16px 16px 4px;
+  margin-bottom: 14px;
+  background: var(--nexora-list-header, var(--el-fill-color-light));
+  border: 1px solid var(--nexora-list-divider, var(--el-border-color-lighter));
+  border-radius: 10px;
+}
+
+.file-filters :deep(.el-form) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+}
+
+.file-filters :deep(.el-form-item) {
+  margin: 0 0 12px;
+}
+
+.file-filters :deep(.el-form-item__label) {
+  color: var(--el-text-color-regular);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.file-filters :deep(.el-input),
+.file-filters :deep(.el-select) {
+  width: 188px;
+}
+
+.file-filters :deep(.el-input__wrapper),
+.file-filters :deep(.el-select__wrapper) {
+  min-height: 36px;
+  padding-inline: 11px;
+  background: var(--el-bg-color);
+  border-radius: 7px;
+  box-shadow: inset 0 0 0 1px var(--el-border-color-light);
+  transition: box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.file-filters :deep(.el-input__wrapper:hover),
+.file-filters :deep(.el-select__wrapper:hover) {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--el-color-primary) 48%, var(--el-border-color));
+}
+
+.file-filters :deep(.el-input__wrapper.is-focus),
+.file-filters :deep(.el-select__wrapper.is-focused) {
+  box-shadow: inset 0 0 0 1px var(--el-color-primary), 0 0 0 3px color-mix(in srgb, var(--el-color-primary) 13%, transparent);
+}
+
+.file-filters :deep(.el-form-item:last-child) {
+  margin-left: auto;
+}
+
+.file-filters :deep(.el-button) {
+  min-height: 36px;
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+.selection-bar {
+  min-height: 44px;
+  gap: 10px;
+  padding: 6px 10px 6px 14px;
+  margin-bottom: 12px;
+  background: color-mix(in srgb, var(--el-color-primary) 8%, var(--el-bg-color));
+  border: 1px solid color-mix(in srgb, var(--el-color-primary) 22%, var(--el-border-color-lighter));
+  border-radius: 9px;
+}
+
+.selection-bar span {
+  color: var(--el-text-color-primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.selection-bar :deep(.el-button) {
+  min-height: 32px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.file-table {
+  overflow: hidden;
+  --el-table-header-bg-color: var(--nexora-list-header, var(--el-fill-color-light));
+  --el-table-row-hover-bg-color: var(--nexora-list-hover, color-mix(in srgb, var(--el-color-primary) 5%, var(--el-bg-color)));
+  --el-table-border-color: var(--nexora-list-divider, var(--el-border-color-lighter));
+  border: 1px solid var(--nexora-list-divider, var(--el-border-color-lighter));
+  border-radius: 10px;
+}
+
+.file-table :deep(.el-table__inner-wrapper::before) {
+  display: none;
+}
+
+.file-table :deep(th.el-table__cell) {
+  height: 44px;
+  padding: 0;
+  color: var(--el-text-color-secondary);
+  background: var(--nexora-list-header, var(--el-fill-color-light));
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.file-table :deep(td.el-table__cell) {
+  height: 66px;
+  padding: 0;
+  border-bottom-color: var(--nexora-list-divider, var(--el-border-color-lighter));
+}
+
+.file-table :deep(.el-table__row:last-child td.el-table__cell) {
+  border-bottom: 0;
+}
+
+.file-table :deep(.el-table__body tr:hover > td.el-table__cell) {
+  background: var(--nexora-list-hover, color-mix(in srgb, var(--el-color-primary) 5%, var(--el-bg-color)));
+}
+
+.file-table :deep(.el-table__empty-block) {
+  min-height: 190px;
+}
+
+.file-table :deep(.el-tag) {
+  max-width: 145px;
+  height: 24px;
+  padding: 0 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  font-size: 11px !important;
+  line-height: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-table :deep(.el-button.is-link),
+.grid-actions :deep(.el-button.is-link) {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.file-table :deep(.el-button.is-link:hover),
+.grid-actions :deep(.el-button.is-link:hover) {
+  background: color-mix(in srgb, var(--el-color-primary) 9%, transparent);
+}
+
+.file-cell {
+  gap: 12px;
+}
+
+.thumb-button,
+.grid-thumb {
+  border-color: color-mix(in srgb, var(--el-color-primary) 18%, var(--el-border-color-lighter));
+  background: color-mix(in srgb, var(--el-color-primary) 5%, var(--el-fill-color-light));
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.thumb-button:hover,
+.grid-thumb:hover {
+  border-color: color-mix(in srgb, var(--el-color-primary) 45%, var(--el-border-color));
+  box-shadow: 0 5px 12px -8px color-mix(in srgb, var(--el-color-primary) 65%, transparent);
+}
+
+.thumb-button:focus-visible,
+.grid-thumb:focus-visible,
+.group-more:focus-visible,
+.mobile-group-toggle:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
+}
+
+.file-copy strong,
+.grid-copy strong {
+  color: var(--el-text-color-primary);
+  font-weight: 650;
+  line-height: 20px;
+}
+
+.file-copy span,
+.grid-copy span,
+.grid-copy small {
+  line-height: 18px;
+}
+
+.file-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  min-height: 250px;
+}
+
+.grid-empty {
+  display: grid;
+  min-height: 250px;
+  place-items: center;
+  grid-column: 1 / -1;
+  border: 1px dashed var(--nexora-list-divider, var(--el-border-color-lighter));
+  border-radius: 10px;
+  background: var(--nexora-list-header, var(--el-fill-color-light));
+}
+
+.file-grid-item {
+  min-width: 0;
+  padding: 14px;
+  background: var(--nexora-list-surface, var(--el-bg-color));
+  border-color: var(--nexora-list-divider, var(--el-border-color-lighter));
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+}
+
+.file-grid-item:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--el-color-primary) 30%, var(--el-border-color-lighter));
+  box-shadow: 0 12px 24px -18px color-mix(in srgb, var(--el-color-primary) 42%, transparent);
+}
+
+.grid-thumb {
+  height: 148px;
+  border-radius: 9px;
+  font-size: 42px;
+}
+
+.grid-thumb:active,
+.thumb-button:active {
+  transform: scale(0.98);
+}
+
+.thumb-view {
+  width: 28px;
+  height: 28px;
+  background: rgb(15 23 42 / 68%);
+  box-shadow: 0 2px 8px rgb(15 23 42 / 20%);
+}
+
+.grid-copy {
+  gap: 5px;
+  padding: 0 2px;
+}
+
+.grid-copy span {
+  color: var(--el-color-primary);
+  font-weight: 550;
+}
+
+.grid-actions {
+  min-height: 34px;
+  gap: 3px;
+  padding-top: 8px;
+  border-top: 1px solid var(--nexora-list-divider, var(--el-border-color-lighter));
+}
+
+.grid-actions :deep(.el-checkbox) {
+  min-height: 32px;
+  margin-right: auto;
+}
+
+.pagination-container {
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--nexora-list-divider, var(--el-border-color-lighter));
+}
+
+.pagination-container :deep(.el-pagination) {
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pagination-container :deep(.el-pagination button),
+.pagination-container :deep(.el-pager li) {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  line-height: 32px;
+}
+
+.upload-intro {
+  margin: -2px 0 16px;
+  line-height: 1.65;
+}
+
+.upload-dropzone :deep(.el-upload-dragger) {
+  padding: 30px 20px;
+  background: var(--el-fill-color-light);
+  border: 1px dashed color-mix(in srgb, var(--el-color-primary) 35%, var(--el-border-color));
+  border-radius: 10px;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.upload-dropzone :deep(.el-upload-dragger:hover) {
+  background: color-mix(in srgb, var(--el-color-primary) 6%, var(--el-bg-color));
+  border-color: var(--el-color-primary);
+}
+
+.upload-dropzone-content {
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.upload-dropzone-content .el-icon {
+  font-size: 28px;
+}
+
+.selected-file {
+  margin-top: 14px;
+  border: 1px solid var(--nexora-list-divider, var(--el-border-color-lighter));
+  background: var(--el-fill-color-light);
+}
+
+.selected-file strong {
+  min-width: 0;
+  font-weight: 600;
+}
+
+.preview-loading {
+  min-height: 220px;
+  align-items: center;
+}
+
+.preview-media {
+  border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+  .file-body {
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .file-filters :deep(.el-form-item) {
+    min-width: min(240px, 100%);
+    flex: 1 1 calc(50% - 7px);
+  }
+
+  .file-filters :deep(.el-input),
+  .file-filters :deep(.el-select) {
+    width: 100%;
+  }
+
+  .file-filters :deep(.el-form-item:last-child) {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 800px) {
+  .file-toolbar {
+    align-items: stretch;
+    padding: 18px;
+  }
+
+  .toolbar-actions {
+    justify-content: space-between;
+  }
+
+  .group-panel {
+    margin-bottom: 0;
+  }
+
+  .file-filters {
+    padding: 14px 14px 2px;
+  }
+}
+
+@media (max-width: 560px) {
+  .file-card.el-card {
+    border-radius: 10px;
+  }
+
+  .file-toolbar,
+  .file-body {
+    padding-inline: 14px;
+  }
+
+  .file-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .toolbar-actions {
+    align-items: stretch;
+  }
+
+  .view-switcher,
+  .toolbar-actions > :deep(.el-button--primary) {
+    flex: 1;
+  }
+
+  .view-switcher :deep(.el-button) {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .toolbar-actions > :deep(.el-button--primary) {
+    justify-content: center;
+  }
+
+  .file-filters :deep(.el-form-item) {
+    min-width: 100%;
+    flex-basis: 100%;
+  }
+
+  .selection-bar {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .selection-bar span {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .selection-bar :deep(.el-button) {
+    flex: 1;
+  }
+
+  .file-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .file-grid-item {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .grid-thumb {
+    height: 112px;
+  }
+
+  .grid-actions :deep(.el-button.is-link) {
+    min-width: 28px;
+    padding-inline: 3px;
+  }
+
+  .pagination-container {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .pagination-container :deep(.el-pagination) {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  .file-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .grid-thumb {
+    height: 150px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-grid-item,
+  .thumb-button,
+  .grid-thumb,
+  .file-filters :deep(.el-input__wrapper),
+  .file-filters :deep(.el-select__wrapper),
+  .upload-dropzone :deep(.el-upload-dragger) {
+    transition: none;
   }
 }
 </style>
