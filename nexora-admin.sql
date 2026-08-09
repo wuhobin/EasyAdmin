@@ -594,4 +594,48 @@ INSERT INTO `sys_user_role` VALUES (56, 1, 1);
 INSERT INTO `sys_user_role` VALUES (61, 20, 1815);
 INSERT INTO `sys_user_role` VALUES (62, 20, 1816);
 
+-- ----------------------------
+-- System notifications
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_user_notice`;
+DROP TABLE IF EXISTS `sys_notice`;
+CREATE TABLE `sys_notice` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '通知ID',
+  `title` varchar(62) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '标题',
+  `content` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '正文',
+  `content_format` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'text' COMMENT '内容格式 text/html',
+  `notice_type` tinyint NOT NULL COMMENT '类型 1通知 2公告',
+  `target_type` tinyint NOT NULL COMMENT '接收对象 1指定用户 3全部用户',
+  `target_ids` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '指定用户ID快照JSON',
+  `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态 0草稿 1已发布',
+  `create_by` int NULL COMMENT '创建人',
+  `create_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '创建人名称',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `publish_time` datetime NULL,
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sys_notice_status_time` (`status`, `publish_time`, `create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统通知';
+
+CREATE TABLE `sys_user_notice` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '接收记录ID',
+  `notice_id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  `is_read` tinyint NOT NULL DEFAULT 0,
+  `read_time` datetime NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_sys_user_notice_notice_user` (`notice_id`, `user_id`),
+  KEY `idx_sys_user_notice_user_read` (`user_id`, `is_read`),
+  KEY `idx_sys_user_notice_notice` (`notice_id`),
+  CONSTRAINT `fk_sys_user_notice_notice` FOREIGN KEY (`notice_id`) REFERENCES `sys_notice` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户通知接收记录';
+
+INSERT INTO `sys_menu` VALUES (150, '1', 'notice', '/system/notice/index', '系统通知', 6, 'Bell', 'MENU', NOW(), NOW(), NULL, '', 0, NULL, 0);
+INSERT INTO `sys_menu` VALUES (151, '150', '', '', '列表', 1, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:list', 0);
+INSERT INTO `sys_menu` VALUES (152, '150', '', '', '新增', 2, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:add', 0);
+INSERT INTO `sys_menu` VALUES (153, '150', '', '', '修改', 3, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:update', 0);
+INSERT INTO `sys_menu` VALUES (154, '150', '', '', '删除', 4, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:delete', 0);
+INSERT INTO `sys_menu` VALUES (155, '150', '', '', '发布', 5, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:publish', 0);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (1, 150), (1, 151), (1, 152), (1, 153), (1, 154), (1, 155);
+
 SET FOREIGN_KEY_CHECKS = 1;
