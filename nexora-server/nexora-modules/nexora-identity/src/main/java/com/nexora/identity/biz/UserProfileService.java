@@ -5,7 +5,7 @@ import com.aurora.starter.common.utils.StringUtils;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.aurora.starter.webmvc.exception.BizException;
-import com.nexora.identity.config.PasswordPolicyValidator;
+import com.nexora.identity.infrastructure.PasswordPolicyValidator;
 import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.domain.convert.SysUserConvert;
 import com.nexora.identity.domain.form.SysUserForm;

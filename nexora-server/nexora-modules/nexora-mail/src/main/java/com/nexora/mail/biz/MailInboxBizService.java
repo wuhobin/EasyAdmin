@@ -6,9 +6,9 @@ import com.nexora.mail.domain.vo.MailMessagePageVo;
 import com.nexora.mail.domain.vo.MailMessageSummaryVo;
 import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.infrastructure.ImapMailClient;
-import com.nexora.mail.infrastructure.MailCredentialCipher;
 import com.nexora.mail.infrastructure.MailMessagePage;
 import com.nexora.mail.service.MailAccountService;
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import com.aurora.starter.security.context.SecurityUtils;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,13 +35,13 @@ public class MailInboxBizService {
             MailMessageSummaryVo::getReceivedTime, Comparator.nullsLast(Comparator.reverseOrder()));
 
     private final MailAccountService mailAccountService;
-    private final MailCredentialCipher credentialCipher;
+    private final PlatformCredentialCipher credentialCipher;
     private final ImapMailClient imapMailClient;
     private final ObjectMapper objectMapper;
     private final Executor mailExecutor;
 
     public MailInboxBizService(MailAccountService mailAccountService,
-                               MailCredentialCipher credentialCipher,
+                               PlatformCredentialCipher credentialCipher,
                                ImapMailClient imapMailClient,
                                ObjectMapper objectMapper,
                                @Qualifier("mailExecutor") Executor mailExecutor) {
@@ -138,7 +138,8 @@ public class MailInboxBizService {
     }
 
     private String decrypt(MailAccount account) {
-        return credentialCipher.decrypt(account.getAuthCodeCiphertext());
+        return credentialCipher.decrypt(
+                MailConstants.MAIL_CREDENTIAL_PURPOSE, account.getAuthCodeCiphertext());
     }
 
     private void updateConnection(MailAccount account, String error) {

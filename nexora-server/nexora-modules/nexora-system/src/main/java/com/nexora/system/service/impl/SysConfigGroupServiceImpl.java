@@ -1,7 +1,8 @@
 package com.nexora.system.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.nexora.system.domain.query.SysConfigGroupQuery;
 import com.nexora.system.entity.SysConfigGroup;
 import com.nexora.system.mapper.SysConfigGroupMapper;
 import com.nexora.system.service.SysConfigGroupService;
@@ -15,22 +16,22 @@ public class SysConfigGroupServiceImpl extends ServiceImpl<SysConfigGroupMapper,
 
     @Override
     public List<SysConfigGroup> listOrdered() {
-        return baseMapper.selectList(new LambdaQueryWrapper<SysConfigGroup>()
-                .orderByAsc(SysConfigGroup::getSort)
-                .orderByAsc(SysConfigGroup::getId));
+        return baseMapper.selectOrdered(DynamicCondition.toWrapper(new SysConfigGroupQuery()));
     }
 
     @Override
     public SysConfigGroup getByGroupCode(String groupCode) {
-        return baseMapper.selectOne(new LambdaQueryWrapper<SysConfigGroup>()
-                .eq(SysConfigGroup::getGroupCode, groupCode));
+        if (groupCode == null) {
+            return null;
+        }
+        SysConfigGroupQuery query = new SysConfigGroupQuery();
+        query.setGroupCode(groupCode);
+        return baseMapper.selectOne(DynamicCondition.toWrapper(query));
     }
 
     @Override
     public String getValueByGroupCode(String groupCode) {
-        SysConfigGroup group = baseMapper.selectOne(new LambdaQueryWrapper<SysConfigGroup>()
-                .select(SysConfigGroup::getConfigValue)
-                .eq(SysConfigGroup::getGroupCode, groupCode));
+        SysConfigGroup group = getByGroupCode(groupCode);
         return group == null ? null : group.getConfigValue();
     }
 }

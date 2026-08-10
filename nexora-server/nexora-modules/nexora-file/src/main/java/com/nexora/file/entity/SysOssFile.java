@@ -3,6 +3,7 @@ package com.nexora.file.entity;
 import com.aurora.starter.mybatisplus.model.BaseEntity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -42,4 +43,9 @@ public class SysOssFile extends BaseEntity implements Serializable {
     private String thumbnailUrl;
 
     private Long uploaderId;
+
+    private Long groupId;
+
+    @TableField(exist = false)
+    private String groupName;
 }

@@ -14,6 +14,7 @@ spring:
       max-lifetime: 1800000
       connection-timeout: 30000
       connection-test-query: SELECT 1
+
   data:
     redis:
       host: ${REDIS_HOST}
@@ -29,6 +30,7 @@ spring:
           max-idle: 8
           # 最小空闲连接数 默认0
           min-idle: 0
+
 # knife4j Basic 认证（环境相关：dev/prod 账号密码不同）
 knife4j:
   basic:

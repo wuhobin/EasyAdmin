@@ -11,7 +11,7 @@
  Target Server Version : 80046
  File Encoding         : 65001
 
- Date: 31/07/2026 12:06:49
+ Date: 04/08/2026 15:13:05
 */
 
 SET NAMES utf8mb4;
@@ -40,14 +40,42 @@ CREATE TABLE `mail_account`  (
   UNIQUE INDEX `uk_mail_account_owner_email`(`owner_id` ASC, `email` ASC) USING BTREE,
   INDEX `idx_mail_account_enabled_sort`(`enabled` ASC, `sort` ASC) USING BTREE,
   INDEX `idx_mail_account_owner_sort`(`owner_id` ASC, `sort` ASC, `id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '聚合邮箱账户' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '聚合邮箱账户' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mail_account
 -- ----------------------------
-INSERT INTO `mail_account` VALUES (1, 1, 'QQ邮箱', 'QQ', '1289066006@qq.com', 'v1:2jdaO+DSabB/rHuv:YDskUtAw10RUebiHvDOO8SEOIeoYacs47qcdPRFayfI=', 1, 0, 3066, 1763133047, '2026-07-29 09:51:57', '', '2026-07-19 21:23:12', '2026-07-29 09:51:57');
-INSERT INTO `mail_account` VALUES (2, 1, '网易邮箱', 'NETEASE_163', 'wuhongbinyos@163.com', 'v1:PraA3Styz5bgaZlp:ep5JyA4rcv3kDWYmOpVbrVwfjkRx9F68dB70h5B0NpY=', 1, 1, 1672974450, 1, '2026-07-29 09:51:56', '', '2026-07-19 21:54:58', '2026-07-29 09:51:56');
-INSERT INTO `mail_account` VALUES (3, 1, '126邮箱', 'NETEASE_126', 'wuhobin@126.com', 'v1:mvC+jFbn0KjEsPmq:vEjeTZKk1bCenSFkmcjODllLW/21+s4sdUoLwoGAM08=', 1, 3, 1784626138, 1, '2026-07-29 09:51:56', '', '2026-07-21 17:29:44', '2026-07-29 09:51:56');
+
+-- ----------------------------
+-- Table structure for monitor_server
+-- ----------------------------
+DROP TABLE IF EXISTS `monitor_server`;
+CREATE TABLE `monitor_server`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `owner_id` int NOT NULL COMMENT '所属用户ID',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '服务器名称',
+  `host` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '服务器地址',
+  `port` int NOT NULL DEFAULT 22 COMMENT 'SSH端口',
+  `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'SSH用户名',
+  `password_ciphertext` varchar(4096) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '加密后的SSH密码',
+  `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '服务器描述',
+  `enabled` tinyint NOT NULL DEFAULT 1 COMMENT '是否启用：0否，1是',
+  `sort` int NOT NULL DEFAULT 0 COMMENT '排序',
+  `trusted_fingerprint` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '已信任的SSH主机指纹',
+  `fingerprint_algorithm` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '主机密钥算法',
+  `fingerprint_verified_time` datetime NULL DEFAULT NULL COMMENT '指纹确认时间',
+  `last_connect_time` datetime NULL DEFAULT NULL COMMENT '最后连接时间',
+  `last_error` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '最后连接错误',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_monitor_server_owner_sort`(`owner_id` ASC, `sort` ASC, `id` DESC) USING BTREE,
+  INDEX `idx_monitor_server_owner_enabled`(`owner_id` ASC, `enabled` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '服务器管理' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of monitor_server
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for quartz_job
@@ -63,12 +91,13 @@ CREATE TABLE `quartz_job`  (
   `misfire_policy` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '0' COMMENT 'misfire策略',
   `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '0' COMMENT '状态',
   PRIMARY KEY (`job_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '定时任务表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '定时任务表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of quartz_job
 -- ----------------------------
 INSERT INTO `quartz_job` VALUES (3, '邮箱新邮件检查', 'SYSTEM', '0 0 0 * * ?', 'mailFetchTask.checkNewMails()', '1', '3', '0');
+INSERT INTO `quartz_job` VALUES (4, '在线会话清理', 'SYSTEM', '0 0/10 * * * ?', 'onlineSessionCleanupTask.cleanupInvalidSessions()', '1', '3', '0');
 
 -- ----------------------------
 -- Table structure for quartz_job_log
@@ -108,16 +137,16 @@ CREATE TABLE `sys_config_group`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_sys_config_group_code`(`group_code` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统配置分组表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统配置分组表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_config_group
 -- ----------------------------
-INSERT INTO `sys_config_group` VALUES (1, 'system', '系统配置', '{"siteName":"NEXORA ADMIN","shortTitle":"NEXORA ADMIN 后台管理","siteDescription":"一个现代化的后台管理系统","siteLogo":"","copyright":"Copyright © 2026 Nexora Admin","icp":"","watermarkEnabled":false,"watermarkType":"username_time","watermarkCustomText":"","watermarkOpacity":0.15}', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `sys_config_group` VALUES (2, 'register', '注册配置', '{"enabled":true,"captchaEnabled":true,"verifyEmail":true,"defaultRoleCode":"user","needAudit":false}', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `sys_config_group` VALUES (3, 'login', '登录配置', '{"maxRetryCount":5,"lockTimeMinutes":30,"rememberMeEnabled":true,"sessionTimeoutSeconds":3600,"rememberMeTimeoutSeconds":259200,"singleLogin":false}', 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `sys_config_group` VALUES (4, 'password', '密码配置', '{"minLength":6,"maxLength":20,"requireUppercase":false,"requireLowercase":false,"requireNumber":false,"requireSpecial":false}', 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `sys_config_group` VALUES (5, 'email', '邮箱配置', '{"enabled":false,"host":"","port":465,"username":"","password":"","fromName":"Nexora Admin","ssl":true}', 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `sys_config_group` VALUES (1, 'system', '系统配置', '{\"icp\": \"1111\", \"siteLogo\": \"\", \"siteName\": \"Nexora Admin\", \"copyright\": \"Copyright © 2026 Nexora Admin\", \"shortTitle\": \"Nexora Admin 后台管理\", \"watermarkType\": \"username\", \"siteDescription\": \"一个现代化的后台管理系统\", \"watermarkEnabled\": true, \"watermarkOpacity\": 0.05, \"watermarkCustomText\": \"\"}', 1, '2026-07-31 15:42:51', '2026-08-03 15:18:38');
+INSERT INTO `sys_config_group` VALUES (2, 'register', '注册配置', '{"enabled": true, "needAudit": true, "verifyEmail": true, "captchaEnabled":true, "defaultRoleCode": "user"}', 2, '2026-07-31 15:42:51', '2026-08-04 10:13:27');
+INSERT INTO `sys_config_group` VALUES (3, 'login', '登录配置', '{\"singleLogin\": false, \"maxRetryCount\": 5, \"lockTimeMinutes\": 30, \"rememberMeEnabled\": true, \"sessionTimeoutSeconds\": 3600, \"rememberMeTimeoutSeconds\": 259200}', 3, '2026-07-31 15:42:51', '2026-08-04 10:06:40');
+INSERT INTO `sys_config_group` VALUES (4, 'password', '密码配置', '{\"maxLength\": 20, \"minLength\": 6, \"requireNumber\": false, \"requireSpecial\": false, \"requireLowercase\": false, \"requireUppercase\": false}', 4, '2026-07-31 15:42:51', '2026-07-31 16:04:38');
+INSERT INTO `sys_config_group` VALUES (5, 'email', '邮箱配置', '{\"ssl\": true, \"host\": \"smtp.qq.com\", \"port\": 465, \"enabled\": false, \"fromName\": \"Nexora Admin\", \"password\": \"\", \"username\": \"\"}', 5, '2026-08-01 21:49:21', '2026-08-04 20:04:00');
 
 -- ----------------------------
 -- Table structure for sys_dict
@@ -195,7 +224,7 @@ CREATE TABLE `sys_menu`  (
   `perm` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '权限标识',
   `is_external` int NULL DEFAULT 0 COMMENT '是否外链 0:否  1:是',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 135 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '权限资源表 ' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 150 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '权限资源表 ' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -213,12 +242,11 @@ INSERT INTO `sys_menu` VALUES (12, '9', '', '', '删除', 3, '', 'BUTTON', '2024
 INSERT INTO `sys_menu` VALUES (13, '1', 'menu', '/system/menu/index', '菜单管理', 5, 'Menu', 'MENU', NULL, '2021-11-18 11:26:00', '', 'menu', 0, NULL, 0);
 INSERT INTO `sys_menu` VALUES (14, '1', 'user', '/system/user/index', '用户管理', 1, 'User', 'MENU', '2024-11-18 01:10:52', '2024-11-18 01:11:13', NULL, '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (18, '4', 'job', '/monitor/job/index', '定时任务', 3, 'AlarmClock', 'MENU', '2024-11-18 06:57:38', NULL, NULL, '', 0, '', 0);
-INSERT INTO `sys_menu` VALUES (19, '4', 'job-log', '/monitor/job/log', '调度日志', 4, 'Document', 'MENU', '2024-11-18 06:58:43', '2026-07-17 17:25:22', NULL, '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (27, '14', '', '', '新增', 2, '', 'BUTTON', '2024-11-18 09:18:14', '2024-11-21 22:15:30', NULL, '', 1, 'sys:user:add', 0);
 INSERT INTO `sys_menu` VALUES (28, '14', '', '', '编辑', 2, '', 'BUTTON', '2024-11-18 09:18:38', '2024-11-21 14:38:56', NULL, '', 1, 'sys:user:update', 0);
 INSERT INTO `sys_menu` VALUES (29, '14', '', '', '删除', 3, '', 'BUTTON', '2024-11-18 09:18:53', '2024-11-21 22:15:43', NULL, '', 1, 'sys:user:delete', 0);
 INSERT INTO `sys_menu` VALUES (32, '1', 'log', '', '日志管理', 5, 'DocumentCopy', 'MENU', '2024-11-18 10:52:47', '2024-11-18 10:58:00', '/system/log/operation', '', 0, '', 0);
-INSERT INTO `sys_menu` VALUES (33, '32', 'operation', '/system/log/operation/index', '操作日志', 1, 'CircleCheckFilled', 'MENU', '2024-11-18 10:53:10', '2024-11-18 11:05:22', NULL, '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (33, '32', 'operation', '/system/log/operation/index', '操作日志', 1, 'Operation', 'MENU', '2024-11-18 10:53:10', '2026-08-04 11:23:53', NULL, '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (39, '14', '', '', '列表', 1, '', 'BUTTON', '2024-11-18 17:54:15', '2024-11-21 22:07:33', '', '', 1, 'sys:user', 0);
 INSERT INTO `sys_menu` VALUES (40, '2', '', '', '修改', 2, '', 'BUTTON', '2024-11-18 17:56:10', '2024-11-21 22:04:52', '', '', 1, 'sys:role:update', 0);
 INSERT INTO `sys_menu` VALUES (41, '2', '', '', '删除', 3, '', 'BUTTON', '2024-11-18 17:56:34', '2024-11-21 22:17:17', '', NULL, 1, 'sys:role:delete', 0);
@@ -236,9 +264,6 @@ INSERT INTO `sys_menu` VALUES (59, '18', '', '', '添加', 2, '', 'BUTTON', '202
 INSERT INTO `sys_menu` VALUES (60, '18', '', '', '修改', 3, '', 'BUTTON', '2024-11-18 17:56:58', '2024-11-21 22:04:42', '', NULL, 1, 'sys:job:update', 0);
 INSERT INTO `sys_menu` VALUES (61, '18', '', '', '删除', 4, '', 'BUTTON', '2024-11-18 17:56:58', '2024-11-21 22:04:42', '', NULL, 1, 'sys:job:delete', 0);
 INSERT INTO `sys_menu` VALUES (62, '18', '', '', '修改状态', 5, '', 'BUTTON', '2024-11-18 17:56:58', '2024-11-21 22:04:42', '', NULL, 0, 'sys:job:changeStatus', 0);
-INSERT INTO `sys_menu` VALUES (63, '19', '', '', '删除', 1, '', 'BUTTON', '2024-11-21 22:26:56', NULL, '', '', 1, 'sys:jobLog:delete', 0);
-INSERT INTO `sys_menu` VALUES (64, '19', '', '', '清空', 2, '', 'BUTTON', '2024-11-21 22:27:09', NULL, '', '', 1, 'sys:jobLog:clean', 0);
-INSERT INTO `sys_menu` VALUES (66, '19', '', '', '列表', 1, '', 'BUTTON', '2024-11-21 23:09:47', NULL, '', '', 1, 'sys:jobLog', 0);
 INSERT INTO `sys_menu` VALUES (111, '0', '/file', 'Layout', '文件管理', 10, 'FolderOpened', 'CATALOG', '2026-07-16 20:08:41', NULL, '/file/list', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (112, '111', 'list', '/file/index', '文件列表', 1, 'Files', 'MENU', '2026-07-16 20:08:41', NULL, '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (113, '112', '', '', '文件列表', 1, '', 'BUTTON', '2026-07-16 20:08:41', NULL, '', '', 1, 'sys:file:list', 0);
@@ -259,6 +284,21 @@ INSERT INTO `sys_menu` VALUES (127, '117', 'account', '/mail/account/index', '�
 INSERT INTO `sys_menu` VALUES (130, '1', 'config', '/system/config/index', '配置管理', 4, 'Tools', 'MENU', '2026-07-27 13:37:19', NULL, '', 'config', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (132, '130', '', '', '修改', 2, '', 'BUTTON', '2026-07-27 13:37:19', NULL, '', '', 1, 'sys:config:update', 0);
 INSERT INTO `sys_menu` VALUES (134, '130', '', '', '查看', 4, '', 'BUTTON', '2026-07-27 13:37:19', NULL, '', '', 1, 'sys:config:list', 0);
+INSERT INTO `sys_menu` VALUES (135, '32', 'job-log', '/monitor/job/log', '调度日志', 1, 'CircleCheckFilled', 'MENU', '2026-08-04 11:22:22', '2026-08-04 11:23:01', '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (136, '135', '', '', '列表', 1, '', 'BUTTON', '2026-08-04 11:25:33', '2026-08-04 11:25:33', '', '', 1, 'sys:jobLog', 0);
+INSERT INTO `sys_menu` VALUES (137, '135', '', '', '删除', 1, '', 'BUTTON', '2026-08-04 11:25:51', '2026-08-04 11:25:51', '', '', 1, 'sys:jobLog:delete', 0);
+INSERT INTO `sys_menu` VALUES (138, '135', '', '', '清空', 1, '', 'BUTTON', '2026-08-04 11:26:07', '2026-08-04 11:26:07', '', '', 1, 'sys:jobLog:clean', 0);
+INSERT INTO `sys_menu` VALUES (139, '4', 'online', '/monitor/online/index', '在线用户', 2, 'UserFilled', 'MENU', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (140, '139', '', '', '列表', 1, '', 'BUTTON', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 1, 'sys:online', 0);
+INSERT INTO `sys_menu` VALUES (141, '139', '', '', '强退', 2, '', 'BUTTON', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 1, 'sys:online:forceLogout', 0);
+INSERT INTO `sys_menu` VALUES (142, '4', 'server', '/monitor/server/index', '服务器管理', 1, 'Platform', 'MENU', '2026-08-05 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (143, '142', '', '', '列表', 1, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:list', 0);
+INSERT INTO `sys_menu` VALUES (144, '142', '', '', '新增', 2, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:add', 0);
+INSERT INTO `sys_menu` VALUES (145, '142', '', '', '修改', 3, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:update', 0);
+INSERT INTO `sys_menu` VALUES (146, '142', '', '', '删除', 4, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:delete', 0);
+INSERT INTO `sys_menu` VALUES (147, '142', '', '', '连接测试', 5, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:test', 0);
+INSERT INTO `sys_menu` VALUES (148, '142', '', '', '指纹管理', 6, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:fingerprint', 0);
+INSERT INTO `sys_menu` VALUES (149, '142', '', '', 'SSH终端', 7, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:terminal', 0);
 
 -- ----------------------------
 -- Table structure for sys_operate_log
@@ -279,28 +319,11 @@ CREATE TABLE `sys_operate_log`  (
   `method_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '方法名',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2380 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2391 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_operate_log
 -- ----------------------------
-INSERT INTO `sys_operate_log` VALUES (2363, NULL, '/sys/user/delete/1811', 'DELETE', '批量删除用户', '127.0.0.1', '内网IP|内网IP', 167, '2026-07-24 17:25:33', '{\"ids\":[1811]}', 'com.aurora.controller.system.SysUserController', 'delete', '2026-07-24 17:25:33');
-INSERT INTO `sys_operate_log` VALUES (2364, NULL, '/sys/role/delete/2', 'DELETE', '批量删除角色', '127.0.0.1', '内网IP|内网IP', 18, '2026-07-24 17:25:39', '{\"ids\":[2]}', 'com.aurora.controller.system.SysRoleController', 'delete', '2026-07-24 17:25:39');
-INSERT INTO `sys_operate_log` VALUES (2365, 1, '/sys/role/', 'POST', '新增角色', '127.0.0.1', '内网IP|内网IP', 94, '2026-07-28 10:34:01', '{\"form\":{\"id\":null,\"code\":\"user\",\"name\":\"普通\",\"remarks\":\"\",\"createTime\":null,\"updateTime\":null,\"params\":null}}', 'com.nexora.controller.system.SysRoleController', 'addRole', '2026-07-28 10:34:01');
-INSERT INTO `sys_operate_log` VALUES (2366, 1, '/sys/user', 'POST', '新增用户', '127.0.0.1', '内网IP|内网IP', 163, '2026-07-28 10:34:20', '{\"form\":{\"user\":{\"nickname\":\"测试\",\"password\":\"123456\",\"email\":\"1289066006@qq.com\",\"status\":1,\"avatar\":null,\"mobile\":\"\",\"sex\":1},\"roleIds\":[20]}}', 'com.nexora.controller.system.SysUserController', 'addUser', '2026-07-28 10:34:20');
-INSERT INTO `sys_operate_log` VALUES (2367, 1, '/sys/user/delete/1812', 'DELETE', '批量删除用户', '127.0.0.1', '内网IP|内网IP', 119, '2026-07-28 11:03:55', '{\"ids\":[1812]}', 'com.nexora.controller.system.SysUserController', 'delete', '2026-07-28 11:03:55');
-INSERT INTO `sys_operate_log` VALUES (2368, 1, '/sys/user/updProfile', 'PUT', '修改个人信息', '127.0.0.1', '内网IP|内网IP', 99, '2026-07-28 12:10:04', '{\"form\":{\"id\":null,\"nickname\":\"系统管理员\",\"email\":null,\"password\":null,\"oldPassword\":null,\"newPassword\":null,\"code\":null,\"status\":null,\"avatar\":null,\"mobile\":\"18772916901\",\"sex\":2,\"roleIds\":null}}', 'com.nexora.controller.system.SysUserController', 'updateProfile', '2026-07-28 12:10:04');
-INSERT INTO `sys_operate_log` VALUES (2369, 1, '/sys/user/updProfile', 'PUT', '修改个人信息', '127.0.0.1', '内网IP|内网IP', 72, '2026-07-28 14:48:47', '{\"form\":{\"id\":null,\"nickname\":\"系统管理员\",\"email\":null,\"password\":null,\"oldPassword\":null,\"newPassword\":null,\"code\":null,\"status\":null,\"avatar\":\"https://oss.wuhobin.top/base/20260728/6a6850cc101384ebf83b9e3b.jpg\",\"mobile\":\"18772916901\",\"sex\":2,\"roleIds\":null}}', 'com.nexora.controller.system.SysUserController', 'updateProfile', '2026-07-28 14:48:47');
-INSERT INTO `sys_operate_log` VALUES (2370, 1, '/sys/user/delete/1813', 'DELETE', '批量删除用户', '127.0.0.1', '内网IP|内网IP', 214, '2026-07-28 19:37:41', '{\"ids\":[1813]}', 'com.nexora.controller.system.SysUserController', 'delete', '2026-07-28 19:37:41');
-INSERT INTO `sys_operate_log` VALUES (2371, 1, '/sys/role/menus/20', 'PUT', '修改角色权限', '127.0.0.1', '内网IP|内网IP', 69, '2026-07-29 09:53:42', '{\"id\":20,\"menuIds\":[117,118,124,125,126,127,119,120,121,122,123,111,112,116,115,114,113]}', 'com.nexora.controller.system.SysRoleController', 'updateRoleMenus', '2026-07-29 09:53:42');
-INSERT INTO `sys_operate_log` VALUES (2372, 1, '/sys/user/delete/1814', 'DELETE', '批量删除用户', '127.0.0.1', '内网IP|内网IP', 156, '2026-07-30 13:19:00', '{\"ids\":[1814]}', 'com.nexora.controller.system.SysUserController', 'delete', '2026-07-30 13:19:00');
-INSERT INTO `sys_operate_log` VALUES (2373, 1816, '/sys/user/updProfile', 'PUT', '修改个人信息', '127.0.0.1', '内网IP|内网IP', 54, '2026-07-30 16:01:59', '{\"form\":{\"id\":null,\"nickname\":\"wuhobin\",\"email\":null,\"password\":null,\"oldPassword\":null,\"newPassword\":null,\"code\":null,\"status\":null,\"avatar\":\"https://oss.wuhobin.top/base/20260730/6a6b04f3101399263cde2e73.jpg\",\"mobile\":null,\"sex\":null,\"roleIds\":null}}', 'com.nexora.controller.system.SysUserController', 'updateProfile', '2026-07-30 16:01:59');
-INSERT INTO `sys_operate_log` VALUES (2374, 1816, '/sys/user/updProfile', 'PUT', '修改个人信息', '127.0.0.1', '内网IP|内网IP', 16, '2026-07-30 16:04:13', '{\"form\":{\"id\":null,\"nickname\":\"wuhobin\",\"email\":null,\"password\":null,\"oldPassword\":null,\"newPassword\":null,\"code\":null,\"status\":null,\"avatar\":\"https://oss.wuhobin.top/base/20260730/6a6b057c101399263cde2e74.jpg\",\"mobile\":null,\"sex\":null,\"roleIds\":null}}', 'com.nexora.controller.system.SysUserController', 'updateProfile', '2026-07-30 16:04:13');
-INSERT INTO `sys_operate_log` VALUES (2375, 1, '/sys/user/updProfile', 'PUT', '修改个人信息', '127.0.0.1', '内网IP|内网IP', 10, '2026-07-30 16:07:14', '{\"form\":{\"id\":null,\"nickname\":\"系统管理员\",\"email\":null,\"password\":null,\"oldPassword\":null,\"newPassword\":null,\"code\":null,\"status\":null,\"avatar\":\"https://oss.wuhobin.top/base/20260730/6a6b0631101399263cde2e75.jpg\",\"mobile\":\"18772916901\",\"sex\":2,\"roleIds\":null}}', 'com.nexora.controller.system.SysUserController', 'updateProfile', '2026-07-30 16:07:14');
-INSERT INTO `sys_operate_log` VALUES (2376, 1, '/sys/user/updProfile', 'PUT', '修改个人信息', '127.0.0.1', '内网IP|内网IP', 5, '2026-07-30 16:09:34', '{\"form\":{\"id\":null,\"nickname\":\"系统管理员\",\"email\":null,\"password\":null,\"oldPassword\":null,\"newPassword\":null,\"code\":null,\"status\":null,\"avatar\":\"https://oss.wuhobin.top/base/20260730/6a6b06bd101399263cde2e76.png\",\"mobile\":\"18772916901\",\"sex\":2,\"roleIds\":null}}', 'com.nexora.controller.system.SysUserController', 'updateProfile', '2026-07-30 16:09:34');
-INSERT INTO `sys_operate_log` VALUES (2377, 1816, '/sys/user/updProfile', 'PUT', '修改个人信息', '127.0.0.1', '内网IP|内网IP', 7, '2026-07-30 16:11:18', '{\"form\":{\"id\":null,\"nickname\":\"wuhobin\",\"email\":null,\"password\":null,\"oldPassword\":null,\"newPassword\":null,\"code\":null,\"status\":null,\"avatar\":\"https://oss.wuhobin.top/base/20260730/6a6b0725101399263cde2e77.jpg\",\"mobile\":null,\"sex\":null,\"roleIds\":null}}', 'com.nexora.controller.system.SysUserController', 'updateProfile', '2026-07-30 16:11:18');
-INSERT INTO `sys_operate_log` VALUES (2378, 1, '/sys/user/updProfile', 'PUT', '修改个人信息', '127.0.0.1', '内网IP|内网IP', 8, '2026-07-30 16:30:10', '{\"form\":{\"id\":null,\"nickname\":\"系统管理员\",\"email\":null,\"password\":null,\"oldPassword\":null,\"newPassword\":null,\"code\":null,\"status\":null,\"avatar\":\"https://oss.wuhobin.top/base/20260730/6a6b0b91101399263cde2e78.jpg\",\"mobile\":\"18772916901\",\"sex\":2,\"roleIds\":null}}', 'com.nexora.controller.system.SysUserController', 'updateProfile', '2026-07-30 16:30:10');
-INSERT INTO `sys_operate_log` VALUES (2379, 1, '/sys/user/updProfile', 'PUT', '修改个人信息', '127.0.0.1', '内网IP|内网IP', 142, '2026-07-30 16:53:29', '{\"form\":{\"id\":null,\"nickname\":\"系统管理员\",\"email\":null,\"password\":null,\"oldPassword\":null,\"newPassword\":null,\"code\":null,\"status\":null,\"avatar\":\"https://oss.wuhobin.top/base/20260730/6a6b1106101346deb9f8d8b7.jpg\",\"mobile\":\"18772916901\",\"sex\":2,\"roleIds\":null}}', 'com.nexora.controller.system.SysUserController', 'updateProfile', '2026-07-30 16:53:29');
 
 -- ----------------------------
 -- Table structure for sys_oss_file
@@ -317,6 +340,7 @@ CREATE TABLE `sys_oss_file`  (
   `platform` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '存储平台',
   `thumbnail_url` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '缩略图地址',
   `uploader_id` bigint NOT NULL COMMENT '上传人ID',
+  `group_id` bigint NULL DEFAULT NULL COMMENT '文件分组ID',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
@@ -324,18 +348,43 @@ CREATE TABLE `sys_oss_file`  (
   INDEX `idx_sys_oss_file_url`(`file_url`(255) ASC) USING BTREE,
   INDEX `idx_sys_oss_file_original_name`(`original_filename` ASC) USING BTREE,
   INDEX `idx_sys_oss_file_content_type`(`content_type` ASC) USING BTREE,
-  INDEX `idx_sys_oss_file_uploader`(`uploader_id` ASC) USING BTREE
+  INDEX `idx_sys_oss_file_uploader`(`uploader_id` ASC) USING BTREE,
+  INDEX `idx_sys_oss_file_group`(`group_id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'OSS文件流水表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_oss_file
 -- ----------------------------
-INSERT INTO `sys_oss_file` VALUES (9, '2082739780126294017', 'https://oss.wuhobin.top/base/20260730/6a6b0631101399263cde2e75.jpg', '6a6b0631101399263cde2e75.jpg', '微信图片_20260728142844_53285_21.jpg', 'image/jpeg', 154452, 'qiniu-kodo-1', NULL, 1, '2026-07-30 16:07:14', '2026-07-30 16:07:14');
-INSERT INTO `sys_oss_file` VALUES (10, '2082740367886696450', 'https://oss.wuhobin.top/base/20260730/6a6b06bd101399263cde2e76.png', '6a6b06bd101399263cde2e76.png', '微信图片_20260730160723_55651_21.png', 'image/png', 38851, 'qiniu-kodo-1', NULL, 1, '2026-07-30 16:09:34', '2026-07-30 16:09:34');
-INSERT INTO `sys_oss_file` VALUES (11, '2082740804446633985', 'https://oss.wuhobin.top/base/20260730/6a6b0725101399263cde2e77.jpg', '6a6b0725101399263cde2e77.jpg', '微信图片_20260730160939_14180_31.jpg', 'image/jpeg', 256923, 'qiniu-kodo-1', NULL, 1816, '2026-07-30 16:11:18', '2026-07-30 16:11:18');
-INSERT INTO `sys_oss_file` VALUES (13, '2082751416417431553', 'https://oss.wuhobin.top/base/20260730/6a6b1106101346deb9f8d8b7.jpg', '6a6b1106101346deb9f8d8b7.jpg', '微信图片_20260730161709_55684_21.jpg', 'image/jpeg', 330984, 'qiniu-kodo-1', NULL, 1, '2026-07-30 16:53:28', '2026-07-30 16:53:28');
-INSERT INTO `sys_oss_file` VALUES (14, '2082787138621001730', 'https://oss.wuhobin.top/base/20260730/6a6b324b10132a48a1712b16.mp4', '6a6b324b10132a48a1712b16.mp4', '03dbf31cd8e55f8e8e96c4ddb9ddd0e9.mp4', 'video/mp4', 861604, 'qiniu-kodo-1', NULL, 1, '2026-07-30 19:15:25', '2026-07-30 19:15:25');
-INSERT INTO `sys_oss_file` VALUES (15, '2082787781716856833', 'https://oss.wuhobin.top/base/20260730/6a6b32e410132a48a1712b17.pdf', '6a6b32e410132a48a1712b17.pdf', '58种姿势+高清无打码系列(1)(1)(1).pdf', 'application/pdf', 5895518, 'qiniu-kodo-1', NULL, 1, '2026-07-30 19:17:58', '2026-07-30 19:17:58');
+INSERT INTO `sys_oss_file` VALUES (9, '2082739780126294017', 'https://oss.wuhobin.top/base/20260730/6a6b0631101399263cde2e75.jpg', '6a6b0631101399263cde2e75.jpg', '微信图片_20260728142844_53285_21.jpg', 'image/jpeg', 154452, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 16:07:14', '2026-07-30 16:07:14');
+INSERT INTO `sys_oss_file` VALUES (10, '2082740367886696450', 'https://oss.wuhobin.top/base/20260730/6a6b06bd101399263cde2e76.png', '6a6b06bd101399263cde2e76.png', '微信图片_20260730160723_55651_21.png', 'image/png', 38851, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 16:09:34', '2026-07-30 16:09:34');
+INSERT INTO `sys_oss_file` VALUES (11, '2082740804446633985', 'https://oss.wuhobin.top/base/20260730/6a6b0725101399263cde2e77.jpg', '6a6b0725101399263cde2e77.jpg', '微信图片_20260730160939_14180_31.jpg', 'image/jpeg', 256923, 'qiniu-kodo-1', NULL, 1816, NULL, '2026-07-30 16:11:18', '2026-07-30 16:11:18');
+INSERT INTO `sys_oss_file` VALUES (13, '2082751416417431553', 'https://oss.wuhobin.top/base/20260730/6a6b1106101346deb9f8d8b7.jpg', '6a6b1106101346deb9f8d8b7.jpg', '微信图片_20260730161709_55684_21.jpg', 'image/jpeg', 330984, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 16:53:28', '2026-07-30 16:53:28');
+INSERT INTO `sys_oss_file` VALUES (14, '2082787138621001730', 'https://oss.wuhobin.top/base/20260730/6a6b324b10132a48a1712b16.mp4', '6a6b324b10132a48a1712b16.mp4', '03dbf31cd8e55f8e8e96c4ddb9ddd0e9.mp4', 'video/mp4', 861604, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 19:15:25', '2026-07-30 19:15:25');
+INSERT INTO `sys_oss_file` VALUES (15, '2082787781716856833', 'https://oss.wuhobin.top/base/20260730/6a6b32e410132a48a1712b17.pdf', '6a6b32e410132a48a1712b17.pdf', '58种姿势+高清无打码系列(1)(1)(1).pdf', 'application/pdf', 5895518, 'qiniu-kodo-1', NULL, 1, NULL, '2026-07-30 19:17:58', '2026-07-30 19:17:58');
+
+-- ----------------------------
+-- Table structure for sys_oss_file_group
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_oss_file_group`;
+CREATE TABLE `sys_oss_file_group`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `owner_id` bigint NOT NULL COMMENT '分组所有者ID',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '分组名称',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_sys_oss_file_group_owner_name`(`owner_id` ASC, `name` ASC) USING BTREE,
+  INDEX `idx_sys_oss_file_group_owner`(`owner_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'OSS文件分组表' ROW_FORMAT = DYNAMIC;
+
+ALTER TABLE `sys_oss_file`
+  ADD CONSTRAINT `fk_sys_oss_file_group`
+  FOREIGN KEY (`group_id`) REFERENCES `sys_oss_file_group` (`id`)
+  ON DELETE SET NULL;
+
+-- ----------------------------
+-- Records of sys_oss_file_group
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for sys_role
@@ -367,7 +416,7 @@ CREATE TABLE `sys_role_menu`  (
   `menu_id` int NULL DEFAULT NULL COMMENT '菜单ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `role_id`(`role_id` ASC, `menu_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 549 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色-权限资源关联表 ' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 565 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色-权限资源关联表 ' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_role_menu
@@ -479,6 +528,22 @@ INSERT INTO `sys_role_menu` VALUES (534, 20, 124);
 INSERT INTO `sys_role_menu` VALUES (535, 20, 125);
 INSERT INTO `sys_role_menu` VALUES (536, 20, 126);
 INSERT INTO `sys_role_menu` VALUES (537, 20, 127);
+INSERT INTO `sys_role_menu` VALUES (549, 1, 142);
+INSERT INTO `sys_role_menu` VALUES (550, 1, 143);
+INSERT INTO `sys_role_menu` VALUES (551, 1, 144);
+INSERT INTO `sys_role_menu` VALUES (552, 1, 145);
+INSERT INTO `sys_role_menu` VALUES (553, 1, 146);
+INSERT INTO `sys_role_menu` VALUES (554, 1, 147);
+INSERT INTO `sys_role_menu` VALUES (555, 1, 148);
+INSERT INTO `sys_role_menu` VALUES (556, 1, 149);
+INSERT INTO `sys_role_menu` VALUES (557, 20, 142);
+INSERT INTO `sys_role_menu` VALUES (558, 20, 143);
+INSERT INTO `sys_role_menu` VALUES (559, 20, 144);
+INSERT INTO `sys_role_menu` VALUES (560, 20, 145);
+INSERT INTO `sys_role_menu` VALUES (561, 20, 146);
+INSERT INTO `sys_role_menu` VALUES (562, 20, 147);
+INSERT INTO `sys_role_menu` VALUES (563, 20, 148);
+INSERT INTO `sys_role_menu` VALUES (564, 20, 149);
 
 -- ----------------------------
 -- Table structure for sys_user
@@ -489,7 +554,7 @@ CREATE TABLE `sys_user`  (
   `password` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '登录密码',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
-  `status` int NULL DEFAULT 1 COMMENT '状态 0:禁用 1:正常 2:待审核',
+  `status` int NULL DEFAULT 1 COMMENT '状态 0:禁用 1:正常',
   `ip` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'ip地址',
   `ip_location` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'ip来源',
   `os` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '登录系统',
@@ -508,7 +573,7 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, '$2a$10$Olf5IWFsSL5uw6lQQxCCX.Yx9gFvdIbiyXrXPmCm9N9OVesHYMBQy', '2024-12-27 14:16:17', '2026-07-30 16:53:28', 1, '127.0.0.1', '内网IP|内网IP', 'Windows', '2026-07-03 14:17:04', 'Chrome', '系统管理员', 'https://oss.wuhobin.top/base/20260730/6a6b1106101346deb9f8d8b7.jpg', '18772916901', 'wuhongbinyos@163.com', 2, NULL);
+INSERT INTO `sys_user` VALUES (1, '$2a$10$Olf5IWFsSL5uw6lQQxCCX.Yx9gFvdIbiyXrXPmCm9N9OVesHYMBQy', '2024-12-27 14:16:17', '2026-08-04 10:40:42', 1, '127.0.0.1', '内网IP|内网IP', 'Windows', '2026-07-03 14:17:04', 'Chrome', '系统管理员', 'https://oss.wuhobin.top/base/20260730/6a6b1106101346deb9f8d8b7.jpg', '18772916901', '1289066006@qq.com', 2, NULL);
 INSERT INTO `sys_user` VALUES (1816, '$2a$10$w/0p1TOFjL5jwxV57aPIsuhurq6A28I4nMZMKQ/IKlWzNoJ3eSJxi', '2026-07-30 13:58:01', '2026-07-30 16:11:18', 1, NULL, NULL, NULL, '2026-07-30 13:58:01', NULL, 'wuhobin', 'https://oss.wuhobin.top/base/20260730/6a6b0725101399263cde2e77.jpg', NULL, 'wuhobin@126.com', NULL, NULL);
 
 -- ----------------------------
@@ -528,5 +593,49 @@ CREATE TABLE `sys_user_role`  (
 INSERT INTO `sys_user_role` VALUES (56, 1, 1);
 INSERT INTO `sys_user_role` VALUES (61, 20, 1815);
 INSERT INTO `sys_user_role` VALUES (62, 20, 1816);
+
+-- ----------------------------
+-- System notifications
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_user_notice`;
+DROP TABLE IF EXISTS `sys_notice`;
+CREATE TABLE `sys_notice` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '通知ID',
+  `title` varchar(62) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '标题',
+  `content` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '正文',
+  `content_format` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'text' COMMENT '内容格式 text/html',
+  `notice_type` tinyint NOT NULL COMMENT '类型 1通知 2公告',
+  `target_type` tinyint NOT NULL COMMENT '接收对象 1指定用户 3全部用户',
+  `target_ids` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '指定用户ID快照JSON',
+  `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态 0草稿 1已发布',
+  `create_by` int NULL COMMENT '创建人',
+  `create_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '创建人名称',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `publish_time` datetime NULL,
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sys_notice_status_time` (`status`, `publish_time`, `create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统通知';
+
+CREATE TABLE `sys_user_notice` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '接收记录ID',
+  `notice_id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  `is_read` tinyint NOT NULL DEFAULT 0,
+  `read_time` datetime NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_sys_user_notice_notice_user` (`notice_id`, `user_id`),
+  KEY `idx_sys_user_notice_user_read` (`user_id`, `is_read`),
+  KEY `idx_sys_user_notice_notice` (`notice_id`),
+  CONSTRAINT `fk_sys_user_notice_notice` FOREIGN KEY (`notice_id`) REFERENCES `sys_notice` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户通知接收记录';
+
+INSERT INTO `sys_menu` VALUES (150, '1', 'notice', '/system/notice/index', '系统通知', 6, 'Bell', 'MENU', NOW(), NOW(), NULL, '', 0, NULL, 0);
+INSERT INTO `sys_menu` VALUES (151, '150', '', '', '列表', 1, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:list', 0);
+INSERT INTO `sys_menu` VALUES (152, '150', '', '', '新增', 2, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:add', 0);
+INSERT INTO `sys_menu` VALUES (153, '150', '', '', '修改', 3, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:update', 0);
+INSERT INTO `sys_menu` VALUES (154, '150', '', '', '删除', 4, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:delete', 0);
+INSERT INTO `sys_menu` VALUES (155, '150', '', '', '发布', 5, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:publish', 0);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (1, 150), (1, 151), (1, 152), (1, 153), (1, 154), (1, 155);
 
 SET FOREIGN_KEY_CHECKS = 1;

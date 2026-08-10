@@ -43,6 +43,12 @@ public class SysOssFileVo {
     @Schema(description = "上传人ID")
     private Long uploaderId;
 
+    @Schema(description = "分组ID")
+    private Long groupId;
+
+    @Schema(description = "分组名称")
+    private String groupName;
+
     @Schema(description = "创建时间")
     @JsonFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS, timezone = "GMT+8")
     private Date createTime;

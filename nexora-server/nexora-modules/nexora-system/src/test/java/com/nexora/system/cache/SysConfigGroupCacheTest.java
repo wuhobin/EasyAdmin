@@ -1,6 +1,6 @@
 package com.nexora.system.cache;
 
-import com.nexora.cache.TwoLevelCacheTemplate;
+import com.aurora.starter.redis.core.TwoLevelCacheTemplate;
 
 import org.junit.jupiter.api.Test;
 

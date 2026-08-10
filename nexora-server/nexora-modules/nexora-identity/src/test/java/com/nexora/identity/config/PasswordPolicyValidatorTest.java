@@ -1,6 +1,7 @@
 package com.nexora.identity.config;
 
 import com.aurora.starter.webmvc.exception.BizException;
+import com.nexora.identity.infrastructure.PasswordPolicyValidator;
 import com.nexora.system.api.SystemConfigReader;
 import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.system.api.PasswordSettings;

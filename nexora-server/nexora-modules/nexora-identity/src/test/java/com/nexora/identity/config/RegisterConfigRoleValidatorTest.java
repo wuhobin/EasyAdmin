@@ -2,8 +2,8 @@ package com.nexora.identity.config;
 
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.entity.SysRole;
+import com.nexora.identity.infrastructure.RegisterConfigRoleValidator;
 import com.nexora.identity.service.SysRoleService;
-import com.nexora.system.api.RegistrationSettings;
 import com.nexora.system.api.RegistrationSettings;
 import org.junit.jupiter.api.Test;
 

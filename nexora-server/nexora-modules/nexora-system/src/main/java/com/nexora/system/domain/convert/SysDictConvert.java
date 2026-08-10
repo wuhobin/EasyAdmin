@@ -6,11 +6,14 @@ import com.nexora.system.domain.query.SysDictQuery;
 import com.nexora.system.domain.vo.SysDictVo;
 import com.nexora.system.entity.SysDict;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper
 public interface SysDictConvert {
     SysDictConvert INSTANCE = Mappers.getMapper(SysDictConvert.class);
+    @Mapping(target = "type", ignore = true)
+    @Mapping(target = "excludeId", ignore = true)
     SysDictQuery toQuery(SysDictQueryForm form);
     SysDict toEntity(SysDictForm form);
     SysDictVo toVo(SysDict entity);

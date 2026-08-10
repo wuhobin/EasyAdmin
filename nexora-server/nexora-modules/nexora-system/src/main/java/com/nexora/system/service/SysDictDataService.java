@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nexora.system.domain.query.SysDictDataQuery;
 
+import java.util.List;
+
 /**
  * 字典数据表 服务接口
  */
@@ -14,6 +16,11 @@ public interface SysDictDataService extends IService<SysDictData> {
      * 查询字典数据分页列表
      */
     IPage<SysDictData> listDictData(SysDictDataQuery query, PageParam pageParam);
+
+    /**
+     * 查询字典数据并按展示顺序返回。
+     */
+    List<SysDictData> listOrdered(SysDictDataQuery query);
     
     /**
      * 新增字典数据

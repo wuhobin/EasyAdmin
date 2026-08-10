@@ -6,7 +6,7 @@ import com.nexora.identity.mapper.SysMenuMapper;
 import com.nexora.identity.mapper.SysRoleMapper;
 import com.aurora.starter.security.account.AccountType;
 import com.aurora.starter.security.spi.PermissionProvider;
-import com.nexora.identity.cache.SecurityAuthorizationCache;
+import com.nexora.identity.cache.SecurityPermissionCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,7 @@ public class NexoraPermissionProvider implements PermissionProvider {
 
     private final SysRoleMapper roleMapper;
     private final SysMenuMapper menuMapper;
-    private final SecurityAuthorizationCache authorizationCache;
+    private final SecurityPermissionCache authorizationCache;
 
     @Override
     public List<String> getPermissionList(Object loginId, AccountType loginType) {
@@ -30,14 +30,14 @@ public class NexoraPermissionProvider implements PermissionProvider {
         return getAuthorization(loginId, loginType).roles();
     }
 
-    public SecurityAuthorizationCache.Authorization getAuthorization(
+    public SecurityPermissionCache.Authorization getAuthorization(
             Object loginId, AccountType loginType) {
         Integer userId = toInt(loginId);
         return authorizationCache.get(userId, loginType,
                 () -> loadAuthorization(userId));
     }
 
-    private SecurityAuthorizationCache.Authorization loadAuthorization(Integer userId) {
+    private SecurityPermissionCache.Authorization loadAuthorization(Integer userId) {
         List<String> roles = roleMapper.selectRolesCodeByUserId(userId);
         List<String> permissions;
         if (roles.contains(SecurityConstants.ADMIN_ROLE_CODE)) {
@@ -45,7 +45,7 @@ public class NexoraPermissionProvider implements PermissionProvider {
         } else {
             permissions = menuMapper.getPermissionListByUserId(userId, MenuTypeEnum.BUTTON.getCode());
         }
-        return new SecurityAuthorizationCache.Authorization(roles, permissions);
+        return new SecurityPermissionCache.Authorization(roles, permissions);
     }
 
     private Integer toInt(Object loginId) {

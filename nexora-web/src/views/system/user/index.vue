@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container data-list-page">
+  <div class="app-container data-list-page user-management-page">
     <el-card class="box-card data-list-card" shadow="never">
     <!-- 搜索表单 -->
     <div class="search-wrapper data-list-filters">
@@ -642,7 +642,11 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.app-container {
+.user-management-page {
+  :deep(.data-list-table td.el-table__cell) {
+    height: 72px;
+  }
+
   .user-avatar {
     display: block;
     width: 42px;
@@ -723,10 +727,6 @@ onMounted(() => {
     margin-right: 0;
   }
 
-  .el-form-item__error {
-    position: static;
-    padding-top: 6px;
-  }
 }
 
 @media (max-width: 640px) {

@@ -8,8 +8,8 @@ import com.nexora.mail.domain.vo.MailAccountVo;
 import com.nexora.mail.domain.vo.MailProviderVo;
 import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.infrastructure.ImapMailClient;
-import com.nexora.mail.infrastructure.MailCredentialCipher;
 import com.nexora.mail.service.MailAccountService;
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import com.nexora.system.api.DictionaryEntry;
 import com.nexora.system.api.SystemDictionaryReader;
 import com.aurora.starter.security.context.SecurityUtils;
@@ -28,7 +28,7 @@ import java.util.List;
 public class MailAccountBizService {
     private final MailAccountService mailAccountService;
     private final SystemDictionaryReader dictionaryReader;
-    private final MailCredentialCipher credentialCipher;
+    private final PlatformCredentialCipher credentialCipher;
     private final ImapMailClient imapMailClient;
 
     public List<MailAccountVo> list() {
@@ -61,7 +61,8 @@ public class MailAccountBizService {
         MailAccount account = MailAccountConvert.INSTANCE.toEntity(form);
         account.setOwnerId(ownerId);
         normalize(account);
-        account.setAuthCodeCiphertext(credentialCipher.encrypt(form.getAuthCode().trim()));
+        account.setAuthCodeCiphertext(credentialCipher.encrypt(
+                MailConstants.MAIL_CREDENTIAL_PURPOSE, form.getAuthCode().trim()));
         try {
             mailAccountService.save(account);
         } catch (DuplicateKeyException exception) {
@@ -82,7 +83,8 @@ public class MailAccountBizService {
         if (form.getAuthCode() == null || form.getAuthCode().isBlank()) {
             account.setAuthCodeCiphertext(current.getAuthCodeCiphertext());
         } else {
-            account.setAuthCodeCiphertext(credentialCipher.encrypt(form.getAuthCode().trim()));
+            account.setAuthCodeCiphertext(credentialCipher.encrypt(
+                    MailConstants.MAIL_CREDENTIAL_PURPOSE, form.getAuthCode().trim()));
         }
         try {
             mailAccountService.updateById(account);
@@ -100,7 +102,8 @@ public class MailAccountBizService {
     public void test(Long id) {
         MailAccount account = getRequired(id);
         try {
-            imapMailClient.testConnection(account, credentialCipher.decrypt(account.getAuthCodeCiphertext()));
+            imapMailClient.testConnection(account, credentialCipher.decrypt(
+                    MailConstants.MAIL_CREDENTIAL_PURPOSE, account.getAuthCodeCiphertext()));
             updateConnection(account, null);
         } catch (BizException exception) {
             updateConnection(account, exception.getMessage());

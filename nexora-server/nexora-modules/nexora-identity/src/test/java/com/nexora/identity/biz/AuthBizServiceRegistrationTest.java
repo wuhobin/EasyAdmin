@@ -6,7 +6,7 @@ import com.aurora.starter.verification.scene.CommonVerificationScene;
 import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.cache.LoginRetryCache;
 import com.nexora.identity.security.NexoraPermissionProvider;
-import com.nexora.identity.config.PasswordPolicyValidator;
+import com.nexora.identity.infrastructure.PasswordPolicyValidator;
 import com.nexora.system.api.SystemConfigReader;
 import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
@@ -51,7 +51,8 @@ class AuthBizServiceRegistrationTest {
             new LoginSecurityService(mock(LoginRetryCache.class)),
             imageVerificationService,
             registrationService, mock(PasswordResetService.class),
-            mailVerificationOrchestrator);
+            mailVerificationOrchestrator,
+            mock(OnlineSessionLifecycleService.class));
 
     @Test
     void disabledRegistrationIsRejected() {

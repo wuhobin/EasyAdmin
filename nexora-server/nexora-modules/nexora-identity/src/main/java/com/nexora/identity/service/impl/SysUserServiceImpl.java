@@ -1,6 +1,5 @@
 package com.nexora.identity.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nexora.identity.domain.query.SysUserQuery;
@@ -48,7 +47,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (avatar == null || avatar.isBlank()) {
             return false;
         }
-        return baseMapper.exists(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getAvatar, avatar));
+        SysUserQuery query = new SysUserQuery();
+        query.setAvatar(avatar);
+        return baseMapper.exists(DynamicCondition.toWrapper(query));
     }
 }

@@ -158,6 +158,10 @@ test('profile redesign preserves account editing and avatar upload behavior', ()
 })
 
 test('user management and operation logs use email, nickname, and user id identities', () => {
+  assert.match(
+    userManagementSource,
+    /\.user-management-page\s*\{[\s\S]*:deep\(\.data-list-table td\.el-table__cell\)\s*\{[^}]*height:\s*72px/
+  )
   assert.match(userManagementSource, /queryParams\.email/)
   assert.match(userManagementSource, /prop="email"/)
   assert.match(userManagementSource, /:disabled="dialog\.type === 'edit'"/)
@@ -217,7 +221,7 @@ test('frontend dependencies use the coordinated Node 18 compatible versions', ()
 test('package scripts expose repeatable test, typecheck, and full verification commands', () => {
   assert.equal(
     packageJson.scripts.test,
-    'node --test tests/login-page.test.mjs tests/login-session.test.mjs tests/file-management.test.mjs tests/mail-inbox.test.mjs tests/configuration-management.test.mjs'
+    'node --test tests/login-page.test.mjs tests/login-session.test.mjs tests/file-management.test.mjs tests/mail-inbox.test.mjs tests/configuration-management.test.mjs tests/online-users.test.mjs tests/server-management.test.mjs'
   )
   assert.equal(packageJson.scripts.typecheck, 'vue-tsc --noEmit')
   assert.equal(packageJson.scripts.check, 'npm run typecheck && npm run test && npm run build')

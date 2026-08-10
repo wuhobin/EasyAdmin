@@ -58,7 +58,8 @@ class DomainDependencyArchitectureTest {
     @ArchTest
     static final ArchRule commonMustNotDependOnBusinessDomains = noClasses()
             .that().resideInAnyPackage("com.nexora.cache..", "com.nexora.config..",
-                    "com.nexora.constants..", "com.nexora.contract..", "com.nexora.utils..")
+                    "com.nexora.constants..", "com.nexora.contract..", "com.nexora.security..",
+                    "com.nexora.utils..")
             .should().dependOnClassesThat().resideInAnyPackage(
                     "com.nexora.monitor..",
                     "com.nexora.system..",

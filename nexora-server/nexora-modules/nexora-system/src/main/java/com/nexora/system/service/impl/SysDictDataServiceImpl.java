@@ -11,6 +11,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDictData>
         implements SysDictDataService {
@@ -18,5 +20,10 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
     @Override
     public IPage<SysDictData> listDictData(SysDictDataQuery query, PageParam pageParam) {
         return page(PageUtils.buildPage(pageParam), DynamicCondition.toWrapper(query));
+    }
+
+    @Override
+    public List<SysDictData> listOrdered(SysDictDataQuery query) {
+        return baseMapper.selectOrdered(DynamicCondition.toWrapper(query));
     }
 }

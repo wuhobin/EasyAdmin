@@ -8,6 +8,9 @@ import lombok.Data;
 public class SysDictQuery {
     @QueryField(operator = Operator.LIKE)
     private String name;
-    @QueryField
     private Integer status;
+    @QueryField(queryEmpty = true)
+    private String type;
+    @QueryField(field = "id", operator = Operator.NE)
+    private Long excludeId;
 }

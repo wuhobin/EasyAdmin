@@ -14,4 +14,10 @@ public class OssFileQueryForm {
 
     @Schema(description = "上传人ID")
     private Long uploaderId;
+
+    @Schema(description = "分组ID")
+    private Long groupId;
+
+    @Schema(description = "是否仅查询未分组文件")
+    private Boolean ungrouped;
 }

@@ -1,6 +1,5 @@
 package com.nexora.identity.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nexora.identity.service.SysRoleService;
@@ -24,18 +23,23 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     public boolean existsByCode(String code, Integer excludeId) {
-        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysRole::getCode, code);
-        if (excludeId != null) {
-            wrapper.ne(SysRole::getId, excludeId);
+        if (code == null) {
+            return false;
         }
-        return baseMapper.selectCount(wrapper) > 0;
+        SysRoleQuery query = new SysRoleQuery();
+        query.setCode(code);
+        query.setExcludeId(excludeId);
+        return baseMapper.selectCount(DynamicCondition.toWrapper(query)) > 0;
     }
 
     @Override
     public SysRole getByCode(String code) {
-        return baseMapper.selectOne(new LambdaQueryWrapper<SysRole>()
-                .eq(SysRole::getCode, code));
+        if (code == null) {
+            return null;
+        }
+        SysRoleQuery query = new SysRoleQuery();
+        query.setCode(code);
+        return baseMapper.selectOne(DynamicCondition.toWrapper(query));
     }
 
     @Override

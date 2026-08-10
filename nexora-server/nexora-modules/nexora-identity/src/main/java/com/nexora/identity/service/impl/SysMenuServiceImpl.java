@@ -1,9 +1,10 @@
 package com.nexora.identity.service.impl;
 
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
+import com.nexora.identity.domain.query.SysMenuQuery;
 import com.nexora.identity.entity.SysMenu;
 import com.nexora.identity.mapper.SysMenuMapper;
 import com.nexora.identity.service.SysMenuService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +15,17 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     public List<SysMenu> listOrderedMenus() {
-        return list(new LambdaQueryWrapper<SysMenu>().orderByAsc(SysMenu::getSort));
+        return baseMapper.selectOrdered(DynamicCondition.toWrapper(new SysMenuQuery()));
     }
 
     @Override
     public long countByParentId(Integer parentId) {
-        return count(new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getParentId, parentId));
+        if (parentId == null) {
+            return 0;
+        }
+        SysMenuQuery query = new SysMenuQuery();
+        query.setParentId(parentId);
+        return count(DynamicCondition.toWrapper(query));
     }
 
     @Override

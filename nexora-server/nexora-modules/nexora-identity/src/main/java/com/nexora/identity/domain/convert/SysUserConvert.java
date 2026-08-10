@@ -5,11 +5,13 @@ import com.nexora.identity.domain.query.SysUserQuery;
 import com.nexora.identity.entity.SysUser;
 import com.nexora.identity.domain.vo.SysUserVo;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper
 public interface SysUserConvert {
     SysUserConvert INSTANCE = Mappers.getMapper(SysUserConvert.class);
+    @Mapping(target = "avatar", ignore = true)
     SysUserQuery toQuery(SysUserQueryForm form);
     SysUserVo toVo(SysUser entity);
 }

@@ -1,6 +1,7 @@
 package com.nexora.file.task;
 
 import com.nexora.file.entity.SysOssFile;
+import com.nexora.file.service.SysOssFileGroupService;
 import com.nexora.file.service.SysOssFileService;
 import com.aurora.starter.redis.model.DelayRetry;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,23 @@ class OssFileRecordRetryTaskTest {
 
         assertThat(task.execute(data)).isTrue();
 
+        verify(service).saveIfAbsent(data);
+    }
+
+    @Test
+    void storesAFileAsUngroupedWhenItsGroupWasDeletedBeforeRetry() {
+        SysOssFileService service = mock(SysOssFileService.class);
+        SysOssFileGroupService groupService = mock(SysOssFileGroupService.class);
+        SysOssFile data = data();
+        data.setUploaderId(10L);
+        data.setGroupId(8L);
+        when(groupService.getById(8L)).thenReturn(null);
+        when(service.saveIfAbsent(data)).thenReturn(true);
+        OssFileRecordRetryTask task = new OssFileRecordRetryTask(service, groupService);
+
+        assertThat(task.execute(data)).isTrue();
+
+        assertThat(data.getGroupId()).isNull();
         verify(service).saveIfAbsent(data);
     }
 

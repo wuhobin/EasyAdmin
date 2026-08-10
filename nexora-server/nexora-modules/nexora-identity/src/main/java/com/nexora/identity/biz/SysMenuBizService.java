@@ -7,7 +7,7 @@ import com.nexora.identity.domain.form.SysMenuForm;
 import com.nexora.identity.domain.vo.SysRouterVo;
 import com.nexora.identity.domain.vo.SysMenuVo;
 import com.nexora.identity.entity.SysMenu;
-import com.nexora.identity.cache.SecurityAuthorizationCache;
+import com.nexora.identity.cache.SecurityPermissionCache;
 import com.nexora.identity.constants.MenuTypeEnum;
 import com.nexora.identity.service.SysMenuService;
 import com.aurora.starter.common.utils.StringUtils;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SysMenuBizService {
     private final SysMenuService sysMenuService;
-    private final SecurityAuthorizationCache authorizationCache;
+    private final SecurityPermissionCache authorizationCache;
 
     public List<SysMenuVo> getMenuTree() {
         List<SysMenu> menus = sysMenuService.listOrderedMenus();

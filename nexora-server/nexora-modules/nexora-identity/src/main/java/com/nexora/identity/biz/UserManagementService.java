@@ -7,8 +7,9 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nexora.constants.SecurityConstants;
 import com.nexora.contract.UserDeletionCleanup;
-import com.nexora.identity.cache.SecurityAuthorizationCache;
-import com.nexora.identity.config.PasswordPolicyValidator;
+import com.nexora.contract.UserDisabledCleanup;
+import com.nexora.identity.cache.SecurityPermissionCache;
+import com.nexora.identity.infrastructure.PasswordPolicyValidator;
 import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
 import com.nexora.identity.domain.convert.SysUserConvert;
@@ -33,8 +34,9 @@ public class UserManagementService {
 
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
-    private final SecurityAuthorizationCache authorizationCache;
+    private final SecurityPermissionCache authorizationCache;
     private final List<UserDeletionCleanup> userDeletionCleanups;
+    private final List<UserDisabledCleanup> userDisabledCleanups;
     private final PasswordPolicyValidator passwordPolicyValidator;
 
     public IPage<SysUserPageListVo> list(SysUserQueryForm form, PageParam pageParam) {
@@ -91,6 +93,10 @@ public class UserManagementService {
         sysUserService.updateById(user);
         sysRoleService.deleteUserRoles(List.of(user.getId()));
         sysRoleService.addUserRoles(user.getId(), form.getRoleIds());
+        if (Integer.valueOf(SysUserStatusEnum.DISABLED.getCode()).equals(status)
+                && !Objects.equals(existing.getStatus(), status)) {
+            userDisabledCleanups.forEach(cleanup -> cleanup.cleanup(userId));
+        }
         authorizationCache.evictUsersAfterCommit(List.of(user.getId()));
     }
 

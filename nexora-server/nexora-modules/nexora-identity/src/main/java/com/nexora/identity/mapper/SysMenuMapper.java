@@ -1,6 +1,8 @@
 package com.nexora.identity.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.nexora.identity.entity.SysMenu;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -9,6 +11,8 @@ import java.util.List;
 
 @Mapper
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
+    List<SysMenu> selectOrdered(@Param(Constants.WRAPPER) Wrapper<SysMenu> wrapper);
+
     /**
      * 获取用户菜单列表
      */

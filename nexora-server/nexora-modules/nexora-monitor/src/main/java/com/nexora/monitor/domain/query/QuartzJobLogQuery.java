@@ -8,8 +8,6 @@ import lombok.Data;
 public class QuartzJobLogQuery {
     @QueryField(operator = Operator.LIKE)
     private String jobName;
-    @QueryField
     private String jobGroup;
-    @QueryField
     private String status;
 }

@@ -1,11 +1,16 @@
 package com.nexora.file.task;
 
 import com.nexora.file.entity.SysOssFile;
+import com.nexora.file.entity.SysOssFileGroup;
+import com.nexora.file.service.SysOssFileGroupService;
 import com.nexora.file.service.SysOssFileService;
 import com.aurora.starter.redis.core.task.DelayedRetryTask;
 import com.aurora.starter.redis.model.DelayRetry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -16,9 +21,16 @@ public class OssFileRecordRetryTask extends DelayedRetryTask<SysOssFile> {
     static final long INTERVAL_SECONDS = 15L;
 
     private final SysOssFileService ossFileService;
+    private final SysOssFileGroupService groupService;
+
+    @Autowired
+    public OssFileRecordRetryTask(SysOssFileService ossFileService, SysOssFileGroupService groupService) {
+        this.ossFileService = ossFileService;
+        this.groupService = groupService;
+    }
 
     public OssFileRecordRetryTask(SysOssFileService ossFileService) {
-        this.ossFileService = ossFileService;
+        this(ossFileService, null);
     }
 
     public void submit(SysOssFile data) {
@@ -37,10 +49,23 @@ public class OssFileRecordRetryTask extends DelayedRetryTask<SysOssFile> {
 
     @Override
     protected boolean execute(SysOssFile data) {
+        normalizeMissingGroup(data);
         if (!ossFileService.saveIfAbsent(data)) {
             throw new IllegalStateException("OSS file record insert returned false: " + data.getFileId());
         }
         return true;
+    }
+
+    private void normalizeMissingGroup(SysOssFile data) {
+        if (data.getGroupId() == null || groupService == null) {
+            return;
+        }
+        SysOssFileGroup group = groupService.getById(data.getGroupId());
+        if (group == null || !Objects.equals(group.getOwnerId(), data.getUploaderId())) {
+            log.info("File group disappeared before record retry, storing file as ungrouped, fileId={}, groupId={}",
+                    data.getFileId(), data.getGroupId());
+            data.setGroupId(null);
+        }
     }
 
     @Override

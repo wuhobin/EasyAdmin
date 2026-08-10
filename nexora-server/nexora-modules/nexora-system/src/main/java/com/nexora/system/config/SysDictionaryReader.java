@@ -1,10 +1,11 @@
 package com.nexora.system.config;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
 import com.nexora.system.api.DictionaryEntry;
 import com.nexora.system.api.SystemDictionaryReader;
+import com.nexora.system.domain.query.SysDictDataQuery;
+import com.nexora.system.domain.query.SysDictQuery;
 import com.nexora.system.entity.SysDict;
-import com.nexora.system.entity.SysDictData;
 import com.nexora.system.service.SysDictDataService;
 import com.nexora.system.service.SysDictService;
 import lombok.RequiredArgsConstructor;
@@ -25,17 +26,20 @@ public class SysDictionaryReader implements SystemDictionaryReader {
 
     @Override
     public Optional<List<DictionaryEntry>> findEnabledEntries(String type) {
-        SysDict dict = dictService.getOne(new LambdaQueryWrapper<SysDict>()
-                .eq(SysDict::getType, type)
-                .eq(SysDict::getStatus, ENABLED_STATUS), false);
+        if (type == null) {
+            return Optional.empty();
+        }
+        SysDictQuery dictQuery = new SysDictQuery();
+        dictQuery.setType(type);
+        dictQuery.setStatus(ENABLED_STATUS);
+        SysDict dict = dictService.getOne(DynamicCondition.toWrapper(dictQuery), false);
         if (dict == null) {
             return Optional.empty();
         }
-        List<DictionaryEntry> entries = dictDataService.list(new LambdaQueryWrapper<SysDictData>()
-                        .eq(SysDictData::getDictId, dict.getId())
-                        .eq(SysDictData::getStatus, ENABLED_STATUS)
-                        .orderByAsc(SysDictData::getSort)
-                        .orderByAsc(SysDictData::getId))
+        SysDictDataQuery dataQuery = new SysDictDataQuery();
+        dataQuery.setDictId(dict.getId());
+        dataQuery.setStatus(ENABLED_STATUS);
+        List<DictionaryEntry> entries = dictDataService.listOrdered(dataQuery)
                 .stream()
                 .map(item -> new DictionaryEntry(
                         item.getLabel(),

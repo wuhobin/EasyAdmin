@@ -1,14 +1,16 @@
 package com.nexora.mail.service.impl;
 
+import com.aurora.starter.mybatisplus.mybatis.DynamicCondition;
+import com.nexora.mail.domain.query.MailAccountQuery;
 import com.nexora.mail.entity.MailAccount;
 import com.nexora.mail.mapper.MailAccountMapper;
 import com.nexora.mail.service.MailAccountService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class MailAccountServiceImpl extends ServiceImpl<MailAccountMapper, MailAccount>
@@ -16,19 +18,17 @@ public class MailAccountServiceImpl extends ServiceImpl<MailAccountMapper, MailA
 
     @Override
     public List<MailAccount> listOrderedByOwnerId(Integer ownerId) {
-        return list(new LambdaQueryWrapper<MailAccount>()
-                .eq(MailAccount::getOwnerId, ownerId)
-                .orderByAsc(MailAccount::getSort)
-                .orderByAsc(MailAccount::getId));
+        MailAccountQuery query = new MailAccountQuery();
+        query.setOwnerId(Objects.requireNonNull(ownerId, "ownerId"));
+        return baseMapper.selectOrdered(DynamicCondition.toWrapper(query));
     }
 
     @Override
     public List<MailAccount> listEnabledByOwnerId(Integer ownerId) {
-        return list(new LambdaQueryWrapper<MailAccount>()
-                .eq(MailAccount::getOwnerId, ownerId)
-                .eq(MailAccount::getEnabled, 1)
-                .orderByAsc(MailAccount::getSort)
-                .orderByAsc(MailAccount::getId));
+        MailAccountQuery query = new MailAccountQuery();
+        query.setOwnerId(Objects.requireNonNull(ownerId, "ownerId"));
+        query.setEnabled(1);
+        return baseMapper.selectOrdered(DynamicCondition.toWrapper(query));
     }
 
     @Override
@@ -38,27 +38,36 @@ public class MailAccountServiceImpl extends ServiceImpl<MailAccountMapper, MailA
 
     @Override
     public MailAccount getByIdAndOwnerId(Long id, Integer ownerId) {
-        return getOne(new LambdaQueryWrapper<MailAccount>()
-                .eq(MailAccount::getId, id)
-                .eq(MailAccount::getOwnerId, ownerId), false);
+        if (id == null || ownerId == null) {
+            return null;
+        }
+        MailAccountQuery query = new MailAccountQuery();
+        query.setId(id);
+        query.setOwnerId(ownerId);
+        return getOne(DynamicCondition.toWrapper(query), false);
     }
 
     @Override
     public boolean existsByOwnerIdAndEmail(Integer ownerId, String email, Long excludedId) {
-        LambdaQueryWrapper<MailAccount> wrapper = new LambdaQueryWrapper<MailAccount>()
-                .eq(MailAccount::getOwnerId, ownerId)
-                .eq(MailAccount::getEmail, email);
-        if (excludedId != null) {
-            wrapper.ne(MailAccount::getId, excludedId);
+        if (ownerId == null || email == null) {
+            return false;
         }
-        return count(wrapper) > 0;
+        MailAccountQuery query = new MailAccountQuery();
+        query.setOwnerId(ownerId);
+        query.setEmail(email);
+        query.setExcludeId(excludedId);
+        return count(DynamicCondition.toWrapper(query)) > 0;
     }
 
     @Override
     public boolean removeByIdAndOwnerId(Long id, Integer ownerId) {
-        return remove(new LambdaQueryWrapper<MailAccount>()
-                .eq(MailAccount::getId, id)
-                .eq(MailAccount::getOwnerId, ownerId));
+        if (id == null || ownerId == null) {
+            return false;
+        }
+        MailAccountQuery query = new MailAccountQuery();
+        query.setId(id);
+        query.setOwnerId(ownerId);
+        return remove(DynamicCondition.toWrapper(query));
     }
 
     @Override
@@ -66,7 +75,8 @@ public class MailAccountServiceImpl extends ServiceImpl<MailAccountMapper, MailA
         if (ownerIds == null || ownerIds.isEmpty()) {
             return true;
         }
-        return remove(new LambdaQueryWrapper<MailAccount>()
-                .in(MailAccount::getOwnerId, ownerIds));
+        MailAccountQuery query = new MailAccountQuery();
+        query.setOwnerIds(ownerIds);
+        return remove(DynamicCondition.toWrapper(query));
     }
 }
