@@ -1,5 +1,6 @@
 package com.nexora.message.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -16,7 +17,9 @@ public class NoticeAdminVo {
     private Integer status;
     private Integer createBy;
     private String createName;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishTime;
     private LocalDateTime updateTime;
     private Long recipientCount;

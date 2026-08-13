@@ -50,6 +50,7 @@ public class SysUserVo {
     private Integer loginType;
 
     @Schema(description = "最后登录时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastLoginTime;
 
     @Schema(description = "创建时间")

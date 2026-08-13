@@ -1,5 +1,6 @@
 package com.nexora.monitor.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -31,9 +32,11 @@ public class OnlineSessionVo {
     private String os;
 
     @Schema(description = "登录时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime loginTime;
 
     @Schema(description = "最后访问时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastAccessTime;
 
     @Schema(description = "是否为当前请求会话")

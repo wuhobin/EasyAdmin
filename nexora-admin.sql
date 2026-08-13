@@ -229,24 +229,24 @@ CREATE TABLE `sys_menu`  (
 -- ----------------------------
 -- Records of sys_menu
 -- ----------------------------
-INSERT INTO `sys_menu` VALUES (1, '0', '/system', 'Layout', '系统管理', 4, 'Setting', 'CATALOG', '2019-03-28 18:51:08', '2021-12-17 15:26:06', '/system/user', '', 0, NULL, 0);
-INSERT INTO `sys_menu` VALUES (2, '1', 'role', '/system/role/index', '角色管理', 2, 'Avatar', 'MENU', '2019-03-30 14:00:03', '2021-11-16 15:40:42', '', '', 0, NULL, 0);
+INSERT INTO `sys_menu` VALUES (1, '0', '/system', 'Layout', '系统管理', 4, 'antd:SettingOutlined', 'CATALOG', '2019-03-28 18:51:08', '2021-12-17 15:26:06', '/system/user', '', 0, NULL, 0);
+INSERT INTO `sys_menu` VALUES (2, '1', 'role', '/system/role/index', '角色管理', 2, 'antd:TeamOutlined', 'MENU', '2019-03-30 14:00:03', '2021-11-16 15:40:42', '', '', 0, NULL, 0);
 INSERT INTO `sys_menu` VALUES (3, '2', NULL, NULL, '列表', 1, '', 'BUTTON', NULL, '2024-11-18 17:56:16', '', NULL, 1, 'system:role', 0);
-INSERT INTO `sys_menu` VALUES (4, '0', '/monitor', 'Layout', '监控中心', 5, 'Monitor', 'CATALOG', NULL, '2024-11-17 21:38:25', '/monitor/server', '', 0, NULL, 0);
+INSERT INTO `sys_menu` VALUES (4, '0', '/monitor', 'Layout', '监控中心', 5, 'antd:MonitorOutlined', 'CATALOG', NULL, '2024-11-17 21:38:25', '/monitor/server', '', 0, NULL, 0);
 INSERT INTO `sys_menu` VALUES (7, '6', '', '', '新增', 1, '', 'BUTTON', NULL, '2024-11-16 14:18:24', NULL, '', 1, 'a:b:add', 0);
 INSERT INTO `sys_menu` VALUES (8, '2', '', '', '新增', 1, '', 'BUTTON', NULL, '2024-11-21 22:16:56', NULL, '', 1, 'sys:role:add', 0);
-INSERT INTO `sys_menu` VALUES (9, '1', 'dict', '/system/dict/index', '字典管理', 3, 'Memo', 'MENU', '2024-11-17 21:29:51', '2024-11-17 21:39:06', NULL, '', 0, NULL, 0);
+INSERT INTO `sys_menu` VALUES (9, '1', 'dict', '/system/dict/index', '字典管理', 3, 'antd:DatabaseOutlined', 'MENU', '2024-11-17 21:29:51', '2024-11-17 21:39:06', NULL, '', 0, NULL, 0);
 INSERT INTO `sys_menu` VALUES (10, '9', '', '', '新增', 2, '', 'BUTTON', '2024-11-17 21:30:23', '2025-01-04 11:19:01', NULL, '', 1, 'sys:dict:add', 0);
 INSERT INTO `sys_menu` VALUES (11, '9', '', '', '修改', 2, '', 'BUTTON', '2024-11-17 21:32:34', '2024-11-18 18:01:35', NULL, '', 1, 'sys:dict:update', 0);
 INSERT INTO `sys_menu` VALUES (12, '9', '', '', '删除', 3, '', 'BUTTON', '2024-11-17 21:34:33', '2024-11-17 21:39:11', NULL, '', 1, 'sys:dict:delete', 0);
-INSERT INTO `sys_menu` VALUES (13, '1', 'menu', '/system/menu/index', '菜单管理', 5, 'Menu', 'MENU', NULL, '2021-11-18 11:26:00', '', 'menu', 0, NULL, 0);
-INSERT INTO `sys_menu` VALUES (14, '1', 'user', '/system/user/index', '用户管理', 1, 'User', 'MENU', '2024-11-18 01:10:52', '2024-11-18 01:11:13', NULL, '', 0, '', 0);
-INSERT INTO `sys_menu` VALUES (18, '4', 'job', '/monitor/job/index', '定时任务', 3, 'AlarmClock', 'MENU', '2024-11-18 06:57:38', NULL, NULL, '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (13, '1', 'menu', '/system/menu/index', '菜单管理', 5, 'antd:MenuOutlined', 'MENU', NULL, '2021-11-18 11:26:00', '', 'menu', 0, NULL, 0);
+INSERT INTO `sys_menu` VALUES (14, '1', 'user', '/system/user/index', '用户管理', 1, 'antd:UserOutlined', 'MENU', '2024-11-18 01:10:52', '2024-11-18 01:11:13', NULL, '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (18, '4', 'job', '/monitor/job/index', '定时任务', 3, 'antd:ScheduleOutlined', 'MENU', '2024-11-18 06:57:38', NULL, NULL, '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (27, '14', '', '', '新增', 2, '', 'BUTTON', '2024-11-18 09:18:14', '2024-11-21 22:15:30', NULL, '', 1, 'sys:user:add', 0);
 INSERT INTO `sys_menu` VALUES (28, '14', '', '', '编辑', 2, '', 'BUTTON', '2024-11-18 09:18:38', '2024-11-21 14:38:56', NULL, '', 1, 'sys:user:update', 0);
 INSERT INTO `sys_menu` VALUES (29, '14', '', '', '删除', 3, '', 'BUTTON', '2024-11-18 09:18:53', '2024-11-21 22:15:43', NULL, '', 1, 'sys:user:delete', 0);
-INSERT INTO `sys_menu` VALUES (32, '1', 'log', '', '日志管理', 5, 'DocumentCopy', 'MENU', '2024-11-18 10:52:47', '2024-11-18 10:58:00', '/system/log/operation', '', 0, '', 0);
-INSERT INTO `sys_menu` VALUES (33, '32', 'operation', '/system/log/operation/index', '操作日志', 1, 'Operation', 'MENU', '2024-11-18 10:53:10', '2026-08-04 11:23:53', NULL, '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (32, '1', 'log', '', '日志管理', 5, 'antd:FileTextOutlined', 'MENU', '2024-11-18 10:52:47', '2024-11-18 10:58:00', '/system/log/operation', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (33, '32', 'operation', '/system/log/operation/index', '操作日志', 1, 'antd:AuditOutlined', 'MENU', '2024-11-18 10:53:10', '2026-08-04 11:23:53', NULL, '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (39, '14', '', '', '列表', 1, '', 'BUTTON', '2024-11-18 17:54:15', '2024-11-21 22:07:33', '', '', 1, 'sys:user', 0);
 INSERT INTO `sys_menu` VALUES (40, '2', '', '', '修改', 2, '', 'BUTTON', '2024-11-18 17:56:10', '2024-11-21 22:04:52', '', '', 1, 'sys:role:update', 0);
 INSERT INTO `sys_menu` VALUES (41, '2', '', '', '删除', 3, '', 'BUTTON', '2024-11-18 17:56:34', '2024-11-21 22:17:17', '', NULL, 1, 'sys:role:delete', 0);
@@ -256,7 +256,7 @@ INSERT INTO `sys_menu` VALUES (49, '13', '', '', '修改', 2, '', 'BUTTON', '202
 INSERT INTO `sys_menu` VALUES (50, '13', '', '', '删除', 3, '', 'BUTTON', '2024-11-21 21:55:49', NULL, '', '', 1, 'sys:menu:delete', 0);
 INSERT INTO `sys_menu` VALUES (51, '13', '', '', '列表', 1, '', 'BUTTON', '2024-11-21 21:58:29', NULL, '', '', 1, 'sys:menu', 0);
 INSERT INTO `sys_menu` VALUES (53, '9', '', '', '列表', 1, '', 'BUTTON', '2024-11-18 17:58:16', NULL, '', '', 1, 'sys:dict', 0);
-INSERT INTO `sys_menu` VALUES (54, '1', 'profile', '/system/user/profile/index', '个人中心', 99, 'Avatar', 'MENU', '2024-11-21 22:12:18', '2024-11-21 22:12:46', '', '', 1, '', 0);
+INSERT INTO `sys_menu` VALUES (54, '1', 'profile', '/system/user/profile/index', '个人中心', 99, 'antd:IdcardOutlined', 'MENU', '2024-11-21 22:12:18', '2024-11-21 22:12:46', '', '', 1, '', 0);
 INSERT INTO `sys_menu` VALUES (55, '33', '', '', '列表', 1, '', 'BUTTON', '2024-11-18 10:53:10', '2024-11-18 11:05:22', '', '', 1, 'sys:operateLog', 0);
 INSERT INTO `sys_menu` VALUES (56, '33', '', '', '删除', 2, '', 'BUTTON', '2024-11-18 10:53:10', '2024-11-18 11:05:22', '', '', 1, 'sys:operateLog:delete', 0);
 INSERT INTO `sys_menu` VALUES (58, '18', '', '', '列表', 1, '', 'BUTTON', '2024-11-18 17:56:58', '2024-11-21 22:04:42', '', NULL, 1, 'sys:job', 0);
@@ -264,14 +264,14 @@ INSERT INTO `sys_menu` VALUES (59, '18', '', '', '添加', 2, '', 'BUTTON', '202
 INSERT INTO `sys_menu` VALUES (60, '18', '', '', '修改', 3, '', 'BUTTON', '2024-11-18 17:56:58', '2024-11-21 22:04:42', '', NULL, 1, 'sys:job:update', 0);
 INSERT INTO `sys_menu` VALUES (61, '18', '', '', '删除', 4, '', 'BUTTON', '2024-11-18 17:56:58', '2024-11-21 22:04:42', '', NULL, 1, 'sys:job:delete', 0);
 INSERT INTO `sys_menu` VALUES (62, '18', '', '', '修改状态', 5, '', 'BUTTON', '2024-11-18 17:56:58', '2024-11-21 22:04:42', '', NULL, 0, 'sys:job:changeStatus', 0);
-INSERT INTO `sys_menu` VALUES (111, '0', '/file', 'Layout', '文件管理', 10, 'FolderOpened', 'CATALOG', '2026-07-16 20:08:41', NULL, '/file/list', '', 0, '', 0);
-INSERT INTO `sys_menu` VALUES (112, '111', 'list', '/file/index', '文件列表', 1, 'Files', 'MENU', '2026-07-16 20:08:41', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (111, '0', '/file', 'Layout', '文件管理', 10, 'antd:FolderOpenOutlined', 'CATALOG', '2026-07-16 20:08:41', NULL, '/file/list', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (112, '111', 'list', '/file/index', '文件列表', 1, 'antd:FileOutlined', 'MENU', '2026-07-16 20:08:41', NULL, '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (113, '112', '', '', '文件列表', 1, '', 'BUTTON', '2026-07-16 20:08:41', NULL, '', '', 1, 'sys:file:list', 0);
 INSERT INTO `sys_menu` VALUES (114, '112', '', '', '上传文件', 1, '', 'BUTTON', '2026-07-17 11:03:53', '2026-07-17 11:03:53', '', '', 1, 'sys:file:upload', 0);
 INSERT INTO `sys_menu` VALUES (115, '112', '', '', '删除文件', 1, '', 'BUTTON', '2026-07-17 11:04:36', '2026-07-17 11:04:36', '', '', 1, 'sys:file:delete', 0);
 INSERT INTO `sys_menu` VALUES (116, '112', '', '', '下载文件', 1, '', 'BUTTON', '2026-07-17 12:31:48', '2026-07-17 12:31:48', '', '', 1, 'sys:file:download', 0);
-INSERT INTO `sys_menu` VALUES (117, '0', '/mail', 'Layout', '聚合邮箱', 9, 'Message', 'CATALOG', '2026-07-19 00:00:00', NULL, '/mail/inbox', '', 0, '', 0);
-INSERT INTO `sys_menu` VALUES (118, '117', 'inbox', '/mail/index', '最新邮件', 1, 'MessageBox', 'MENU', '2026-07-19 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (117, '0', '/mail', 'Layout', '聚合邮箱', 9, 'antd:MailOutlined', 'CATALOG', '2026-07-19 00:00:00', NULL, '/mail/inbox', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (118, '117', 'inbox', '/mail/index', '最新邮件', 1, 'antd:InboxOutlined', 'MENU', '2026-07-19 00:00:00', NULL, '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (119, '127', '', '', '邮箱账户列表', 1, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:account:list', 0);
 INSERT INTO `sys_menu` VALUES (120, '127', '', '', '新增邮箱账户', 2, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:account:add', 0);
 INSERT INTO `sys_menu` VALUES (121, '127', '', '', '修改邮箱账户', 3, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:account:update', 0);
@@ -280,18 +280,18 @@ INSERT INTO `sys_menu` VALUES (123, '127', '', '', '测试邮箱连接', 5, '', 
 INSERT INTO `sys_menu` VALUES (124, '118', '', '', '邮件列表', 6, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:inbox:list', 0);
 INSERT INTO `sys_menu` VALUES (125, '118', '', '', '查看邮件', 7, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:inbox:view', 0);
 INSERT INTO `sys_menu` VALUES (126, '118', '', '', '下载附件', 8, '', 'BUTTON', '2026-07-19 00:00:00', NULL, '', '', 1, 'mail:inbox:download', 0);
-INSERT INTO `sys_menu` VALUES (127, '117', 'account', '/mail/account/index', '邮箱列表', 2, 'Tickets', 'MENU', '2026-07-19 00:00:00', NULL, '', '', 0, '', 0);
-INSERT INTO `sys_menu` VALUES (130, '1', 'config', '/system/config/index', '配置管理', 4, 'Tools', 'MENU', '2026-07-27 13:37:19', NULL, '', 'config', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (127, '117', 'account', '/mail/account/index', '邮箱列表', 2, 'antd:AccountBookOutlined', 'MENU', '2026-07-19 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (130, '1', 'config', '/system/config/index', '配置管理', 4, 'antd:ToolOutlined', 'MENU', '2026-07-27 13:37:19', NULL, '', 'config', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (132, '130', '', '', '修改', 2, '', 'BUTTON', '2026-07-27 13:37:19', NULL, '', '', 1, 'sys:config:update', 0);
 INSERT INTO `sys_menu` VALUES (134, '130', '', '', '查看', 4, '', 'BUTTON', '2026-07-27 13:37:19', NULL, '', '', 1, 'sys:config:list', 0);
-INSERT INTO `sys_menu` VALUES (135, '32', 'job-log', '/monitor/job/log', '调度日志', 1, 'CircleCheckFilled', 'MENU', '2026-08-04 11:22:22', '2026-08-04 11:23:01', '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (135, '32', 'job-log', '/monitor/job/log', '调度日志', 1, 'antd:HistoryOutlined', 'MENU', '2026-08-04 11:22:22', '2026-08-04 11:23:01', '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (136, '135', '', '', '列表', 1, '', 'BUTTON', '2026-08-04 11:25:33', '2026-08-04 11:25:33', '', '', 1, 'sys:jobLog', 0);
 INSERT INTO `sys_menu` VALUES (137, '135', '', '', '删除', 1, '', 'BUTTON', '2026-08-04 11:25:51', '2026-08-04 11:25:51', '', '', 1, 'sys:jobLog:delete', 0);
 INSERT INTO `sys_menu` VALUES (138, '135', '', '', '清空', 1, '', 'BUTTON', '2026-08-04 11:26:07', '2026-08-04 11:26:07', '', '', 1, 'sys:jobLog:clean', 0);
-INSERT INTO `sys_menu` VALUES (139, '4', 'online', '/monitor/online/index', '在线用户', 2, 'UserFilled', 'MENU', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (139, '4', 'online', '/monitor/online/index', '在线用户', 2, 'antd:TeamOutlined', 'MENU', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (140, '139', '', '', '列表', 1, '', 'BUTTON', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 1, 'sys:online', 0);
 INSERT INTO `sys_menu` VALUES (141, '139', '', '', '强退', 2, '', 'BUTTON', '2026-08-04 19:53:09', '2026-08-04 19:53:09', '', '', 1, 'sys:online:forceLogout', 0);
-INSERT INTO `sys_menu` VALUES (142, '4', 'server', '/monitor/server/index', '服务器管理', 1, 'Platform', 'MENU', '2026-08-05 00:00:00', NULL, '', '', 0, '', 0);
+INSERT INTO `sys_menu` VALUES (142, '4', 'server', '/monitor/server/index', '服务器管理', 1, 'antd:CloudServerOutlined', 'MENU', '2026-08-05 00:00:00', NULL, '', '', 0, '', 0);
 INSERT INTO `sys_menu` VALUES (143, '142', '', '', '列表', 1, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:list', 0);
 INSERT INTO `sys_menu` VALUES (144, '142', '', '', '新增', 2, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:add', 0);
 INSERT INTO `sys_menu` VALUES (145, '142', '', '', '修改', 3, '', 'BUTTON', '2026-08-05 00:00:00', NULL, '', '', 1, 'monitor:server:update', 0);
@@ -630,7 +630,7 @@ CREATE TABLE `sys_user_notice` (
   CONSTRAINT `fk_sys_user_notice_notice` FOREIGN KEY (`notice_id`) REFERENCES `sys_notice` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户通知接收记录';
 
-INSERT INTO `sys_menu` VALUES (150, '1', 'notice', '/system/notice/index', '系统通知', 6, 'Bell', 'MENU', NOW(), NOW(), NULL, '', 0, NULL, 0);
+INSERT INTO `sys_menu` VALUES (150, '1', 'notice', '/system/notice/index', '系统通知', 6, 'antd:BellOutlined', 'MENU', NOW(), NOW(), NULL, '', 0, NULL, 0);
 INSERT INTO `sys_menu` VALUES (151, '150', '', '', '列表', 1, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:list', 0);
 INSERT INTO `sys_menu` VALUES (152, '150', '', '', '新增', 2, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:add', 0);
 INSERT INTO `sys_menu` VALUES (153, '150', '', '', '修改', 3, '', 'BUTTON', NOW(), NOW(), NULL, '', 1, 'sys:notice:update', 0);
