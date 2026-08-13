@@ -10,13 +10,10 @@ export function registerUnauthorizedHandler(handler: UnauthorizedHandler) {
 export function notifyUnauthorized() {
   if (!unauthorizedPromise) {
     unauthorizedPromise = Promise.resolve()
-      .then(async () => {
-        await unauthorizedHandler?.()
-      })
+      .then(async () => unauthorizedHandler?.())
       .finally(() => {
         unauthorizedPromise = null
       })
   }
-
   return unauthorizedPromise
 }

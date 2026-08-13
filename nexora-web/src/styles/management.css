@@ -1,0 +1,169 @@
+.management-page {
+  width: calc(100% - clamp(16px, 2vw, 32px));
+  max-width: 1680px;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.management-data-card {
+  padding: 0 10px 10px;
+  border: 1px solid var(--nexora-line) !important;
+  border-radius: 16px !important;
+  background: var(--nexora-panel) !important;
+  box-shadow: 0 12px 30px rgb(25 23 40 / 3%);
+}
+
+.management-filters { padding: 18px 4px 2px; border-bottom: 1px solid var(--nexora-line); }
+.management-filter-form { display: flex; align-items: center; gap: 18px; padding-bottom: 16px; }
+.management-filter-field {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  width: 244px;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 4px;
+}
+.management-filter-field > label { white-space: nowrap; }
+.management-filter-field > p { grid-column: 2; }
+.management-filter-field.management-filter-field-select { width: 190px; }
+.management-filter-actions { display: flex; gap: 8px; margin-left: auto; }
+
+.management-toolbar,
+.management-subpanel-toolbar {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--nexora-line);
+}
+
+.management-toolbar-selection { color: var(--nexora-placeholder); font-size: 12px; font-weight: 650; }
+.management-table-wrap { min-width: 0; }
+.management-data-card .ant-table,
+.management-subpanel .ant-table { color: var(--nexora-ink); background: transparent; }
+.management-data-card .ant-table-thead > tr > th,
+.management-subpanel .ant-table-thead > tr > th { color: var(--nexora-placeholder); border-bottom-color: var(--nexora-line); background: transparent; font-size: 11px; font-weight: 750; letter-spacing: .04em; }
+.management-data-card .ant-table-tbody > tr > td,
+.management-subpanel .ant-table-tbody > tr > td { border-bottom-color: color-mix(in srgb, var(--nexora-line) 72%, transparent); background: transparent; transition: background-color .18s ease; }
+.management-data-card .ant-table-tbody > tr:hover > td,
+.management-subpanel .ant-table-tbody > tr:hover > td { background: color-mix(in srgb, var(--nexora-violet) 4%, var(--nexora-panel)) !important; }
+.management-data-card .ant-table-cell-fix-right,
+.management-subpanel .ant-table-cell-fix-right { background: var(--nexora-panel); }
+.management-data-card .ant-table-tbody > tr:hover .ant-table-cell-fix-right,
+.management-subpanel .ant-table-tbody > tr:hover .ant-table-cell-fix-right { background: color-mix(in srgb, var(--nexora-violet) 4%, var(--nexora-panel)) !important; }
+
+.management-pagination { display: flex; min-height: 66px; align-items: center; justify-content: flex-end; padding: 14px 4px 4px; }
+.management-primary-text { color: var(--nexora-ink); font-weight: 400; }
+.management-code { padding: 3px 6px; border-radius: 5px; color: var(--nexora-ink-soft); background: var(--nexora-muted); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }
+.management-empty-value { color: var(--nexora-placeholder); }
+.management-user-cell { display: flex; min-width: 0; align-items: center; gap: 10px; }
+.management-user-cell .ant-avatar { flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--nexora-violet) 20%, var(--nexora-line)); border-radius: 8px; color: var(--nexora-violet); background: color-mix(in srgb, var(--nexora-violet) 9%, var(--nexora-panel)); }
+.management-user-cell > span { display: grid; min-width: 0; gap: 3px; }
+.management-user-name,
+.management-user-cell small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.management-user-name { color: var(--nexora-ink); font-size: 13px; font-weight: 400; }
+.management-user-cell small { color: var(--nexora-placeholder); font-size: 11px; }
+
+.management-row-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.management-row-action { width: 34px; height: 34px; padding: 0; border: 0; border-radius: 7px; box-shadow: none; font-size: 13px; transition: color .18s ease, background-color .18s ease, opacity .18s ease; }
+.management-row-action-add { color: var(--nexora-action-add); background: color-mix(in srgb, var(--nexora-action-add) 11%, var(--nexora-panel)); }
+.management-row-action-add:not(:disabled):hover { color: #fff; background: var(--nexora-action-add); }
+.management-row-action-edit { color: var(--nexora-action-edit); background: color-mix(in srgb, var(--nexora-action-edit) 12%, var(--nexora-panel)); }
+.management-row-action-edit:not(:disabled):hover { color: #fff; background: var(--nexora-action-edit); }
+.management-row-action-delete { color: var(--nexora-action-delete); background: color-mix(in srgb, var(--nexora-action-delete) 11%, var(--nexora-panel)); }
+.management-row-action-delete:not(:disabled):hover { color: #fff; background: var(--nexora-action-delete); }
+.management-row-action-approve { color: var(--nexora-success); background: color-mix(in srgb, var(--nexora-success) 12%, var(--nexora-panel)); }
+.management-row-action-approve:not(:disabled):hover { color: #fff; background: var(--nexora-success); }
+.management-row-action-settings { color: var(--nexora-violet); background: color-mix(in srgb, var(--nexora-violet) 11%, var(--nexora-panel)); }
+.management-row-action-settings:not(:disabled):hover { color: #fff; background: var(--nexora-violet); }
+.management-row-action-data { color: var(--nexora-action-add); background: color-mix(in srgb, var(--nexora-action-add) 11%, var(--nexora-panel)); }
+.management-row-action-data:not(:disabled):hover { color: #fff; background: var(--nexora-action-add); }
+.management-row-action:disabled { opacity: .4; }
+
+.management-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.management-dialog-body { display: grid; gap: 18px; padding: 20px 24px 22px; }
+.management-dialog-body [data-slot='form-item'] { position: relative; }
+.management-dialog-body .nexora-form-message { position: absolute; top: calc(100% + 2px); left: 0; z-index: 1; margin: 0; }
+.management-form-stack { display: grid; gap: 18px; }
+.management-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
+.management-form-span-2 { grid-column: 1 / -1; }
+.management-radio-options {
+  min-height: 36px;
+  align-items: center;
+  gap: 22px;
+}
+.management-radio-option {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  color: var(--nexora-ink-soft);
+  cursor: pointer;
+  transition: color .18s ease;
+}
+.management-radio-option:hover,
+.management-radio-option:has([data-state='checked']) { color: var(--nexora-violet); }
+.management-radio-option:has([data-disabled]) { cursor: not-allowed; opacity: .45; }
+.management-switch-field { display: flex; min-height: 54px; align-items: center; justify-content: space-between; gap: 14px; padding: 9px 12px; border: 1px solid var(--nexora-line); border-radius: 8px; background: color-mix(in srgb, var(--nexora-muted) 38%, var(--nexora-panel)); }
+.management-switch-copy { display: grid; gap: 3px; }
+.management-switch-copy > span { font-size: 12px; font-weight: 650; }
+.management-switch-copy > small { color: var(--nexora-placeholder); font-size: 11px; }
+.management-character-count { margin-top: -2px; color: var(--nexora-placeholder); font-size: 10px; text-align: right; }
+
+.management-permission-tree { max-height: min(52vh, 460px); overflow: auto; padding: 10px 4px 10px 0; }
+.management-permission-tree .ant-tree { color: var(--nexora-ink); background: transparent; }
+.management-permission-tree .ant-tree-node-content-wrapper { min-height: 30px; line-height: 30px; }
+
+.management-subpanel { min-width: 0; }
+.management-subpanel-toolbar { padding-inline: 2px; }
+
+.management-log-detail {
+  display: grid;
+  max-height: 360px;
+  gap: 14px;
+  overflow: auto;
+  padding: 14px 18px;
+  border: 1px solid var(--nexora-line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--nexora-muted) 50%, var(--nexora-panel));
+}
+.management-log-detail-row { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: start; gap: 14px; }
+.management-log-detail-row > span { padding-top: 2px; color: var(--nexora-placeholder); font-size: 11px; font-weight: 650; }
+.management-log-detail-row code,
+.management-log-detail-row pre { min-width: 0; margin: 0; color: var(--nexora-ink-soft); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-wrap; }
+.management-data-card .ant-table-expanded-row > td { background: color-mix(in srgb, var(--nexora-muted) 24%, var(--nexora-panel)) !important; }
+.management-data-card .ant-table-row-expand-icon { color: var(--nexora-ink-soft); background: var(--nexora-panel); }
+
+@media (max-width: 900px) {
+  .management-filter-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .management-filter-field, .management-filter-field.management-filter-field-select { width: 100%; }
+  .management-filter-actions { grid-column: 1 / -1; margin-left: 0; }
+  .management-toolbar,
+  .management-subpanel-toolbar { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 620px) {
+  .management-filter-form { grid-template-columns: 1fr; }
+  .management-actions { width: 100%; justify-content: flex-start; }
+  .management-form-grid { grid-template-columns: 1fr; }
+  .management-form-span-2 { grid-column: auto; }
+  .management-dialog-body { padding-inline: 18px; }
+  .management-radio-option { min-height: 44px; }
+  .management-pagination { justify-content: flex-start; overflow-x: auto; }
+  .management-log-detail { padding: 12px; }
+  .management-log-detail-row { grid-template-columns: 1fr; gap: 4px; }
+  .management-data-card .ant-table-cell-fix-right,
+  .management-subpanel .ant-table-cell-fix-right { position: static !important; }
+  .management-data-card .ant-table-cell-fix-right-first::after,
+  .management-data-card .ant-table-cell-fix-right-last::after,
+  .management-subpanel .ant-table-cell-fix-right-first::after,
+  .management-subpanel .ant-table-cell-fix-right-last::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .management-row-action,
+  .management-data-card .ant-table-tbody > tr > td,
+  .management-subpanel .ant-table-tbody > tr > td { transition: none; }
+}

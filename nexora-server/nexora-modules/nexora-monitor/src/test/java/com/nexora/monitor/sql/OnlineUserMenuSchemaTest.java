@@ -18,7 +18,7 @@ class OnlineUserMenuSchemaTest {
         assertThat(initializationSql).contains(
                 "ENGINE = InnoDB AUTO_INCREMENT = 150 CHARACTER SET = utf8mb3",
                 "INSERT INTO `sys_menu` VALUES (139, '4', 'online', "
-                        + "'/monitor/online/index', '在线用户', 2, 'UserFilled', 'MENU'",
+                        + "'/monitor/online/index', '在线用户', 2, 'antd:TeamOutlined', 'MENU'",
                 "INSERT INTO `sys_menu` VALUES (140, '139', '', '', '列表', 1, '', "
                         + "'BUTTON'",
                 "'sys:online'",
