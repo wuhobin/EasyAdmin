@@ -1,64 +1,49 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import path from 'path'
-import { ConfigEnv, UserConfig, loadEnv } from 'vite'
-import AutoImport from 'unplugin-auto-import/vite'
-import { svgBuilder } from './src/plugins/svgBuilder'
+import { defineConfig, loadEnv } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
-  // 获取环境变量
-  const env = loadEnv(mode, process.cwd())
-  
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const apiTarget = env.VITE_APP_API_URL || 'http://localhost:8800/'
+
   return {
-    css: {
-      preprocessorOptions: {
-        scss: {
-          charset: false
-        },
-      },
-    },
-    plugins: [vue(),svgBuilder('./src/icons/svg/'), AutoImport({
-      imports: [
-        'vue',
-        'vue-router',
-        'pinia'
-      ],
-      dts: 'src/auto-imports.d.ts',
-      // 可以选择是否自动导入 Vue 的组合式 API
-      vueTemplate: true,
-      // 自动导入目录下的模块
-      dirs: [
-        './src/composables',
-        './src/stores'
-      ],
-    })],
+    plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src')
+        '@': new URL('./src', import.meta.url).pathname
       }
     },
     server: {
       host: '0.0.0.0',
-      port: Number(env.VITE_APP_PORT) || 3000,
+      port: Number(env.VITE_APP_PORT) || 3001,
       open: false,
       proxy: {
         '/api/ws': {
-          target: env.VITE_APP_API_URL,
+          target: apiTarget,
           ws: true,
           changeOrigin: false,
-          rewrite: (path) => path.replace(/^\/api/, '')
+          rewrite: path => path.replace(/^\/api/, '')
         },
         '/api': {
-          target: env.VITE_APP_API_URL,
+          target: apiTarget,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-          configure: (proxy, options) => {
-            proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('代理请求:', {
-                target: options.target,
-                path: req.url
-              })
-            })
+          rewrite: path => path.replace(/^\/api/, '')
+        }
+      }
+    },
+    preview: {
+      port: Number(env.VITE_APP_PREVIEW_PORT) || 4301
+    },
+    build: {
+      outDir: 'dist',
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            antdCore: ['antd/es/app', 'antd/es/config-provider', 'antd/locale/zh_CN'],
+            router: ['react-router-dom'],
+            query: ['@tanstack/react-query'],
+            motion: ['framer-motion']
           }
         }
       }
