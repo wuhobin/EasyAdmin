@@ -42,13 +42,14 @@ export function AppShell() {
 
   return (
     <SidebarProvider open={!collapsed} onOpenChange={open => setSidebarCollapsed(!open)}>
+      <a className="skip-link" href="#main-content">跳到主要内容</a>
       <div className={`app-shell ${collapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'mobile-sidebar-open' : ''} ${showLogo ? '' : 'sidebar-logo-hidden'} tags-style-${tagsStyle} page-animation-${pageAnimation}`}>
         <Sidebar />
         <button className="mobile-sidebar-scrim" type="button" aria-label="关闭导航" onClick={() => setMobileOpen(false)} />
         <div className="app-main">
           <Topbar />
           <div className={showTags ? '' : 'app-tabs-hidden'}><TabsBar /></div>
-          <main className="app-content"><ContentWatermark><CachedOutlet /></ContentWatermark></main>
+          <main id="main-content" className="app-content" tabIndex={-1}><ContentWatermark><CachedOutlet /></ContentWatermark></main>
           {showFooter ? <AppFooter /> : null}
         </div>
       </div>

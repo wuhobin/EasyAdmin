@@ -5,7 +5,7 @@ import AntApp from 'antd/es/app'
 import Table from 'antd/es/table'
 import Tag from 'antd/es/tag'
 import type { ColumnsType } from 'antd/es/table'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { addNoticeApi, deleteNoticeApi, getNoticeDetailApi, getNoticeListApi, publishNoticeApi, updateNoticeApi, type NoticeQuery, type NoticeRecord } from '@/api/notice'
@@ -21,6 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { emptyNoticeForm, htmlContentByteLength, noticeFormToPayload, noticeRecordToForm, type NoticeFormValues } from '@/pages/system/noticeForm'
 import { useAuthStore } from '@/store/authStore'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 interface NoticeFilterValues {
   title?: string
@@ -29,6 +31,7 @@ interface NoticeFilterValues {
 }
 
 const initialQuery: NoticeQuery = { pageNum: 1, pageSize: 10 }
+const querySchema: UrlQuerySchema<NoticeQuery> = { pageNum: 'number', pageSize: 'number', title: 'string', noticeType: 'number', status: 'number' }
 
 const noticeSchema = z.object({
   id: z.number().optional(),
@@ -65,10 +68,12 @@ export function NoticeManagementPage() {
   const { message, modal } = AntApp.useApp()
   const queryClient = useQueryClient()
   const permissions = useAuthStore(state => state.user.permissions)
-  const [queryParams, setQueryParams] = useState<NoticeQuery>(initialQuery)
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
   const [editorOpen, setEditorOpen] = useState(false)
   const [detail, setDetail] = useState<NoticeRecord>()
   const filterForm = useForm<NoticeFilterValues>({ defaultValues: { title: '', noticeType: undefined, status: undefined } })
+
+  useEffect(() => filterForm.reset({ title: queryParams.title ?? '', noticeType: queryParams.noticeType, status: queryParams.status }), [filterForm, queryParams.noticeType, queryParams.status, queryParams.title])
   const form = useForm<NoticeFormValues>({ resolver: zodResolver(noticeSchema), defaultValues: emptyNoticeForm })
   const noticeType = form.watch('noticeType')
   const targetType = form.watch('targetType')
@@ -131,7 +136,7 @@ export function NoticeManagementPage() {
     { title: '状态', dataIndex: 'status', width: 92, align: 'center', render: value => value === 1 ? <Tag color="green">已发布</Tag> : <Tag>草稿</Tag> },
     { title: '接收数', dataIndex: 'recipientCount', width: 90, align: 'center', render: value => value ?? 0 },
     { title: '已读 / 未读', key: 'readState', width: 116, align: 'center', render: (_, record) => `${record.readCount ?? 0} / ${record.unreadCount ?? 0}` },
-    { title: '发布时间', dataIndex: 'publishTime', width: 180, render: value => <EmptyValue value={value} /> },
+    { title: '发布时间', dataIndex: 'publishTime', width: 180, render: value => <EmptyValue value={formatDateTime(value)} /> },
     { title: '创建人', dataIndex: 'createName', width: 120, ellipsis: true, render: value => <EmptyValue value={value} /> },
     {
       title: '操作', key: 'action', width: 190, fixed: 'right', align: 'center', render: (_, record) => <div className="management-row-actions">
@@ -185,7 +190,7 @@ export function NoticeManagementPage() {
       <Dialog open={Boolean(detail)} onOpenChange={open => { if (!open) setDetail(undefined) }}>
         <DialogContent className="max-w-[720px]">
           <DialogHeader><DialogTitle>通知详情</DialogTitle><DialogDescription>查看通知内容、格式和接收范围。</DialogDescription></DialogHeader>
-          {detail ? <div className="notice-detail-body"><div className="notice-detail-meta"><Tag color={detail.noticeType === 2 ? 'gold' : 'blue'}>{detail.noticeType === 2 ? '公告' : '通知'}</Tag><span>{detail.contentFormat === 'html' ? 'HTML / CSS' : '普通文案'}</span><span>{detail.targetType === 3 ? '全部正常用户' : `指定用户（${detail.targetUserIds?.length ?? 0} 人）`}</span><span>{detail.publishTime || detail.createTime || ''}</span></div><h2>{detail.title}</h2><NoticeContent notice={detail} /></div> : null}
+          {detail ? <div className="notice-detail-body"><div className="notice-detail-meta"><Tag color={detail.noticeType === 2 ? 'gold' : 'blue'}>{detail.noticeType === 2 ? '公告' : '通知'}</Tag><span>{detail.contentFormat === 'html' ? 'HTML / CSS' : '普通文案'}</span><span>{detail.targetType === 3 ? '全部正常用户' : `指定用户（${detail.targetUserIds?.length ?? 0} 人）`}</span><span>{formatDateTime(detail.publishTime || detail.createTime, '')}</span></div><h2>{detail.title}</h2><NoticeContent notice={detail} /></div> : null}
           <DialogFooter><DialogClose asChild><Button type="button" variant="outline">关闭</Button></DialogClose></DialogFooter>
         </DialogContent>
       </Dialog>

@@ -69,7 +69,7 @@ export function LoginPage() {
     <AuthLayout animationState={animationState}>
       <div className="auth-heading-mark"><span /><span /><span /></div>
       <header className="auth-heading">
-        <h2>欢迎回来</h2>
+        <h1>欢迎回来</h1>
         <p>{flashMessage || '输入账号信息，进入管理工作台'}</p>
       </header>
       <form className="auth-form" onSubmit={handleSubmit} noValidate>

@@ -12,11 +12,19 @@ import java.util.Date;
 @Schema(description = "系统配置分组摘要")
 public class SysConfigGroupSummaryVo {
 
+    @Schema(description = "分组ID")
     private Long id;
+
+    @Schema(description = "分组编码")
     private String groupCode;
+
+    @Schema(description = "分组名称")
     private String groupName;
+
+    @Schema(description = "排序")
     private Integer sort;
 
+    @Schema(description = "更新时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
 }

@@ -4,7 +4,7 @@ import AntApp from 'antd/es/app'
 import Table from 'antd/es/table'
 import Tag from 'antd/es/tag'
 import type { ColumnsType } from 'antd/es/table'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { deleteOperationLogApi, getOperationLogListApi, type OperationLogQuery, type OperationLogRecord } from '@/api/operationLog'
 import { EmptyValue, ManagementCard, ManagementPagination, ManagementRowAction } from '@/components/management/ManagementUi'
@@ -12,12 +12,15 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/store/authStore'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 interface OperationLogFilterValues {
   userId?: number
 }
 
 const initialQuery: OperationLogQuery = { pageNum: 1, pageSize: 10 }
+const querySchema: UrlQuerySchema<OperationLogQuery> = { pageNum: 'number', pageSize: 'number', userId: 'number' }
 
 const methodColors: Record<string, string> = {
   GET: 'blue',
@@ -40,9 +43,10 @@ export function OperationLogPage() {
   const { message, modal } = AntApp.useApp()
   const queryClient = useQueryClient()
   const permissions = useAuthStore(state => state.user.permissions)
-  const [queryParams, setQueryParams] = useState<OperationLogQuery>(initialQuery)
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const filterForm = useForm<OperationLogFilterValues>({ defaultValues: { userId: undefined } })
+  useEffect(() => filterForm.reset({ userId: queryParams.userId }), [filterForm, queryParams.userId])
   const canDelete = permissions.includes('sys:operateLog:delete')
   const logsQuery = useQuery({ queryKey: ['operation-logs', queryParams], queryFn: async () => (await getOperationLogListApi(queryParams)).data })
 
@@ -87,7 +91,7 @@ export function OperationLogPage() {
     { title: 'IP', dataIndex: 'ip', width: 130, render: value => <EmptyValue value={value} /> },
     { title: 'IP 来源', dataIndex: 'source', width: 180, ellipsis: true, render: value => <EmptyValue value={value} /> },
     { title: '请求耗时', dataIndex: 'spendTime', width: 112, align: 'center', render: value => value === undefined || value === null ? <EmptyValue /> : <Tag>{value} ms</Tag> },
-    { title: '创建时间', dataIndex: 'createTime', width: 180, render: value => <EmptyValue value={value} /> },
+    { title: '创建时间', dataIndex: 'createTime', width: 180, render: value => <EmptyValue value={formatDateTime(value)} /> },
     {
       title: '操作',
       key: 'action',

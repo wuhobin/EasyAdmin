@@ -5,9 +5,9 @@ import AntApp from 'antd/es/app'
 import Table from 'antd/es/table'
 import Tag from 'antd/es/tag'
 import type { ColumnsType } from 'antd/es/table'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { z } from 'zod'
 import { addJobApi, changeJobStatusApi, deleteJobApi, getJobDetailApi, getJobListApi, runJobApi, updateJobApi, type JobQuery, type JobRecord } from '@/api/job'
 import { ManagementCard, ManagementPagination, ManagementRowAction } from '@/components/management/ManagementUi'
@@ -22,10 +22,12 @@ import { Switch } from '@/components/ui/switch'
 import { emptyJobForm, jobFormToPayload, jobRecordToForm, type JobFormValues } from '@/pages/monitor/monitorForms'
 import { flattenRoutes } from '@/routes/routeAdapter'
 import { useAuthStore } from '@/store/authStore'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 import { useRouteStore } from '@/store/routeStore'
 
 interface JobFilterValues { jobName: string; jobGroup?: string; status?: string }
 const initialQuery: JobQuery = { pageNum: 1, pageSize: 10 }
+const querySchema: UrlQuerySchema<JobQuery> = { pageNum: 'number', pageSize: 'number', jobName: 'string', jobGroup: 'string', status: 'string' }
 const jobGroupLabels: Record<string, string> = { DEFAULT: '默认', SYSTEM: '系统' }
 const schema = z.object({
   jobId: z.number().optional(),
@@ -39,15 +41,16 @@ const schema = z.object({
 export function ScheduledJobsPage() {
   const { message, modal } = AntApp.useApp()
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const permissions = useAuthStore(state => state.user.permissions)
   const routes = useRouteStore(state => state.routes)
-  const [queryParams, setQueryParams] = useState<JobQuery>(initialQuery)
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [cronOpen, setCronOpen] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
   const filterForm = useForm<JobFilterValues>({ defaultValues: { jobName: '', jobGroup: undefined, status: undefined } })
+
+  useEffect(() => filterForm.reset({ jobName: queryParams.jobName ?? '', jobGroup: queryParams.jobGroup, status: queryParams.status }), [filterForm, queryParams.jobGroup, queryParams.jobName, queryParams.status])
   const jobForm = useForm<JobFormValues>({ resolver: zodResolver(schema), defaultValues: emptyJobForm })
   const canAdd = permissions.includes('sys:job:add')
   const canUpdate = permissions.includes('sys:job:update')
@@ -108,7 +111,7 @@ export function ScheduledJobsPage() {
     <section className="management-page scheduled-jobs-page">
       <ManagementCard
         filters={<Form {...filterForm}><form className="management-filter-form" onSubmit={filterForm.handleSubmit(applyFilters)}><FormField control={filterForm.control} name="jobName" render={({ field }) => <FormItem className="management-filter-field"><FormLabel>任务名称</FormLabel><FormControl><Input placeholder="请输入任务名称" {...field} /></FormControl><FormMessage /></FormItem>} /><FormField control={filterForm.control} name="jobGroup" render={({ field }) => <FormItem className="management-filter-field management-filter-field-select"><FormLabel>任务组名</FormLabel><Select value={field.value ?? 'all'} onValueChange={value => field.onChange(value === 'all' ? undefined : value)}><FormControl><SelectTrigger><SelectValue placeholder="全部任务组" /></SelectTrigger></FormControl><SelectContent><SelectItem value="all">全部任务组</SelectItem><SelectItem value="DEFAULT">默认</SelectItem><SelectItem value="SYSTEM">系统</SelectItem></SelectContent></Select><FormMessage /></FormItem>} /><FormField control={filterForm.control} name="status" render={({ field }) => <FormItem className="management-filter-field management-filter-field-select"><FormLabel>任务状态</FormLabel><Select value={field.value ?? 'all'} onValueChange={value => field.onChange(value === 'all' ? undefined : value)}><FormControl><SelectTrigger><SelectValue placeholder="全部状态" /></SelectTrigger></FormControl><SelectContent><SelectItem value="all">全部状态</SelectItem><SelectItem value="0">正常</SelectItem><SelectItem value="1">暂停</SelectItem></SelectContent></Select><FormMessage /></FormItem>} /><div className="management-filter-actions"><Button type="submit"><SearchOutlined />搜索</Button><Button type="button" variant="outline" onClick={resetFilters}><UndoOutlined />重置</Button></div></form></Form>}
-        toolbar={<><div className="management-toolbar-selection">{selectedIds.length ? `已选择 ${selectedIds.length} 项` : '定时任务列表'}</div><div className="management-actions">{canDelete ? <Button type="button" variant="destructive" disabled={!selectedIds.length} onClick={confirmBatchDelete}><DeleteOutlined />批量删除</Button> : null}<Button type="button" variant="outline" onClick={() => navigate(logPath)}><HistoryOutlined />调度日志</Button><Button type="button" variant="outline" loading={jobsQuery.isFetching} onClick={() => void jobsQuery.refetch()}><ReloadOutlined />刷新</Button>{canAdd ? <Button type="button" onClick={openCreate}><PlusOutlined />新增任务</Button> : null}</div></>}
+        toolbar={<><div className="management-toolbar-selection">{selectedIds.length ? `已选择 ${selectedIds.length} 项` : '定时任务列表'}</div><div className="management-actions">{canDelete ? <Button type="button" variant="destructive" disabled={!selectedIds.length} onClick={confirmBatchDelete}><DeleteOutlined />批量删除</Button> : null}<Button variant="outline" asChild><Link to={logPath}><HistoryOutlined />调度日志</Link></Button><Button type="button" variant="outline" loading={jobsQuery.isFetching} onClick={() => void jobsQuery.refetch()}><ReloadOutlined />刷新</Button>{canAdd ? <Button type="button" onClick={openCreate}><PlusOutlined />新增任务</Button> : null}</div></>}
         pagination={<ManagementPagination current={queryParams.pageNum} pageSize={queryParams.pageSize} total={jobsQuery.data?.total ?? 0} onChange={(pageNum, pageSize) => setQueryParams(previous => ({ ...previous, pageNum: pageSize === previous.pageSize ? pageNum : 1, pageSize }))} />}
       >
         <Table<JobRecord> rowKey="jobId" loading={jobsQuery.isLoading} columns={columns} dataSource={jobsQuery.data?.records ?? []} pagination={false} scroll={{ x: 1120 }} rowSelection={canDelete ? { selectedRowKeys: selectedIds, preserveSelectedRowKeys: true, onChange: keys => setSelectedIds(keys.map(Number)) } : undefined} />

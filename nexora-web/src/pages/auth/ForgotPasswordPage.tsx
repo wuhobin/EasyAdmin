@@ -83,7 +83,7 @@ export function ForgotPasswordPage() {
     <AuthLayout animationState={animationState}>
       <div className="auth-heading-mark auth-heading-mark-reset"><span /><span /><span /></div>
       <header className="auth-heading">
-        <h2>重置登录密码</h2>
+        <h1>重置登录密码</h1>
         <p>验证当前绑定邮箱后设置新密码</p>
       </header>
       <form className="auth-form" onSubmit={submit} noValidate>

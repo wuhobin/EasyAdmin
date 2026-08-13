@@ -7,7 +7,7 @@ import Tree from 'antd/es/tree'
 import type { ColumnsType } from 'antd/es/table'
 import type { DataNode } from 'antd/es/tree'
 import { useForm } from 'react-hook-form'
-import { useState, type Key } from 'react'
+import { useEffect, useState, type Key } from 'react'
 import { z } from 'zod'
 import { getMenuTreeApi, type SysMenuRecord } from '@/api/menu'
 import { createRoleApi, deleteRoleApi, exportRoleApi, getRoleListApi, getRoleMenusApi, updateRoleApi, updateRoleMenusApi, type RoleQuery, type SysRoleRecord } from '@/api/role'
@@ -19,12 +19,15 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { emptyRoleForm, roleFormToPayload, roleRecordToForm, splitRoleMenuSelection, type RoleFormValues } from '@/pages/system/managementForms'
 import { useAuthStore } from '@/store/authStore'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 interface RoleFilterValues {
   name?: string
 }
 
 const initialQuery: RoleQuery = { pageNum: 1, pageSize: 10 }
+const querySchema: UrlQuerySchema<RoleQuery> = { pageNum: 'number', pageSize: 'number', name: 'string' }
 const roleSchema = z.object({
   id: z.number().optional(),
   name: z.string().trim().min(1, '请输入角色名称').max(50, '角色名称不能超过 50 个字符'),
@@ -42,13 +45,15 @@ export function RoleManagementPage() {
   const { message, modal } = AntApp.useApp()
   const queryClient = useQueryClient()
   const permissions = useAuthStore(state => state.user.permissions)
-  const [queryParams, setQueryParams] = useState<RoleQuery>(initialQuery)
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [editingId, setEditingId] = useState<number>()
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [permissionRole, setPermissionRole] = useState<SysRoleRecord>()
   const [checkedMenuIds, setCheckedMenuIds] = useState<number[]>([])
   const [halfCheckedMenuIds, setHalfCheckedMenuIds] = useState<number[]>([])
+
+  useEffect(() => filterForm.reset({ name: queryParams.name ?? '' }), [filterForm, queryParams.name])
 
   const canAdd = permissions.includes('sys:role:add')
   const canUpdate = permissions.includes('sys:role:update')
@@ -131,7 +136,7 @@ export function RoleManagementPage() {
     { title: '角色名称', dataIndex: 'name', width: 180, ellipsis: true, render: value => <span className="management-primary-text">{value}</span> },
     { title: '角色编码', dataIndex: 'code', width: 180, ellipsis: true, render: value => <code className="management-code">{value}</code> },
     { title: '备注', dataIndex: 'remarks', ellipsis: true, render: value => <EmptyValue value={value} /> },
-    { title: '创建时间', dataIndex: 'createTime', width: 180, render: value => <EmptyValue value={value} /> },
+    { title: '创建时间', dataIndex: 'createTime', width: 180, render: value => <EmptyValue value={formatDateTime(value)} /> },
     { title: '操作', key: 'action', width: 156, fixed: 'right', align: 'center', render: (_, record) => <div className="management-row-actions">{canUpdate ? <ManagementRowAction tone="edit" icon={<EditOutlined />} aria-label={`修改${record.name}`} onClick={() => openEdit(record)} /> : null}{canAssign ? <ManagementRowAction tone="settings" icon={<SettingOutlined />} aria-label={`分配${record.name}的权限`} onClick={() => void openPermission(record)} /> : null}{canDelete ? <ManagementRowAction tone="delete" icon={<DeleteOutlined />} aria-label={`删除${record.name}`} loading={deleteMutation.isPending && deleteMutation.variables === record.id} onClick={() => confirmDelete(record)} /> : null}</div> }
   ]
 

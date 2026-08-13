@@ -9,7 +9,7 @@ import {
 import Dropdown from 'antd/es/dropdown'
 import type { MenuProps } from 'antd/es/menu'
 import { useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { findRouteByPath } from '@/routes/routeAdapter'
 import { usePageTabsStore, getTabKey, homeTab, type PageTab } from '@/store/pageTabsStore'
 import { useRouteStore } from '@/store/routeStore'
@@ -58,7 +58,7 @@ export function TabsBar() {
   useEffect(() => {
     const active = Array.from(scrollRef.current?.querySelectorAll<HTMLElement>('[data-tab-key]') || [])
       .find(element => element.dataset.tabKey === currentKey)
-    active?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+    active?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest', inline: 'nearest' })
   }, [currentKey, tabs])
 
   const tabContextItems = (tab: PageTab): MenuProps['items'] => {
@@ -123,10 +123,10 @@ export function TabsBar() {
           return (
             <Dropdown key={`${key}:${tab.revision}`} trigger={['contextMenu']} menu={{ items: tabContextItems(tab), onClick: info => runAction(info.key, tab) }}>
               <div className={`app-tab ${active ? 'is-active' : ''}`} data-tab-key={key}>
-                <button className="app-tab-main" type="button" onClick={() => navigate(tabHref(tab))} aria-current={active ? 'page' : undefined}>
+                <Link className="app-tab-main" to={tabHref(tab)} aria-current={active ? 'page' : undefined}>
                   <MenuIcon value={tab.icon} />
                   <span className="app-tab-label" title={tab.title}>{tab.title}</span>
-                </button>
+                </Link>
                 {tab.closable ? <button className="app-tab-close" type="button" aria-label={`关闭${tab.title}`} onClick={() => {
                   closeTab(key)
                   if (active) goAfterClosing(tab)

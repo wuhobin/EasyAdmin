@@ -22,6 +22,10 @@ button, input, textarea, select { font: inherit; }
 a { color: inherit; }
 
 :where(button, [role='button']):not(:disabled):not([aria-disabled='true']) { cursor: pointer; }
+:where(select, [role='combobox'], [role='option']):not(:disabled):not([aria-disabled='true']) { cursor: pointer; }
+.ant-select:not(.ant-select-disabled) .ant-select-selector,
+.ant-select-dropdown .ant-select-item-option:not(.ant-select-item-option-disabled),
+.ant-select-tree .ant-select-tree-node-content-wrapper { cursor: pointer; }
 :where(button, [role='button']):disabled,
 :where(button, [role='button'])[aria-disabled='true'] { cursor: not-allowed; }
 
@@ -30,10 +34,24 @@ a { color: inherit; }
   outline-offset: 3px;
 }
 
-:where(input, textarea, select, [role='combobox']):focus-visible {
+:where(input, textarea, select, [role='combobox'], [role='option']):focus-visible {
   outline: none;
   outline-offset: 0;
 }
+
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  z-index: 2000;
+  padding: 8px 12px;
+  border-radius: 7px;
+  color: #fff;
+  background: var(--nexora-violet);
+  transform: translate(-50%, calc(-100% - 16px));
+  transition: transform .16s ease;
+}
+.skip-link:focus-visible { transform: translate(-50%, 0); }
 
 .brand-mark { display: inline-grid; flex: 0 0 auto; place-items: center; color: var(--nexora-violet); }
 .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }

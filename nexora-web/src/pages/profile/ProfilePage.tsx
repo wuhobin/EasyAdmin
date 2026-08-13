@@ -42,8 +42,14 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { usePublicConfigStore } from '@/store/publicConfigStore'
 import { passwordPolicyDescription } from '@/utils/password-policy'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 type ProfileSection = 'details' | 'security'
+
+interface ProfilePageState { section: ProfileSection }
+const initialPageState: ProfilePageState = { section: 'details' }
+const pageStateSchema: UrlQuerySchema<ProfilePageState> = { section: 'string' }
 
 const EMPTY_PROFILE_FORM: ProfileFormValues = { nickname: '', mobile: '', sex: 0 }
 const EMPTY_PASSWORD_FORM: PasswordFormValues = { oldPassword: '', newPassword: '', confirmPassword: '' }
@@ -74,7 +80,16 @@ export function ProfilePage() {
   const setUser = useAuthStore(state => state.setUser)
   const passwordPolicy = usePublicConfigStore(state => state.config.password)
   const avatarInputRef = useRef<HTMLInputElement>(null)
-  const [activeSection, setActiveSection] = useState<ProfileSection>('details')
+  const [pageState, setPageState] = useUrlQueryState(initialPageState, pageStateSchema)
+  const activeSection: ProfileSection = pageState.section === 'security' ? 'security' : 'details'
+  const setActiveSection = (section: ProfileSection) => setPageState({ section })
+  const moveSection = (event: React.KeyboardEvent<HTMLButtonElement>, section: ProfileSection) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const next: ProfileSection = event.key === 'ArrowLeft' || event.key === 'Home' ? 'details' : 'security'
+    setActiveSection(next)
+    window.requestAnimationFrame(() => document.getElementById(`profile-tab-${next}`)?.focus())
+  }
   const [emailDialogOpen, setEmailDialogOpen] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [codeCountdown, setCodeCountdown] = useState(0)
@@ -184,7 +199,7 @@ export function ProfilePage() {
           <div className="profile-avatar-editor">
             <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png" aria-label="选择新头像" onChange={event => void chooseAvatar(event)} />
             <button type="button" disabled={avatarUploading} aria-label="更换头像" onClick={() => avatarInputRef.current?.click()}>
-              <span className="profile-avatar">{profile.avatar ? <img src={profile.avatar} alt={`${displayName}的头像`} /> : initials(displayName)}</span>
+              <span className="profile-avatar">{profile.avatar ? <img src={profile.avatar} alt={`${displayName}的头像`} width={84} height={84} /> : initials(displayName)}</span>
               <span className="profile-avatar-action" aria-hidden="true">{avatarUploading ? <i /> : <CameraOutlined />}</span>
             </button>
             <small>JPG / PNG · 2MB 内</small>
@@ -198,18 +213,18 @@ export function ProfilePage() {
 
           <dl className="profile-account-meta">
             <div><dt>手机号</dt><dd>{profile.mobile || '未设置'}</dd></div>
-            <div><dt>加入时间</dt><dd>{profile.createTime || '-'}</dd></div>
-            <div><dt>最近登录</dt><dd>{profile.lastLoginTime || '-'}</dd></div>
+            <div><dt>加入时间</dt><dd>{formatDateTime(profile.createTime)}</dd></div>
+            <div><dt>最近登录</dt><dd>{formatDateTime(profile.lastLoginTime)}</dd></div>
           </dl>
         </header>
 
         <div className="profile-tabs" role="tablist" aria-label="个人中心设置">
-          <button type="button" role="tab" aria-selected={activeSection === 'details'} className={activeSection === 'details' ? 'active' : ''} onClick={() => setActiveSection('details')}><UserOutlined /><span>个人资料</span></button>
-          <button type="button" role="tab" aria-selected={activeSection === 'security'} className={activeSection === 'security' ? 'active' : ''} onClick={() => setActiveSection('security')}><SafetyCertificateOutlined /><span>登录安全</span></button>
+          <button id="profile-tab-details" type="button" role="tab" tabIndex={activeSection === 'details' ? 0 : -1} aria-selected={activeSection === 'details'} aria-controls="profile-panel-details" className={activeSection === 'details' ? 'active' : ''} onClick={() => setActiveSection('details')} onKeyDown={event => moveSection(event, 'details')}><UserOutlined /><span>个人资料</span></button>
+          <button id="profile-tab-security" type="button" role="tab" tabIndex={activeSection === 'security' ? 0 : -1} aria-selected={activeSection === 'security'} aria-controls="profile-panel-security" className={activeSection === 'security' ? 'active' : ''} onClick={() => setActiveSection('security')} onKeyDown={event => moveSection(event, 'security')}><SafetyCertificateOutlined /><span>登录安全</span></button>
         </div>
 
         {activeSection === 'details' ? (
-          <div className="profile-panel" role="tabpanel">
+          <div id="profile-panel-details" className="profile-panel" role="tabpanel" aria-labelledby="profile-tab-details">
             <div className="profile-panel-heading"><div><h2>个人资料</h2><p>用于系统内的身份展示与必要联系。</p></div><UserOutlined /></div>
             <Form {...profileForm}>
               <form className="profile-settings-form" onSubmit={profileForm.handleSubmit(values => profileMutation.mutate(values))}>
@@ -222,7 +237,7 @@ export function ProfilePage() {
             </Form>
           </div>
         ) : (
-          <div className="profile-panel" role="tabpanel">
+          <div id="profile-panel-security" className="profile-panel" role="tabpanel" aria-labelledby="profile-tab-security">
             <div className="profile-panel-heading"><div><h2>登录安全</h2><p>更新当前账户的登录密码。</p></div><KeyOutlined /></div>
             <div className="profile-security-note"><LockOutlined /><div><strong>密码要求</strong><p>{passwordPolicyDescription(passwordPolicy)}</p></div></div>
             <Form {...passwordForm}>

@@ -119,7 +119,7 @@ export function LockScreen() {
       <main className="lock-screen-panel">
         <div className="lock-screen-clock" aria-label={`${clock.date} ${clock.time}`}><time>{clock.time}</time><span>{clock.date}</span></div>
         <div className="lock-screen-identity">
-          <span className="lock-screen-avatar">{user.avatar ? <img src={user.avatar} alt={`${nickname}的头像`} /> : nickname.slice(0, 1).toUpperCase()}</span>
+          <span className="lock-screen-avatar">{user.avatar ? <img src={user.avatar} alt={`${nickname}的头像`} width={52} height={52} /> : nickname.slice(0, 1).toUpperCase()}</span>
           <div><h1 id="lock-screen-title">欢迎回来，{nickname}</h1><p>输入当前账户密码以继续</p></div>
         </div>
         <form className={shaking ? 'lock-screen-form is-shaking' : 'lock-screen-form'} onSubmit={event => { event.preventDefault(); void handleUnlock() }}>

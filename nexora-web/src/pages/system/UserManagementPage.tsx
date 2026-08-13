@@ -5,7 +5,7 @@ import AntApp from 'antd/es/app'
 import Avatar from 'antd/es/avatar'
 import Table from 'antd/es/table'
 import type { ColumnsType } from 'antd/es/table'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { auditUserApi, createUserApi, deleteUserApi, getUserListApi, resetPasswordApi, updateUserApi, type SysUserRecord, type UserQuery } from '@/api/user'
@@ -24,6 +24,8 @@ import { emptyUserForm, userFormToPayload, userRecordToForm, type UserFormValues
 import { useAuthStore } from '@/store/authStore'
 import { usePublicConfigStore } from '@/store/publicConfigStore'
 import { passwordPolicyDescription, validatePasswordByPolicy } from '@/utils/password-policy'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 interface UserFilterValues {
   nickname?: string
@@ -37,6 +39,7 @@ interface ResetPasswordValues {
 }
 
 const initialQuery: UserQuery = { pageNum: 1, pageSize: 10 }
+const querySchema: UrlQuerySchema<UserQuery> = { pageNum: 'number', pageSize: 'number', nickname: 'string', email: 'string', status: 'number' }
 
 function createUserSchema(passwordPolicy: PasswordConfig, editing: boolean) {
   return z.object({
@@ -68,7 +71,7 @@ export function UserManagementPage() {
   const queryClient = useQueryClient()
   const permissions = useAuthStore(state => state.user.permissions)
   const passwordPolicy = usePublicConfigStore(state => state.config.password)
-  const [queryParams, setQueryParams] = useState<UserQuery>(initialQuery)
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [editingId, setEditingId] = useState<number>()
   const [userDialogOpen, setUserDialogOpen] = useState(false)
@@ -78,6 +81,8 @@ export function UserManagementPage() {
   const filterForm = useForm<UserFilterValues>({ defaultValues: { nickname: '', email: '', status: undefined } })
   const userForm = useForm<UserFormValues>({ resolver: zodResolver(userSchema), defaultValues: emptyUserForm })
   const passwordForm = useForm<ResetPasswordValues>({ resolver: zodResolver(resetPasswordSchema), defaultValues: { password: '', confirmPassword: '' } })
+
+  useEffect(() => filterForm.reset({ nickname: queryParams.nickname ?? '', email: queryParams.email ?? '', status: queryParams.status }), [filterForm, queryParams.email, queryParams.nickname, queryParams.status])
 
   const canAdd = permissions.includes('sys:user:add')
   const canUpdate = permissions.includes('sys:user:update')
@@ -154,7 +159,7 @@ export function UserManagementPage() {
     { title: '登录 IP', dataIndex: 'ip', width: 130, render: value => <EmptyValue value={value} /> },
     { title: '登录地址', dataIndex: 'ipLocation', width: 150, ellipsis: true, render: value => <EmptyValue value={value} /> },
     { title: '状态', dataIndex: 'status', width: 88, align: 'center', render: status => <StatusTag status={status} pending /> },
-    { title: '创建时间', dataIndex: 'createTime', width: 168, render: value => <EmptyValue value={value} /> },
+    { title: '创建时间', dataIndex: 'createTime', width: 180, render: value => <EmptyValue value={formatDateTime(value)} /> },
     {
       title: '操作', key: 'action', width: 190, fixed: 'right', align: 'center', render: (_, record) => <div className="management-row-actions">
         {record.status === 2 && canUpdate ? <ManagementRowAction tone="approve" icon={<CheckOutlined />} aria-label={`审核通过${record.nickname}`} loading={auditMutation.isPending && auditMutation.variables === record.id} onClick={() => confirmAudit(record)} /> : null}

@@ -25,7 +25,7 @@ function routeObject(route: MenuRoute): RouteObject {
     ? <Outlet />
     : target
       ? <Navigate to={target} replace />
-      : <Suspense fallback={<div className="app-loading"><span className="app-loading__spinner" aria-label="正在加载页面" /></div>}><Page title={route.meta.title} /></Suspense>
+      : <Suspense fallback={<div className="app-loading" role="status" aria-live="polite" aria-busy="true"><span className="app-loading__spinner" aria-hidden="true" /><span className="sr-only">正在加载页面…</span></div>}><Page title={route.meta.title} /></Suspense>
   const children = hasChildren
     ? [
         ...(target ? [{ index: true, element: <Navigate to={target} replace /> } satisfies RouteObject] : []),

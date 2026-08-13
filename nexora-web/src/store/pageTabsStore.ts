@@ -23,7 +23,7 @@ export const homeTab: PageTab = {
 }
 
 function tabKey(tab: Pick<PageTab, 'path' | 'search' | 'hash'>) {
-  return `${tab.path}${tab.search || ''}${tab.hash || ''}`
+  return tab.path
 }
 
 function persistTabs(tabs: PageTab[]) {
@@ -83,6 +83,8 @@ export const usePageTabsStore = create<PageTabsState>((set, get) => ({
     if (existing) {
       const next = state.tabs.map(item => item === existing ? {
         ...item,
+        search: tab.search,
+        hash: tab.hash,
         title: tab.title,
         icon: tab.icon,
         closable: tab.path !== HOME_PATH

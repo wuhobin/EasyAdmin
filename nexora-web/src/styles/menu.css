@@ -25,6 +25,8 @@
 .icon-picker-item > .anticon > svg { width: 1em; height: 1em; }
 .icon-picker-item:hover, .icon-picker-item.is-selected { border-color: var(--nexora-violet); color: var(--nexora-violet); background: color-mix(in srgb, var(--nexora-violet) 8%, var(--nexora-panel)); }
 .icon-picker-empty { grid-column: 1 / -1; margin: 24px 0; color: var(--nexora-placeholder); text-align: center; }
+.icon-picker-more { width: 100%; min-height: 38px; margin-top: 10px; border: 1px solid var(--nexora-line); border-radius: 7px; color: var(--nexora-violet); background: var(--nexora-panel); }
+.icon-picker-more:hover { border-color: var(--nexora-violet); background: color-mix(in srgb, var(--nexora-violet) 6%, var(--nexora-panel)); }
 .ant-card, .ant-dropdown { background: var(--nexora-panel) !important; }
 .ant-tree-select { color: var(--nexora-ink) !important; border-color: var(--nexora-line) !important; background: var(--nexora-panel) !important; }
 .ant-select-focused.ant-tree-select .ant-select-selector { box-shadow: none !important; }

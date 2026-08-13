@@ -146,8 +146,8 @@ export function CaptchaDialog({ open, onOpenChange, onSuccess }: CaptchaDialogPr
           <div className="captcha-toolbar"><span>{statusLabel}</span><button type="button" aria-label="刷新验证码" onClick={() => void loadChallenge()} disabled={status === 'loading' || status === 'matching'}><ReloadOutlined /></button></div>
           <div className="captcha-stage">
             {captcha ? <>
-              <img ref={bgRef} src={captcha.backgroundImage} alt="" draggable="false" onLoad={measure} />
-              <div className="captcha-piece" style={{ transform: `translate3d(${left}px, 0, 0)` }}><img ref={pieceRef} src={captcha.templateImage} alt="" draggable="false" onLoad={measure} /></div>
+              <img ref={bgRef} src={captcha.backgroundImage} alt="" width={captcha.backgroundImageWidth} height={captcha.backgroundImageHeight} draggable="false" onLoad={measure} />
+              <div className="captcha-piece" style={{ transform: `translate3d(${left}px, 0, 0)` }}><img ref={pieceRef} src={captcha.templateImage} alt="" width={captcha.templateImageWidth} height={captcha.templateImageHeight} draggable="false" onLoad={measure} /></div>
             </> : null}
             {status === 'loading' || !imagesReady ? <div className="captcha-loading">加载验证图片…</div> : null}
           </div>

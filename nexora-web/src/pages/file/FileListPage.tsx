@@ -73,12 +73,18 @@ import {
   type FilePreviewKind
 } from '@/pages/file/fileUtils'
 import { useAuthStore } from '@/store/authStore'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 interface FileFilterValues {
   fileName: string
   contentType: string
   uploaderId: string
 }
+
+interface FileViewState { view: 'table' | 'grid' }
+const querySchema: UrlQuerySchema<OssFileQuery> = { pageNum: 'number', pageSize: 'number', fileName: 'string', contentType: 'string', uploaderId: 'number', groupId: 'number', ungrouped: 'boolean' }
+const viewSchema: UrlQuerySchema<FileViewState> = { view: 'string' }
 
 interface PreviewState {
   file: OssFileRecord
@@ -114,7 +120,7 @@ function FileThumbnail({ file, onClick }: { file: OssFileRecord; onClick: () => 
   const imageUrl = file.thumbnailUrl || file.fileUrl
   return (
     <button type="button" className="file-list-thumb" aria-label={`预览 ${displayFileName(file)}`} onClick={onClick}>
-      {filePreviewKind(file) === 'image' && imageUrl ? <img src={imageUrl} alt="" /> : fileTypeIcon(file)}
+      {filePreviewKind(file) === 'image' && imageUrl ? <img src={imageUrl} alt="" width={42} height={42} loading="lazy" /> : fileTypeIcon(file)}
     </button>
   )
 }
@@ -141,13 +147,13 @@ function FileAttachment({ file, selected, canDownload, canUpload, canDelete, onS
   return (
     <Attachment orientation="vertical" state="done" className={selected ? 'file-attachment selected' : 'file-attachment'}>
       <AttachmentMedia variant={isImage ? 'image' : 'icon'} className="file-attachment-media">
-        {isImage ? <img src={imageUrl} alt="" /> : fileTypeIcon(file)}
+        {isImage ? <img src={imageUrl} alt="" width={205} height={142} loading="lazy" /> : fileTypeIcon(file)}
         {previewKind !== 'none' ? <span className="file-attachment-preview-mark"><EyeOutlined /></span> : null}
       </AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle title={displayFileName(file)}>{displayFileName(file)}</AttachmentTitle>
         <AttachmentDescription className="file-attachment-group">{file.groupName || '未分组'}</AttachmentDescription>
-        <AttachmentDescription>{formatFileSize(file.fileSize)} · {file.createTime || '-'}</AttachmentDescription>
+        <AttachmentDescription>{formatFileSize(file.fileSize)} · {formatDateTime(file.createTime)}</AttachmentDescription>
       </AttachmentContent>
       <AttachmentActions>
         <Checkbox checked={selected} aria-label={`选择 ${displayFileName(file)}`} onCheckedChange={checked => onSelectedChange(Boolean(checked))} />
@@ -207,11 +213,14 @@ export function FileListPage() {
   const canDelete = user.permissions.includes('sys:file:delete')
   const canDownload = user.permissions.includes('sys:file:download')
   const defaultOwnerId = user.id ? String(user.id) : ''
-  const [queryParams, setQueryParams] = useState<OssFileQuery>({ pageNum: 1, pageSize: 20, uploaderId: isAdmin ? user.id ?? undefined : undefined })
-  const [selectedOwnerId, setSelectedOwnerId] = useState<number | undefined>(user.id ?? undefined)
-  const [activeGroup, setActiveGroup] = useState('all')
+  const initialQuery = useMemo<OssFileQuery>(() => ({ pageNum: 1, pageSize: 20, uploaderId: isAdmin ? user.id ?? undefined : undefined }), [isAdmin, user.id])
+  const initialView = useMemo<FileViewState>(() => ({ view: localStorage.getItem(`nexora:file:view:${user.id}`) === 'grid' ? 'grid' : 'table' }), [user.id])
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
+  const [viewState, setViewState] = useUrlQueryState(initialView, viewSchema)
+  const selectedOwnerId = queryParams.uploaderId
+  const activeGroup = queryParams.ungrouped ? 'ungrouped' : queryParams.groupId ? String(queryParams.groupId) : 'all'
+  const viewMode = viewState.view === 'grid' ? 'grid' : 'table'
   const [selectedIds, setSelectedIds] = useState<number[]>([])
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => localStorage.getItem(`nexora:file:view:${user.id}`) === 'grid' ? 'grid' : 'table')
   const [groupPanelExpanded, setGroupPanelExpanded] = useState(true)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [uploadFile, setUploadFile] = useState<File>()
@@ -261,6 +270,7 @@ export function FileListPage() {
   const canManageGroups = canUpload && (!isAdmin || Boolean(selectedOwnerId))
 
   useEffect(() => setSelectedIds([]), [queryParams])
+  useEffect(() => filterForm.reset({ fileName: queryParams.fileName ?? '', contentType: queryParams.contentType ?? 'all', uploaderId: queryParams.uploaderId ? String(queryParams.uploaderId) : '' }), [filterForm, queryParams.contentType, queryParams.fileName, queryParams.uploaderId])
   useEffect(() => () => { if (previewObjectUrl.current) URL.revokeObjectURL(previewObjectUrl.current) }, [])
 
   const refreshFiles = async () => {
@@ -307,7 +317,6 @@ export function FileListPage() {
   const applyFilters = (values: FileFilterValues) => {
     const ownerId = isAdmin && values.uploaderId ? Number(values.uploaderId) : undefined
     const ownerChanged = ownerId !== selectedOwnerId
-    if (ownerChanged) { setSelectedOwnerId(ownerId); setActiveGroup('all') }
     setQueryParams(previous => ({
       pageNum: 1,
       pageSize: previous.pageSize,
@@ -321,13 +330,10 @@ export function FileListPage() {
 
   const resetFilters = () => {
     filterForm.reset({ fileName: '', contentType: 'all', uploaderId: defaultOwnerId })
-    setSelectedOwnerId(user.id ?? undefined)
-    setActiveGroup('all')
     setQueryParams(previous => ({ pageNum: 1, pageSize: previous.pageSize, uploaderId: isAdmin ? user.id ?? undefined : undefined }))
   }
 
   function selectGroup(key: string) {
-    setActiveGroup(key)
     setQueryParams(previous => ({
       ...previous,
       pageNum: 1,
@@ -337,7 +343,7 @@ export function FileListPage() {
   }
 
   const setFileView = (mode: 'table' | 'grid') => {
-    setViewMode(mode)
+    setViewState({ view: mode })
     localStorage.setItem(`nexora:file:view:${user.id}`, mode)
   }
 
@@ -461,7 +467,7 @@ export function FileListPage() {
       render: (_, file) => <div className="file-name-cell"><FileThumbnail file={file} onClick={() => void openPreview(file)} /><span><span title={displayFileName(file)}>{displayFileName(file)}</span><small>{file.groupName || '未分组'} · {formatFileSize(file.fileSize)}</small></span></div>
     },
     { title: '类型', dataIndex: 'contentType', width: 112, ellipsis: true, render: (_, file) => <Tag color={mimeColor(file)}>{file.contentType || '未知类型'}</Tag> },
-    { title: '上传时间', dataIndex: 'createTime', width: 146, align: 'center', render: value => value ? <span className="file-upload-time">{value}</span> : <span className="management-empty-value">-</span> },
+    { title: '上传时间', dataIndex: 'createTime', width: 176, align: 'center', render: value => <span className="file-upload-time">{formatDateTime(value)}</span> },
     {
       title: 'URL', key: 'url', width: 82, align: 'center', responsive: ['xxl'],
       render: (_, file) => <div className="file-inline-actions"><Button type="button" variant="ghost" size="icon" aria-label={`打开 ${displayFileName(file)} 的 OSS 地址`} disabled={!file.fileUrl} onClick={() => window.open(file.fileUrl, '_blank', 'noopener,noreferrer')}><LinkOutlined /></Button><Button type="button" variant="ghost" size="icon" aria-label={`复制 ${displayFileName(file)} 的 OSS 地址`} disabled={!file.fileUrl} onClick={() => void copyText(file.fileUrl).then(() => message.success('OSS 地址已复制'))}><CopyOutlined /></Button></div>
@@ -541,7 +547,7 @@ export function FileListPage() {
       </Dialog>
 
       <Dialog open={Boolean(groupEditor)} onOpenChange={open => { if (!open) setGroupEditor(undefined) }}>
-        <DialogContent className="max-w-[400px]"><DialogHeader><DialogTitle>{groupEditor?.group ? '重命名分组' : '新建分组'}</DialogTitle><DialogDescription>分组仅用于整理当前上传人的文件。</DialogDescription></DialogHeader><div className="management-dialog-body"><Input autoFocus maxLength={50} placeholder="请输入分组名称" value={groupEditor?.name ?? ''} onChange={event => setGroupEditor(current => current ? { ...current, name: event.target.value } : current)} onKeyDown={event => { if (event.key === 'Enter' && groupEditor?.name.trim()) groupMutation.mutate(groupEditor) }} /></div><DialogFooter><DialogClose asChild><Button type="button" variant="outline">取消</Button></DialogClose><Button type="button" loading={groupMutation.isPending} disabled={!groupEditor?.name.trim()} onClick={() => { if (groupEditor) groupMutation.mutate(groupEditor) }}>保存</Button></DialogFooter></DialogContent>
+        <DialogContent className="max-w-[400px]"><DialogHeader><DialogTitle>{groupEditor?.group ? '重命名分组' : '新建分组'}</DialogTitle><DialogDescription>分组仅用于整理当前上传人的文件。</DialogDescription></DialogHeader><div className="management-dialog-body"><Input id="file-group-name" name="file-group-name" aria-label="分组名称" autoComplete="off" autoFocus maxLength={50} placeholder="请输入分组名称…" value={groupEditor?.name ?? ''} onChange={event => setGroupEditor(current => current ? { ...current, name: event.target.value } : current)} onKeyDown={event => { if (event.key === 'Enter' && groupEditor?.name.trim()) groupMutation.mutate(groupEditor) }} /></div><DialogFooter><DialogClose asChild><Button type="button" variant="outline">取消</Button></DialogClose><Button type="button" loading={groupMutation.isPending} disabled={!groupEditor?.name.trim()} onClick={() => { if (groupEditor) groupMutation.mutate(groupEditor) }}>保存</Button></DialogFooter></DialogContent>
       </Dialog>
 
       <Dialog open={Boolean(moveFiles)} onOpenChange={open => { if (!open) setMoveFiles(undefined) }}>
@@ -549,11 +555,11 @@ export function FileListPage() {
       </Dialog>
 
       <Dialog open={Boolean(renameTarget)} onOpenChange={open => { if (!open) setRenameTarget(undefined) }}>
-        <DialogContent className="max-w-[460px]"><DialogHeader><DialogTitle>重命名文件</DialogTitle><DialogDescription>可以修改文件名称，但必须保留原扩展名。</DialogDescription></DialogHeader><div className="management-dialog-body"><Input autoFocus maxLength={255} value={renameValue} onChange={event => setRenameValue(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') submitRename() }} /></div><DialogFooter><DialogClose asChild><Button type="button" variant="outline">取消</Button></DialogClose><Button type="button" loading={renameMutation.isPending} disabled={!renameValue.trim()} onClick={submitRename}>保存</Button></DialogFooter></DialogContent>
+        <DialogContent className="max-w-[460px]"><DialogHeader><DialogTitle>重命名文件</DialogTitle><DialogDescription>可以修改文件名称，但必须保留原扩展名。</DialogDescription></DialogHeader><div className="management-dialog-body"><Input id="file-rename" name="file-rename" aria-label="新的文件名称" autoComplete="off" autoFocus maxLength={255} value={renameValue} onChange={event => setRenameValue(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') submitRename() }} /></div><DialogFooter><DialogClose asChild><Button type="button" variant="outline">取消</Button></DialogClose><Button type="button" loading={renameMutation.isPending} disabled={!renameValue.trim()} onClick={submitRename}>保存</Button></DialogFooter></DialogContent>
       </Dialog>
 
       <Dialog open={Boolean(preview)} onOpenChange={open => { if (!open) closePreview() }}>
-        <DialogContent className="file-preview-dialog max-w-[900px]"><DialogHeader><DialogTitle>{preview ? displayFileName(preview.file) : '文件预览'}</DialogTitle><DialogDescription>{preview?.file.contentType || '未知文件类型'} · {formatFileSize(preview?.file.fileSize)}</DialogDescription></DialogHeader><div className="file-preview-body">{preview?.loading ? <div className="file-preview-loading"><Spin /><span>正在加载预览</span></div> : preview?.kind === 'text' ? <pre>{preview.text}</pre> : preview?.kind === 'image' ? <img src={preview.url || preview.file.fileUrl} alt={displayFileName(preview.file)} /> : preview?.kind === 'video' ? <video src={preview.url} controls autoPlay /> : preview?.kind === 'audio' ? <audio src={preview.url} controls autoPlay /> : preview?.kind === 'pdf' ? <iframe src={preview.url} title="PDF 预览" /> : <Empty description="该文件仅支持下载或打开 OSS 地址" />}</div></DialogContent>
+        <DialogContent className="file-preview-dialog max-w-[900px]"><DialogHeader><DialogTitle>{preview ? displayFileName(preview.file) : '文件预览'}</DialogTitle><DialogDescription>{preview?.file.contentType || '未知文件类型'} · {formatFileSize(preview?.file.fileSize)}</DialogDescription></DialogHeader><div className="file-preview-body">{preview?.loading ? <div className="file-preview-loading" role="status"><Spin /><span>正在加载预览…</span></div> : preview?.kind === 'text' ? <pre>{preview.text}</pre> : preview?.kind === 'image' ? <img src={preview.url || preview.file.fileUrl} alt={displayFileName(preview.file)} width={900} height={600} /> : preview?.kind === 'video' ? <video src={preview.url} controls /> : preview?.kind === 'audio' ? <audio src={preview.url} controls /> : preview?.kind === 'pdf' ? <iframe src={preview.url} title="PDF 预览" /> : <Empty description="该文件仅支持下载或打开 OSS 地址" />}</div></DialogContent>
       </Dialog>
     </section>
   )
