@@ -8,9 +8,9 @@ import {
 } from '@ant-design/icons'
 import Dropdown from 'antd/es/dropdown'
 import type { MenuProps } from 'antd/es/menu'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { findRouteByPath } from '@/routes/routeAdapter'
+import { flattenRoutes, isPageTabRoute } from '@/routes/routeAdapter'
 import { usePageTabsStore, getTabKey, homeTab, type PageTab } from '@/store/pageTabsStore'
 import { useRouteStore } from '@/store/routeStore'
 import { MenuIcon } from '@/components/MenuIcon'
@@ -37,14 +37,15 @@ export function TabsBar() {
   const refreshTab = usePageTabsStore(state => state.refreshTab)
   const scrollRef = useRef<HTMLDivElement>(null)
   const currentKey = getTabKey({ path: location.pathname, search: location.search, hash: location.hash })
-  const currentRoute = findRouteByPath(routes, location.pathname)
+  const routeByPath = useMemo(() => new Map(flattenRoutes(routes).map(route => [route.fullPath, route])), [routes])
+  const currentRoute = routeByPath.get(location.pathname)
 
   useEffect(() => {
     if (location.pathname === homeTab.path) {
       openTab({ ...homeTab })
       return
     }
-    if (!currentRoute) return
+    if (!isPageTabRoute(currentRoute)) return
     openTab({
       path: location.pathname,
       search: location.search,
@@ -54,6 +55,13 @@ export function TabsBar() {
       closable: true
     })
   }, [currentRoute, location.hash, location.pathname, location.search, openTab])
+
+  useEffect(() => {
+    for (const tab of tabs) {
+      const route = routeByPath.get(tab.path)
+      if (tab.closable && route && !isPageTabRoute(route)) closeTab(getTabKey(tab))
+    }
+  }, [closeTab, routeByPath, tabs])
 
   useEffect(() => {
     const active = Array.from(scrollRef.current?.querySelectorAll<HTMLElement>('[data-tab-key]') || [])

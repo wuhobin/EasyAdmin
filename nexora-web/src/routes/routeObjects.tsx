@@ -1,7 +1,7 @@
 import { Navigate, Outlet, type RouteObject } from 'react-router-dom'
 import { Suspense } from 'react'
 import { ForbiddenPage, NotFoundPage } from '@/pages/NotFoundPage'
-import { HomePlaceholder } from '@/pages/HomePlaceholder'
+import { WorkbenchPage } from '@/pages/workbench/WorkbenchPage'
 import { resolveRouteComponent } from '@/routes/componentRegistry'
 import { flattenRoutes, HOME_PATH, LEGACY_HOME_PATH, LEGACY_PROFILE_PATH, PROFILE_PATH, type MenuRoute } from '@/routes/routeAdapter'
 
@@ -49,7 +49,7 @@ export function createDynamicRouteObjects(routes: MenuRoute[]): RouteObject[] {
     }
   }
   const hasHome = flattenRoutes(routes).some(route => route.fullPath === HOME_PATH)
-  if (!hasHome) result.push({ path: segment(HOME_PATH), element: <HomePlaceholder /> })
+  if (!hasHome) result.push({ path: segment(HOME_PATH), element: <WorkbenchPage /> })
   result.push({ path: segment(LEGACY_HOME_PATH), element: <Navigate to={HOME_PATH} replace /> })
   result.push({ path: segment(LEGACY_PROFILE_PATH), element: <Navigate to={PROFILE_PATH} replace /> })
   result.push({ path: '403', element: <ForbiddenPage /> })

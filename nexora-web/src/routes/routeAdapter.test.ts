@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createAppRouteTree, findRouteByPath, findRouteTrail, flattenRoutes, normalizeRouteTree } from '@/routes/routeAdapter'
+import { createAppRouteTree, findRouteByPath, findRouteTrail, flattenRoutes, isPageTabRoute, normalizeRouteTree } from '@/routes/routeAdapter'
 
 describe('normalizeRouteTree', () => {
   it('joins nested paths, keeps external paths, and sorts siblings', () => {
@@ -51,5 +51,18 @@ describe('normalizeRouteTree', () => {
     expect(routes[2].children).toEqual([])
     expect(routes[0].meta.title).toBe('工作台')
     expect(routes[1].meta.hidden).toBe(true)
+  })
+
+  it('only treats renderable leaf routes as cacheable page tabs', () => {
+    const [catalog, redirect] = normalizeRouteTree([
+      { id: 1, path: '/file', component: 'ParentView', redirect: '/file/list', children: [
+        { id: 2, path: 'list', component: '/file/list/index', meta: { title: '文件列表' } }
+      ] },
+      { id: 3, path: '/legacy', component: '/legacy', redirect: '/home' }
+    ])
+
+    expect(isPageTabRoute(catalog)).toBe(false)
+    expect(isPageTabRoute(catalog.children[0])).toBe(true)
+    expect(isPageTabRoute(redirect)).toBe(false)
   })
 })

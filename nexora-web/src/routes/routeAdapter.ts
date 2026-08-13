@@ -123,6 +123,10 @@ export function findRouteByPath(routes: MenuRoute[], path: string): MenuRoute | 
   return flattenRoutes(routes).find(route => route.fullPath === path)
 }
 
+export function isPageTabRoute(route?: MenuRoute): route is MenuRoute {
+  return Boolean(route && !route.redirect && !route.meta.isExternal && route.children.length === 0)
+}
+
 export function findRouteTrail(routes: MenuRoute[], path: string): MenuRoute[] {
   for (const route of routes) {
     if (route.fullPath === path) return [route]
