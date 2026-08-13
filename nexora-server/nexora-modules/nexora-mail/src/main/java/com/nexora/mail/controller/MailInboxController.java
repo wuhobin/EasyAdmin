@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,8 +28,9 @@ public class MailInboxController {
     public Result<MailMessagePageVo> list(
             @RequestParam(required = false) Long accountId,
             @RequestParam(required = false) Integer limit,
-            @RequestParam(required = false) String cursor) {
-        return Result.data(mailInboxBizService.list(accountId, limit, cursor));
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "false") boolean refresh) {
+        return Result.data(mailInboxBizService.list(accountId, limit, cursor, refresh));
     }
 
     @GetMapping("/detail")
@@ -38,6 +40,25 @@ public class MailInboxController {
                                                @RequestParam long uid,
                                                @RequestParam long uidValidity) {
         return Result.data(mailInboxBizService.getDetail(accountId, uid, uidValidity));
+    }
+
+    @PostMapping("/open")
+    @Operation(summary = "打开邮件并标记为已读")
+    @SaCheckPermission("mail:inbox:view")
+    public Result<MailMessageDetailVo> open(@RequestParam Long accountId,
+                                            @RequestParam long uid,
+                                            @RequestParam long uidValidity) {
+        return Result.data(mailInboxBizService.openMessage(accountId, uid, uidValidity));
+    }
+
+    @PostMapping("/read")
+    @Operation(summary = "标记邮件为已读")
+    @SaCheckPermission("mail:inbox:view")
+    public Result<Void> read(@RequestParam Long accountId,
+                             @RequestParam long uid,
+                             @RequestParam long uidValidity) {
+        mailInboxBizService.markRead(accountId, uid, uidValidity);
+        return Result.success();
     }
 
     @GetMapping("/attachment")

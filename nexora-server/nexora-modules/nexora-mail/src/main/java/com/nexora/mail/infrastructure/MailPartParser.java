@@ -18,8 +18,8 @@ import java.util.Map;
 @Component
 public class MailPartParser {
 
-    private static final int MAX_INLINE_IMAGE_BYTES = 5 * 1024 * 1024;
-    private static final int MAX_INLINE_IMAGE_TOTAL_BYTES = 10 * 1024 * 1024;
+    private static final int MAX_INLINE_IMAGE_BYTES = 1024 * 1024;
+    private static final int MAX_INLINE_IMAGE_TOTAL_BYTES = 2 * 1024 * 1024;
 
     /**
      * 递归解析邮件 Part 树，提取 body 内容和附件信息。
@@ -49,24 +49,27 @@ public class MailPartParser {
         boolean inline = Part.INLINE.equalsIgnoreCase(disposition) || contentId != null;
         if (inline && part.isMimeType("image/*") && contentId != null) {
             int remaining = MAX_INLINE_IMAGE_TOTAL_BYTES - parsed.inlineImageBytes;
-            byte[] bytes = remaining <= 0 ? null
-                    : readLimited(part.getInputStream(), Math.min(MAX_INLINE_IMAGE_BYTES, remaining));
+            int declaredSize = part.getSize();
+            boolean tooLarge = remaining <= 0
+                    || declaredSize > MAX_INLINE_IMAGE_BYTES || declaredSize > remaining;
+            if (tooLarge) {
+                addAttachmentMetadata(part, path, fileName == null ? "inline-image" : fileName, parsed);
+                return;
+            }
+            byte[] bytes = readLimited(part.getInputStream(), Math.min(MAX_INLINE_IMAGE_BYTES, remaining));
             if (bytes != null) {
                 parsed.inlineImageBytes += bytes.length;
                 String normalizedCid = contentId.replace("<", "").replace(">", "").trim();
                 parsed.inlineImages.put(normalizedCid, "data:" + baseContentType(part.getContentType())
                         + ";base64," + java.util.Base64.getEncoder().encodeToString(bytes));
+            } else {
+                addAttachmentMetadata(part, path, fileName == null ? "inline-image" : fileName, parsed);
             }
             return;
         }
 
         if (Part.ATTACHMENT.equalsIgnoreCase(disposition) || fileName != null) {
-            parsed.attachments.add(MailAttachmentVo.builder()
-                    .partId(path)
-                    .fileName(fileName == null ? "attachment" : fileName)
-                    .contentType(baseContentType(part.getContentType()))
-                    .size(Math.max(part.getSize(), 0))
-                    .build());
+            addAttachmentMetadata(part, path, fileName == null ? "attachment" : fileName, parsed);
             return;
         }
 
@@ -139,6 +142,16 @@ public class MailPartParser {
         }
         int separator = contentType.indexOf(';');
         return separator < 0 ? contentType : contentType.substring(0, separator).trim();
+    }
+
+    private static void addAttachmentMetadata(Part part, String path, String fileName,
+                                              ParsedBody parsed) throws Exception {
+        parsed.attachments.add(MailAttachmentVo.builder()
+                .partId(path)
+                .fileName(fileName)
+                .contentType(baseContentType(part.getContentType()))
+                .size(Math.max(part.getSize(), 0))
+                .build());
     }
 
     private static byte[] readLimited(java.io.InputStream input, int maxBytes) throws java.io.IOException {

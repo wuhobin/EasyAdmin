@@ -5,8 +5,8 @@ import { Button, type ButtonProps } from '@/components/ui/button'
 
 type ActionTone = 'add' | 'edit' | 'delete' | 'approve' | 'settings' | 'data'
 
-export function ManagementRowAction({ tone, className = '', icon, children, ...props }: ButtonProps & { tone: ActionTone; icon?: ReactNode }) {
-  return <Button type="button" variant="ghost" size="icon" className={`management-row-action management-row-action-${tone} ${className}`.trim()} {...props}>{icon}{children}</Button>
+export function ManagementRowAction({ tone, className = '', icon, children, loading, ...props }: ButtonProps & { tone: ActionTone; icon?: ReactNode }) {
+  return <Button type="button" variant="ghost" size="icon" className={`management-row-action management-row-action-${tone} ${className}`.trim()} loading={loading} {...props}>{loading ? null : icon}{children}</Button>
 }
 
 export function ManagementCard({ filters, toolbar, children, pagination }: { filters?: ReactNode; toolbar: ReactNode; children: ReactNode; pagination?: ReactNode }) {

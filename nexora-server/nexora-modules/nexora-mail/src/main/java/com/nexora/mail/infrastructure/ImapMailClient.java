@@ -91,8 +91,8 @@ public class ImapMailClient {
             FetchProfile profile = new FetchProfile();
             profile.add(FetchProfile.Item.ENVELOPE);
             profile.add(FetchProfile.Item.FLAGS);
-            profile.add(FetchProfile.Item.CONTENT_INFO);
             profile.add(UIDFolder.FetchProfileItem.UID);
+            profile.add("Content-Type");
             folder.fetch(messages, profile);
 
             long uidValidity = uidFolder.getUIDValidity();
@@ -120,30 +120,62 @@ public class ImapMailClient {
     }
 
     public MailMessageDetailVo getDetail(MailAccount account, String authCode, long uid, long uidValidity) {
-        return withInbox(account, authCode, folder -> {
+        return withInbox(account, authCode, Folder.READ_ONLY,
+                folder -> readDetail(account, folder, uid, uidValidity, false));
+    }
+
+    public MailMessageDetailVo openMessage(MailAccount account, String authCode, long uid, long uidValidity) {
+        return withInbox(account, authCode, Folder.READ_WRITE,
+                folder -> readDetail(account, folder, uid, uidValidity, true));
+    }
+
+    public void markRead(MailAccount account, String authCode, long uid, long uidValidity) {
+        withInbox(account, authCode, Folder.READ_WRITE, folder -> {
             UIDFolder uidFolder = uidFolder(folder);
             validateUidValidity(uidFolder, uidValidity);
             Message message = uidFolder.getMessageByUID(uid);
             if (message == null) {
                 throw new BizException("邮件不存在或已被邮箱服务器删除");
             }
-            MailPartParser.ParsedBody parsed = mailPartParser.parse(message);
-            Sender sender = sender(message.getFrom());
-            String html = parsed.html == null ? null : HtmlSanitizer.sanitizeHtml(parsed.html, parsed.inlineImages);
-            return MailMessageDetailVo.builder()
-                    .accountId(account.getId())
-                    .uid(uid)
-                    .uidValidity(uidValidity)
-                    .fromName(sender.name())
-                    .fromAddress(sender.address())
-                    .recipients(addresses(message.getAllRecipients()))
-                    .subject(defaultSubject(message.getSubject()))
-                    .receivedTime(toLocalDateTime(message.getReceivedDate()))
-                    .bodyHtml(html)
-                    .bodyText(parsed.text == null ? "" : parsed.text.trim())
-                    .attachments(parsed.attachments)
-                    .build();
+            markAsRead(message);
+            return null;
         });
+    }
+
+    private MailMessageDetailVo readDetail(MailAccount account, Folder folder, long uid,
+                                           long uidValidity, boolean markRead) throws Exception {
+        UIDFolder uidFolder = uidFolder(folder);
+        validateUidValidity(uidFolder, uidValidity);
+        Message message = uidFolder.getMessageByUID(uid);
+        if (message == null) {
+            throw new BizException("邮件不存在或已被邮箱服务器删除");
+        }
+        MailPartParser.ParsedBody parsed = mailPartParser.parse(message);
+        Sender sender = sender(message.getFrom());
+        String html = parsed.html == null ? null : HtmlSanitizer.sanitizeHtml(parsed.html, parsed.inlineImages);
+        MailMessageDetailVo detail = MailMessageDetailVo.builder()
+                .accountId(account.getId())
+                .uid(uid)
+                .uidValidity(uidValidity)
+                .fromName(sender.name())
+                .fromAddress(sender.address())
+                .recipients(addresses(message.getAllRecipients()))
+                .subject(defaultSubject(message.getSubject()))
+                .receivedTime(toLocalDateTime(message.getReceivedDate()))
+                .bodyHtml(html)
+                .bodyText(parsed.text == null ? "" : parsed.text.trim())
+                .attachments(parsed.attachments)
+                .build();
+        if (markRead) {
+            markAsRead(message);
+        }
+        return detail;
+    }
+
+    static void markAsRead(Message message) throws Exception {
+        if (!message.isSet(Flags.Flag.SEEN)) {
+            message.setFlag(Flags.Flag.SEEN, true);
+        }
     }
 
     public void downloadAttachment(MailAccount account, String authCode, long uid, long uidValidity,
@@ -174,6 +206,11 @@ public class ImapMailClient {
     }
 
     private <T> T withInbox(MailAccount account, String authCode, MailFolderCallback<T> callback) {
+        return withInbox(account, authCode, Folder.READ_ONLY, callback);
+    }
+
+    private <T> T withInbox(MailAccount account, String authCode, int mode,
+                            MailFolderCallback<T> callback) {
         MailProviderEnum provider = provider(account);
         Properties properties = new Properties();
         properties.put("mail.imaps.ssl.enable", "true");
@@ -187,7 +224,7 @@ public class ImapMailClient {
             identifyClient(store, provider);
             Folder inbox = store.getFolder("INBOX");
             try {
-                inbox.open(Folder.READ_ONLY);
+                inbox.open(mode);
                 return callback.apply(inbox);
             } finally {
                 if (inbox.isOpen()) {
@@ -202,7 +239,9 @@ public class ImapMailClient {
     }
 
     static void identifyClient(Store store, MailProviderEnum provider) throws Exception {
-        if (provider == MailProviderEnum.QQ) {
+        if (provider != MailProviderEnum.NETEASE_163
+                && provider != MailProviderEnum.NETEASE_126
+                && provider != MailProviderEnum.YEAH) {
             return;
         }
         if (!(store instanceof IMAPStore imapStore)) {

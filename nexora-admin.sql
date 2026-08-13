@@ -185,7 +185,7 @@ CREATE TABLE `sys_dict_data`  (
   `remark` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   `status` int NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 50 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 51 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_dict_data
@@ -202,6 +202,7 @@ INSERT INTO `sys_dict_data` VALUES (46, 34, 'QQ 邮箱', 'QQ', 'primary', '1', 1
 INSERT INTO `sys_dict_data` VALUES (47, 34, '163 邮箱', 'NETEASE_163', 'success', '0', 2, '网易 163 邮箱', 1);
 INSERT INTO `sys_dict_data` VALUES (48, 34, '126 邮箱', 'NETEASE_126', 'warning', '0', 3, '网易 126 邮箱', 1);
 INSERT INTO `sys_dict_data` VALUES (49, 34, 'yeah 邮箱', 'YEAH', 'info', '0', 4, '网易 yeah 邮箱', 1);
+INSERT INTO `sys_dict_data` VALUES (50, 34, 'Gmail 邮箱', 'GMAIL', 'danger', '0', 5, 'Google Gmail 邮箱', 1);
 
 -- ----------------------------
 -- Table structure for sys_menu

@@ -18,6 +18,7 @@
 .mail-provider-avatar.netease-126, .mail-sender-avatar.netease-126 { --mail-provider-color: #e17a3f; }
 .mail-provider-avatar.yeah, .mail-sender-avatar.yeah { --mail-provider-color: #29936f; }
 .mail-provider-avatar.qq, .mail-sender-avatar.qq { --mail-provider-color: #3584dc; }
+.mail-provider-avatar.gmail, .mail-sender-avatar.gmail { --mail-provider-color: #d94b3f; }
 
 .mail-account-form .mail-address-control { display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: center; border: 1px solid var(--nexora-line); border-radius: 7px; background: var(--nexora-panel); transition: border-color .18s ease; }
 .mail-account-form .mail-address-control:hover { border-color: color-mix(in srgb, var(--nexora-violet) 28%, var(--nexora-line)); }
@@ -106,9 +107,11 @@
 .mail-limit-control button.active { color: var(--nexora-ink); background: var(--nexora-panel); box-shadow: 0 1px 3px rgb(25 23 40 / 8%); }
 .mail-message-panel > .ant-spin-nested-loading, .mail-message-panel .ant-spin-container { height: calc(100% - 62px); }
 .mail-message-list { height: 100%; overflow-y: auto; }
-.mail-message-item { display: flex; width: 100%; min-height: 82px; gap: 10px; padding: 12px; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--nexora-line) 72%, transparent); color: var(--nexora-ink); background: transparent; text-align: left; transition: background-color .18s ease; }
+.mail-message-item { position: relative; display: flex; width: 100%; min-height: 82px; gap: 10px; padding: 12px; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--nexora-line) 72%, transparent); color: var(--nexora-ink); background: transparent; text-align: left; transition: background-color .18s ease; }
+.mail-message-item.unread { background: color-mix(in srgb, var(--nexora-violet) 3%, var(--nexora-panel)); }
 .mail-message-item:hover { background: color-mix(in srgb, var(--nexora-violet) 4%, var(--nexora-panel)); }
 .mail-message-item.active { background: color-mix(in srgb, var(--nexora-violet) 9%, var(--nexora-panel)); }
+.mail-unread-dot { position: absolute; top: 17px; left: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--nexora-violet); box-shadow: 0 0 0 3px color-mix(in srgb, var(--nexora-violet) 10%, transparent); }
 .mail-sender-avatar { width: 34px; height: 34px; }
 .mail-sender-avatar.large { width: 44px; height: 44px; border-radius: 9px; font-size: 14px; }
 .mail-message-copy { display: grid; min-width: 0; flex: 1; align-content: start; gap: 4px; }

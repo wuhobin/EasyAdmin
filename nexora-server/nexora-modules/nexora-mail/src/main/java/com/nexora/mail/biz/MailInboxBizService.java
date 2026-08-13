@@ -24,13 +24,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class MailInboxBizService {
     private static final int DEFAULT_LIMIT = 30;
     private static final int MAX_LIMIT = 50;
+    private static final long FIRST_PAGE_CACHE_NANOS = TimeUnit.SECONDS.toNanos(60);
+    private static final long DETAIL_CACHE_NANOS = TimeUnit.MINUTES.toNanos(5);
+    private static final int DETAIL_CACHE_MAX_ENTRIES = 50;
     private static final Comparator<MailMessageSummaryVo> RECEIVED_TIME_COMPARATOR = Comparator.comparing(
             MailMessageSummaryVo::getReceivedTime, Comparator.nullsLast(Comparator.reverseOrder()));
 
@@ -39,6 +45,8 @@ public class MailInboxBizService {
     private final ImapMailClient imapMailClient;
     private final ObjectMapper objectMapper;
     private final Executor mailExecutor;
+    private final ConcurrentMap<FirstPageCacheKey, CachedPage> firstPageCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<DetailCacheKey, CachedDetail> detailCache = new ConcurrentHashMap<>();
 
     public MailInboxBizService(MailAccountService mailAccountService,
                                PlatformCredentialCipher credentialCipher,
@@ -52,12 +60,12 @@ public class MailInboxBizService {
         this.mailExecutor = mailExecutor;
     }
 
-    public MailMessagePageVo list(Long accountId, Integer limit, String cursor) {
+    public MailMessagePageVo list(Long accountId, Integer limit, String cursor, boolean refresh) {
         int normalizedLimit = normalizeLimit(limit);
         CursorState cursorState = decodeCursor(cursor);
         if (accountId != null) {
             AccountPage accountPage = listAccount(getEnabledAccount(accountId), normalizedLimit,
-                    cursorState.accounts().get(accountId), true);
+                    cursorState.accounts().get(accountId), true, refresh);
             return buildPage(List.of(accountPage), normalizedLimit);
         }
 
@@ -65,7 +73,7 @@ public class MailInboxBizService {
                 mailAccountService.listEnabledByOwnerId(currentOwnerId()).stream()
                 .map(account -> CompletableFuture.supplyAsync(
                         () -> listAccount(account, normalizedLimit,
-                                cursorState.accounts().get(account.getId()), false),
+                                cursorState.accounts().get(account.getId()), false, refresh),
                         mailExecutor))
                 .toList();
         List<AccountPage> accountPages = futures.stream().map(CompletableFuture::join).toList();
@@ -100,7 +108,37 @@ public class MailInboxBizService {
 
     public MailMessageDetailVo getDetail(Long accountId, long uid, long uidValidity) {
         MailAccount account = getEnabledAccount(accountId);
-        return imapMailClient.getDetail(account, decrypt(account), uid, uidValidity);
+        DetailCacheKey cacheKey = new DetailCacheKey(accountId, uidValidity, uid);
+        CachedDetail cachedDetail = freshDetail(cacheKey);
+        if (cachedDetail != null) {
+            return cachedDetail.detail();
+        }
+        MailMessageDetailVo detail = imapMailClient.getDetail(account, decrypt(account), uid, uidValidity);
+        cacheDetail(cacheKey, detail);
+        return detail;
+    }
+
+    public MailMessageDetailVo openMessage(Long accountId, long uid, long uidValidity) {
+        MailAccount account = getEnabledAccount(accountId);
+        String authCode = decrypt(account);
+        DetailCacheKey cacheKey = new DetailCacheKey(accountId, uidValidity, uid);
+        CachedDetail cachedDetail = freshDetail(cacheKey);
+        MailMessageDetailVo detail;
+        if (cachedDetail == null) {
+            detail = imapMailClient.openMessage(account, authCode, uid, uidValidity);
+            cacheDetail(cacheKey, detail);
+        } else {
+            imapMailClient.markRead(account, authCode, uid, uidValidity);
+            detail = cachedDetail.detail();
+        }
+        firstPageCache.keySet().removeIf(key -> key.accountId().equals(accountId));
+        return detail;
+    }
+
+    public void markRead(Long accountId, long uid, long uidValidity) {
+        MailAccount account = getEnabledAccount(accountId);
+        imapMailClient.markRead(account, decrypt(account), uid, uidValidity);
+        firstPageCache.keySet().removeIf(key -> key.accountId().equals(accountId));
     }
 
     public void downloadAttachment(Long accountId, long uid, long uidValidity, String partId,
@@ -109,12 +147,25 @@ public class MailInboxBizService {
         imapMailClient.downloadAttachment(account, decrypt(account), uid, uidValidity, partId, response);
     }
 
-    private AccountPage listAccount(MailAccount account, int limit, AccountCursor cursor, boolean failFast) {
+    private AccountPage listAccount(MailAccount account, int limit, AccountCursor cursor,
+                                    boolean failFast, boolean refresh) {
         AccountCursor normalizedCursor = cursor == null ? new AccountCursor(0, 0) : cursor;
+        FirstPageCacheKey cacheKey = new FirstPageCacheKey(account.getId(), limit);
+        boolean firstPage = normalizedCursor.anchorUid() == 0 && normalizedCursor.offset() == 0;
+        if (firstPage && !refresh) {
+            CachedPage cachedPage = firstPageCache.get(cacheKey);
+            if (cachedPage != null && cachedPage.isFresh()) {
+                return new AccountPage(account.getId(), normalizedCursor, cachedPage.page());
+            }
+        }
         try {
             MailMessagePage page = imapMailClient.listPage(account, decrypt(account), limit,
                     normalizedCursor.anchorUid() > 0 ? normalizedCursor.anchorUid() : null,
                     normalizedCursor.offset());
+            if (firstPage) {
+                firstPageCache.put(cacheKey, new CachedPage(page, System.nanoTime()));
+                firstPageCache.entrySet().removeIf(entry -> !entry.getValue().isFresh());
+            }
             updateConnection(account, null);
             return new AccountPage(account.getId(), normalizedCursor, page);
         } catch (BizException exception) {
@@ -205,5 +256,45 @@ public class MailInboxBizService {
     }
 
     private record AccountPage(Long accountId, AccountCursor cursor, MailMessagePage page) {
+    }
+
+    private CachedDetail freshDetail(DetailCacheKey cacheKey) {
+        CachedDetail cachedDetail = detailCache.get(cacheKey);
+        if (cachedDetail != null && cachedDetail.isFresh()) {
+            return cachedDetail;
+        }
+        if (cachedDetail != null) {
+            detailCache.remove(cacheKey, cachedDetail);
+        }
+        return null;
+    }
+
+    private void cacheDetail(DetailCacheKey cacheKey, MailMessageDetailVo detail) {
+        detailCache.entrySet().removeIf(entry -> !entry.getValue().isFresh());
+        if (detailCache.size() >= DETAIL_CACHE_MAX_ENTRIES) {
+            detailCache.entrySet().stream()
+                    .min(Comparator.comparingLong(entry -> entry.getValue().cachedAtNanos()))
+                    .ifPresent(entry -> detailCache.remove(entry.getKey(), entry.getValue()));
+        }
+        detailCache.put(cacheKey, new CachedDetail(detail, System.nanoTime()));
+    }
+
+    private record FirstPageCacheKey(Long accountId, int limit) {
+    }
+
+    private record DetailCacheKey(Long accountId, long uidValidity, long uid) {
+    }
+
+    private record CachedPage(MailMessagePage page, long cachedAtNanos) {
+        private boolean isFresh() {
+            return System.nanoTime() - cachedAtNanos < FIRST_PAGE_CACHE_NANOS;
+        }
+    }
+
+
+    private record CachedDetail(MailMessageDetailVo detail, long cachedAtNanos) {
+        private boolean isFresh() {
+            return System.nanoTime() - cachedAtNanos < DETAIL_CACHE_NANOS;
+        }
     }
 }

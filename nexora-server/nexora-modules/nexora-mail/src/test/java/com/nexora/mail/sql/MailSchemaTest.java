@@ -28,7 +28,12 @@ class MailSchemaTest {
         assertThat(initializationSql).contains("'mail_provider'");
         assertThat(initializationSql).contains("'QQ'");
         assertThat(initializationSql).contains("'NETEASE_163'");
+        assertThat(initializationSql).contains("'GMAIL'");
         assertThat(initializationSql).doesNotContain("CREATE TABLE `mail_message`");
+
+        String gmailMigration = Files.readString(repositoryRoot.resolve(
+                "deploy/migrations/20260813_add_gmail_mail_provider.sql"), StandardCharsets.UTF_8);
+        assertThat(gmailMigration).contains("'mail_provider'", "'GMAIL'");
 
         String mapperXml = Files.readString(repositoryRoot.resolve(
                 "nexora-server/nexora-modules/nexora-mail/src/main/resources/mapper/MailAccountMapper.xml"),

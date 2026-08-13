@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import type { MailAccount, MailProvider, MailProviderConfig } from '@/api/mail'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ import { buildMailAddress, defaultMailProvider, emptyMailAccountForm, isMailAddr
 const schema = z.object({
   id: z.number().optional(),
   accountName: z.string().trim().min(1, '请输入账户名称').max(100, '账户名称不能超过 100 个字符'),
-  provider: z.union([z.enum(['QQ', 'NETEASE_163', 'NETEASE_126', 'YEAH']), z.literal('')]).refine(Boolean, '请选择邮箱类型'),
+  provider: z.union([z.enum(['QQ', 'NETEASE_163', 'NETEASE_126', 'YEAH', 'GMAIL']), z.literal('')]).refine(Boolean, '请选择邮箱类型'),
   email: z.string().trim().min(1, '请输入邮箱地址').email('邮箱格式不正确'),
   authCode: z.string().max(255, '邮箱授权码不能超过 255 个字符'),
   enabled: z.number(),
@@ -34,6 +34,7 @@ export function MailAccountDialog({ open, account, providers, providersLoading, 
   onSubmit: (values: MailAccountFormValues) => void
 }) {
   const form = useForm<MailAccountFormValues>({ resolver: zodResolver(schema), defaultValues: emptyMailAccountForm })
+  const selectedProvider = useWatch({ control: form.control, name: 'provider' })
 
   useEffect(() => {
     if (!open) return
@@ -72,10 +73,10 @@ export function MailAccountDialog({ open, account, providers, providersLoading, 
                 form.setValue('email', replaceMailProviderDomain(form.getValues('email'), previousDomain, providerDomain(providers, nextProvider)), { shouldValidate: Boolean(form.getValues('email')) })
               }}><FormControl><SelectTrigger><SelectValue placeholder={providersLoading ? '正在加载邮箱类型' : '请选择邮箱类型'} /></SelectTrigger></FormControl><SelectContent>{providers.map(provider => <SelectItem key={provider.value} value={provider.value}>{provider.label}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
               <FormField control={form.control} name="email" render={({ field }) => {
-                const domain = providerDomain(providers, form.watch('provider'))
+                const domain = providerDomain(providers, selectedProvider)
                 return <FormItem className="management-form-span-2"><FormLabel>邮箱地址</FormLabel><div className="mail-address-control"><FormControl><Input value={mailAddressAccount(field.value)} onBlur={field.onBlur} onChange={event => field.onChange(buildMailAddress(event.target.value, domain))} placeholder="请输入邮箱账号或手机号" autoComplete="email" /></FormControl><span>@{domain || '邮箱域名'}</span></div><FormMessage /></FormItem>
               }} />
-              <FormField control={form.control} name="authCode" render={({ field }) => <FormItem className="management-form-span-2"><FormLabel>邮箱授权码</FormLabel><FormControl><PasswordInput maxLength={255} autoComplete="new-password" placeholder={account ? '留空表示不修改' : '不是邮箱登录密码，请填写 IMAP 授权码'} {...field} /></FormControl><FormDescription>请先在邮箱设置中开启 IMAP/SMTP 服务并生成授权码。</FormDescription><FormMessage /></FormItem>} />
+              <FormField control={form.control} name="authCode" render={({ field }) => <FormItem className="management-form-span-2"><FormLabel>{selectedProvider === 'GMAIL' ? '应用专用密码' : '邮箱授权码'}</FormLabel><FormControl><PasswordInput maxLength={255} autoComplete="new-password" placeholder={account ? '留空表示不修改' : selectedProvider === 'GMAIL' ? '请输入 Google 生成的 16 位应用专用密码' : '不是邮箱登录密码，请填写 IMAP 授权码'} {...field} /></FormControl><FormDescription>{selectedProvider === 'GMAIL' ? '请先为 Google 账号开启两步验证，再创建应用专用密码；不要填写 Google 登录密码。' : '请先在邮箱设置中开启 IMAP/SMTP 服务并生成授权码。'}</FormDescription><FormMessage /></FormItem>} />
               <FormField control={form.control} name="sort" render={({ field }) => <FormItem><FormLabel>排序</FormLabel><FormControl><Input type="number" min={0} max={999} inputMode="numeric" value={field.value} onBlur={field.onBlur} onChange={event => field.onChange(event.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem>} />
               <FormField control={form.control} name="enabled" render={({ field }) => <FormItem><FormLabel>状态</FormLabel><div className="management-switch-field"><span className="management-switch-copy"><span>{field.value === 1 ? '启用' : '停用'}</span><small>停用后不再读取该邮箱</small></span><Switch aria-label="邮箱账户状态" checked={field.value === 1} onCheckedChange={checked => field.onChange(checked ? 1 : 0)} /></div><FormMessage /></FormItem>} />
             </div>

@@ -75,7 +75,8 @@ export function providerMark(provider: MailProvider) {
   if (provider === 'QQ') return 'Q'
   if (provider === 'NETEASE_163') return '163'
   if (provider === 'NETEASE_126') return '126'
-  return 'Y'
+  if (provider === 'YEAH') return 'Y'
+  return 'G'
 }
 
 export function providerClass(provider: MailProvider) {

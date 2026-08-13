@@ -6,7 +6,7 @@ import Skeleton from 'antd/es/skeleton'
 import Spin from 'antd/es/spin'
 import axios from 'axios'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { addMailAccountApi, deleteMailAccountApi, downloadMailAttachmentApi, getLatestMailsApi, getMailAccountsApi, getMailDetailApi, getMailProvidersApi, testMailAccountApi, updateMailAccountApi, type MailAccount, type MailAttachment, type MailMessageDetail, type MailMessageSummary } from '@/api/mail'
+import { addMailAccountApi, deleteMailAccountApi, downloadMailAttachmentApi, getLatestMailsApi, getMailAccountsApi, getMailDetailApi, getMailProvidersApi, markMailReadApi, openMailApi, testMailAccountApi, updateMailAccountApi, type MailAccount, type MailAttachment, type MailMessageDetail, type MailMessageSummary } from '@/api/mail'
 import { MailAccountDialog } from '@/components/mail/MailAccountDialog'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -15,7 +15,17 @@ import { mailAccountFormToPayload, providerClass, providerLabel, providerMark, t
 import { useAuthStore } from '@/store/authStore'
 
 const MAIL_LIMITS = [20, 30, 50]
-const REFRESH_INTERVAL = 15_000
+const REFRESH_INTERVAL = 30_000
+
+interface MailboxSnapshot {
+  items: MailMessageSummary[]
+  nextCursor?: string
+  hasMore: boolean
+}
+
+function mailboxCacheKey(accountId: number | undefined, limit: number) {
+  return `${accountId ?? 'all'}:${limit}`
+}
 
 function messageKey(message: MailMessageSummary) {
   return `${message.accountId}:${message.uidValidity}:${message.uid}`
@@ -72,6 +82,11 @@ export function LatestMailPage() {
   const detailController = useRef<AbortController>()
   const listRequestId = useRef(0)
   const detailRequestId = useRef(0)
+  const messagesRef = useRef<MailMessageSummary[]>([])
+  const mailboxCache = useRef(new Map<string, MailboxSnapshot>())
+  const detailCache = useRef(new Map<string, MailMessageDetail>())
+  const detailRequests = useRef(new Map<string, Promise<MailMessageDetail>>())
+  const prefetchTimer = useRef<number>()
   const knownMessageKeys = useRef(new Set<string>())
   const initializedMessages = useRef(false)
   const selectedMessageKeyRef = useRef('')
@@ -91,16 +106,20 @@ export function LatestMailPage() {
   const mailDocument = useMemo(() => `<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light"><style>html{background:#fff;color:#222}body{margin:20px;font:14px/1.65 Arial,sans-serif;overflow-wrap:anywhere}img{max-width:100%;height:auto}table{max-width:100%}</style></head><body>${mailDetail?.bodyHtml || ''}</body></html>`, [mailDetail?.bodyHtml])
 
   const selectMessage = (key: string) => { selectedMessageKeyRef.current = key; setSelectedMessageKey(key) }
-  const resetMailbox = () => {
+  const showMailbox = useCallback((snapshot?: MailboxSnapshot) => {
     selectMessage('')
     setMailDetail(undefined)
-    setMailCursor(undefined)
-    setHasMore(false)
+    const nextMessages = snapshot?.items ?? []
+    messagesRef.current = nextMessages
+    setMessages(nextMessages)
+    setMailCursor(snapshot?.nextCursor)
+    setHasMore(snapshot?.hasMore ?? false)
     knownMessageKeys.current.clear()
-    initializedMessages.current = false
-  }
+    nextMessages.forEach(item => knownMessageKeys.current.add(messageKey(item)))
+    initializedMessages.current = Boolean(snapshot)
+  }, [])
 
-  const loadMessages = useCallback(async ({ accountId, limit, cursor, silent = false, append = false }: { accountId?: number; limit: number; cursor?: string; silent?: boolean; append?: boolean }) => {
+  const loadMessages = useCallback(async ({ accountId, limit, cursor, silent = false, append = false, refresh = false }: { accountId?: number; limit: number; cursor?: string; silent?: boolean; append?: boolean; refresh?: boolean }) => {
     if (append && listController.current) return
     if (silent && listController.current) return
     if (!append) listController.current?.abort()
@@ -110,7 +129,7 @@ export function LatestMailPage() {
     if (append) setLoadingMore(true)
     else if (!silent) setMailLoading(true)
     try {
-      const data = (await getLatestMailsApi(accountId, limit, append ? cursor : undefined, controller.signal)).data
+      const data = (await getLatestMailsApi(accountId, limit, append ? cursor : undefined, controller.signal, refresh)).data
       if (requestId !== listRequestId.current) return
       if (!append && initializedMessages.current) {
         const newMessages = data.items.filter(item => !knownMessageKeys.current.has(messageKey(item)))
@@ -119,9 +138,26 @@ export function LatestMailPage() {
       if (!append) knownMessageKeys.current.clear()
       data.items.forEach(item => knownMessageKeys.current.add(messageKey(item)))
       initializedMessages.current = true
-      setMessages(previous => append ? [...previous, ...data.items.filter(item => !previous.some(existing => messageKey(existing) === messageKey(item)))] : data.items)
+      const nextMessages = append
+        ? [...messagesRef.current, ...data.items.filter(item => !messagesRef.current.some(existing => messageKey(existing) === messageKey(item)))]
+        : data.items
+      messagesRef.current = nextMessages
+      setMessages(nextMessages)
       setMailCursor(data.nextCursor)
       setHasMore(data.hasMore)
+      mailboxCache.current.set(mailboxCacheKey(accountId, limit), {
+        items: nextMessages,
+        nextCursor: data.nextCursor,
+        hasMore: data.hasMore
+      })
+      if (accountId === undefined && !append) {
+        const accountItems = new Map<number, MailMessageSummary[]>()
+        data.items.forEach(item => accountItems.set(item.accountId, [...(accountItems.get(item.accountId) ?? []), item]))
+        accountItems.forEach((items, itemAccountId) => {
+          const key = mailboxCacheKey(itemAccountId, limit)
+          if (!mailboxCache.current.has(key)) mailboxCache.current.set(key, { items, hasMore: false })
+        })
+      }
       if (!append && selectedMessageKeyRef.current && !data.items.some(item => messageKey(item) === selectedMessageKeyRef.current)) {
         selectMessage('')
         setMailDetail(undefined)
@@ -138,31 +174,92 @@ export function LatestMailPage() {
   }, [message, notification])
 
   useEffect(() => {
-    resetMailbox()
-    void loadMessages({ accountId: selectedAccountId, limit: mailLimit })
+    const pendingController = listController.current
+    pendingController?.abort()
+    if (listController.current === pendingController) listController.current = undefined
+    const cached = mailboxCache.current.get(mailboxCacheKey(selectedAccountId, mailLimit))
+    showMailbox(cached)
+    void loadMessages({ accountId: selectedAccountId, limit: mailLimit, silent: Boolean(cached) })
     return () => listController.current?.abort()
-  }, [loadMessages, mailLimit, selectedAccountId])
+  }, [loadMessages, mailLimit, selectedAccountId, showMailbox])
 
   useEffect(() => {
     if (!autoRefresh) return
     const timer = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void loadMessages({ accountId: selectedAccountId, limit: mailLimit, silent: true })
+      if (document.visibilityState === 'visible') void loadMessages({ accountId: selectedAccountId, limit: mailLimit, silent: true, refresh: true })
     }, REFRESH_INTERVAL)
     return () => window.clearInterval(timer)
   }, [autoRefresh, loadMessages, mailLimit, selectedAccountId])
 
-  useEffect(() => () => { listController.current?.abort(); detailController.current?.abort() }, [])
+  useEffect(() => () => {
+    listController.current?.abort()
+    detailController.current?.abort()
+    if (prefetchTimer.current !== undefined) window.clearTimeout(prefetchTimer.current)
+  }, [])
+
+  const markMessageRead = useCallback((key: string) => {
+    const updateItems = (items: MailMessageSummary[]) => items.map(item =>
+      messageKey(item) === key && !item.read ? { ...item, read: true } : item)
+    const nextMessages = updateItems(messagesRef.current)
+    messagesRef.current = nextMessages
+    setMessages(nextMessages)
+    mailboxCache.current.forEach((snapshot, cacheKey) => {
+      const nextItems = updateItems(snapshot.items)
+      if (nextItems.some((item, index) => item !== snapshot.items[index])) {
+        mailboxCache.current.set(cacheKey, { ...snapshot, items: nextItems })
+      }
+    })
+  }, [])
+
+  const prefetchMessage = useCallback((mail: MailMessageSummary) => {
+    const key = messageKey(mail)
+    if (detailCache.current.has(key) || detailRequests.current.has(key) || detailRequests.current.size > 0) return
+    const request = getMailDetailApi(mail)
+      .then(response => {
+        detailCache.current.set(key, response.data)
+        return response.data
+      })
+      .finally(() => detailRequests.current.delete(key))
+    detailRequests.current.set(key, request)
+    void request.catch(() => undefined)
+  }, [])
+
+  const schedulePrefetch = useCallback((mail: MailMessageSummary) => {
+    if (prefetchTimer.current !== undefined) window.clearTimeout(prefetchTimer.current)
+    prefetchTimer.current = window.setTimeout(() => {
+      prefetchTimer.current = undefined
+      prefetchMessage(mail)
+    }, 200)
+  }, [prefetchMessage])
+
+  const cancelPrefetch = useCallback(() => {
+    if (prefetchTimer.current === undefined) return
+    window.clearTimeout(prefetchTimer.current)
+    prefetchTimer.current = undefined
+  }, [])
 
   const openMessage = async (mail: MailMessageSummary) => {
+    cancelPrefetch()
     detailController.current?.abort()
     const controller = new AbortController()
     detailController.current = controller
     const requestId = ++detailRequestId.current
     const key = messageKey(mail)
     selectMessage(key)
-    setDetailLoading(true)
+    const cachedDetail = detailCache.current.get(key)
+    const pendingDetail = detailRequests.current.get(key)
+    if (cachedDetail) setMailDetail(cachedDetail)
+    setDetailLoading(!cachedDetail)
     try {
-      const detail = (await getMailDetailApi(mail, controller.signal)).data
+      let detail = cachedDetail
+      if (!detail) {
+        detail = pendingDetail
+          ? await pendingDetail
+          : (await (mail.read ? getMailDetailApi(mail, controller.signal) : openMailApi(mail, controller.signal))).data
+      }
+      detailCache.current.set(key, detail)
+      if (!mail.read && (cachedDetail || pendingDetail)) await markMailReadApi(mail, controller.signal)
+      if (!mail.read) markMessageRead(key)
       if (requestId === detailRequestId.current && selectedMessageKeyRef.current === key) setMailDetail(detail)
     } catch (error) {
       if (!axios.isCancel(error)) message.error('邮件正文读取失败')
@@ -174,7 +271,7 @@ export function LatestMailPage() {
   const refreshAccounts = async () => { await queryClient.invalidateQueries({ queryKey: ['mail-accounts'] }) }
   const saveMutation = useMutation({
     mutationFn: async (values: MailAccountFormValues) => values.id === undefined ? addMailAccountApi(mailAccountFormToPayload(values)) : updateMailAccountApi(mailAccountFormToPayload(values)),
-    onSuccess: async (_, values) => { setDialogOpen(false); await refreshAccounts(); await loadMessages({ accountId: selectedAccountId, limit: mailLimit }); message.success(values.id === undefined ? '邮箱账户已添加' : '邮箱账户已更新') },
+    onSuccess: async (_, values) => { setDialogOpen(false); await refreshAccounts(); await loadMessages({ accountId: selectedAccountId, limit: mailLimit, refresh: true }); message.success(values.id === undefined ? '邮箱账户已添加' : '邮箱账户已更新') },
     onError: () => message.error('邮箱账户保存失败')
   })
   const testAccount = async (account: MailAccount) => {
@@ -187,7 +284,7 @@ export function LatestMailPage() {
     okText: '删除',
     cancelText: '取消',
     okButtonProps: { danger: true },
-    onOk: async () => { await deleteMailAccountApi(account.id); setSelectedAccountId(undefined); resetMailbox(); await refreshAccounts(); message.success('邮箱账户已删除') }
+    onOk: async () => { await deleteMailAccountApi(account.id); mailboxCache.current.clear(); detailCache.current.clear(); setSelectedAccountId(undefined); showMailbox(); await refreshAccounts(); message.success('邮箱账户已删除') }
   })
   const downloadAttachment = async (attachment: MailAttachment) => {
     if (!mailDetail) return
@@ -208,8 +305,8 @@ export function LatestMailPage() {
     <section className="management-page mail-inbox-page">
       <div className="mail-inbox-canvas">
         <header className="mail-inbox-toolbar">
-          <div><span className={`mail-refresh-dot ${autoRefresh ? 'active' : ''}`} /><span>{autoRefresh ? '每 15 秒自动刷新' : '自动刷新已暂停'}</span><Switch checked={autoRefresh} aria-label="自动刷新" onCheckedChange={setAutoRefresh} /></div>
-          <div className="management-actions"><Button type="button" variant="outline" loading={mailLoading} onClick={() => void loadMessages({ accountId: selectedAccountId, limit: mailLimit })}><ReloadOutlined />刷新</Button>{canAdd ? <Button type="button" onClick={() => { setEditingAccount(undefined); setDialogOpen(true) }}><PlusOutlined />添加邮箱</Button> : null}</div>
+          <div><span className={`mail-refresh-dot ${autoRefresh ? 'active' : ''}`} /><span>{autoRefresh ? '每 30 秒自动刷新' : '自动刷新已暂停'}</span><Switch checked={autoRefresh} aria-label="自动刷新" onCheckedChange={setAutoRefresh} /></div>
+          <div className="management-actions"><Button type="button" variant="outline" loading={mailLoading} onClick={() => void loadMessages({ accountId: selectedAccountId, limit: mailLimit, refresh: true })}><ReloadOutlined />刷新</Button>{canAdd ? <Button type="button" onClick={() => { setEditingAccount(undefined); setDialogOpen(true) }}><PlusOutlined />添加邮箱</Button> : null}</div>
         </header>
 
         <div className="mail-workspace">
@@ -222,7 +319,7 @@ export function LatestMailPage() {
 
           <section className="mail-message-panel">
             <div className="mail-message-toolbar"><div><span>{currentAccount?.accountName || '全部收件箱'}</span><small>{messages.length} 封最新邮件</small></div><div className="mail-limit-control" aria-label="邮件数量">{MAIL_LIMITS.map(limit => <button key={limit} type="button" className={mailLimit === limit ? 'active' : ''} onClick={() => setMailLimit(limit)}>{limit}</button>)}</div></div>
-            <Spin spinning={mailLoading}><div className="mail-message-list">{messages.map(mail => <button key={messageKey(mail)} className={`mail-message-item ${selectedMessageKey === messageKey(mail) ? 'active' : ''} ${mail.read ? '' : 'unread'}`} type="button" onClick={() => void openMessage(mail)}><span className={`mail-sender-avatar ${providerClass(mail.provider)}`}>{senderMark(mail)}</span><span className="mail-message-copy"><span className="mail-message-meta"><span>{mail.fromName || mail.fromAddress}</span><time dateTime={mail.receivedTime}>{formatMessageTime(mail.receivedTime)}</time></span><span className="mail-subject"><span>{mail.subject || '（无主题）'}</span>{mail.hasAttachment ? <PaperClipOutlined /> : null}</span><small>{mail.accountName} · {mail.fromAddress}</small></span></button>)}{!mailLoading && !messages.length ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有读取到邮件" /> : null}{hasMore ? <div className="mail-load-more"><Button type="button" variant="outline" loading={loadingMore} onClick={() => void loadMessages({ accountId: selectedAccountId, limit: mailLimit, cursor: mailCursor, append: true })}>加载更多</Button></div> : null}</div></Spin>
+            <Spin spinning={mailLoading}><div className="mail-message-list">{messages.map(mail => <button key={messageKey(mail)} aria-label={`${mail.read ? '已读' : '未读'}邮件：${mail.subject || '无主题'}`} className={`mail-message-item ${selectedMessageKey === messageKey(mail) ? 'active' : ''} ${mail.read ? '' : 'unread'}`} type="button" onMouseEnter={() => schedulePrefetch(mail)} onMouseLeave={cancelPrefetch} onClick={() => void openMessage(mail)}>{mail.read ? null : <span className="mail-unread-dot" aria-hidden="true" />}<span className={`mail-sender-avatar ${providerClass(mail.provider)}`}>{senderMark(mail)}</span><span className="mail-message-copy"><span className="mail-message-meta"><span>{mail.fromName || mail.fromAddress}</span><time dateTime={mail.receivedTime}>{formatMessageTime(mail.receivedTime)}</time></span><span className="mail-subject"><span>{mail.subject || '（无主题）'}</span>{mail.hasAttachment ? <PaperClipOutlined /> : null}</span><small>{mail.accountName} · {mail.fromAddress}</small></span></button>)}{!mailLoading && !messages.length ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有读取到邮件" /> : null}{hasMore ? <div className="mail-load-more"><Button type="button" variant="outline" loading={loadingMore} onClick={() => void loadMessages({ accountId: selectedAccountId, limit: mailLimit, cursor: mailCursor, append: true })}>加载更多</Button></div> : null}</div></Spin>
           </section>
 
           <article className="mail-reader-panel">

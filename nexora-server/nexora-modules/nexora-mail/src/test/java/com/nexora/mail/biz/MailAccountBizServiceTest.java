@@ -91,6 +91,7 @@ class MailAccountBizServiceTest {
         when(dictionaryReader.findEnabledEntries(MailConstants.MAIL_PROVIDER_DICT_TYPE))
                 .thenReturn(Optional.of(List.of(
                         new DictionaryEntry("QQ邮箱", "QQ", true),
+                        new DictionaryEntry("Gmail邮箱", "GMAIL", false),
                         new DictionaryEntry("未知邮箱", "UNKNOWN", false))));
         MailAccountBizService service = service(
                 mock(MailAccountService.class),
@@ -98,11 +99,15 @@ class MailAccountBizServiceTest {
                 dictionaryReader);
 
         assertThat(service.listProviders())
-                .singleElement()
+                .extracting(provider -> provider.getValue())
+                .containsExactly("QQ", "GMAIL");
+        assertThat(service.listProviders().get(0).isDefaultProvider()).isTrue();
+        assertThat(service.listProviders().get(1))
                 .satisfies(provider -> {
-                    assertThat(provider.getLabel()).isEqualTo("QQ邮箱");
-                    assertThat(provider.getValue()).isEqualTo("QQ");
-                    assertThat(provider.isDefaultProvider()).isTrue();
+                    assertThat(provider.getLabel()).isEqualTo("Gmail邮箱");
+                    assertThat(provider.getDomain()).isEqualTo("gmail.com");
+                    assertThat(provider.getImapHost()).isEqualTo("imap.gmail.com");
+                    assertThat(provider.getImapPort()).isEqualTo(993);
                 });
     }
 

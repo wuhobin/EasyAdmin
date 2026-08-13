@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildMailAddress, isMailAddressForDomain, mailAccountFormToPayload, mailAddressAccount, replaceMailProviderDomain } from '@/pages/mail/mailForms'
+import { buildMailAddress, isMailAddressForDomain, mailAccountFormToPayload, mailAddressAccount, providerClass, providerMark, replaceMailProviderDomain } from '@/pages/mail/mailForms'
 
 describe('mail account form helpers', () => {
   it('builds a normalized provider address from the local account', () => {
@@ -23,5 +23,10 @@ describe('mail account form helpers', () => {
       enabled: 1,
       sort: 3
     })
+  })
+
+  it('provides Gmail account presentation metadata', () => {
+    expect(providerMark('GMAIL')).toBe('G')
+    expect(providerClass('GMAIL')).toBe('gmail')
   })
 })

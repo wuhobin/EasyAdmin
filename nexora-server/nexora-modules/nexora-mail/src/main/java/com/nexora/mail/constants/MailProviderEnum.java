@@ -7,7 +7,8 @@ public enum MailProviderEnum {
     QQ("QQ邮箱", "qq.com", "imap.qq.com", 993),
     NETEASE_163("163邮箱", "163.com", "imap.163.com", 993),
     NETEASE_126("126邮箱", "126.com", "imap.126.com", 993),
-    YEAH("yeah邮箱", "yeah.net", "imap.yeah.net", 993);
+    YEAH("yeah邮箱", "yeah.net", "imap.yeah.net", 993),
+    GMAIL("Gmail邮箱", "gmail.com", "imap.gmail.com", 993);
 
     private final String description;
     private final String emailDomain;

@@ -1,6 +1,8 @@
 package com.nexora.mail.infrastructure;
 
 import com.nexora.mail.constants.MailProviderEnum;
+import jakarta.mail.Flags;
+import jakarta.mail.Message;
 import org.junit.jupiter.api.Test;
 import org.eclipse.angus.mail.imap.IMAPStore;
 
@@ -11,8 +13,29 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ImapMailClientTest {
+
+    @Test
+    void marksUnreadMessagesAsSeen() throws Exception {
+        Message message = mock(Message.class);
+        when(message.isSet(Flags.Flag.SEEN)).thenReturn(false);
+
+        ImapMailClient.markAsRead(message);
+
+        verify(message).setFlag(Flags.Flag.SEEN, true);
+    }
+
+    @Test
+    void doesNotRewriteTheSeenFlagForReadMessages() throws Exception {
+        Message message = mock(Message.class);
+        when(message.isSet(Flags.Flag.SEEN)).thenReturn(true);
+
+        ImapMailClient.markAsRead(message);
+
+        verify(message, never()).setFlag(Flags.Flag.SEEN, true);
+    }
 
     @Test
     void sendsRfc2971ClientIdentificationForNetEaseBeforeMailboxAccess() throws Exception {
@@ -27,10 +50,11 @@ class ImapMailClientTest {
     }
 
     @Test
-    void doesNotSendClientIdentificationForQqMail() throws Exception {
+    void doesNotSendClientIdentificationForProvidersThatDoNotRequireIt() throws Exception {
         IMAPStore store = mock(IMAPStore.class);
 
         ImapMailClient.identifyClient(store, MailProviderEnum.QQ);
+        ImapMailClient.identifyClient(store, MailProviderEnum.GMAIL);
 
         verify(store, never()).id(argThat(parameters -> true));
     }

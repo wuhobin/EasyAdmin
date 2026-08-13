@@ -12,6 +12,9 @@ class MailProviderEnumTest {
         assertThat(MailProviderEnum.NETEASE_163.matchesEmail("user@163.com")).isTrue();
         assertThat(MailProviderEnum.NETEASE_126.matchesEmail("user@126.com")).isTrue();
         assertThat(MailProviderEnum.YEAH.matchesEmail("user@yeah.net")).isTrue();
+        assertThat(MailProviderEnum.GMAIL.matchesEmail("user@gmail.com")).isTrue();
+        assertThat(MailProviderEnum.GMAIL.getHost()).isEqualTo("imap.gmail.com");
+        assertThat(MailProviderEnum.GMAIL.getPort()).isEqualTo(993);
     }
 
     @Test
