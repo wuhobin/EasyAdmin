@@ -24,6 +24,7 @@ export interface MenuRoute {
 export const HOME_PATH = '/home'
 export const LEGACY_HOME_PATH = '/dashboard'
 export const PROFILE_PATH = '/profile'
+export const LEGACY_PROFILE_PATH = '/system/profile'
 
 export const homeRoute: MenuRoute = {
   id: -1,
@@ -105,7 +106,7 @@ export function normalizeRouteTree(routes: BackendRoute[]): MenuRoute[] {
 
 function removeStaticRouteDuplicates(routes: MenuRoute[]): MenuRoute[] {
   return routes.flatMap(route => {
-    if (route.fullPath === HOME_PATH || route.fullPath === LEGACY_HOME_PATH || route.fullPath === PROFILE_PATH) return []
+    if ([HOME_PATH, LEGACY_HOME_PATH, PROFILE_PATH, LEGACY_PROFILE_PATH].includes(route.fullPath)) return []
     return [{ ...route, children: removeStaticRouteDuplicates(route.children) }]
   })
 }

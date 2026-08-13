@@ -11,7 +11,8 @@ import { registerUnauthorizedHandler } from '@/utils/auth-session'
 import { useAuthStore } from '@/store/authStore'
 import { useRouteStore } from '@/store/routeStore'
 import { usePageTabsStore } from '@/store/pageTabsStore'
-import { useSettingsStore } from '@/store/settingsStore'
+import { getEffectiveAccentColor, useSettingsStore } from '@/store/settingsStore'
+import { RouteProgress } from '@/components/RouteProgress'
 import '@/styles/global.css'
 import '@/styles/shadcn.css'
 import '@/styles/auth.css'
@@ -51,10 +52,12 @@ function AuthSessionBridge() {
 
 function NexoraConfigProvider({ children }: { children: ReactNode }) {
   const themeMode = useSettingsStore(state => state.theme)
+  const accentColor = useSettingsStore(state => state.accentColor)
   const dark = themeMode === 'dark'
+  const effectiveAccentColor = getEffectiveAccentColor(themeMode, accentColor)
   const palette = dark
     ? {
-        primary: '#9d83ff',
+        primary: effectiveAccentColor,
         surface: '#15131e',
         panel: '#201d2b',
         muted: '#292535',
@@ -64,7 +67,7 @@ function NexoraConfigProvider({ children }: { children: ReactNode }) {
         border: '#3a3449'
       }
     : {
-        primary: '#6c3ff5',
+        primary: effectiveAccentColor,
         surface: '#fcfbfe',
         panel: '#ffffff',
         muted: '#f2eff6',
@@ -115,6 +118,7 @@ createRoot(document.getElementById('root')!).render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthSessionBridge />
+            <RouteProgress />
             <App />
           </BrowserRouter>
         </QueryClientProvider>

@@ -11,6 +11,7 @@ describe('component registry', () => {
 
   it.each([
     { id: -2, path: '/profile', component: '/profile', title: '个人中心' },
+    { id: 54, path: '/system/profile', component: '/system/user/profile/index', title: '旧个人中心' },
     { id: 33, path: '/system/log/operation', component: '/system/log/operation/index', title: '操作日志' },
     { id: 135, path: '/system/log/job-log', component: '/monitor/job/log', title: '调度日志' },
     { id: 150, path: '/system/notice', component: '/system/notice/index', title: '系统通知' },

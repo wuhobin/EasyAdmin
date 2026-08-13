@@ -1,22 +1,36 @@
-import { MenuOutlined, MoonOutlined, SunOutlined } from '@ant-design/icons'
-import { useMemo } from 'react'
+import { CompressOutlined, ExpandOutlined, MenuOutlined, SettingOutlined } from '@ant-design/icons'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { MenuIcon } from '@/components/MenuIcon'
+import { AppearanceSettings } from '@/components/AppearanceSettings'
 import { NotificationCenter } from '@/components/notifications/NotificationCenter'
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { findRouteTrail, HOME_PATH } from '@/routes/routeAdapter'
 import { useRouteStore } from '@/store/routeStore'
-import { useSettingsStore } from '@/store/settingsStore'
 import { useUiStore } from '@/store/uiStore'
 
 export function Topbar() {
   const location = useLocation()
   const navigate = useNavigate()
   const routes = useRouteStore(state => state.routes)
-  const theme = useSettingsStore(state => state.theme)
-  const toggleTheme = useSettingsStore(state => state.toggleTheme)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement))
   const setMobileOpen = useUiStore(state => state.setMobileSidebarOpen)
   const { state: sidebarState } = useSidebar()
+  useEffect(() => {
+    const syncFullscreen = () => setFullscreen(Boolean(document.fullscreenElement))
+    document.addEventListener('fullscreenchange', syncFullscreen)
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen)
+  }, [])
+
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen()
+      else await document.documentElement.requestFullscreen()
+    } catch {
+      // Browsers can reject fullscreen when it is unavailable or restricted.
+    }
+  }
   const crumbs = useMemo(() => {
     const trail = findRouteTrail(routes, location.pathname).filter(route => route.fullPath !== '/')
     const menuCrumbs = trail
@@ -51,8 +65,10 @@ export function Topbar() {
       </div>
       <div className="topbar-actions">
         <NotificationCenter />
-        <button className="topbar-icon-button" type="button" onClick={toggleTheme} aria-label={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}>{theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}</button>
+        <button className="topbar-icon-button" type="button" onClick={() => setSettingsOpen(true)} aria-label="打开外观设置" title="外观设置"><SettingOutlined /></button>
+        <button className="topbar-icon-button topbar-fullscreen-button" type="button" onClick={() => void toggleFullscreen()} aria-label={fullscreen ? '退出全屏' : '进入全屏'} title={fullscreen ? '退出全屏' : '进入全屏'}>{fullscreen ? <CompressOutlined /> : <ExpandOutlined />}</button>
       </div>
+      <AppearanceSettings open={settingsOpen} onOpenChange={setSettingsOpen} />
     </header>
   )
 }

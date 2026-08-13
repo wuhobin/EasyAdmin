@@ -110,7 +110,7 @@ export function TabsBar() {
   }
 
   return (
-    <div className="app-tabs" aria-label="页面标签">
+    <nav className="app-tabs" aria-label="页面标签">
       <div className="app-tabs-scroll" ref={scrollRef} onWheel={event => {
         if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
           event.currentTarget.scrollLeft += event.deltaY
@@ -136,6 +136,6 @@ export function TabsBar() {
           )
         })}
       </div>
-    </div>
+    </nav>
   )
 }

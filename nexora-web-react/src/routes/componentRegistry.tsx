@@ -108,6 +108,8 @@ const registry: Record<string, ComponentType<{ title?: string }>> = {
   '/mail/account': MailAccountsPage,
   '/file/index': FileListPage,
   '/file': FileListPage,
+  '/system/user/profile/index': ProfilePage,
+  '/system/profile': ProfilePage,
   [PROFILE_PATH]: ProfilePage,
   [HOME_PATH]: HomePlaceholder,
   home: HomePlaceholder

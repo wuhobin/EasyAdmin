@@ -42,10 +42,13 @@ describe('normalizeRouteTree', () => {
   it('prepends the static workbench and replaces legacy home routes', () => {
     const routes = createAppRouteTree([
       { id: 1, path: '/dashboard', component: '/dashboard', meta: { title: '仪表盘' } },
-      { id: 2, path: '/system', component: 'ParentView', meta: { title: '系统管理' } }
+      { id: 2, path: '/system', component: 'ParentView', meta: { title: '系统管理' }, children: [
+        { id: 3, path: 'profile', component: '/system/user/profile/index', meta: { title: '个人中心', hidden: true } }
+      ] }
     ])
 
     expect(routes.map(route => route.fullPath)).toEqual(['/home', '/profile', '/system'])
+    expect(routes[2].children).toEqual([])
     expect(routes[0].meta.title).toBe('工作台')
     expect(routes[1].meta.hidden).toBe(true)
   })

@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { ForbiddenPage, NotFoundPage } from '@/pages/NotFoundPage'
 import { HomePlaceholder } from '@/pages/HomePlaceholder'
 import { resolveRouteComponent } from '@/routes/componentRegistry'
-import { flattenRoutes, HOME_PATH, LEGACY_HOME_PATH, type MenuRoute } from '@/routes/routeAdapter'
+import { flattenRoutes, HOME_PATH, LEGACY_HOME_PATH, LEGACY_PROFILE_PATH, PROFILE_PATH, type MenuRoute } from '@/routes/routeAdapter'
 
 function segment(path: string) {
   return path.replace(/^\/+|\/+$/g, '')
@@ -51,6 +51,7 @@ export function createDynamicRouteObjects(routes: MenuRoute[]): RouteObject[] {
   const hasHome = flattenRoutes(routes).some(route => route.fullPath === HOME_PATH)
   if (!hasHome) result.push({ path: segment(HOME_PATH), element: <HomePlaceholder /> })
   result.push({ path: segment(LEGACY_HOME_PATH), element: <Navigate to={HOME_PATH} replace /> })
+  result.push({ path: segment(LEGACY_PROFILE_PATH), element: <Navigate to={PROFILE_PATH} replace /> })
   result.push({ path: '403', element: <ForbiddenPage /> })
   result.push({ path: '404', element: <NotFoundPage /> })
   return result

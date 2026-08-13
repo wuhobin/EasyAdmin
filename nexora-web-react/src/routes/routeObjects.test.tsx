@@ -23,5 +23,6 @@ describe('createDynamicRouteObjects', () => {
     const appRoutes = createDynamicRouteObjects(routes)
     expect(appRoutes.some(route => route.path === 'home')).toBe(true)
     expect(appRoutes.some(route => route.path === 'dashboard')).toBe(true)
+    expect(appRoutes.some(route => route.path === 'system/profile')).toBe(true)
   })
 })

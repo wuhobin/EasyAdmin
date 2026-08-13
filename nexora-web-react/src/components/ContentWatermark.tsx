@@ -10,6 +10,7 @@ export function ContentWatermark({ children }: { children: ReactNode }) {
   const configStatus = usePublicConfigStore(state => state.status)
   const userName = useAuthStore(state => state.user.nickname || state.user.email || 'Nexora User')
   const theme = useSettingsStore(state => state.theme)
+  const localWatermark = useSettingsStore(state => state.watermark)
   const [currentTime, setCurrentTime] = useState(() => new Date())
 
   useEffect(() => {
@@ -17,13 +18,13 @@ export function ContentWatermark({ children }: { children: ReactNode }) {
   }, [configStatus])
 
   useEffect(() => {
-    if (!system.watermarkEnabled || system.watermarkType !== 'username_time') return
+    if ((!system.watermarkEnabled && !localWatermark) || system.watermarkType !== 'username_time') return
     setCurrentTime(new Date())
     const timer = window.setInterval(() => setCurrentTime(new Date()), 60_000)
     return () => window.clearInterval(timer)
-  }, [system.watermarkEnabled, system.watermarkType])
+  }, [localWatermark, system.watermarkEnabled, system.watermarkType])
 
-  if (!system.watermarkEnabled) return children
+  if (!system.watermarkEnabled && !localWatermark) return children
 
   const content = buildWatermarkContent(system, userName, currentTime)
   return (
