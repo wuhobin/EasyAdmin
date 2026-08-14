@@ -153,7 +153,7 @@ export function UserManagementPage() {
   }
 
   const columns: ColumnsType<SysUserRecord> = [
-    { title: '用户', key: 'user', width: 200, render: (_, record) => <div className="management-user-cell"><Avatar shape="square" src={record.avatar}>{(record.nickname || record.email).slice(0, 1).toUpperCase()}</Avatar><span><span className="management-user-name">{record.nickname || '-'}</span><small>{record.email}</small></span></div> },
+    { title: '用户', key: 'user', width: 200, render: (_, record) => <div className="management-user-cell"><Avatar shape="square" src={record.avatar}>{(record.nickname || record.email || '微').slice(0, 1).toUpperCase()}</Avatar><span><span className="management-user-name">{record.nickname || '-'}</span><small>{record.email || '未绑定邮箱'}</small></span></div> },
     { title: '手机号', dataIndex: 'mobile', width: 130, render: value => <EmptyValue value={value} /> },
     { title: '角色', dataIndex: 'roleIds', width: 170, ellipsis: true, render: (roleIds: number[]) => <EmptyValue value={roleNames(roleIds)} /> },
     { title: '登录 IP', dataIndex: 'ip', width: 130, render: value => <EmptyValue value={value} /> },

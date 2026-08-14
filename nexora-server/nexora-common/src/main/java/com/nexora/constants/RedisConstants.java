@@ -14,6 +14,24 @@ public class RedisConstants {
      */
     public static final String LOGIN_RETRY_KEY = "nexora:login-retry";
 
+    /** 微信登录六码与事务映射 redis key。 */
+    public static final String WECHAT_LOGIN_CODE_KEY = "nexora:wechat-login:code";
+
+    /** 微信登录待处理事务 redis key。 */
+    public static final String WECHAT_LOGIN_TRANSACTION_KEY = "nexora:wechat-login:transaction";
+
+    /** 微信登录短期结果 redis key。 */
+    public static final String WECHAT_LOGIN_RESULT_KEY = "nexora:wechat-login:result";
+
+    /** 微信登录结果一次性消费 redis key。 */
+    public static final String WECHAT_LOGIN_CONSUMED_KEY = "nexora:wechat-login:consumed";
+
+    /** 微信登录六码有效期（秒）。 */
+    public static final long WECHAT_LOGIN_CODE_TTL_SECONDS = 300L;
+
+    /** 微信登录结果保留时间（秒）。 */
+    public static final long WECHAT_LOGIN_RESULT_TTL_SECONDS = 60L;
+
     /**
      * 用户授权信息 redis key
      */

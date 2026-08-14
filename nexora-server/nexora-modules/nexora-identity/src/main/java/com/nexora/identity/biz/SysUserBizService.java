@@ -71,6 +71,11 @@ public class SysUserBizService {
         userProfileService.changeEmail(form);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public void bindEmail(SysUserForm form) {
+        userProfileService.bindEmail(form);
+    }
+
     public boolean verifyPassword(String password) {
         return userProfileService.verifyPassword(password);
     }

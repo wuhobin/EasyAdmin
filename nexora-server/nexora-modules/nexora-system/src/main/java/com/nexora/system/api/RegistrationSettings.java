@@ -12,9 +12,6 @@ public class RegistrationSettings {
 
     public static final String GROUP_CODE = "register";
 
-    @NotNull(message = "注册开关不能为空")
-    private Boolean enabled;
-
     @NotNull(message = "注册滑块验证开关不能为空")
     private Boolean captchaEnabled;
 

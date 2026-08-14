@@ -5,6 +5,7 @@ import com.nexora.system.api.LoginSettings;
 import com.nexora.system.api.PasswordSettings;
 import com.nexora.system.api.RegistrationSettings;
 import com.nexora.system.api.SystemSettings;
+import com.nexora.system.api.WechatLoginSettings;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +34,10 @@ class SysConfigGroupEnumTest {
                 .extracting(SysConfigGroupEnum::getCode, SysConfigGroupEnum::getDescription,
                         SysConfigGroupEnum::getConfigType)
                 .containsExactly("email", "邮箱配置", EmailSettings.class);
+        assertThat(SysConfigGroupEnum.WECHAT)
+                .extracting(SysConfigGroupEnum::getCode, SysConfigGroupEnum::getDescription,
+                        SysConfigGroupEnum::getConfigType)
+                .containsExactly("wechat", "微信登录配置", WechatLoginSettings.class);
     }
 
     @Test
@@ -40,6 +45,6 @@ class SysConfigGroupEnumTest {
         assertThat(SysConfigGroupEnum.getByCode("register")).isEqualTo(SysConfigGroupEnum.REGISTER);
         assertThat(SysConfigGroupEnum.getByCode("unknown")).isNull();
         assertThat(SysConfigGroupEnum.codes())
-                .containsExactlyInAnyOrder("system", "register", "login", "password", "email");
+                .containsExactlyInAnyOrder("system", "register", "login", "password", "email", "wechat");
     }
 }

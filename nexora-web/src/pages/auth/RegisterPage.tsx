@@ -38,7 +38,6 @@ export function RegisterPage() {
   }, [countdown])
 
   if (getToken()) return <Navigate to={HOME_PATH} replace />
-  if (configStatus === 'success' && !config.register.enabled) return <Navigate to="/login" replace />
 
   const animationState: AuthAnimationState = {
     isTyping: focused === 'email',

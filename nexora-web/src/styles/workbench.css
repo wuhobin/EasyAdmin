@@ -5,6 +5,20 @@
   gap: 20px;
 }
 
+.workbench-email-reminder {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--primary) 7%, var(--card));
+}
+
+.workbench-email-reminder > svg { flex: 0 0 auto; color: var(--primary); }
+.workbench-email-reminder > div { display: grid; flex: 1; gap: 3px; }
+.workbench-email-reminder > div span { color: var(--muted-foreground); font-size: 13px; }
+
 .workbench-welcome {
   display: flex;
   min-height: 142px;

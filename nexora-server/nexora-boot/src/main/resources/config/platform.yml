@@ -49,6 +49,10 @@ platform:
     is-log: true
     exclude-paths:
       - /auth/login
+      - /auth/wechat/transaction
+      - /auth/wechat/poll
+      - /auth/wechat/cancel
+      - /auth/wechat/portal
       - /auth/register/sendCode
       - /auth/register
       - /auth/image

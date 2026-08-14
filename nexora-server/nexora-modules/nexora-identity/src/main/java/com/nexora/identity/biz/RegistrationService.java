@@ -7,6 +7,7 @@ import com.aurora.starter.webmvc.exception.BizException;
 import com.nexora.identity.infrastructure.PasswordPolicyValidator;
 import com.nexora.identity.constants.IdentityConstants;
 import com.nexora.identity.constants.SysUserStatusEnum;
+import com.nexora.identity.constants.LoginTypeEnum;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.identity.entity.SysRole;
 import com.nexora.identity.entity.SysUser;
@@ -56,6 +57,7 @@ public class RegistrationService {
         user.setEmail(email);
         user.setNickname(createNickname(email));
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+        user.setLoginType(LoginTypeEnum.EMAIL.getCode());
         user.setStatus(Boolean.TRUE.equals(registerConfig.getNeedAudit())
                 ? SysUserStatusEnum.PENDING.getCode() : SysUserStatusEnum.NORMAL.getCode());
         try {
@@ -70,9 +72,6 @@ public class RegistrationService {
 
     public RegistrationSettings requireRegistrationConfig() {
         RegistrationSettings config = configReader.register();
-        if (!Boolean.TRUE.equals(config.getEnabled())) {
-            throw new BizException(IdentityConstants.REGISTER_DISABLED_MESSAGE);
-        }
         return config;
     }
 

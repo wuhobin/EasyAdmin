@@ -9,6 +9,7 @@ import {
   getConfigGroupListApi,
   refreshConfigGroupCacheApi,
   testConfigEmailApi,
+  testWechatConnectionApi,
   updateConfigGroupApi,
   type ConfigGroupCode,
   type ConfigGroupSummary,
@@ -32,10 +33,11 @@ const groupDefinitions: Array<{ code: ConfigGroupCode; name: string }> = [
   { code: 'register', name: '注册配置' },
   { code: 'login', name: '登录配置' },
   { code: 'password', name: '密码配置' },
-  { code: 'email', name: '邮箱配置' }
+  { code: 'email', name: '邮箱配置' },
+  { code: 'wechat', name: '微信登录配置' }
 ]
 
-type TextFieldName = 'siteName' | 'shortTitle' | 'siteLogo' | 'copyright' | 'icp' | 'watermarkCustomText' | 'defaultRoleCode' | 'host' | 'username' | 'password' | 'fromName'
+type TextFieldName = 'siteName' | 'shortTitle' | 'siteLogo' | 'copyright' | 'icp' | 'watermarkCustomText' | 'defaultRoleCode' | 'host' | 'username' | 'password' | 'fromName' | 'qrCodeUrl' | 'appId' | 'appSecret' | 'token' | 'aesKey'
 type NumberFieldName = 'maxRetryCount' | 'lockTimeMinutes' | 'sessionTimeoutSeconds' | 'rememberMeTimeoutSeconds' | 'minLength' | 'maxLength' | 'port'
 type BooleanFieldName = 'enabled' | 'captchaEnabled' | 'verifyEmail' | 'needAudit' | 'rememberMeEnabled' | 'singleLogin' | 'requireUppercase' | 'requireLowercase' | 'requireNumber' | 'requireSpecial' | 'ssl'
 
@@ -77,8 +79,7 @@ function SystemConfigFields({ form, disabled }: { form: UseFormReturn<ConfigForm
 }
 
 function RegisterConfigFields({ form, disabled }: { form: UseFormReturn<ConfigFormValues>; disabled: boolean }) {
-  return <section className="config-section"><div className="config-section-heading"><h2>注册策略</h2><p>控制注册入口、验证方式和新用户初始权限。</p></div><div className="config-field-grid">
-    <ConfigToggleField form={form} name="enabled" label="开放用户注册" hint="关闭后隐藏注册入口并拒绝注册请求。" disabled={disabled} />
+  return <section className="config-section"><div className="config-section-heading"><h2>注册策略</h2><p>设置验证方式和新用户初始权限，系统默认开放注册。</p></div><div className="config-field-grid">
     <ConfigToggleField form={form} name="captchaEnabled" label="注册滑块验证" hint="创建账号前必须完成滑块验证。" disabled={disabled} />
     <ConfigToggleField form={form} name="verifyEmail" label="验证邮箱" hint="注册时要求完成邮箱验证码校验。" disabled={disabled} />
     <ConfigToggleField form={form} name="needAudit" label="注册后审核" hint="新用户需管理员审核后才能使用。" disabled={disabled} />
@@ -131,6 +132,25 @@ function EmailConfigFields({ form, disabled, testing, onTest }: { form: UseFormR
       <ConfigTextField form={form} name="fromName" label="发件人名称" placeholder="显示的发件人名称" maxLength={100} disabled={disabled} />
     </div></section>
     <section className="config-section"><div className="config-section-heading"><h2>发送测试</h2><p>保存配置后，向指定地址发送一封连通性测试邮件。</p></div><div className="config-test-email"><label className="sr-only" htmlFor="config-test-email">测试收件人邮箱</label><Input id="config-test-email" name="config-test-email" type="email" autoComplete="off" spellCheck={false} value={testAddress} maxLength={254} onChange={event => setTestAddress(event.target.value)} placeholder="输入测试收件人邮箱…" disabled={disabled || !enabled} /><Button type="button" loading={testing} disabled={disabled || !enabled} onClick={() => onTest(testAddress.trim())}><SendOutlined />发送测试邮件</Button></div></section>
+  </>
+}
+
+function WechatConfigFields({ form, disabled, testing, onTest }: { form: UseFormReturn<ConfigFormValues>; disabled: boolean; testing: boolean; onTest: () => void }) {
+  const enabled = form.watch('enabled')
+  const qrCodeUrl = form.watch('qrCodeUrl')
+  return <>
+    <section className="config-section"><div className="config-section-heading"><h2>公众号登录</h2><p>用户扫码关注公众号后，发送网页显示的 6 位数字完成登录。</p></div><div className="config-field-grid">
+      <ConfigToggleField form={form} name="enabled" label="启用微信登录" hint="启用后登录页显示微信扫码入口。" disabled={disabled} />
+      <ConfigTextField form={form} name="appId" label="AppID" maxLength={64} disabled={disabled} />
+      <ConfigTextField form={form} name="qrCodeUrl" label="公众号二维码 URL" placeholder="https://..." maxLength={1000} disabled={disabled} />
+      <div className="config-logo-preview">{qrCodeUrl ? <img src={qrCodeUrl} alt="公众号二维码预览" width={96} height={96} /> : <span>未配置</span>}</div>
+      <ConfigTextField form={form} name="appSecret" label="AppSecret" placeholder="已配置时留空不修改" maxLength={512} disabled={disabled} password />
+      <ConfigTextField form={form} name="token" label="服务器 Token" placeholder="已配置时留空不修改" maxLength={512} disabled={disabled} password />
+      <ConfigTextField form={form} name="aesKey" label="EncodingAESKey" placeholder="已配置时留空不修改" maxLength={512} disabled={disabled} password />
+    </div></section>
+    <section className="config-section"><div className="config-section-heading"><h2>连接测试</h2><p>保存配置后测试 AppID 与 AppSecret 是否能获取 access_token。</p></div>
+      <Button type="button" variant="outline" loading={testing} disabled={disabled || !enabled} onClick={onTest}><SendOutlined />测试公众号连接</Button>
+    </section>
   </>
 }
 
@@ -195,6 +215,12 @@ export function ConfigManagementPage() {
     onError: () => message.error('测试邮件发送失败，请检查 SMTP 配置')
   })
 
+  const testWechatMutation = useMutation({
+    mutationFn: testWechatConnectionApi,
+    onSuccess: () => message.success('微信公众号连接成功'),
+    onError: () => message.error('微信公众号连接失败，请检查配置')
+  })
+
   const saveCurrentGroup = () => {
     if (!canUpdate || !detailReady || saveMutation.isPending) return
     form.clearErrors()
@@ -250,6 +276,7 @@ export function ConfigManagementPage() {
         {activeGroup === 'login' ? <LoginConfigFields form={form} disabled={!canUpdate} /> : null}
         {activeGroup === 'password' ? <PasswordConfigFields form={form} disabled={!canUpdate} /> : null}
         {activeGroup === 'email' ? <EmailConfigFields form={form} disabled={!canUpdate} testing={testEmailMutation.isPending} onTest={sendTestEmail} /> : null}
+        {activeGroup === 'wechat' ? <WechatConfigFields form={form} disabled={!canUpdate} testing={testWechatMutation.isPending} onTest={() => testWechatMutation.mutate()} /> : null}
       </fieldset>}
     </form></Form>
   </div></section>

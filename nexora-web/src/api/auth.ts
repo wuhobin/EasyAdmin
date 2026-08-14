@@ -16,7 +16,7 @@ export type ResetPasswordParams = Pick<AuthParams, 'email' | 'password' | 'code'
 
 export interface CurrentUserResult {
   id: number
-  email: string
+  email: string | null
   nickname: string | null
   avatar: string | null
   roles: string[] | null
@@ -25,6 +25,24 @@ export interface CurrentUserResult {
 
 export interface LoginResult extends CurrentUserResult {
   token: string
+}
+
+export interface WechatLoginTransaction {
+  transactionId: string
+  pollToken: string
+  code: string
+  expiresInSeconds: number
+}
+
+export interface WechatLoginPollResult {
+  status: 'PENDING' | 'SUCCESS' | 'PENDING_AUDIT' | 'FAILED' | 'EXPIRED'
+  message: string
+  user: LoginResult | null
+}
+
+export interface WechatLoginPollParams {
+  transactionId: string
+  pollToken: string
 }
 
 export interface ImageCaptchaResult {
@@ -89,6 +107,15 @@ export const resetPasswordApi = (data: ResetPasswordParams) =>
 export const logoutApi = () => request<void>({ url: '/auth/logout', method: 'post' })
 
 export const getUserInfoApi = () => request<CurrentUserResult>({ url: '/auth/info', method: 'get' })
+
+export const createWechatLoginTransactionApi = () =>
+  request<WechatLoginTransaction>({ url: '/auth/wechat/transaction', method: 'post' })
+
+export const pollWechatLoginApi = (data: WechatLoginPollParams) =>
+  request<WechatLoginPollResult>({ url: '/auth/wechat/poll', method: 'post', data })
+
+export const cancelWechatLoginApi = (data: WechatLoginPollParams) =>
+  request<void>({ url: '/auth/wechat/cancel', method: 'post', data })
 
 export const getRoutersApi = () => request<BackendRoute[]>({ url: '/sys/menu/routers', method: 'get' })
 

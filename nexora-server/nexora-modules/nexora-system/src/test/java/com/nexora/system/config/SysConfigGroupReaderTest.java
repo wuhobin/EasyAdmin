@@ -21,14 +21,15 @@ class SysConfigGroupReaderTest {
     private final SysConfigGroupService configService = mock(SysConfigGroupService.class);
     private final SysConfigGroupCache configCache = mock(SysConfigGroupCache.class);
     private final SysConfigGroupRegistry registry = mock(SysConfigGroupRegistry.class);
+    private final WechatConfigSecretService wechatConfigSecretService = mock(WechatConfigSecretService.class);
     private final SysConfigGroupReader reader =
-            new SysConfigGroupReader(configService, configCache, registry);
+            new SysConfigGroupReader(configService, configCache, registry, wechatConfigSecretService);
 
     @Test
     void readsAndParsesAWholeConfigurationGroup() {
-        String json = "{\"enabled\":true}";
+        String json = "{\"captchaEnabled\":true}";
         RegistrationSettings expected = new RegistrationSettings();
-        expected.setEnabled(true);
+        expected.setCaptchaEnabled(true);
         when(registry.normalizeCode("register")).thenReturn("register");
         when(configCache.get(eq("register"), any())).thenReturn(json);
         when(registry.parse("register", json, RegistrationSettings.class)).thenReturn(expected);

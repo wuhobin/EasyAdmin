@@ -19,6 +19,11 @@ export interface ConfigFormValues extends SystemConfig, PasswordConfig {
   password: string
   fromName: string
   ssl: boolean
+  qrCodeUrl: string
+  appId: string
+  appSecret: string
+  token: string
+  aesKey: string
 }
 
 export const emptyConfigForm: ConfigFormValues = {
@@ -54,7 +59,12 @@ export const emptyConfigForm: ConfigFormValues = {
   username: '',
   password: '',
   fromName: 'Nexora Admin',
-  ssl: true
+  ssl: true,
+  qrCodeUrl: '',
+  appId: '',
+  appSecret: '',
+  token: '',
+  aesKey: ''
 }
 
 const systemSchema = z.object({
@@ -75,7 +85,6 @@ const systemSchema = z.object({
 })
 
 const registerSchema = z.object({
-  enabled: z.boolean(),
   captchaEnabled: z.boolean(),
   verifyEmail: z.boolean(),
   defaultRoleCode: z.string().trim().min(1, '请输入默认角色编码').max(50, '角色编码不能超过 50 个字符'),
@@ -121,10 +130,29 @@ const emailSchema = z.object({
   if (!values.password.trim()) context.addIssue({ code: 'custom', path: ['password'], message: '请输入 SMTP 密码或授权码' })
 })
 
-const schemas = { system: systemSchema, register: registerSchema, login: loginSchema, password: passwordSchema, email: emailSchema }
+const wechatSchema = z.object({
+  enabled: z.boolean(),
+  qrCodeUrl: z.string().trim().max(1000, '二维码地址不能超过 1000 个字符'),
+  appId: z.string().trim().max(64, 'AppID 不能超过 64 个字符'),
+  appSecret: z.string().max(512, 'AppSecret 不能超过 512 个字符'),
+  token: z.string().max(512, 'Token 不能超过 512 个字符'),
+  aesKey: z.string().max(512, 'EncodingAESKey 不能超过 512 个字符')
+}).superRefine((values, context) => {
+  if (!values.enabled) return
+  if (!/^https?:\/\//i.test(values.qrCodeUrl)) context.addIssue({ code: 'custom', path: ['qrCodeUrl'], message: '请输入有效的 HTTP(S) 二维码地址' })
+  if (!values.appId) context.addIssue({ code: 'custom', path: ['appId'], message: '请输入 AppID' })
+})
+
+const schemas = { system: systemSchema, register: registerSchema, login: loginSchema, password: passwordSchema, email: emailSchema, wechat: wechatSchema }
 
 export function configDetailToForm<T extends ConfigGroupCode>(value: ConfigValueByGroup[T]): ConfigFormValues {
-  return { ...emptyConfigForm, ...value }
+  const result = { ...emptyConfigForm, ...value }
+  if ('appSecret' in value) {
+    result.appSecret = value.appSecret === '******' ? '' : value.appSecret
+    result.token = value.token === '******' ? '' : value.token
+    result.aesKey = value.aesKey === '******' ? '' : value.aesKey
+  }
+  return result
 }
 
 export function parseConfigForm(groupCode: ConfigGroupCode, values: ConfigFormValues) {

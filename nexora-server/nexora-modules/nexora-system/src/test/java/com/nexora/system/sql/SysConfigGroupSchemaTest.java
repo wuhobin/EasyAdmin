@@ -36,7 +36,8 @@ class SysConfigGroupSchemaTest {
                 "'register', '注册配置'",
                 "'login', '登录配置'",
                 "'password', '密码配置'",
-                "'email', '邮箱配置'");
+                "'email', '邮箱配置'",
+                "'wechat', '微信登录配置'");
         assertThat(initializationSql).contains("`group_code` varchar(50)");
         assertThat(initializationSql).contains("`config_value` json");
         assertThat(initializationSql).contains("UNIQUE INDEX `uk_sys_config_group_code`");
@@ -63,6 +64,7 @@ class SysConfigGroupSchemaTest {
                 .orElseThrow();
 
         assertThat(registerInsert).contains("\"captchaEnabled\":true");
+        assertThat(registerInsert).doesNotContain("\"enabled\"");
         assertThat(loginInsert).doesNotContain("\"captchaEnabled\"");
 
     }

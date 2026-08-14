@@ -4,6 +4,11 @@ import com.nexora.identity.biz.AuthBizService;
 import com.aurora.starter.webmvc.domain.response.Result;
 import com.nexora.identity.domain.form.AuthForm;
 import com.nexora.identity.domain.vo.LoginUserInfoVo;
+import com.nexora.identity.biz.WechatLoginService;
+import com.nexora.identity.domain.form.WechatLoginPollForm;
+import com.nexora.identity.domain.vo.WechatLoginPollVo;
+import com.nexora.identity.domain.vo.WechatLoginTransactionVo;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cloud.tianai.captcha.application.vo.ImageCaptchaVO;
 import cloud.tianai.captcha.validator.common.model.dto.ImageCaptchaTrack;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,11 +27,39 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthBizService authBizService;
+    private final WechatLoginService wechatLoginService;
 
     @Operation(summary = "用户登录")
     @PostMapping("/auth/login")
     public Result<LoginUserInfoVo> login(@Valid @RequestBody AuthForm form) {
         return Result.data(authBizService.login(form));
+    }
+
+    @Operation(summary = "创建微信公众号登录事务")
+    @PostMapping("/auth/wechat/transaction")
+    public Result<WechatLoginTransactionVo> createWechatTransaction() {
+        return Result.data(wechatLoginService.createTransaction());
+    }
+
+    @Operation(summary = "轮询微信公众号登录结果")
+    @PostMapping("/auth/wechat/poll")
+    public Result<WechatLoginPollVo> pollWechatLogin(@Valid @RequestBody WechatLoginPollForm form) {
+        return Result.data(wechatLoginService.poll(form));
+    }
+
+    @Operation(summary = "取消微信公众号登录事务")
+    @PostMapping("/auth/wechat/cancel")
+    public Result<Void> cancelWechatLogin(@Valid @RequestBody WechatLoginPollForm form) {
+        wechatLoginService.cancel(form);
+        return Result.success();
+    }
+
+    @Operation(summary = "测试微信公众号连接")
+    @PostMapping("/auth/wechat/test-connection")
+    @SaCheckPermission("sys:config:update")
+    public Result<Void> testWechatConnection() {
+        wechatLoginService.testConnection();
+        return Result.success();
     }
 
     @Operation(summary = "发送注册邮箱验证码")

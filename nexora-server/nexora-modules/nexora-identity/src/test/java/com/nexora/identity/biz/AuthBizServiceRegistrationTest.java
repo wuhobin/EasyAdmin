@@ -55,18 +55,6 @@ class AuthBizServiceRegistrationTest {
             mock(OnlineSessionLifecycleService.class));
 
     @Test
-    void disabledRegistrationIsRejected() {
-        RegistrationSettings config = registerConfig();
-        config.setEnabled(false);
-        when(configReader.register()).thenReturn(config);
-
-        assertThatThrownBy(() -> bizService.sendRegisterCode(form("user@example.com", null, null)))
-                .isInstanceOf(BizException.class)
-                .hasMessageContaining(IdentityConstants.REGISTER_DISABLED_MESSAGE);
-        verify(mailVerificationOrchestrator, never()).sendCode(anyString(), any());
-    }
-
-    @Test
     void rejectsRegistrationWhenTheConfiguredRoleDoesNotExist() {
         enableRegistration(null);
 
@@ -271,7 +259,6 @@ class AuthBizServiceRegistrationTest {
 
     private static RegistrationSettings registerConfig() {
         RegistrationSettings config = new RegistrationSettings();
-        config.setEnabled(true);
         config.setCaptchaEnabled(true);
         config.setVerifyEmail(true);
         config.setDefaultRoleCode("user");

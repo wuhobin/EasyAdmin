@@ -152,6 +152,7 @@ export function WorkbenchPage() {
   const user = useAuthStore(state => state.user)
   const routes = useRouteStore(state => state.routes)
   const [noticeDetail, setNoticeDetail] = useState<NoticeRecord>()
+  const [emailReminderDismissed, setEmailReminderDismissed] = useState(false)
   const shortcuts = useMemo(() => selectWorkbenchShortcuts(routes), [routes])
 
   const summaryQuery = useQuery({
@@ -273,6 +274,12 @@ export function WorkbenchPage() {
   return (
     <div className="workbench-page">
       <WorkbenchClock name={displayName} avatar={user.avatar} />
+      {!user.email && !emailReminderDismissed ? <section className="workbench-email-reminder" role="status">
+        <CircleAlert aria-hidden="true" />
+        <div><strong>绑定邮箱，完善账号登录方式</strong><span>绑定并设置密码后，你仍可使用微信登录，也可以使用邮箱密码登录。</span></div>
+        <Button type="button" onClick={() => navigate('/profile')}>去绑定</Button>
+        <Button type="button" variant="ghost" onClick={() => setEmailReminderDismissed(true)}>稍后提醒</Button>
+      </section> : null}
       <StatCards cards={statCards} loading={summaryQuery.isLoading || (!summary?.administrator && unreadQuery.isLoading)} error={summaryQuery.isError} />
 
       <div className="workbench-main-grid">

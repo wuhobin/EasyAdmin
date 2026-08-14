@@ -7,6 +7,8 @@ import com.nexora.system.cache.SysConfigGroupCache;
 import com.nexora.system.api.SystemSettingsValidator;
 import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.system.config.SysConfigGroupRegistry;
+import com.nexora.system.config.WechatConfigSecretService;
+import com.nexora.system.api.WechatLoginSettings;
 import com.nexora.system.constants.SysConfigGroupEnum;
 import com.nexora.system.api.LoginSettings;
 import com.nexora.system.api.PasswordSettings;
@@ -33,14 +35,15 @@ class SysConfigGroupBizServiceTest {
     private final SysConfigGroupRegistry registry = mock(SysConfigGroupRegistry.class);
     private final SysConfigGroupReader reader = mock(SysConfigGroupReader.class);
     private final SystemSettingsValidator registerValidator = mock(SystemSettingsValidator.class);
+    private final WechatConfigSecretService wechatConfigSecretService = mock(WechatConfigSecretService.class);
     private final SysConfigGroupBizService bizService = new SysConfigGroupBizService(
-            configService, configCache, registry, reader, List.of(registerValidator));
+            configService, configCache, registry, reader, List.of(registerValidator), wechatConfigSecretService);
 
     @Test
     void replacesTheWholeGroupAndRefreshesItsCacheAfterCommit() {
         JsonNode input = new ObjectMapper().createObjectNode().put("enabled", true);
         RegistrationSettings value = registerConfig();
-        String json = "{\"enabled\":true,\"captchaEnabled\":true,\"verifyEmail\":true,"
+        String json = "{\"captchaEnabled\":true,\"verifyEmail\":true,"
                 + "\"defaultRoleCode\":\"user\",\"needAudit\":false}";
         SysConfigGroup group = group("register", "{}");
         when(registry.normalizeCode("register")).thenReturn("register");
@@ -83,10 +86,13 @@ class SysConfigGroupBizServiceTest {
         LoginSettings login = new LoginSettings();
         login.setRememberMeEnabled(false);
         PasswordSettings password = new PasswordSettings();
+        WechatLoginSettings wechat = new WechatLoginSettings();
+        wechat.setEnabled(false);
         when(reader.system()).thenReturn(system);
         when(reader.register()).thenReturn(register);
         when(reader.login()).thenReturn(login);
         when(reader.password()).thenReturn(password);
+        when(reader.wechat()).thenReturn(wechat);
 
         var publicConfig = bizService.getPublicConfig();
 
@@ -144,7 +150,6 @@ class SysConfigGroupBizServiceTest {
 
     private static RegistrationSettings registerConfig() {
         RegistrationSettings value = new RegistrationSettings();
-        value.setEnabled(true);
         value.setCaptchaEnabled(true);
         value.setVerifyEmail(true);
         value.setDefaultRoleCode("user");
