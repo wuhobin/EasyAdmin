@@ -31,7 +31,26 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [loginMode, setLoginMode] = useState<'email' | 'wechat'>('email')
+  const loginModeRef = useRef<'email' | 'wechat'>('email')
+  const wechatTransactionRef = useRef<WechatLoginTransaction>()
+  const wechatTransactionAttemptRef = useRef(0)
+  const wechatTransaction = useMutation({
+    mutationFn: async (_attempt: number) => (await createWechatLoginTransactionApi()).data,
+    onSuccess: (data, attempt) => {
+      if (loginModeRef.current !== 'wechat' || attempt !== wechatTransactionAttemptRef.current) {
+        void cancelWechatLoginApi(data)
+        return
+      }
+      wechatTransactionRef.current = data
+    }
+  })
   const handleWechatSuccess = useCallback(() => navigate(HOME_PATH, { replace: true }), [navigate])
+
+  useEffect(() => () => {
+    wechatTransactionAttemptRef.current += 1
+    const current = wechatTransactionRef.current
+    if (current) void cancelWechatLoginApi(current)
+  }, [])
 
   if (getToken()) return <Navigate to={HOME_PATH} replace />
 
@@ -74,6 +93,27 @@ export function LoginPage() {
 
   const flashMessage = (location.state as { message?: string } | null)?.message
 
+  const switchToEmailLogin = () => {
+    if (loginModeRef.current === 'email') return
+    loginModeRef.current = 'email'
+    wechatTransactionAttemptRef.current += 1
+    setLoginMode('email')
+    const current = wechatTransactionRef.current
+    wechatTransactionRef.current = undefined
+    if (current) void cancelWechatLoginApi(current)
+    wechatTransaction.reset()
+  }
+
+  const switchToWechatLogin = () => {
+    if (loginModeRef.current === 'wechat') return
+    loginModeRef.current = 'wechat'
+    setLoginMode('wechat')
+    wechatTransaction.reset()
+    const attempt = wechatTransactionAttemptRef.current + 1
+    wechatTransactionAttemptRef.current = attempt
+    wechatTransaction.mutate(attempt)
+  }
+
   return (
     <AuthLayout animationState={animationState}>
       <div className="auth-heading-mark"><span /><span /><span /></div>
@@ -82,74 +122,71 @@ export function LoginPage() {
         <p>{flashMessage || '输入账号信息，进入管理工作台'}</p>
       </header>
       {config.wechat.enabled ? <div className="auth-login-tabs" role="tablist" aria-label="登录方式">
-        <button type="button" role="tab" aria-selected={loginMode === 'email'} className={loginMode === 'email' ? 'is-active' : ''} onClick={() => setLoginMode('email')}>邮箱密码</button>
-        <button type="button" role="tab" aria-selected={loginMode === 'wechat'} className={loginMode === 'wechat' ? 'is-active' : ''} onClick={() => setLoginMode('wechat')}>微信扫码</button>
+        <button type="button" role="tab" aria-selected={loginMode === 'email'} className={loginMode === 'email' ? 'is-active' : ''} onClick={switchToEmailLogin}>邮箱密码</button>
+        <button type="button" role="tab" aria-selected={loginMode === 'wechat'} className={loginMode === 'wechat' ? 'is-active' : ''} onClick={switchToWechatLogin}>微信扫码</button>
       </div> : null}
-      {loginMode === 'wechat' && config.wechat.enabled
-        ? <WechatLoginPanel qrCodeUrl={config.wechat.qrCodeUrl} onSuccess={handleWechatSuccess} />
-        : <form className="auth-form" onSubmit={handleSubmit} noValidate>
-        <AuthInput
-          id="login-email"
-          label="邮箱"
-          type="email"
-          value={email}
-          onChange={event => { setEmail(event.target.value); setError('') }}
-          onFocus={() => setFocused('email')}
-          onBlur={() => setFocused(null)}
-          placeholder="you@example.com"
-          autoComplete="email"
-          leading={<MailOutlined />}
-          aria-invalid={Boolean(error)}
-        />
-        <PasswordInput
-          id="login-password"
-          label="密码"
-          value={password}
-          onChange={event => { setPassword(event.target.value); setError('') }}
-          onFocus={() => setFocused('password')}
-          onBlur={() => setFocused(null)}
-          placeholder="请输入密码"
-          autoComplete="current-password"
-          leading={<LockOutlined />}
-          visible={showPassword}
-          onToggle={() => setShowPassword(value => !value)}
-        />
-        <div className="auth-form-options">
-          {config.login.rememberMeEnabled ? <AuthCheckbox checked={rememberMe} onCheckedChange={setRememberMe}>记住我 3 天</AuthCheckbox> : <span />}
-          <Link to="/forgot-password" className="auth-inline-link">忘记密码？</Link>
-        </div>
-        {error ? <div className="auth-error-banner" role="alert">{error}</div> : null}
-        <AuthButton type="submit" loading={loading}>进入工作台</AuthButton>
-      </form>}
-      <p className="auth-switch-copy">还没有账号？ <Link to="/register" className="auth-strong-link">创建账号</Link></p>
+      <div className={`auth-login-stage auth-login-stage-${loginMode}`}>
+        {loginMode === 'wechat' && config.wechat.enabled
+          ? <WechatLoginPanel
+            qrCodeUrl={config.wechat.qrCodeUrl}
+            transaction={wechatTransaction.data}
+            transactionError={wechatTransaction.isError}
+            onSuccess={handleWechatSuccess}
+          />
+          : <form className="auth-form" onSubmit={handleSubmit} noValidate>
+            <AuthInput
+              id="login-email"
+              label="邮箱"
+              type="email"
+              value={email}
+              onChange={event => { setEmail(event.target.value); setError('') }}
+              onFocus={() => setFocused('email')}
+              onBlur={() => setFocused(null)}
+              placeholder="you@example.com"
+              autoComplete="email"
+              leading={<MailOutlined />}
+              aria-invalid={Boolean(error)}
+            />
+            <PasswordInput
+              id="login-password"
+              label="密码"
+              value={password}
+              onChange={event => { setPassword(event.target.value); setError('') }}
+              onFocus={() => setFocused('password')}
+              onBlur={() => setFocused(null)}
+              placeholder="请输入密码"
+              autoComplete="current-password"
+              leading={<LockOutlined />}
+              visible={showPassword}
+              onToggle={() => setShowPassword(value => !value)}
+            />
+            <div className="auth-form-options">
+              {config.login.rememberMeEnabled ? <AuthCheckbox checked={rememberMe} onCheckedChange={setRememberMe}>记住我 3 天</AuthCheckbox> : <span />}
+              <Link to="/forgot-password" className="auth-inline-link">忘记密码？</Link>
+            </div>
+            {error ? <div className="auth-error-banner" role="alert">{error}</div> : null}
+            <AuthButton type="submit" loading={loading}>进入工作台</AuthButton>
+          </form>}
+      </div>
+      {loginMode === 'email'
+        ? <p className="auth-switch-copy">还没有账号？ <Link to="/register" className="auth-strong-link">创建账号</Link></p>
+        : null}
     </AuthLayout>
   )
 }
 
-function WechatLoginPanel({ qrCodeUrl, onSuccess }: { qrCodeUrl: string; onSuccess: () => void }) {
+function WechatLoginPanel({ qrCodeUrl, transaction, transactionError, onSuccess }: {
+  qrCodeUrl: string
+  transaction?: WechatLoginTransaction
+  transactionError: boolean
+  onSuccess: () => void
+}) {
   const { message } = AntApp.useApp()
-  const transactionRef = useRef<WechatLoginTransaction>()
-  const transaction = useMutation({
-    mutationFn: async () => (await createWechatLoginTransactionApi()).data,
-    onSuccess: data => {
-      transactionRef.current = data
-    }
-  })
-
-  useEffect(() => {
-    transaction.mutate()
-    return () => {
-      const current = transactionRef.current
-      if (current) void cancelWechatLoginApi(current)
-    }
-    // A new transaction is intentionally tied to this panel mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const poll = useQuery({
-    queryKey: ['wechat-login', transaction.data?.transactionId],
-    enabled: Boolean(transaction.data),
-    queryFn: async () => (await pollWechatLoginApi(transaction.data!)).data,
+    queryKey: ['wechat-login', transaction?.transactionId],
+    enabled: Boolean(transaction),
+    queryFn: async () => (await pollWechatLoginApi(transaction!)).data,
     refetchInterval: query => query.state.data?.status === 'PENDING' || !query.state.data ? 3000 : false,
     retry: false
   })
@@ -164,14 +201,34 @@ function WechatLoginPanel({ qrCodeUrl, onSuccess }: { qrCodeUrl: string; onSucce
   }, [message, onSuccess, poll.data])
 
   const status = poll.data
+  const codeLoading = !transaction && !transactionError
+  const codeDigits = transaction?.code.split('') ?? []
   return <div className="auth-wechat-panel">
-    {qrCodeUrl ? <img src={qrCodeUrl} alt="微信公众号二维码" className="auth-wechat-qr" /> : <div className="auth-error-banner">管理员尚未配置公众号二维码</div>}
-    {transaction.isPending ? <p>正在生成登录码…</p> : transaction.isError ? <div className="auth-error-banner">微信登录暂不可用，请稍后重试</div> : null}
-    {transaction.data ? <>
-      <p>微信扫码关注公众号后，向公众号发送下面的 6 位数字</p>
-      <strong className="auth-wechat-code">{transaction.data.code}</strong>
-      <small>登录码 5 分钟内有效，网页会自动检测登录结果</small>
-    </> : null}
+    <div className="auth-wechat-card-heading"><span aria-hidden="true" />微信安全登录</div>
+    {qrCodeUrl
+      ? <div className="auth-wechat-qr-frame"><img src={qrCodeUrl} alt="微信公众号二维码" className="auth-wechat-qr" /></div>
+      : <div className="auth-error-banner">管理员尚未配置公众号二维码</div>}
+    <div className="auth-wechat-content" aria-live="polite" aria-busy={codeLoading}>
+      {transactionError
+        ? <div className="auth-error-banner">微信登录暂不可用，请稍后重试</div>
+        : <>
+          <div className="auth-wechat-instruction">
+            <strong>扫码后发送登录码</strong>
+            <p>关注公众号，将下方 6 位数字发送给公众号</p>
+          </div>
+          <div className="auth-wechat-code-slot">
+            {transaction
+              ? <strong className="auth-wechat-code" aria-label={`登录码 ${codeDigits.join(' ')}`}>
+                {codeDigits.map((digit, index) => <span key={`${digit}-${index}`}>{digit}</span>)}
+              </strong>
+              : <span className="auth-wechat-code-placeholder" aria-hidden="true">
+                <i /><i /><i /><i /><i /><i />
+              </span>}
+          </div>
+          <small className="auth-wechat-status"><i aria-hidden="true" />网页自动检测登录结果 <span aria-hidden="true">·</span> 登录码 5 分钟内有效</small>
+          {codeLoading ? <span className="sr-only">正在生成登录码…</span> : null}
+        </>}
+    </div>
     {status?.status === 'PENDING_AUDIT' ? <div className="auth-error-banner">{status.message}</div> : null}
     {status && ['FAILED', 'EXPIRED'].includes(status.status) ? <div className="auth-error-banner">{status.message}</div> : null}
   </div>

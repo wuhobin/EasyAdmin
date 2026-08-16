@@ -1,5 +1,6 @@
 package com.nexora.system.config;
 
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexora.system.api.WechatLoginSettings;
 import org.junit.jupiter.api.Test;
@@ -11,16 +12,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 class WechatConfigSecretServiceTest {
 
     private final WechatConfigSecretService service = new WechatConfigSecretService(
-            new ObjectMapper(), Base64.getEncoder().encodeToString(new byte[32]));
+            new ObjectMapper(), new PlatformCredentialCipher(
+                    Base64.getEncoder().encodeToString(new byte[32])));
 
     @Test
     void encryptsSecretsAtRestAndMasksAdminDetails() {
         WechatLoginSettings incoming = settings("app-secret", "callback-token", "encoding-key");
         WechatLoginSettings stored = service.prepareForStorage(incoming, settings("", "", ""));
 
-        assertThat(stored.getAppSecret()).startsWith("enc:v1:").doesNotContain("app-secret");
-        assertThat(stored.getToken()).startsWith("enc:v1:").doesNotContain("callback-token");
-        assertThat(stored.getAesKey()).startsWith("enc:v1:").doesNotContain("encoding-key");
+        assertThat(stored.getAppSecret()).startsWith("v1:").doesNotContain("app-secret");
+        assertThat(stored.getToken()).startsWith("v1:").doesNotContain("callback-token");
+        assertThat(stored.getAesKey()).startsWith("v1:").doesNotContain("encoding-key");
         assertThat(service.decrypt(stored))
                 .extracting(WechatLoginSettings::getAppSecret, WechatLoginSettings::getToken,
                         WechatLoginSettings::getAesKey)
@@ -48,9 +50,9 @@ class WechatConfigSecretServiceTest {
         WechatLoginSettings stored = service.prepareForStorage(
                 settings("", "", ""), settings("old-secret", "old-token", "old-key"));
 
-        assertThat(stored.getAppSecret()).startsWith("enc:v1:").doesNotContain("old-secret");
-        assertThat(stored.getToken()).startsWith("enc:v1:").doesNotContain("old-token");
-        assertThat(stored.getAesKey()).startsWith("enc:v1:").doesNotContain("old-key");
+        assertThat(stored.getAppSecret()).startsWith("v1:").doesNotContain("old-secret");
+        assertThat(stored.getToken()).startsWith("v1:").doesNotContain("old-token");
+        assertThat(stored.getAesKey()).startsWith("v1:").doesNotContain("old-key");
         assertThat(service.decrypt(stored))
                 .extracting(WechatLoginSettings::getAppSecret, WechatLoginSettings::getToken,
                         WechatLoginSettings::getAesKey)

@@ -1,35 +1,27 @@
 package com.nexora.system.config;
 
+import com.aurora.starter.webmvc.security.PlatformCredentialCipher;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexora.system.api.WechatLoginSettings;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Base64;
 
 @Component
 public class WechatConfigSecretService {
 
     public static final String MASK = "******";
-    private static final String PREFIX = "enc:v1:";
-    private static final int IV_LENGTH = 12;
+    private static final String CIPHERTEXT_PREFIX = "v1:";
+    private static final String APP_SECRET_PURPOSE = "system.wechat.app-secret";
+    private static final String TOKEN_PURPOSE = "system.wechat.token";
+    private static final String AES_KEY_PURPOSE = "system.wechat.aes-key";
     private final ObjectMapper objectMapper;
-    private final String masterKey;
-    private final SecureRandom secureRandom = new SecureRandom();
+    private final PlatformCredentialCipher credentialCipher;
 
     public WechatConfigSecretService(
             ObjectMapper objectMapper,
-            @Value("${NEXORA_CONFIG_ENCRYPTION_KEY:}") String masterKey) {
+            PlatformCredentialCipher credentialCipher) {
         this.objectMapper = objectMapper;
-        this.masterKey = masterKey;
+        this.credentialCipher = credentialCipher;
     }
 
     public WechatLoginSettings mask(WechatLoginSettings stored) {
@@ -42,17 +34,17 @@ public class WechatConfigSecretService {
 
     public WechatLoginSettings decrypt(WechatLoginSettings stored) {
         WechatLoginSettings result = copy(stored);
-        result.setAppSecret(decryptValue(stored.getAppSecret()));
-        result.setToken(decryptValue(stored.getToken()));
-        result.setAesKey(decryptValue(stored.getAesKey()));
+        result.setAppSecret(decryptValue(APP_SECRET_PURPOSE, stored.getAppSecret()));
+        result.setToken(decryptValue(TOKEN_PURPOSE, stored.getToken()));
+        result.setAesKey(decryptValue(AES_KEY_PURPOSE, stored.getAesKey()));
         return result;
     }
 
     public WechatLoginSettings prepareForStorage(WechatLoginSettings incoming, WechatLoginSettings existing) {
         WechatLoginSettings result = copy(incoming);
-        result.setAppSecret(mergeAndEncrypt(incoming.getAppSecret(), existing.getAppSecret()));
-        result.setToken(mergeAndEncrypt(incoming.getToken(), existing.getToken()));
-        result.setAesKey(mergeAndEncrypt(incoming.getAesKey(), existing.getAesKey()));
+        result.setAppSecret(mergeAndEncrypt(APP_SECRET_PURPOSE, incoming.getAppSecret(), existing.getAppSecret()));
+        result.setToken(mergeAndEncrypt(TOKEN_PURPOSE, incoming.getToken(), existing.getToken()));
+        result.setAesKey(mergeAndEncrypt(AES_KEY_PURPOSE, incoming.getAesKey(), existing.getAesKey()));
         return result;
     }
 
@@ -64,54 +56,29 @@ public class WechatConfigSecretService {
         }
     }
 
-    private String mergeAndEncrypt(String incoming, String existing) {
+    private String mergeAndEncrypt(String purpose, String incoming, String existing) {
         if (incoming == null || incoming.isBlank() || MASK.equals(incoming)) {
-            return encryptValue(existing);
+            return encryptExistingValue(purpose, existing);
         }
-        return encryptValue(incoming.strip());
+        return credentialCipher.encrypt(purpose, incoming.strip());
     }
 
-    private String encryptValue(String value) {
-        if (value == null || value.isBlank() || value.startsWith(PREFIX)) {
+    private String encryptExistingValue(String purpose, String value) {
+        if (value == null || value.isBlank() || isCiphertext(value)) {
             return value;
         }
-        try {
-            byte[] iv = new byte[IV_LENGTH];
-            secureRandom.nextBytes(iv);
-            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, key(), new GCMParameterSpec(128, iv));
-            byte[] encrypted = cipher.doFinal(value.getBytes(StandardCharsets.UTF_8));
-            byte[] payload = new byte[iv.length + encrypted.length];
-            System.arraycopy(iv, 0, payload, 0, iv.length);
-            System.arraycopy(encrypted, 0, payload, iv.length, encrypted.length);
-            return PREFIX + Base64.getEncoder().encodeToString(payload);
-        } catch (GeneralSecurityException exception) {
-            throw new IllegalStateException("微信登录配置加密失败", exception);
-        }
+        return credentialCipher.encrypt(purpose, value);
     }
 
-    private String decryptValue(String value) {
-        if (value == null || value.isBlank() || !value.startsWith(PREFIX)) {
+    private String decryptValue(String purpose, String value) {
+        if (value == null || value.isBlank() || !isCiphertext(value)) {
             return value;
         }
-        try {
-            byte[] payload = Base64.getDecoder().decode(value.substring(PREFIX.length()));
-            byte[] iv = Arrays.copyOfRange(payload, 0, IV_LENGTH);
-            byte[] encrypted = Arrays.copyOfRange(payload, IV_LENGTH, payload.length);
-            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, key(), new GCMParameterSpec(128, iv));
-            return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
-        } catch (GeneralSecurityException exception) {
-            throw new IllegalStateException("微信登录配置解密失败", exception);
-        }
+        return credentialCipher.decrypt(purpose, value);
     }
 
-    private SecretKeySpec key() {
-        byte[] decoded = Base64.getDecoder().decode(masterKey);
-        if (decoded.length != 32) {
-            throw new IllegalStateException("NEXORA_CONFIG_ENCRYPTION_KEY 必须是 Base64 编码的32字节密钥");
-        }
-        return new SecretKeySpec(decoded, "AES");
+    private static boolean isCiphertext(String value) {
+        return value.startsWith(CIPHERTEXT_PREFIX);
     }
 
     private WechatLoginSettings copy(WechatLoginSettings source) {

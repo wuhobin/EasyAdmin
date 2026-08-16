@@ -28,7 +28,7 @@ public record OnlineSessionRecord(
         if (userId == null || userId <= 0) {
             throw new IllegalArgumentException("userId must be positive");
         }
-        email = requireText(email, "email");
+        email = normalizeOptional(email);
         ip = requireText(ip, "ip");
         nickname = normalizeOptional(nickname);
         browser = normalizeOptional(browser);

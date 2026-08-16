@@ -46,6 +46,22 @@ class OnlineSessionRecordTest {
     }
 
     @Test
+    void acceptsMissingEmailForThirdPartyUsers() {
+        OnlineSessionRecord record = new OnlineSessionRecord(
+                OnlineSessionRecord.createSessionId(),
+                7,
+                "   ",
+                "微信用户-ABC123",
+                "127.0.0.1",
+                null,
+                null,
+                LocalDateTime.now());
+
+        assertThat(record.email()).isNull();
+        assertThat(record.nickname()).isEqualTo("微信用户-ABC123");
+    }
+
+    @Test
     void roundTripsThroughStarterRedisSerializer() {
         OnlineSessionRecord record = new OnlineSessionRecord(
                 OnlineSessionRecord.createSessionId(),

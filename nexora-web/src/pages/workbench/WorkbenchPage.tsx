@@ -19,7 +19,7 @@ import {
   Users
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getFileListApi } from '@/api/file'
 import { getJobListApi } from '@/api/job'
@@ -74,6 +74,7 @@ interface OverviewItem {
 }
 
 const noticeId = (notice: NoticeRecord) => notice.noticeId ?? notice.id
+const BindEmailDialog = lazy(() => import('@/components/profile/BindEmailDialog').then(module => ({ default: module.BindEmailDialog })))
 
 async function getRecentNotices() {
   const [unreadResponse, allResponse] = await Promise.all([
@@ -153,6 +154,7 @@ export function WorkbenchPage() {
   const routes = useRouteStore(state => state.routes)
   const [noticeDetail, setNoticeDetail] = useState<NoticeRecord>()
   const [emailReminderDismissed, setEmailReminderDismissed] = useState(false)
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false)
   const shortcuts = useMemo(() => selectWorkbenchShortcuts(routes), [routes])
 
   const summaryQuery = useQuery({
@@ -277,7 +279,7 @@ export function WorkbenchPage() {
       {!user.email && !emailReminderDismissed ? <section className="workbench-email-reminder" role="status">
         <CircleAlert aria-hidden="true" />
         <div><strong>绑定邮箱，完善账号登录方式</strong><span>绑定并设置密码后，你仍可使用微信登录，也可以使用邮箱密码登录。</span></div>
-        <Button type="button" onClick={() => navigate('/profile')}>去绑定</Button>
+        <Button type="button" onClick={() => setEmailDialogOpen(true)}>去绑定</Button>
         <Button type="button" variant="ghost" onClick={() => setEmailReminderDismissed(true)}>稍后提醒</Button>
       </section> : null}
       <StatCards cards={statCards} loading={summaryQuery.isLoading || (!summary?.administrator && unreadQuery.isLoading)} error={summaryQuery.isError} />
@@ -343,6 +345,8 @@ export function WorkbenchPage() {
           <DialogFooter><DialogClose asChild><Button type="button" variant="outline">关闭</Button></DialogClose></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {emailDialogOpen ? <Suspense fallback={null}><BindEmailDialog open onOpenChange={setEmailDialogOpen} /></Suspense> : null}
     </div>
   )
 }
