@@ -60,5 +60,5 @@ platform:
       - /auth/password/reset/sendCode
       - /auth/password/reset
       - /sys/config-group/public
-      # SSH WebSocket 使用 30 秒一次性票据完成独立认证。
       - /ws/ssh
+      - /ws/notification
