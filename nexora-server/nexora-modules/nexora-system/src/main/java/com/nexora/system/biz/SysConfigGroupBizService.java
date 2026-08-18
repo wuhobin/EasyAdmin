@@ -6,12 +6,14 @@ import com.nexora.system.cache.SysConfigGroupCache;
 import com.nexora.system.api.SystemSettingsValidator;
 import com.nexora.system.config.SysConfigGroupReader;
 import com.nexora.system.config.SysConfigGroupRegistry;
+import com.nexora.system.config.WechatConfigSecretService;
 import com.nexora.system.constants.SystemConfigConstants;
 import com.nexora.system.constants.SysConfigGroupEnum;
 import com.nexora.system.api.LoginSettings;
 import com.nexora.system.api.PasswordSettings;
 import com.nexora.system.api.RegistrationSettings;
 import com.nexora.system.api.SystemSettings;
+import com.nexora.system.api.WechatLoginSettings;
 import com.nexora.system.domain.vo.SysConfigGroupDetailVo;
 import com.nexora.system.domain.vo.SysConfigGroupSummaryVo;
 import com.nexora.system.domain.vo.SysConfigPublicVo;
@@ -34,6 +36,7 @@ public class SysConfigGroupBizService {
     private final SysConfigGroupRegistry registry;
     private final SysConfigGroupReader configReader;
     private final List<SystemSettingsValidator> businessValidators;
+    private final WechatConfigSecretService wechatConfigSecretService;
 
     public List<SysConfigGroupSummaryVo> list() {
         return configGroupService.listOrdered().stream().map(group -> SysConfigGroupSummaryVo.builder()
@@ -49,6 +52,9 @@ public class SysConfigGroupBizService {
         String normalizedCode = registry.normalizeCode(groupCode);
         SysConfigGroup group = requireGroup(normalizedCode);
         Object config = registry.parse(normalizedCode, group.getConfigValue());
+        if (config instanceof WechatLoginSettings wechat) {
+            config = wechatConfigSecretService.mask(wechat);
+        }
         return SysConfigGroupDetailVo.builder()
                 .id(group.getId())
                 .groupCode(group.getGroupCode())
@@ -63,15 +69,23 @@ public class SysConfigGroupBizService {
     @Transactional(rollbackFor = Exception.class)
     public void update(String groupCode, JsonNode configValue) {
         String normalizedCode = registry.normalizeCode(groupCode);
-        SysConfigGroupRegistry.NormalizedConfig normalized = registry.normalize(normalizedCode, configValue);
-        validateBusinessRules(normalizedCode, normalized.value());
         SysConfigGroup group = requireGroup(normalizedCode);
+        SysConfigGroupRegistry.NormalizedConfig normalized = registry.normalize(normalizedCode, configValue);
+        Object value = normalized.value();
+        String json = normalized.json();
+        if (value instanceof WechatLoginSettings wechat) {
+            WechatLoginSettings existing = registry.parse(normalizedCode, group.getConfigValue(), WechatLoginSettings.class);
+            WechatLoginSettings stored = wechatConfigSecretService.prepareForStorage(wechat, existing);
+            value = wechatConfigSecretService.decrypt(stored);
+            json = wechatConfigSecretService.toJson(stored);
+        }
+        validateBusinessRules(normalizedCode, value);
         prepareCacheUpdate(normalizedCode);
-        group.setConfigValue(normalized.json());
+        group.setConfigValue(json);
         if (!configGroupService.updateById(group)) {
             throw new BizException(SystemConfigConstants.CONFIG_GROUP_UPDATE_FAILED_MESSAGE);
         }
-        configGroupCache.refreshAfterCommit(normalizedCode, normalized.json());
+        configGroupCache.refreshAfterCommit(normalizedCode, json);
     }
 
     public void refreshCache() {
@@ -90,6 +104,7 @@ public class SysConfigGroupBizService {
         RegistrationSettings register = configReader.register();
         LoginSettings login = configReader.login();
         PasswordSettings password = configReader.password();
+        WechatLoginSettings wechat = configReader.wechat();
         return new SysConfigPublicVo(
                 new SysConfigPublicVo.SystemConfig(
                         system.getSiteName(), system.getShortTitle(), system.getSiteDescription(),
@@ -97,14 +112,16 @@ public class SysConfigGroupBizService {
                         system.getWatermarkEnabled(), system.getWatermarkType(),
                         system.getWatermarkCustomText(), system.getWatermarkOpacity()),
                 new SysConfigPublicVo.RegisterConfig(
-                        register.getEnabled(), register.getCaptchaEnabled(),
+                        register.getCaptchaEnabled(),
                         register.getVerifyEmail(), register.getNeedAudit()),
                 new SysConfigPublicVo.LoginConfig(
                         login.getRememberMeEnabled()),
                 new SysConfigPublicVo.PasswordConfig(
                         password.getMinLength(), password.getMaxLength(),
                         password.getRequireUppercase(), password.getRequireLowercase(),
-                        password.getRequireNumber(), password.getRequireSpecial()));
+                        password.getRequireNumber(), password.getRequireSpecial()),
+                new SysConfigPublicVo.WechatConfig(
+                        wechat.getEnabled(), wechat.getQrCodeUrl()));
     }
 
     public void validateDatabase() {

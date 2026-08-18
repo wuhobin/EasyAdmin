@@ -22,6 +22,15 @@ describe('pageTabsStore', () => {
     expect(usePageTabsStore.getState().tabs[0].path).toBe('/home')
   })
 
+  it('keeps one cached tab per route while updating its latest URL state', () => {
+    usePageTabsStore.getState().openTab({ path: '/system/user', search: '?pageNum=2', title: '用户管理', closable: true })
+    usePageTabsStore.getState().openTab({ path: '/system/user', search: '?pageNum=3&status=1', title: '用户管理', closable: true })
+
+    expect(usePageTabsStore.getState().tabs).toHaveLength(2)
+    expect(usePageTabsStore.getState().tabs[1]).toMatchObject({ path: '/system/user', search: '?pageNum=3&status=1' })
+    expect(getTabKey({ path: '/system/user', search: '?pageNum=2' })).toBe('/system/user')
+  })
+
   it('supports closing tabs on either side, other tabs, and all tabs', () => {
     open('/a', 'A')
     open('/b', 'B')

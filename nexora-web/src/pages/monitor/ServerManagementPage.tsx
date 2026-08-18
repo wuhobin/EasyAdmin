@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AntApp from 'antd/es/app'
 import Spin from 'antd/es/spin'
 import Tag from 'antd/es/tag'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { addManagedServerApi, confirmServerFingerprintApi, deleteManagedServerApi, getManagedServersApi, resetServerFingerprintApi, testManagedServerApi, updateManagedServerApi, type ManagedServer, type ManagedServerQuery, type ServerConnectionTest } from '@/api/server'
 import { ManagementCard, ManagementPagination } from '@/components/management/ManagementUi'
@@ -17,11 +17,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { managedServerFormToPayload, type ManagedServerFormValues } from '@/pages/monitor/monitorForms'
 import { useAuthStore } from '@/store/authStore'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 interface ServerFilterValues { name: string; enabled?: number }
 type PasswordAction = 'test' | 'terminal'
 
 const initialQuery: ManagedServerQuery = { pageNum: 1, pageSize: 12 }
+const querySchema: UrlQuerySchema<ManagedServerQuery> = { pageNum: 'number', pageSize: 'number', name: 'string', enabled: 'number' }
 
 function compactFingerprint(fingerprint: string) {
   if (fingerprint.length <= 38) return fingerprint
@@ -39,13 +42,14 @@ export function ServerManagementPage() {
   const { message, modal } = AntApp.useApp()
   const queryClient = useQueryClient()
   const permissions = useAuthStore(state => state.user.permissions)
-  const [queryParams, setQueryParams] = useState<ManagedServerQuery>(initialQuery)
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
   const [serverDialogOpen, setServerDialogOpen] = useState(false)
   const [editingServer, setEditingServer] = useState<ManagedServer>()
   const [passwordRequest, setPasswordRequest] = useState<{ server: ManagedServer; action: PasswordAction }>()
   const [terminal, setTerminal] = useState<{ server: ManagedServer; password?: string }>()
   const [testingId, setTestingId] = useState<number>()
   const filterForm = useForm<ServerFilterValues>({ defaultValues: { name: '', enabled: undefined } })
+  useEffect(() => filterForm.reset({ name: queryParams.name ?? '', enabled: queryParams.enabled }), [filterForm, queryParams.enabled, queryParams.name])
   const canAdd = permissions.includes('monitor:server:add')
   const canUpdate = permissions.includes('monitor:server:update')
   const canDelete = permissions.includes('monitor:server:delete')
@@ -150,7 +154,7 @@ export function ServerManagementPage() {
           <div className="server-grid">
             {(serversQuery.data?.records ?? []).map(server => {
               const state = serverState(server)
-              return <article key={server.id} className={`server-card ${state.className}`} aria-label={`${server.name}，${state.label}`}><header className="server-card-header"><span className="server-mark"><DesktopOutlined /></span><div className="server-title"><strong>{server.name}</strong><code>{server.username}@{server.host}:{server.port}</code></div><span className="server-state"><i />{state.label}</span></header><p className="server-description">{server.description || '未填写用途说明'}</p><dl className="server-meta"><div><dt>凭据</dt><dd>{server.hasSavedPassword ? <LockOutlined /> : <UnlockOutlined />}{server.hasSavedPassword ? '已加密保存' : '连接时输入'}</dd></div><div><dt>最后连接</dt><dd>{server.lastConnectTime || '尚未连接'}</dd></div></dl><section className={`fingerprint-strip ${server.trustedFingerprint ? 'trusted' : ''}`}><div className="fingerprint-label"><span><KeyOutlined />主机指纹</span><Tag color={server.trustedFingerprint ? 'green' : undefined}>{server.trustedFingerprint ? '已确认' : '待确认'}</Tag></div>{server.trustedFingerprint ? <><code title={server.trustedFingerprint}>{compactFingerprint(server.trustedFingerprint)}</code><small>{server.fingerprintAlgorithm || '未知算法'} · {server.fingerprintVerifiedTime || '确认时间未知'}</small></> : <p>首次测试连接后，请核对并确认服务器返回的指纹。</p>}</section>{server.lastError ? <div className="server-error" role="alert">{server.lastError}</div> : null}<footer className="server-actions">{canTerminal ? <Button type="button" disabled={server.enabled !== 1} loading={testingId === server.id} onClick={() => requestCredential(server, 'terminal')}><DesktopOutlined />SSH 终端</Button> : null}{canTest ? <Button type="button" variant="outline" disabled={server.enabled !== 1} loading={testingId === server.id} onClick={() => requestCredential(server, 'test')}><ApiOutlined />测试</Button> : null}{canUpdate || canDelete || (canFingerprint && server.trustedFingerprint) ? <Popover><PopoverTrigger asChild><Button type="button" variant="outline" size="icon" aria-label={`${server.name}更多操作`}><MoreOutlined /></Button></PopoverTrigger><PopoverContent align="end" className="server-action-menu">{canFingerprint && server.trustedFingerprint ? <button type="button" onClick={() => confirmResetFingerprint(server)}><ReloadOutlined />重置主机指纹</button> : null}{canUpdate ? <button type="button" onClick={() => { setEditingServer(server); setServerDialogOpen(true) }}><EditOutlined />编辑配置</button> : null}{canDelete ? <button type="button" className="is-danger" onClick={() => confirmDelete(server)}><DeleteOutlined />删除服务器</button> : null}</PopoverContent></Popover> : null}</footer></article>
+              return <article key={server.id} className={`server-card ${state.className}`} aria-label={`${server.name}，${state.label}`}><header className="server-card-header"><span className="server-mark"><DesktopOutlined /></span><div className="server-title"><strong>{server.name}</strong><code>{server.username}@{server.host}:{server.port}</code></div><span className="server-state"><i />{state.label}</span></header><p className="server-description">{server.description || '未填写用途说明'}</p><dl className="server-meta"><div><dt>凭据</dt><dd>{server.hasSavedPassword ? <LockOutlined /> : <UnlockOutlined />}{server.hasSavedPassword ? '已加密保存' : '连接时输入'}</dd></div><div><dt>最后连接</dt><dd>{server.lastConnectTime ? formatDateTime(server.lastConnectTime) : '尚未连接'}</dd></div></dl><section className={`fingerprint-strip ${server.trustedFingerprint ? 'trusted' : ''}`}><div className="fingerprint-label"><span><KeyOutlined />主机指纹</span><Tag color={server.trustedFingerprint ? 'green' : undefined}>{server.trustedFingerprint ? '已确认' : '待确认'}</Tag></div>{server.trustedFingerprint ? <><code title={server.trustedFingerprint}>{compactFingerprint(server.trustedFingerprint)}</code><small>{server.fingerprintAlgorithm || '未知算法'} · {server.fingerprintVerifiedTime ? formatDateTime(server.fingerprintVerifiedTime) : '确认时间未知'}</small></> : <p>首次测试连接后，请核对并确认服务器返回的指纹。</p>}</section>{server.lastError ? <div className="server-error" role="alert">{server.lastError}</div> : null}<footer className="server-actions">{canTerminal ? <Button type="button" disabled={server.enabled !== 1} loading={testingId === server.id} onClick={() => requestCredential(server, 'terminal')}><DesktopOutlined />SSH 终端</Button> : null}{canTest ? <Button type="button" variant="outline" disabled={server.enabled !== 1} loading={testingId === server.id} onClick={() => requestCredential(server, 'test')}><ApiOutlined />测试</Button> : null}{canUpdate || canDelete || (canFingerprint && server.trustedFingerprint) ? <Popover><PopoverTrigger asChild><Button type="button" variant="outline" size="icon" aria-label={`${server.name}更多操作`}><MoreOutlined /></Button></PopoverTrigger><PopoverContent align="end" className="server-action-menu">{canFingerprint && server.trustedFingerprint ? <button type="button" onClick={() => confirmResetFingerprint(server)}><ReloadOutlined />重置主机指纹</button> : null}{canUpdate ? <button type="button" onClick={() => { setEditingServer(server); setServerDialogOpen(true) }}><EditOutlined />编辑配置</button> : null}{canDelete ? <button type="button" className="is-danger" onClick={() => confirmDelete(server)}><DeleteOutlined />删除服务器</button> : null}</PopoverContent></Popover> : null}</footer></article>
             })}
             {!serversQuery.isLoading && !serversQuery.data?.records.length ? <div className="server-empty"><DesktopOutlined /><span>暂无符合条件的服务器</span>{canAdd ? <Button type="button" onClick={() => setServerDialogOpen(true)}><PlusOutlined />添加第一台服务器</Button> : null}</div> : null}
           </div>

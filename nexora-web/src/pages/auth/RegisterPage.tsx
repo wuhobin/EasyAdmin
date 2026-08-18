@@ -38,7 +38,6 @@ export function RegisterPage() {
   }, [countdown])
 
   if (getToken()) return <Navigate to={HOME_PATH} replace />
-  if (configStatus === 'success' && !config.register.enabled) return <Navigate to="/login" replace />
 
   const animationState: AuthAnimationState = {
     isTyping: focused === 'email',
@@ -112,7 +111,7 @@ export function RegisterPage() {
     <AuthLayout animationState={animationState}>
       <div className="auth-heading-mark auth-heading-mark-register"><span /><span /><span /></div>
       <header className="auth-heading">
-        <h2>创建你的账号</h2>
+        <h1>创建你的账号</h1>
         <p>验证邮箱，建立新的管理工作台账号</p>
       </header>
       <form className="auth-form" onSubmit={handleSubmit} noValidate>

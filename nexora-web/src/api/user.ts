@@ -18,7 +18,7 @@ export interface SysUserRecord {
   ip?: string
   ipLocation?: string
   mobile?: string
-  email: string
+  email: string | null
   sex: number
   roleIds: number[]
   createTime?: string
@@ -41,7 +41,7 @@ export interface UserProfileRecord {
   nickname: string
   avatar?: string
   mobile?: string
-  email: string
+  email: string | null
   sex: number
   createTime?: string
   lastLoginTime?: string
@@ -94,3 +94,6 @@ export const sendChangeEmailCodeApi = (email: string) =>
 
 export const changeEmailApi = (email: string, code: string) =>
   request<void>({ url: '/sys/user/profile/changeEmail', method: 'put', data: { email, code } })
+
+export const bindEmailApi = (email: string, code: string, password: string) =>
+  request<void>({ url: '/sys/user/profile/bindEmail', method: 'put', data: { email, code, password } })

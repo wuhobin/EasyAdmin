@@ -81,6 +81,11 @@
 .management-row-action-data { color: var(--nexora-action-add); background: color-mix(in srgb, var(--nexora-action-add) 11%, var(--nexora-panel)); }
 .management-row-action-data:not(:disabled):hover { color: #fff; background: var(--nexora-action-add); }
 .management-row-action:disabled { opacity: .4; }
+.management-row-action-approve[aria-busy='true'] {
+  color: #fff;
+  background: var(--nexora-success);
+  opacity: 1;
+}
 
 .management-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .management-dialog-body { display: grid; gap: 18px; padding: 20px 24px 22px; }

@@ -24,7 +24,7 @@ const emptyUser = (): CurrentUser => ({
 function toCurrentUser(data: CurrentUserResult): CurrentUser {
   return {
     id: data.id,
-    email: data.email,
+    email: data.email ?? '',
     nickname: data.nickname,
     avatar: data.avatar,
     roles: data.roles ?? [],

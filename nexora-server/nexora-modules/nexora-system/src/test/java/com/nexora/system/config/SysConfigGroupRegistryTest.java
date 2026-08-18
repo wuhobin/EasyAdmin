@@ -19,9 +19,9 @@ class SysConfigGroupRegistryTest {
     private final SysConfigGroupRegistry registry = new SysConfigGroupRegistry(objectMapper, validator);
 
     @Test
-    void exposesOnlyTheFiveFixedGroups() {
+    void exposesOnlyTheFixedGroups() {
         assertThat(registry.supportedCodes())
-                .containsExactlyInAnyOrder("system", "register", "login", "password", "email");
+                .containsExactlyInAnyOrder("system", "register", "login", "password", "email", "wechat");
     }
 
     @Test
@@ -65,7 +65,6 @@ class SysConfigGroupRegistryTest {
     @Test
     void requiresTheRegistrationCaptchaSwitch() {
         ObjectNode input = objectMapper.createObjectNode()
-                .put("enabled", true)
                 .put("verifyEmail", true)
                 .put("defaultRoleCode", "user")
                 .put("needAudit", false);
@@ -78,7 +77,6 @@ class SysConfigGroupRegistryTest {
     @Test
     void parsesTheRegistrationCaptchaSwitchIndependentlyFromEmailVerification() {
         ObjectNode input = objectMapper.createObjectNode()
-                .put("enabled", true)
                 .put("captchaEnabled", false)
                 .put("verifyEmail", true)
                 .put("defaultRoleCode", "user")

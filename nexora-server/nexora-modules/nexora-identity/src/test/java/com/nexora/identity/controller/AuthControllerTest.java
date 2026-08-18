@@ -3,6 +3,7 @@ package com.nexora.identity.controller;
 import cloud.tianai.captcha.application.vo.ImageCaptchaVO;
 import cloud.tianai.captcha.validator.common.model.dto.ImageCaptchaTrack;
 import com.nexora.identity.biz.AuthBizService;
+import com.nexora.identity.biz.WechatLoginService;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,7 +16,7 @@ class AuthControllerTest {
     @Test
     void delegatesImageCaptchaOperationsToTheBizService() {
         AuthBizService authBizService = mock(AuthBizService.class);
-        AuthController controller = new AuthController(authBizService);
+        AuthController controller = new AuthController(authBizService, mock(WechatLoginService.class));
         ImageCaptchaVO captcha = new ImageCaptchaVO();
         captcha.setId("captcha-id");
         ImageCaptchaTrack track = new ImageCaptchaTrack();

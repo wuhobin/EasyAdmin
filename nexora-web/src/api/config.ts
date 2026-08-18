@@ -14,11 +14,19 @@ export interface SystemConfig {
 }
 
 export interface RegisterConfig {
-  enabled: boolean
   captchaEnabled: boolean
   verifyEmail: boolean
   defaultRoleCode: string
   needAudit: boolean
+}
+
+export interface WechatConfig {
+  enabled: boolean
+  qrCodeUrl: string
+  appId: string
+  appSecret: string
+  token: string
+  aesKey: string
 }
 
 export interface LoginConfig {
@@ -49,7 +57,7 @@ export interface EmailConfig {
   ssl: boolean
 }
 
-export type ConfigGroupCode = 'system' | 'register' | 'login' | 'password' | 'email'
+export type ConfigGroupCode = 'system' | 'register' | 'login' | 'password' | 'email' | 'wechat'
 
 export interface ConfigValueByGroup {
   system: SystemConfig
@@ -57,6 +65,7 @@ export interface ConfigValueByGroup {
   login: LoginConfig
   password: PasswordConfig
   email: EmailConfig
+  wechat: WechatConfig
 }
 
 export interface ConfigGroupSummary {
@@ -78,6 +87,7 @@ export interface ConfigGroupDetail<T extends ConfigGroupCode = ConfigGroupCode> 
 }
 
 export type PublicRegisterConfig = Omit<RegisterConfig, 'defaultRoleCode'>
+export type PublicWechatConfig = Pick<WechatConfig, 'enabled' | 'qrCodeUrl'>
 export type PublicLoginConfig = Pick<LoginConfig, 'rememberMeEnabled'>
 
 export interface PublicConfig {
@@ -85,6 +95,7 @@ export interface PublicConfig {
   register: PublicRegisterConfig
   login: PublicLoginConfig
   password: PasswordConfig
+  wechat: PublicWechatConfig
 }
 
 export const DEFAULT_PUBLIC_CONFIG: PublicConfig = {
@@ -100,7 +111,7 @@ export const DEFAULT_PUBLIC_CONFIG: PublicConfig = {
     watermarkCustomText: '',
     watermarkOpacity: 0.15
   },
-  register: { enabled: true, captchaEnabled: true, verifyEmail: true, needAudit: false },
+  register: { captchaEnabled: true, verifyEmail: true, needAudit: false },
   login: { rememberMeEnabled: true },
   password: {
     minLength: 6,
@@ -109,7 +120,8 @@ export const DEFAULT_PUBLIC_CONFIG: PublicConfig = {
     requireLowercase: false,
     requireNumber: false,
     requireSpecial: false
-  }
+  },
+  wechat: { enabled: false, qrCodeUrl: '' }
 }
 
 export const getPublicConfigApi = () => request<PublicConfig>({ url: '/sys/config-group/public', method: 'get' })
@@ -134,3 +146,6 @@ export const testConfigEmailApi = (to: string) => request<void>({
   method: 'post',
   params: { to }
 })
+
+export const testWechatConnectionApi = () =>
+  request<void>({ url: '/auth/wechat/test-connection', method: 'post' })

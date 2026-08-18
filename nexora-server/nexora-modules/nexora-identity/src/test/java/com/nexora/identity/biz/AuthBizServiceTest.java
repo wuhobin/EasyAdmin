@@ -116,6 +116,10 @@ class AuthBizServiceTest {
         assertThat(config).contains(
                 "exclude-paths:",
                 "- /auth/login",
+                "- /auth/wechat/transaction",
+                "- /auth/wechat/poll",
+                "- /auth/wechat/cancel",
+                "- /auth/wechat/portal",
                 "- /auth/register/sendCode",
                 "- /auth/register",
                 "- /auth/image",
@@ -123,7 +127,9 @@ class AuthBizServiceTest {
                 "- /auth/password/reset/sendCode",
                 "- /auth/password/reset",
                 "- /sys/config-group/public");
-        assertThat(config).doesNotContain("- /auth/info", "- /auth/logout", "- /auth/verify");
+        assertThat(config).doesNotContain(
+                "- /auth/info", "- /auth/logout", "- /auth/verify",
+                "- /auth/wechat/test-connection");
     }
 
     @Test

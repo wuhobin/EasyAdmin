@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import { lazy } from 'react'
-import { HomePlaceholder } from '@/pages/HomePlaceholder'
+import { WorkbenchPage } from '@/pages/workbench/WorkbenchPage'
 import { MigrationPlaceholder } from '@/pages/MigrationPlaceholder'
 import { HOME_PATH, PROFILE_PATH, type MenuRoute } from '@/routes/routeAdapter'
 
@@ -111,12 +111,12 @@ const registry: Record<string, ComponentType<{ title?: string }>> = {
   '/system/user/profile/index': ProfilePage,
   '/system/profile': ProfilePage,
   [PROFILE_PATH]: ProfilePage,
-  [HOME_PATH]: HomePlaceholder,
-  home: HomePlaceholder
+  [HOME_PATH]: WorkbenchPage,
+  home: WorkbenchPage
 }
 
 export function resolveRouteComponent(route: MenuRoute): ComponentType<{ title?: string }> {
-  return registry[route.component] || registry[route.fullPath] || (route.fullPath === HOME_PATH ? HomePlaceholder : MigrationPlaceholder)
+  return registry[route.component] || registry[route.fullPath] || (route.fullPath === HOME_PATH ? WorkbenchPage : MigrationPlaceholder)
 }
 
 export function registerRouteComponent(key: string, component: ComponentType<{ title?: string }>) {

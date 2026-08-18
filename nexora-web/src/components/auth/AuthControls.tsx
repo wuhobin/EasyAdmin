@@ -9,13 +9,13 @@ interface AuthInputProps extends InputHTMLAttributes<HTMLInputElement> {
   trailing?: ReactNode
 }
 
-export function AuthInput({ label, error, leading, trailing, id, className = '', ...props }: AuthInputProps) {
+export function AuthInput({ label, error, leading, trailing, id, name, spellCheck, type, inputMode, className = '', ...props }: AuthInputProps) {
   return (
     <label className={`auth-field ${error ? 'has-error' : ''} ${className}`} htmlFor={id}>
       <span className="auth-field-label">{label}</span>
       <span className="auth-field-control">
         {leading ? <span className="auth-field-leading" aria-hidden="true">{leading}</span> : null}
-        <input id={id} {...props} />
+        <input id={id} name={name ?? id} type={type} inputMode={inputMode} spellCheck={spellCheck ?? (type === 'email' || inputMode === 'numeric' ? false : undefined)} {...props} />
         {trailing ? <span className="auth-field-trailing">{trailing}</span> : null}
       </span>
       <span className="auth-field-message" role={error ? 'alert' : undefined}>{error || ' '}</span>

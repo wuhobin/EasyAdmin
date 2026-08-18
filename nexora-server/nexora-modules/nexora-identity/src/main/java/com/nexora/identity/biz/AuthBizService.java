@@ -51,13 +51,19 @@ public class AuthBizService {
         loginSecurityService.validateCredentials(email, password, user, loginConfig);
         loginSecurityService.clearFailures(email);
         loginSecurityService.validateUserStatus(user);
+        return loginUser(user, form.isRememberMe());
+    }
+
+    public LoginUserInfoVo loginUser(SysUser user, boolean rememberMe) {
+        loginSecurityService.validateUserStatus(user);
+        LoginSettings loginConfig = configReader.login();
         String sessionId = onlineSessionLifecycleService.createSessionId();
         boolean singleLogin = Boolean.TRUE.equals(loginConfig.getSingleLogin());
         SecurityUtils.login(user.getId(), new SaLoginParameter()
                 .setDeviceId(sessionId)
                 .setIsConcurrent(!singleLogin)
                 .setIsShare(true)
-                .setTimeout(LoginSecurityService.tokenTimeout(loginConfig, form.isRememberMe())));
+                .setTimeout(LoginSecurityService.tokenTimeout(loginConfig, rememberMe)));
 
         LoginUserInfoVo loginUserInfo;
         try {

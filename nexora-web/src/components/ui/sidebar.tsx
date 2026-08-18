@@ -1,3 +1,4 @@
+import { Slot } from '@radix-ui/react-slot'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ButtonHTMLAttributes, type CSSProperties, type HTMLAttributes, type LiHTMLAttributes } from 'react'
 
 interface SidebarContextValue {
@@ -93,8 +94,9 @@ export function SidebarMenuItem({ className = '', ...props }: LiHTMLAttributes<H
   return <li data-slot="sidebar-menu-item" className={`nav-node ${className}`.trim()} {...props} />
 }
 
-export function SidebarMenuButton({ className = '', isActive = false, size = 'default', tooltip: _tooltip, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { isActive?: boolean; size?: 'default' | 'sm' | 'lg'; tooltip?: string }) {
-  return <button data-slot="sidebar-menu-button" data-active={isActive || undefined} data-size={size} className={`nav-item nav-item-${size} ${isActive ? 'is-active' : ''} ${className}`.trim()} type="button" {...props} />
+export function SidebarMenuButton({ className = '', isActive = false, size = 'default', tooltip: _tooltip, asChild = false, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { isActive?: boolean; size?: 'default' | 'sm' | 'lg'; tooltip?: string; asChild?: boolean }) {
+  const Component = asChild ? Slot : 'button'
+  return <Component data-slot="sidebar-menu-button" data-active={isActive || undefined} data-size={size} className={`nav-item nav-item-${size} ${isActive ? 'is-active' : ''} ${className}`.trim()} type={asChild ? undefined : 'button'} {...props} />
 }
 
 export function SidebarMenuSub({ className = '', ...props }: HTMLAttributes<HTMLUListElement>) {

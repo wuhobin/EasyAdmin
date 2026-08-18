@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AntApp from 'antd/es/app'
 import Table from 'antd/es/table'
 import type { ColumnsType } from 'antd/es/table'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { addDictApi, addDictDataApi, deleteDictApi, deleteDictDataApi, getDictDataListApi, getDictListApi, updateDictApi, updateDictDataApi, type DictDataQuery, type DictQuery, type SysDictDataRecord, type SysDictRecord } from '@/api/dict'
@@ -20,6 +20,8 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTit
 import { Textarea } from '@/components/ui/textarea'
 import { dictDataFormToPayload, dictDataRecordToForm, dictFormToPayload, dictRecordToForm, emptyDictDataForm, emptyDictForm, type DictDataFormValues, type DictFormValues } from '@/pages/system/managementForms'
 import { useAuthStore } from '@/store/authStore'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 interface DictFilterValues {
   name?: string
@@ -27,6 +29,7 @@ interface DictFilterValues {
 }
 
 const initialQuery: DictQuery = { pageNum: 1, pageSize: 10 }
+const querySchema: UrlQuerySchema<DictQuery> = { pageNum: 'number', pageSize: 'number', name: 'string', status: 'number' }
 const dictSchema = z.object({
   id: z.number().optional(),
   name: z.string().trim().min(1, '请输入字典名称').max(50, '字典名称不能超过 50 个字符'),
@@ -129,11 +132,13 @@ export function DictManagementPage() {
   const { message, modal } = AntApp.useApp()
   const queryClient = useQueryClient()
   const permissions = useAuthStore(state => state.user.permissions)
-  const [queryParams, setQueryParams] = useState<DictQuery>(initialQuery)
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [editingId, setEditingId] = useState<number>()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [activeDictionary, setActiveDictionary] = useState<SysDictRecord>()
+
+  useEffect(() => filterForm.reset({ name: queryParams.name ?? '', status: queryParams.status }), [filterForm, queryParams.name, queryParams.status])
 
   const canAdd = permissions.includes('sys:dict:add')
   const canUpdate = permissions.includes('sys:dict:update')
@@ -176,7 +181,7 @@ export function DictManagementPage() {
     { title: '字典类型', dataIndex: 'type', width: 210, ellipsis: true, render: value => <code className="management-code">{value}</code> },
     { title: '状态', dataIndex: 'status', width: 88, align: 'center', render: status => <StatusTag status={status} /> },
     { title: '备注', dataIndex: 'remark', ellipsis: true, render: value => <EmptyValue value={value} /> },
-    { title: '创建时间', dataIndex: 'createTime', width: 180, render: value => <EmptyValue value={value} /> },
+    { title: '创建时间', dataIndex: 'createTime', width: 180, render: value => <EmptyValue value={formatDateTime(value)} /> },
     { title: '操作', key: 'action', width: 156, fixed: 'right', align: 'center', render: (_, record) => <div className="management-row-actions"><ManagementRowAction tone="data" icon={<UnorderedListOutlined />} aria-label={`查看${record.name}的字典数据`} onClick={() => setActiveDictionary(record)} />{canUpdate ? <ManagementRowAction tone="edit" icon={<EditOutlined />} aria-label={`修改${record.name}`} onClick={() => openEdit(record)} /> : null}{canDelete ? <ManagementRowAction tone="delete" icon={<DeleteOutlined />} aria-label={`删除${record.name}`} loading={deleteMutation.isPending && deleteMutation.variables === record.id} onClick={() => confirmDelete(record)} /> : null}</div> }
   ]
 

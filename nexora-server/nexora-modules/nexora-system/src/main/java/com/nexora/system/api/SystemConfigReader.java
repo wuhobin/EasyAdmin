@@ -14,4 +14,6 @@ public interface SystemConfigReader {
     PasswordSettings password();
 
     EmailSettings email();
+
+    WechatLoginSettings wechat();
 }

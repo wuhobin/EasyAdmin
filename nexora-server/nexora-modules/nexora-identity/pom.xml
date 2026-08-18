@@ -18,6 +18,10 @@
             <groupId>com.nexora</groupId>
             <artifactId>nexora-system</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-mp</artifactId>
+        </dependency>
 
     </dependencies>
 </project>

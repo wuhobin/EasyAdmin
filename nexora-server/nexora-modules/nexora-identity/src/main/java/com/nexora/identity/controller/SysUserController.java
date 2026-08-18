@@ -91,6 +91,13 @@ public class SysUserController {
         return Result.success();
     }
 
+    @PutMapping("/profile/bindEmail")
+    @Operation(summary = "为当前微信账号绑定邮箱并设置密码")
+    public Result<Void> bindEmail(@Valid @RequestBody SysUserForm form) {
+        sysUserBizService.bindEmail(form);
+        return Result.success();
+    }
+
     @GetMapping("/verifyPassword/{password}")
     @Operation(summary = "验证密码")
     public Result<Boolean> verifyPassword(@PathVariable String password) {

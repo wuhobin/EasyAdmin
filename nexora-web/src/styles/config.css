@@ -34,6 +34,7 @@
 .config-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
 .config-range-row { display: flex; min-height: 36px; align-items: center; gap: 12px; }
 .config-range { width: 100%; height: 4px; accent-color: var(--nexora-violet); cursor: pointer; }
+.config-range:focus-visible { outline: 3px solid color-mix(in srgb, var(--nexora-violet) 60%, transparent); outline-offset: 5px; }
 .config-range:disabled { cursor: not-allowed; opacity: .55; }
 .config-range-row output { min-width: 34px; color: var(--nexora-violet); font-size: 11px; font-weight: 700; text-align: right; }
 .config-notice { display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--nexora-violet) 18%, var(--nexora-line)); border-radius: 7px; color: var(--nexora-ink-soft); background: color-mix(in srgb, var(--nexora-violet) 5%, var(--nexora-panel)); font-size: 11px; line-height: 1.6; }

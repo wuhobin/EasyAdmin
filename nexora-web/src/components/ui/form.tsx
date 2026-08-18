@@ -59,6 +59,6 @@ export const FormMessage = forwardRef<HTMLParagraphElement, HTMLAttributes<HTMLP
   const { error, formMessageId } = useFormField()
   const body = error ? String(error.message ?? '') : children
   if (!body) return null
-  return <p ref={ref} id={formMessageId} className={cn('nexora-form-message text-[11px] font-medium leading-4 text-[var(--nexora-danger)]', className)} {...props}>{body}</p>
+  return <p ref={ref} id={formMessageId} role="alert" aria-live="polite" className={cn('nexora-form-message text-[11px] font-medium leading-4 text-[var(--nexora-danger)]', className)} {...props}>{body}</p>
 })
 FormMessage.displayName = 'FormMessage'

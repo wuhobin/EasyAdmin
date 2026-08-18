@@ -4,7 +4,7 @@ import AntApp from 'antd/es/app'
 import Table from 'antd/es/table'
 import Tag from 'antd/es/tag'
 import type { ColumnsType } from 'antd/es/table'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { forceLogoutOnlineSessionApi, getOnlineSessionListApi, type ForceLogoutOutcome, type OnlineSessionQuery, type OnlineSessionRecord } from '@/api/online'
@@ -16,9 +16,12 @@ import { abbreviateSessionId, runForceLogoutFlow, type OnlineSessionPageState } 
 import { useAuthStore } from '@/store/authStore'
 import { usePageTabsStore } from '@/store/pageTabsStore'
 import { useRouteStore } from '@/store/routeStore'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 interface OnlineFilterValues { keyword: string; ip: string }
 const initialQuery: OnlineSessionQuery = { pageNum: 1, pageSize: 10 }
+const querySchema: UrlQuerySchema<OnlineSessionQuery> = { pageNum: 'number', pageSize: 'number', keyword: 'string', ip: 'string' }
 
 function displayValue(value?: string) {
   return value?.trim() || '-'
@@ -29,9 +32,10 @@ export function OnlineUsersPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const permissions = useAuthStore(state => state.user.permissions)
-  const [queryParams, setQueryParams] = useState<OnlineSessionQuery>(initialQuery)
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
   const [forcingSessionId, setForcingSessionId] = useState('')
   const filterForm = useForm<OnlineFilterValues>({ defaultValues: { keyword: '', ip: '' } })
+  useEffect(() => filterForm.reset({ keyword: queryParams.keyword ?? '', ip: queryParams.ip ?? '' }), [filterForm, queryParams.ip, queryParams.keyword])
   const canForceLogout = permissions.includes('sys:online:forceLogout')
   const sessionsQuery = useQuery({ queryKey: ['online-sessions', queryParams], queryFn: async () => (await getOnlineSessionListApi(queryParams)).data })
 
@@ -83,8 +87,8 @@ export function OnlineUsersPage() {
     { title: 'IP / 地点', key: 'location', width: 200, render: (_, record) => <div className="online-detail-cell"><span>{displayValue(record.ip)}</span><small>{displayValue(record.location)}</small></div> },
     { title: '浏览器', dataIndex: 'browser', width: 140, align: 'center', render: value => displayValue(value) },
     { title: '操作系统', dataIndex: 'os', width: 160, align: 'center', ellipsis: true, render: value => displayValue(value) },
-    { title: '登录时间', dataIndex: 'loginTime', width: 180, render: value => <time>{displayValue(value)}</time> },
-    { title: '最后访问时间', dataIndex: 'lastAccessTime', width: 180, render: value => <time>{displayValue(value)}</time> },
+    { title: '登录时间', dataIndex: 'loginTime', width: 180, render: value => <time dateTime={value}>{formatDateTime(value)}</time> },
+    { title: '最后访问时间', dataIndex: 'lastAccessTime', width: 180, render: value => <time dateTime={value}>{formatDateTime(value)}</time> },
     { title: '操作', key: 'action', width: 84, fixed: 'right', align: 'center', render: (_, record) => canForceLogout ? <div className="management-row-actions"><ManagementRowAction tone="delete" icon={<LogoutOutlined />} aria-label={`强退会话 ${abbreviateSessionId(record.sessionId)}`} loading={forcingSessionId === record.sessionId} disabled={Boolean(forcingSessionId) && forcingSessionId !== record.sessionId} onClick={() => void handleForceLogout(record)} /></div> : null }
   ]
 

@@ -137,16 +137,17 @@ CREATE TABLE `sys_config_group`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_sys_config_group_code`(`group_code` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统配置分组表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统配置分组表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_config_group
 -- ----------------------------
 INSERT INTO `sys_config_group` VALUES (1, 'system', '系统配置', '{\"icp\": \"1111\", \"siteLogo\": \"\", \"siteName\": \"Nexora Admin\", \"copyright\": \"Copyright © 2026 Nexora Admin\", \"shortTitle\": \"Nexora Admin 后台管理\", \"watermarkType\": \"username\", \"siteDescription\": \"一个现代化的后台管理系统\", \"watermarkEnabled\": true, \"watermarkOpacity\": 0.05, \"watermarkCustomText\": \"\"}', 1, '2026-07-31 15:42:51', '2026-08-03 15:18:38');
-INSERT INTO `sys_config_group` VALUES (2, 'register', '注册配置', '{"enabled": true, "needAudit": true, "verifyEmail": true, "captchaEnabled":true, "defaultRoleCode": "user"}', 2, '2026-07-31 15:42:51', '2026-08-04 10:13:27');
+INSERT INTO `sys_config_group` VALUES (2, 'register', '注册配置', '{"needAudit": true, "verifyEmail": true, "captchaEnabled":true, "defaultRoleCode": "user"}', 2, '2026-07-31 15:42:51', '2026-08-04 10:13:27');
 INSERT INTO `sys_config_group` VALUES (3, 'login', '登录配置', '{\"singleLogin\": false, \"maxRetryCount\": 5, \"lockTimeMinutes\": 30, \"rememberMeEnabled\": true, \"sessionTimeoutSeconds\": 3600, \"rememberMeTimeoutSeconds\": 259200}', 3, '2026-07-31 15:42:51', '2026-08-04 10:06:40');
 INSERT INTO `sys_config_group` VALUES (4, 'password', '密码配置', '{\"maxLength\": 20, \"minLength\": 6, \"requireNumber\": false, \"requireSpecial\": false, \"requireLowercase\": false, \"requireUppercase\": false}', 4, '2026-07-31 15:42:51', '2026-07-31 16:04:38');
 INSERT INTO `sys_config_group` VALUES (5, 'email', '邮箱配置', '{\"ssl\": true, \"host\": \"smtp.qq.com\", \"port\": 465, \"enabled\": false, \"fromName\": \"Nexora Admin\", \"password\": \"\", \"username\": \"\"}', 5, '2026-08-01 21:49:21', '2026-08-04 20:04:00');
+INSERT INTO `sys_config_group` VALUES (6, 'wechat', '微信登录配置', '{"enabled": false, "qrCodeUrl": "", "appId": "", "appSecret": "", "token": "", "aesKey": ""}', 6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- ----------------------------
 -- Table structure for sys_dict
@@ -185,7 +186,7 @@ CREATE TABLE `sys_dict_data`  (
   `remark` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   `status` int NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 50 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 51 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_dict_data
@@ -202,6 +203,7 @@ INSERT INTO `sys_dict_data` VALUES (46, 34, 'QQ 邮箱', 'QQ', 'primary', '1', 1
 INSERT INTO `sys_dict_data` VALUES (47, 34, '163 邮箱', 'NETEASE_163', 'success', '0', 2, '网易 163 邮箱', 1);
 INSERT INTO `sys_dict_data` VALUES (48, 34, '126 邮箱', 'NETEASE_126', 'warning', '0', 3, '网易 126 邮箱', 1);
 INSERT INTO `sys_dict_data` VALUES (49, 34, 'yeah 邮箱', 'YEAH', 'info', '0', 4, '网易 yeah 邮箱', 1);
+INSERT INTO `sys_dict_data` VALUES (50, 34, 'Gmail 邮箱', 'GMAIL', 'danger', '0', 5, 'Google Gmail 邮箱', 1);
 
 -- ----------------------------
 -- Table structure for sys_menu
@@ -563,7 +565,7 @@ CREATE TABLE `sys_user`  (
   `nickname` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '昵称',
   `avatar` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '头像',
   `mobile` varchar(15) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '手机号',
-  `email` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '登录邮箱',
+  `email` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '登录邮箱',
   `sex` int NULL DEFAULT NULL COMMENT '性别',
   `login_type` int NULL DEFAULT NULL COMMENT '登录方式',
   PRIMARY KEY (`id`) USING BTREE,
@@ -575,6 +577,24 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 INSERT INTO `sys_user` VALUES (1, '$2a$10$Olf5IWFsSL5uw6lQQxCCX.Yx9gFvdIbiyXrXPmCm9N9OVesHYMBQy', '2024-12-27 14:16:17', '2026-08-04 10:40:42', 1, '127.0.0.1', '内网IP|内网IP', 'Windows', '2026-07-03 14:17:04', 'Chrome', '系统管理员', 'https://oss.wuhobin.top/base/20260730/6a6b1106101346deb9f8d8b7.jpg', '18772916901', '1289066006@qq.com', 2, NULL);
 INSERT INTO `sys_user` VALUES (1816, '$2a$10$w/0p1TOFjL5jwxV57aPIsuhurq6A28I4nMZMKQ/IKlWzNoJ3eSJxi', '2026-07-30 13:58:01', '2026-07-30 16:11:18', 1, NULL, NULL, NULL, '2026-07-30 13:58:01', NULL, 'wuhobin', 'https://oss.wuhobin.top/base/20260730/6a6b0725101399263cde2e77.jpg', NULL, 'wuhobin@126.com', NULL, NULL);
+
+-- ----------------------------
+-- Table structure for user_identity
+-- ----------------------------
+DROP TABLE IF EXISTS `user_identity`;
+CREATE TABLE `user_identity` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` int NOT NULL COMMENT '系统用户ID',
+  `provider` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '身份提供方',
+  `provider_app_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '身份提供方应用ID',
+  `provider_user_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '身份提供方用户ID',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_identity_provider_user` (`provider`, `provider_app_id`, `provider_user_id`),
+  KEY `idx_user_identity_user_id` (`user_id`),
+  CONSTRAINT `fk_user_identity_user` FOREIGN KEY (`user_id`) REFERENCES `sys_user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户第三方身份表';
 
 -- ----------------------------
 -- Table structure for sys_user_role

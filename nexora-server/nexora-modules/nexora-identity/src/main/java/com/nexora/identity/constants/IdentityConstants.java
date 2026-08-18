@@ -16,6 +16,8 @@ public final class IdentityConstants {
 
     public static final String EMAIL_UNCHANGED_MESSAGE = "新邮箱不能与当前邮箱相同";
 
+    public static final String EMAIL_ALREADY_BOUND_MESSAGE = "当前账号已经绑定邮箱";
+
     public static final String USER_NOT_FOUND_MESSAGE = "用户不存在";
 
     public static final String USER_ID_REQUIRED_MESSAGE = "用户ID不能为空";
@@ -29,6 +31,8 @@ public final class IdentityConstants {
     public static final String PASSWORD_RESET_FAILED_MESSAGE = "密码重置失败，请稍后重试";
 
     public static final String OLD_PASSWORD_INCORRECT_MESSAGE = "旧密码错误";
+
+    public static final String PASSWORD_NOT_SET_MESSAGE = "当前账号尚未设置密码，请先绑定邮箱";
 
     public static final String ROLE_REQUIRED_MESSAGE = "请选择角色";
 
@@ -57,8 +61,6 @@ public final class IdentityConstants {
     public static final String IMAGE_CAPTCHA_INVALID_MESSAGE = "图片验证无效或已过期，请重新验证";
 
     public static final String IMAGE_CAPTCHA_VERIFY_FAILED_MESSAGE = "图片验证失败，请稍后重试";
-
-    public static final String REGISTER_DISABLED_MESSAGE = "系统暂未开放注册";
 
     public static final String REGISTER_CONFIG_INCOMPLETE_MESSAGE = "注册配置不完整，请联系管理员";
 

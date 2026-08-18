@@ -1,6 +1,6 @@
 import { CompressOutlined, ExpandOutlined, MenuOutlined, SettingOutlined } from '@ant-design/icons'
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { MenuIcon } from '@/components/MenuIcon'
 import { AppearanceSettings } from '@/components/AppearanceSettings'
 import { NotificationCenter } from '@/components/notifications/NotificationCenter'
@@ -11,7 +11,6 @@ import { useUiStore } from '@/store/uiStore'
 
 export function Topbar() {
   const location = useLocation()
-  const navigate = useNavigate()
   const routes = useRouteStore(state => state.routes)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement))
@@ -56,7 +55,7 @@ export function Topbar() {
                   {index > 0 ? <i aria-hidden="true">/</i> : null}
                   {isCurrent
                     ? <span className="breadcrumb-current" aria-current="page"><MenuIcon value={crumb.icon} />{crumb.title}</span>
-                    : <button className="breadcrumb-link" type="button" onClick={() => navigate(crumb.path)}><MenuIcon value={crumb.icon} />{crumb.title}</button>}
+                    : <Link className="breadcrumb-link" to={crumb.path}><MenuIcon value={crumb.icon} />{crumb.title}</Link>}
                 </li>
               )
             })}

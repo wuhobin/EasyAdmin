@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +36,9 @@ public class UserProfileService {
         String oldPassword = requireCurrentPassword(form.getOldPassword());
         String newPassword = passwordPolicyValidator.validateNewPassword(form.getNewPassword());
         SysUser user = getCurrentUser();
+        if (user.getPassword() == null) {
+            throw new BizException(IdentityConstants.PASSWORD_NOT_SET_MESSAGE);
+        }
         if (!BCrypt.checkpw(oldPassword, user.getPassword())) {
             throw new BizException(IdentityConstants.OLD_PASSWORD_INCORRECT_MESSAGE);
         }
@@ -70,6 +74,9 @@ public class UserProfileService {
     @Transactional(rollbackFor = Exception.class)
     public void changeEmail(SysUserForm form) {
         SysUser currentUser = getCurrentUser();
+        if (currentUser.getEmail() == null) {
+            throw new BizException(IdentityConstants.PASSWORD_NOT_SET_MESSAGE);
+        }
         String email = StringUtils.normalizeEmail(
                 InputValidator.requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
         String code = InputValidator.requireText(form.getCode(), IdentityConstants.EMAIL_CODE_REQUIRED_MESSAGE);
@@ -87,8 +94,36 @@ public class UserProfileService {
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public void bindEmail(SysUserForm form) {
+        SysUser currentUser = getCurrentUser();
+        if (currentUser.getEmail() != null) {
+            throw new BizException(IdentityConstants.EMAIL_ALREADY_BOUND_MESSAGE);
+        }
+        String email = StringUtils.normalizeEmail(
+                InputValidator.requireText(form.getEmail(), IdentityConstants.EMAIL_REQUIRED_MESSAGE));
+        String code = InputValidator.requireText(form.getCode(), IdentityConstants.EMAIL_CODE_REQUIRED_MESSAGE);
+        String password = passwordPolicyValidator.validateNewPassword(form.getPassword());
+        validateNewEmail(currentUser, email);
+        mailVerificationOrchestrator.verifyCode(email, CommonVerificationScene.CHANGE_EMAIL, code);
+        SysUser update = new SysUser();
+        update.setEmail(email);
+        update.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+        try {
+            boolean updated = sysUserService.update(update, new LambdaUpdateWrapper<SysUser>()
+                    .eq(SysUser::getId, currentUser.getId())
+                    .isNull(SysUser::getEmail));
+            if (!updated) {
+                throw new BizException(IdentityConstants.EMAIL_ALREADY_BOUND_MESSAGE);
+            }
+        } catch (DuplicateKeyException exception) {
+            throw new BizException(IdentityConstants.EMAIL_IN_USE_MESSAGE);
+        }
+    }
+
     public boolean verifyPassword(String password) {
-        return BCrypt.checkpw(password, getCurrentUser().getPassword());
+        String hashedPassword = getCurrentUser().getPassword();
+        return hashedPassword != null && BCrypt.checkpw(password, hashedPassword);
     }
 
     // --- helpers ---

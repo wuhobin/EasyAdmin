@@ -26,6 +26,7 @@ import '@/styles/monitor.css'
 import '@/styles/mail.css'
 import '@/styles/file.css'
 import '@/styles/profile.css'
+import '@/styles/workbench.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {

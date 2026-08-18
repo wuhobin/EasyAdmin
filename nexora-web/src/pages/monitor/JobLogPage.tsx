@@ -4,7 +4,7 @@ import AntApp from 'antd/es/app'
 import Table from 'antd/es/table'
 import Tag from 'antd/es/tag'
 import type { ColumnsType } from 'antd/es/table'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { cleanJobLogApi, deleteJobLogApi, getJobLogListApi, type JobLogQuery, type JobLogRecord } from '@/api/jobLog'
 import { EmptyValue, ManagementCard, ManagementPagination, ManagementRowAction } from '@/components/management/ManagementUi'
@@ -13,6 +13,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuthStore } from '@/store/authStore'
+import { formatDateTime } from '@/utils/format'
+import { useUrlQueryState, type UrlQuerySchema } from '@/utils/urlQueryState'
 
 interface JobLogFilterValues {
   jobName?: string
@@ -21,6 +23,7 @@ interface JobLogFilterValues {
 }
 
 const initialQuery: JobLogQuery = { pageNum: 1, pageSize: 10 }
+const querySchema: UrlQuerySchema<JobLogQuery> = { pageNum: 'number', pageSize: 'number', jobName: 'string', jobGroup: 'string', status: 'string' }
 
 const jobGroupLabels: Record<string, string> = {
   DEFAULT: '默认',
@@ -31,9 +34,11 @@ export function JobLogPage() {
   const { message, modal } = AntApp.useApp()
   const queryClient = useQueryClient()
   const permissions = useAuthStore(state => state.user.permissions)
-  const [queryParams, setQueryParams] = useState<JobLogQuery>(initialQuery)
+  const [queryParams, setQueryParams] = useUrlQueryState(initialQuery, querySchema)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const filterForm = useForm<JobLogFilterValues>({ defaultValues: { jobName: '', jobGroup: undefined, status: undefined } })
+
+  useEffect(() => filterForm.reset({ jobName: queryParams.jobName ?? '', jobGroup: queryParams.jobGroup, status: queryParams.status }), [filterForm, queryParams.jobGroup, queryParams.jobName, queryParams.status])
   const canDelete = permissions.includes('sys:jobLog:delete')
   const canClean = permissions.includes('sys:jobLog:clean')
   const logsQuery = useQuery({ queryKey: ['job-logs', queryParams], queryFn: async () => (await getJobLogListApi(queryParams)).data })
@@ -97,7 +102,7 @@ export function JobLogPage() {
     { title: '调用目标字符串', dataIndex: 'invokeTarget', width: 250, ellipsis: true, render: value => <EmptyValue value={value} /> },
     { title: '日志信息', dataIndex: 'jobMessage', width: 250, ellipsis: true, render: value => <EmptyValue value={value} /> },
     { title: '执行状态', dataIndex: 'status', width: 100, align: 'center', render: value => value === '0' ? <Tag color="green">成功</Tag> : value === '1' ? <Tag color="red">失败</Tag> : <EmptyValue value={value} /> },
-    { title: '执行时间', dataIndex: 'startTime', width: 180, render: value => <EmptyValue value={value} /> },
+    { title: '执行时间', dataIndex: 'startTime', width: 180, render: value => <EmptyValue value={formatDateTime(value)} /> },
     {
       title: '操作',
       key: 'action',

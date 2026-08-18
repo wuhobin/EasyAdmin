@@ -1,4 +1,4 @@
-import { Slot } from '@radix-ui/react-slot'
+import { Slot, Slottable } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { LoaderCircle } from 'lucide-react'
 import { forwardRef, type ButtonHTMLAttributes } from 'react'
@@ -37,7 +37,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ asChild = fa
   return (
     <Component ref={ref} className={cn(buttonVariants({ variant, size }), className)} disabled={disabled || loading} aria-busy={loading || undefined} {...props}>
       {loading ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : null}
-      {children}
+      <Slottable>{children}</Slottable>
     </Component>
   )
 })

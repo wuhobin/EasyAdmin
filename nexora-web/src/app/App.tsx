@@ -12,7 +12,7 @@ import { getToken } from '@/utils/token'
 import { isUnauthorizedError } from '@/types/api'
 
 function AppLoading() {
-  return <div className="app-loading"><span className="app-loading__spinner" aria-label="正在加载" /></div>
+  return <div className="app-loading" role="status" aria-live="polite" aria-busy="true"><span className="app-loading__spinner" aria-hidden="true" /><span className="sr-only">正在加载…</span></div>
 }
 
 function PublicOnly() {

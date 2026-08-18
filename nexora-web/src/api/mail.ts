@@ -1,6 +1,6 @@
 import request from '@/api/client'
 
-export type MailProvider = 'QQ' | 'NETEASE_163' | 'NETEASE_126' | 'YEAH'
+export type MailProvider = 'QQ' | 'NETEASE_163' | 'NETEASE_126' | 'YEAH' | 'GMAIL'
 
 export interface MailProviderConfig {
   label: string
@@ -91,11 +91,11 @@ export const deleteMailAccountApi = (id: number) =>
 export const testMailAccountApi = (id: number) =>
   request<void>({ url: `/mail/account/${id}/test`, method: 'post', timeout: 30000 })
 
-export const getLatestMailsApi = (accountId?: number, limit = 30, cursor?: string, signal?: AbortSignal) =>
+export const getLatestMailsApi = (accountId?: number, limit = 30, cursor?: string, signal?: AbortSignal, refresh = false) =>
   request<MailMessagePage>({
     url: '/mail/inbox/list',
     method: 'get',
-    params: { accountId, limit, cursor },
+    params: { accountId, limit, cursor, refresh },
     signal,
     timeout: 30000
   })
@@ -104,6 +104,24 @@ export const getMailDetailApi = (message: MailMessageSummary, signal?: AbortSign
   request<MailMessageDetail>({
     url: '/mail/inbox/detail',
     method: 'get',
+    params: { accountId: message.accountId, uid: message.uid, uidValidity: message.uidValidity },
+    signal,
+    timeout: 30000
+  })
+
+export const openMailApi = (message: MailMessageSummary, signal?: AbortSignal) =>
+  request<MailMessageDetail>({
+    url: '/mail/inbox/open',
+    method: 'post',
+    params: { accountId: message.accountId, uid: message.uid, uidValidity: message.uidValidity },
+    signal,
+    timeout: 30000
+  })
+
+export const markMailReadApi = (message: MailMessageSummary, signal?: AbortSignal) =>
+  request<void>({
+    url: '/mail/inbox/read',
+    method: 'post',
     params: { accountId: message.accountId, uid: message.uid, uidValidity: message.uidValidity },
     signal,
     timeout: 30000

@@ -10,6 +10,7 @@ import com.nexora.system.api.PasswordSettings;
 import com.nexora.system.api.RegistrationSettings;
 import com.nexora.system.api.SystemConfigReader;
 import com.nexora.system.api.SystemSettings;
+import com.nexora.system.api.WechatLoginSettings;
 import com.nexora.system.service.SysConfigGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ public class SysConfigGroupReader implements SystemConfigReader {
     private final SysConfigGroupService configGroupService;
     private final SysConfigGroupCache configGroupCache;
     private final SysConfigGroupRegistry registry;
+    private final WechatConfigSecretService wechatConfigSecretService;
 
     @Override
     public SystemSettings system() {
@@ -45,6 +47,12 @@ public class SysConfigGroupReader implements SystemConfigReader {
     @Override
     public EmailSettings email() {
         return read(SysConfigGroupEnum.EMAIL.getCode(), EmailSettings.class);
+    }
+
+    @Override
+    public WechatLoginSettings wechat() {
+        return wechatConfigSecretService.decrypt(read(
+                SysConfigGroupEnum.WECHAT.getCode(), WechatLoginSettings.class));
     }
 
     public <T> T read(String groupCode, Class<T> valueType) {

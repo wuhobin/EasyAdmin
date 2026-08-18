@@ -114,7 +114,7 @@ OSS_QINIU_DOMAIN=
 OSS_QINIU_BASE_PATH=
 ```
 
-启动前至少填写 MySQL、Redis 配置和 `PLATFORM_CREDENTIAL_SECRET_KEY`。响应密钥 `PLATFORM_RESPONSE_SECRET_KEY` 只有使用 `@EncryptResponse` 时需要。两个值都必须是 Base64 编码的 32 字节密钥，可使用 `openssl rand -base64 32` 生成；响应密钥与服务端凭据密钥必须分开，邮件授权码和已保存的 SSH 密码使用凭据密钥。系统 SMTP 参数在启动后的“系统管理 / 配置管理 / 邮箱配置”中维护，无需写入本地配置文件。使用文件管理功能时还需填写自己的七牛 Kodo 配置。不要提交真实凭据。
+启动前至少填写 MySQL、Redis 配置和 `PLATFORM_CREDENTIAL_SECRET_KEY`。响应密钥 `PLATFORM_RESPONSE_SECRET_KEY` 只有使用 `@EncryptResponse` 时需要。两个值都必须是 Base64 编码的 32 字节密钥，可使用 `openssl rand -base64 32` 生成；响应密钥与服务端凭据密钥必须分开，邮件授权码、微信登录敏感配置和已保存的 SSH 密码使用凭据密钥。系统 SMTP 参数在启动后的“系统管理 / 配置管理 / 邮箱配置”中维护，无需写入本地配置文件。使用文件管理功能时还需填写自己的七牛 Kodo 配置。不要提交真实凭据。
 
 ### 3. 启动后端
 
@@ -223,7 +223,7 @@ vi .env
 | `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PASSWORD` | MySQL 地址和账号 |
 | `REDIS_HOST` / `REDIS_PASSWORD` | Redis 地址和密码 |
 | `PLATFORM_RESPONSE_SECRET_KEY` | `@EncryptResponse` 接口使用的 AES-256-GCM 密钥；未使用响应加密时可以留空 |
-| `PLATFORM_CREDENTIAL_SECRET_KEY` | 邮件授权码与 SSH 密码使用的服务端 AES-256-GCM 密钥；必须为 Base64 编码的 32 字节 |
+| `PLATFORM_CREDENTIAL_SECRET_KEY` | 邮件授权码、微信登录敏感配置与 SSH 密码使用的服务端 AES-256-GCM 密钥；必须为 Base64 编码的 32 字节 |
 | `OSS_QINIU_*` | 七牛 Kodo 的 AK、SK、Bucket 和访问域名 |
 | `JAVA_TOOL_OPTIONS` | JVM 内存、编码和时区参数，按服务器内存调整 |
 | `LOG_PATH` | 容器日志目录，保持 `/app/logs` 即可 |
