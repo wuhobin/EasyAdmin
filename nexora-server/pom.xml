@@ -71,11 +71,6 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.nexora</groupId>
-                <artifactId>nexora-message</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.qiniu</groupId>
                 <artifactId>qiniu-java-sdk</artifactId>
                 <version>${qiniu.version}</version>
