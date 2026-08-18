@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nexora.identity.mapper.SysUserNoticeMapper">
+    <resultMap id="NoticeUserMap" type="com.nexora.identity.domain.vo.NoticeUserVo">
+        <id property="id" column="user_notice_id"/>
+        <result property="noticeId" column="notice_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="contentPreview" column="content_preview"/>
+        <result property="contentFormat" column="content_format"/>
+        <result property="noticeType" column="notice_type"/>
+        <result property="isRead" column="is_read"/>
+        <result property="publishTime" column="publish_time"/>
+    </resultMap>
+
+    <sql id="NoticeListColumns">
+        un.id user_notice_id, un.notice_id, n.title,
+        case when n.content_format = 'text' then left(n.content, 100) end content_preview,
+        n.content_format,
+        n.notice_type, un.is_read, n.publish_time
+    </sql>
+
+    <sql id="NoticeDetailColumns">
+        un.id user_notice_id, un.notice_id, n.title, n.content, n.content_format,
+        n.notice_type, un.is_read, n.publish_time
+    </sql>
+
+    <select id="selectUserPage" resultMap="NoticeUserMap">
+        select <include refid="NoticeListColumns"/>
+        from sys_user_notice un
+        inner join sys_notice n on n.id = un.notice_id
+        where un.user_id = #{userId}
+        <if test="unreadOnly">
+            and un.is_read = 0
+        </if>
+        order by n.publish_time desc, n.id desc
+    </select>
+
+    <select id="selectUserNotice" resultMap="NoticeUserMap">
+        select <include refid="NoticeDetailColumns"/>
+        from sys_user_notice un
+        inner join sys_notice n on n.id = un.notice_id
+        where un.user_id = #{userId} and un.notice_id = #{noticeId}
+    </select>
+
+    <select id="selectUnreadAnnouncements" resultMap="NoticeUserMap">
+        select <include refid="NoticeDetailColumns"/>
+        from sys_user_notice un
+        inner join sys_notice n on n.id = un.notice_id
+        where un.user_id = #{userId} and un.is_read = 0 and n.notice_type = 2
+        order by n.publish_time desc, n.id desc
+    </select>
+
+    <select id="selectUnreadCounts" resultType="com.nexora.identity.domain.vo.NoticeUserUnreadVo">
+        select user_id userId, count(*) unreadCount
+        from sys_user_notice
+        where is_read = 0
+          and user_id in
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        group by user_id
+    </select>
+</mapper>

@@ -20,7 +20,6 @@
         <module>nexora-identity</module>
         <module>nexora-file</module>
         <module>nexora-mail</module>
-        <module>nexora-message</module>
     </modules>
 
     <dependencies>

@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>nexora-identity</artifactId>
-    <description>身份权限领域模块</description>
+    <description>身份权限与站内通知领域模块</description>
 
     <dependencies>
         <dependency>
@@ -21,6 +21,10 @@
         <dependency>
             <groupId>com.github.binarywang</groupId>
             <artifactId>weixin-java-mp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
     </dependencies>
